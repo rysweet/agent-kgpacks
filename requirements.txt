@@ -1,0 +1,26 @@
+# WikiGR - Wikipedia Knowledge Graph
+# Python 3.10+
+
+# Core dependencies
+kuzu==0.11.3
+sentence-transformers==5.2.2
+requests==2.32.3
+pandas==3.0.0
+numpy==2.4.2
+
+# Transformers and ML
+torch==2.10.0
+transformers==5.1.0
+safetensors==0.7.0
+
+# Utilities
+python-dateutil==2.9.0
+tqdm==4.67.1
+pyyaml==6.0.2
+
+# Development dependencies
+pytest==8.3.4
+pytest-cov==6.0.0
+black==24.10.0
+flake8==7.1.1
+mypy==1.13.0

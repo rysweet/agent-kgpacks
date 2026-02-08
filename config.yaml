@@ -1,0 +1,31 @@
+# WikiGR Configuration
+
+# Database
+database:
+  path: "data/wikigr.db"
+
+# Wikipedia API
+wikipedia:
+  user_agent: "WikiGR/1.0 (Educational Project)"
+  rate_limit_delay: 0.1  # seconds
+  max_retries: 3
+  timeout: 30  # seconds
+
+# Embeddings
+embeddings:
+  model_name: "paraphrase-MiniLM-L3-v2"
+  batch_size: 32
+  use_gpu: true  # auto-detect if null
+
+# Expansion
+expansion:
+  max_depth: 2
+  batch_size: 10
+  claim_timeout: 300  # seconds
+  max_retries: 3
+
+# Logging
+logging:
+  level: "INFO"
+  file: "logs/wikigr.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
