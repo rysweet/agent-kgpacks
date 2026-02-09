@@ -14,7 +14,7 @@ Replace the sections below with information about your project.
 
 ## Overview
 
-[Brief description of what your project does]
+A semantic search and graph traversal system for Wikipedia articles using embedded graph database (Kuzu) and vector search (HNSW). - **Semantic Search**: Find articles by meaning using vector embeddings
 
 ## Architecture
 
@@ -26,7 +26,7 @@ Replace the sections below with information about your project.
 
 ### Technology Stack
 
-- **Language**: [Primary language(s)]
+- **Language**: Python
 - **Framework**: [Main framework if applicable]
 - **Database**: [Database system if applicable]
 
