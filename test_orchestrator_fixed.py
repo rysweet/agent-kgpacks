@@ -2,15 +2,15 @@
 """Quick test of orchestrator with fix"""
 
 import sys
-sys.path.insert(0, 'bootstrap')
+
+sys.path.insert(0, "bootstrap")
 
 import logging
-from pathlib import Path
 import shutil
+from pathlib import Path
 
-from src.expansion import RyuGraphOrchestrator
-from src.query import semantic_search
 from schema.ryugraph_schema import create_schema
+from src.expansion import RyuGraphOrchestrator
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -39,7 +39,8 @@ seeds = [
 ]
 
 for title in seeds:
-    orch.conn.execute("""
+    orch.conn.execute(
+        """
         CREATE (a:Article {
             title: $title,
             category: 'Computer Science',
@@ -50,7 +51,9 @@ for title in seeds:
             processed_at: NULL,
             retry_count: 0
         })
-    """, {"title": title})
+    """,
+        {"title": title},
+    )
 
 print(f"✓ Initialized {len(seeds)} seeds")
 
@@ -64,7 +67,7 @@ print("=" * 70)
 
 # Check sections
 result = orch.conn.execute("MATCH (s:Section) RETURN COUNT(s) AS count")
-sections = result.get_as_df().iloc[0]['count']
+sections = result.get_as_df().iloc[0]["count"]
 
 # Check articles with content
 result = orch.conn.execute("""
@@ -72,7 +75,7 @@ result = orch.conn.execute("""
     WHERE a.word_count > 0
     RETURN COUNT(a) AS count
 """)
-articles_with_content = result.get_as_df().iloc[0]['count']
+articles_with_content = result.get_as_df().iloc[0]["count"]
 
 print(f"Duration: {stats['duration_seconds']:.1f}s")
 print(f"Iterations: {stats['iterations']}")

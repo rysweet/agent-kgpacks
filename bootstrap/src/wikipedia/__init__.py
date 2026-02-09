@@ -4,20 +4,20 @@ Public interface for fetching and parsing Wikipedia articles.
 """
 
 from .api_client import (
-    WikipediaAPIClient,
-    WikipediaArticle,
-    WikipediaAPIError,
-    RateLimitError,
     ArticleNotFoundError,
+    RateLimitError,
+    WikipediaAPIClient,
+    WikipediaAPIError,
+    WikipediaArticle,
 )
 from .parser import parse_sections, strip_wikitext
 
 __all__ = [
-    'WikipediaAPIClient',
-    'WikipediaArticle',
-    'WikipediaAPIError',
-    'RateLimitError',
-    'ArticleNotFoundError',
-    'parse_sections',
-    'strip_wikitext',
+    "WikipediaAPIClient",
+    "WikipediaArticle",
+    "WikipediaAPIError",
+    "RateLimitError",
+    "ArticleNotFoundError",
+    "parse_sections",
+    "strip_wikitext",
 ]

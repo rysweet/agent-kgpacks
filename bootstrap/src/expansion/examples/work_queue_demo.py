@@ -9,9 +9,10 @@ Demonstrates complete workflow of work queue management:
 - Monitor queue statistics
 """
 
-import kuzu
 import time
 from datetime import datetime
+
+import kuzu
 
 
 def demo_work_queue():
@@ -44,14 +45,11 @@ def demo_work_queue():
 
     # Initialize with seed articles
     print("\n2. Initializing seed articles...")
-    seeds = [
-        "Machine Learning",
-        "Deep Learning",
-        "Neural Networks"
-    ]
+    seeds = ["Machine Learning", "Deep Learning", "Neural Networks"]
 
     for title in seeds:
-        conn.execute("""
+        conn.execute(
+            """
             CREATE (a:Article {
                 title: $title,
                 category: 'Computer Science',
@@ -62,11 +60,14 @@ def demo_work_queue():
                 processed_at: NULL,
                 retry_count: 0
             })
-        """, {"title": title})
+        """,
+            {"title": title},
+        )
     print(f"   ✓ Initialized {len(seeds)} seed articles")
 
     # Import WorkQueueManager
     from ..work_queue import WorkQueueManager
+
     manager = WorkQueueManager(conn, max_retries=3)
     print("   ✓ WorkQueueManager initialized")
 
@@ -88,19 +89,19 @@ def demo_work_queue():
     # Simulate processing with heartbeats
     print("\n5. Simulating article processing with heartbeats...")
     for article in articles:
-        title = article['title']
+        title = article["title"]
         print(f"\n   Processing: {title}")
 
         # Simulate work with periodic heartbeats
         for i in range(3):
-            print(f"     [Step {i+1}/3] Working...")
+            print(f"     [Step {i + 1}/3] Working...")
             time.sleep(0.5)
             manager.update_heartbeat(title)
             print(f"     [Heartbeat] Updated at {datetime.now().strftime('%H:%M:%S')}")
 
         # Mark as successfully loaded
         manager.advance_state(title, "loaded")
-        print(f"     ✓ Advanced to 'loaded' state")
+        print("     ✓ Advanced to 'loaded' state")
 
     # Check stats after processing
     print("\n6. Queue statistics after processing:")
@@ -114,19 +115,22 @@ def demo_work_queue():
     print("\n7. Processing remaining article with failure simulation...")
     remaining = manager.claim_work(batch_size=1)
     if remaining:
-        title = remaining[0]['title']
+        title = remaining[0]["title"]
         print(f"   Claimed: {title}")
 
         # Simulate failure
-        print(f"   Simulating failure...")
+        print("   Simulating failure...")
         manager.mark_failed(title, "Simulated network error")
-        print(f"   ✓ Marked as failed (will retry)")
+        print("   ✓ Marked as failed (will retry)")
 
         # Check retry state
-        result = conn.execute("""
+        result = conn.execute(
+            """
             MATCH (a:Article {title: $title})
             RETURN a.retry_count AS retry_count, a.expansion_state AS state
-        """, {"title": title})
+        """,
+            {"title": title},
+        )
         df = result.get_as_df()
         print(f"   Retry count: {df.iloc[0]['retry_count']}")
         print(f"   State: {df.iloc[0]['state']}")
@@ -145,28 +149,35 @@ def demo_work_queue():
     # Claim an article
     articles = manager.claim_work(batch_size=1)
     if articles:
-        title = articles[0]['title']
+        title = articles[0]["title"]
         print(f"   Claimed: {title}")
 
         # Manually set old timestamp to simulate stale claim
         from datetime import timedelta
+
         old_time = datetime.now() - timedelta(seconds=400)
-        conn.execute("""
+        conn.execute(
+            """
             MATCH (a:Article {title: $title})
             SET a.claimed_at = $old_time
-        """, {"title": title, "old_time": old_time})
-        print(f"   Simulated stale claim (no heartbeat for 400 seconds)")
+        """,
+            {"title": title, "old_time": old_time},
+        )
+        print("   Simulated stale claim (no heartbeat for 400 seconds)")
 
         # Reclaim stale work
         reclaimed = manager.reclaim_stale(timeout_seconds=300)
         print(f"   ✓ Reclaimed {reclaimed} stale claim(s)")
 
         # Verify state
-        result = conn.execute("""
+        result = conn.execute(
+            """
             MATCH (a:Article {title: $title})
             RETURN a.expansion_state AS state
-        """, {"title": title})
-        state = result.get_as_df().iloc[0]['state']
+        """,
+            {"title": title},
+        )
+        state = result.get_as_df().iloc[0]["state"]
         print(f"   Article state: {state} (back to queue)")
 
     print("\n" + "=" * 70)

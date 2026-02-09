@@ -1,8 +1,9 @@
 """Configuration management"""
 
-import yaml
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 
 class Config:
@@ -25,29 +26,29 @@ class Config:
         else:
             # Default configuration
             self._config = {
-                'database': {'path': 'data/wikigr.db'},
-                'wikipedia': {
-                    'user_agent': 'WikiGR/1.0 (Educational Project)',
-                    'rate_limit_delay': 0.1,
-                    'max_retries': 3,
-                    'timeout': 30
+                "database": {"path": "data/wikigr.db"},
+                "wikipedia": {
+                    "user_agent": "WikiGR/1.0 (Educational Project)",
+                    "rate_limit_delay": 0.1,
+                    "max_retries": 3,
+                    "timeout": 30,
                 },
-                'embeddings': {
-                    'model_name': 'paraphrase-MiniLM-L3-v2',
-                    'batch_size': 32,
-                    'use_gpu': None
+                "embeddings": {
+                    "model_name": "paraphrase-MiniLM-L3-v2",
+                    "batch_size": 32,
+                    "use_gpu": None,
                 },
-                'expansion': {
-                    'max_depth': 2,
-                    'batch_size': 10,
-                    'claim_timeout': 300,
-                    'max_retries': 3
+                "expansion": {
+                    "max_depth": 2,
+                    "batch_size": 10,
+                    "claim_timeout": 300,
+                    "max_retries": 3,
                 },
-                'logging': {
-                    'level': 'INFO',
-                    'file': 'logs/wikigr.log',
-                    'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-                }
+                "logging": {
+                    "level": "INFO",
+                    "file": "logs/wikigr.log",
+                    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                },
             }
 
     def get(self, key: str, default: Any = None) -> Any:
@@ -55,7 +56,7 @@ class Config:
         if self._config is None:
             self.load()
 
-        keys = key.split('.')
+        keys = key.split(".")
         value = self._config
 
         for k in keys:

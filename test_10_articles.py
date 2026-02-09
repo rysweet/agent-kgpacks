@@ -10,17 +10,17 @@ Validates complete pipeline:
 """
 
 import sys
-sys.path.insert(0, 'bootstrap')
 
-import kuzu
-import time
-import numpy as np
-from pathlib import Path
+sys.path.insert(0, "bootstrap")
+
 import shutil
+import time
+from pathlib import Path
 
+import numpy as np
+from schema.ryugraph_schema import create_schema
 from src.database import ArticleLoader
 from src.query import semantic_search
-from schema.ryugraph_schema import create_schema
 
 print("=" * 70)
 print("WikiGR 10-Article End-to-End Validation")
@@ -92,7 +92,9 @@ total_sections = loader.get_section_count()
 
 print(f"\nTotal articles: {total_articles}")
 print(f"Total sections: {total_sections}")
-print(f"Average sections per article: {total_sections / total_articles if total_articles > 0 else 0:.1f}")
+print(
+    f"Average sections per article: {total_sections / total_articles if total_articles > 0 else 0:.1f}"
+)
 
 # Article details
 result = loader.conn.execute("""
@@ -106,11 +108,15 @@ articles_df = result.get_as_df()
 print("\nArticle details:")
 print("-" * 70)
 for idx, row in articles_df.iterrows():
-    print(f"  {row['article']:<45} {row['sections']:>3} sections  {row['words']:>6} words  {row['category']}")
+    print(
+        f"  {row['article']:<45} {row['sections']:>3} sections  {row['words']:>6} words  {row['category']}"
+    )
 
 # Database size
 if Path(DB_PATH).is_dir():
-    db_size_mb = sum(f.stat().st_size for f in Path(DB_PATH).rglob('*') if f.is_file()) / (1024 * 1024)
+    db_size_mb = sum(f.stat().st_size for f in Path(DB_PATH).rglob("*") if f.is_file()) / (
+        1024 * 1024
+    )
 else:
     db_size_mb = 0
 
@@ -122,7 +128,11 @@ print("SEMANTIC SEARCH TESTS")
 print("=" * 70)
 
 test_queries = [
-    ("Artificial intelligence", "Computer Science", ["Python (programming language)", "Neural network (machine learning)"]),
+    (
+        "Artificial intelligence",
+        "Computer Science",
+        ["Python (programming language)", "Neural network (machine learning)"],
+    ),
     ("DNA", "Biology", ["Evolution"]),
     ("Quantum mechanics", "Physics", ["General relativity"]),
 ]
@@ -137,12 +147,7 @@ for query_title, category, expected in test_queries:
     print(f"\nQuery: '{query_title}' (category={category})")
 
     start = time.time()
-    results = semantic_search(
-        loader.conn,
-        query_title,
-        category=category,
-        top_k=5
-    )
+    results = semantic_search(loader.conn, query_title, category=category, top_k=5)
     elapsed = (time.time() - start) * 1000  # ms
 
     query_latencies.append(elapsed)
@@ -158,7 +163,7 @@ for query_title, category, expected in test_queries:
             print(f"       Section: {result['section_title']}")
 
         # Check if expected results are in top results
-        result_titles = [r['article_title'] for r in results]
+        result_titles = [r["article_title"] for r in results]
         matches = [e for e in expected if e in result_titles]
 
         if matches:
@@ -172,7 +177,7 @@ print("PERFORMANCE SUMMARY")
 print("=" * 70)
 
 if load_times:
-    print(f"\nArticle Loading:")
+    print("\nArticle Loading:")
     print(f"  Total articles attempted: {len(TEST_ARTICLES)}")
     print(f"  Successful: {len(successful_articles)}")
     print(f"  Failed: {len(failed_articles)}")
@@ -182,7 +187,7 @@ if load_times:
     print(f"  Load time (max): {np.max(load_times):.2f}s")
 
 if query_latencies:
-    print(f"\nQuery Performance:")
+    print("\nQuery Performance:")
     print(f"  Queries run: {len(query_latencies)}")
     print(f"  Latency (avg): {np.mean(query_latencies):.1f} ms")
     print(f"  Latency (p50): {np.percentile(query_latencies, 50):.1f} ms")
@@ -201,9 +206,15 @@ print("SUCCESS CRITERIA")
 print("=" * 70)
 
 success_criteria = {
-    "Articles loaded": (len(successful_articles) >= 8, f"{len(successful_articles)}/10 (target: 8+)"),
+    "Articles loaded": (
+        len(successful_articles) >= 8,
+        f"{len(successful_articles)}/10 (target: 8+)",
+    ),
     "Database size": (db_size_mb < 50, f"{db_size_mb:.1f} MB (target: <50 MB)"),
-    "P95 latency": (np.percentile(query_latencies, 95) < 500 if query_latencies else False, f"{np.percentile(query_latencies, 95) if query_latencies else 0:.1f} ms (target: <500ms)"),
+    "P95 latency": (
+        np.percentile(query_latencies, 95) < 500 if query_latencies else False,
+        f"{np.percentile(query_latencies, 95) if query_latencies else 0:.1f} ms (target: <500ms)",
+    ),
 }
 
 all_pass = True

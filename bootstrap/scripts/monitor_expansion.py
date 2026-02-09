@@ -13,18 +13,18 @@ Usage:
     python bootstrap/scripts/monitor_expansion.py --db data/wikigr.db --target 1000
 """
 
-import kuzu
-import time
-from datetime import datetime, timedelta
-import sys
 import argparse
-from typing import Optional
+import sys
+import time
+from datetime import datetime
+
+import kuzu
 
 
 class ExpansionMonitor:
     """Real-time expansion monitoring dashboard"""
 
-    def __init__(self, db_path: str, target_count: Optional[int] = None):
+    def __init__(self, db_path: str, target_count: int | None = None):
         """
         Initialize expansion monitor
 
@@ -58,7 +58,7 @@ class ExpansionMonitor:
         distribution = {}
         while result.has_next():
             row = result.get_next()
-            state = row[0] if row[0] else 'unknown'
+            state = row[0] if row[0] else "unknown"
             distribution[state] = int(row[1])
 
         return distribution
@@ -82,18 +82,21 @@ class ExpansionMonitor:
 
     def get_category_distribution(self, limit: int = 5) -> dict:
         """Get top categories by article count"""
-        result = self.conn.execute("""
+        result = self.conn.execute(
+            """
             MATCH (a:Article)
             WHERE a.expansion_state IN ['loaded', 'processed']
             RETURN a.category AS category, COUNT(a) AS count
             ORDER BY count DESC
             LIMIT $limit
-        """, {"limit": limit})
+        """,
+            {"limit": limit},
+        )
 
         categories = {}
         while result.has_next():
             row = result.get_next()
-            cat = row[0] if row[0] else 'Uncategorized'
+            cat = row[0] if row[0] else "Uncategorized"
             categories[cat] = int(row[1])
 
         return categories
@@ -120,7 +123,7 @@ class ExpansionMonitor:
         if seconds < 60:
             return f"{seconds:.0f}s"
         elif seconds < 3600:
-            return f"{seconds/60:.1f}m"
+            return f"{seconds / 60:.1f}m"
         else:
             hours = int(seconds / 3600)
             minutes = int((seconds % 3600) / 60)
@@ -131,7 +134,7 @@ class ExpansionMonitor:
         self.clear_screen()
 
         # Header
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print("=" * 80)
         print(f"WikiGR Expansion Monitor - {timestamp}")
         print("=" * 80)
@@ -148,7 +151,7 @@ class ExpansionMonitor:
         print("\n┌─ STATE DISTRIBUTION " + "─" * 57 + "┐")
 
         # Sort states in meaningful order
-        state_order = ['discovered', 'claimed', 'loaded', 'processed', 'failed']
+        state_order = ["discovered", "claimed", "loaded", "processed", "failed"]
         for state in state_order:
             count = state_dist.get(state, 0)
             if total_articles > 0:
@@ -191,7 +194,7 @@ class ExpansionMonitor:
                     eta_str = self.format_duration(eta_seconds)
                     print(f"│ ETA:      {eta_str:>10} (at current rate)" + " " * 38 + "│")
                 else:
-                    print(f"│ ETA:      calculating..." + " " * 49 + "│")
+                    print("│ ETA:      calculating..." + " " * 49 + "│")
 
             print("└" + "─" * 78 + "┘")
 
@@ -221,13 +224,17 @@ class ExpansionMonitor:
         print(f"│ Rate:         {rate_per_min:>10.1f} articles/minute" + " " * 35 + "│")
 
         if state_dist:
-            success_count = state_dist.get('loaded', 0) + state_dist.get('processed', 0)
-            failure_count = state_dist.get('failed', 0)
+            success_count = state_dist.get("loaded", 0) + state_dist.get("processed", 0)
+            failure_count = state_dist.get("failed", 0)
             total_processed = success_count + failure_count
 
             if total_processed > 0:
                 success_rate = 100 * success_count / total_processed
-                print(f"│ Success rate: {success_rate:>10.1f}% ({success_count}/{total_processed})" + " " * 35 + "│")
+                print(
+                    f"│ Success rate: {success_rate:>10.1f}% ({success_count}/{total_processed})"
+                    + " " * 35
+                    + "│"
+                )
 
         print("└" + "─" * 78 + "┘")
 
@@ -272,27 +279,23 @@ def main():
         description="Real-time monitoring dashboard for WikiGR expansion"
     )
     parser.add_argument(
-        "--db",
-        default="data/wikigr.db",
-        help="Path to Kuzu database (default: data/wikigr.db)"
+        "--db", default="data/wikigr.db", help="Path to Kuzu database (default: data/wikigr.db)"
     )
     parser.add_argument(
-        "--interval",
-        type=int,
-        default=30,
-        help="Refresh interval in seconds (default: 30)"
+        "--interval", type=int, default=30, help="Refresh interval in seconds (default: 30)"
     )
     parser.add_argument(
         "--target",
         type=int,
         default=None,
-        help="Target article count for progress tracking (optional)"
+        help="Target article count for progress tracking (optional)",
     )
 
     args = parser.parse_args()
 
     # Validate database exists
     from pathlib import Path
+
     if not Path(args.db).exists():
         print(f"Error: Database not found at {args.db}")
         sys.exit(1)

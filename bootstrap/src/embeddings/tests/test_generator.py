@@ -9,10 +9,11 @@ Tests verify the module fulfills its contract:
 - Handles errors appropriately
 """
 
-import pytest
-import numpy as np
 import sys
 from pathlib import Path
+
+import numpy as np
+import pytest
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -35,19 +36,19 @@ class TestEmbeddingGenerator:
         return [
             "Machine learning is a field of artificial intelligence",
             "Deep learning uses neural networks",
-            "Python is a programming language"
+            "Python is a programming language",
         ]
 
     def test_initialization_cpu(self):
         """Test generator initializes with CPU device."""
         gen = EmbeddingGenerator(use_gpu=False)
-        assert gen.device == 'cpu'
-        assert gen.model_name == 'paraphrase-MiniLM-L3-v2'
+        assert gen.device == "cpu"
+        assert gen.model_name == "paraphrase-MiniLM-L3-v2"
 
     def test_initialization_auto_detect(self):
         """Test generator auto-detects device."""
         gen = EmbeddingGenerator(use_gpu=None)
-        assert gen.device in ['cpu', 'cuda']
+        assert gen.device in ["cpu", "cuda"]
 
     def test_generate_shape(self, generator, sample_texts):
         """Test embeddings have correct shape (N, 384)."""
@@ -140,9 +141,9 @@ class TestEmbeddingGenerator:
     def test_repr(self, generator):
         """Test string representation."""
         repr_str = repr(generator)
-        assert 'EmbeddingGenerator' in repr_str
-        assert 'paraphrase-MiniLM-L3-v2' in repr_str
-        assert 'cpu' in repr_str
+        assert "EmbeddingGenerator" in repr_str
+        assert "paraphrase-MiniLM-L3-v2" in repr_str
+        assert "cpu" in repr_str
 
     def test_variance(self, generator):
         """Test embeddings have reasonable variance (not all same)."""

@@ -1,0 +1,62 @@
+# Pre-commit hooks for WikiGR
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Ruff - Fast Python linter and formatter (replaces black, isort, flake8)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        types_or: [python, pyi]
+
+      # Run the formatter
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # Pyright - Type checking (only on src, not test scripts)
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.390
+    hooks:
+      - id: pyright
+        files: ^bootstrap/src/
+        additional_dependencies:
+          - kuzu>=0.11.3
+          - sentence-transformers>=5.2.0
+          - requests>=2.32.0
+          - pandas>=3.0.0
+          - numpy>=2.4.0
+
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: mixed-line-ending
+
+  # Pytest with coverage (disabled by default - run manually with 'pre-commit run pytest-check')
+  # - repo: local
+  #   hooks:
+  #     - id: pytest-check
+  #       name: pytest-check
+  #       entry: pytest
+  #       language: system
+  #       pass_filenames: false
+  #       always_run: false
+  #       args: [
+  #         "bootstrap/src/*/tests",
+  #         "--cov=bootstrap/src",
+  #         "--cov-report=term-missing:skip-covered",
+  #         "--cov-fail-under=50",
+  #         "-q"
+  #       ]

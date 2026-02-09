@@ -2,19 +2,19 @@
 """Test the expansion orchestrator"""
 
 import sys
-sys.path.insert(0, 'bootstrap')
+
+sys.path.insert(0, "bootstrap")
 
 import logging
-from pathlib import Path
 import shutil
+from pathlib import Path
 
-from src.expansion import RyuGraphOrchestrator
 from schema.ryugraph_schema import create_schema
+from src.expansion import RyuGraphOrchestrator
 
 # Set up logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 print("=" * 70)
@@ -38,11 +38,7 @@ print("✓ Schema ready")
 
 # Initialize orchestrator
 print("\nInitializing orchestrator...")
-orch = RyuGraphOrchestrator(
-    db_path=db_path,
-    max_depth=2,
-    batch_size=5
-)
+orch = RyuGraphOrchestrator(db_path=db_path, max_depth=2, batch_size=5)
 print("✓ Orchestrator initialized")
 
 # Test 1: Initialize seeds
@@ -50,11 +46,7 @@ print("\n" + "=" * 70)
 print("TEST 1: Initialize Seeds")
 print("=" * 70)
 
-seeds = [
-    "Python (programming language)",
-    "Artificial intelligence",
-    "Machine learning"
-]
+seeds = ["Python (programming language)", "Artificial intelligence", "Machine learning"]
 
 session_id = orch.initialize_seeds(seeds, category="Computer Science")
 print(f"✓ Initialized {len(seeds)} seeds (session: {session_id})")
@@ -66,7 +58,7 @@ print("=" * 70)
 
 stats = orch.expand_to_target(target_count=15, max_iterations=30)
 
-print(f"\n" + "=" * 70)
+print("\n" + "=" * 70)
 print("EXPANSION RESULTS")
 print("=" * 70)
 print(f"Iterations: {stats['iterations']}")
@@ -77,7 +69,7 @@ print(f"Failed: {stats.get('failed', 0)}")
 print(f"Discovered (queued): {stats.get('discovered', 0)}")
 print(f"Claimed (active): {stats.get('claimed', 0)}")
 
-total_loaded = stats.get('loaded', 0) + stats.get('processed', 0)
+total_loaded = stats.get("loaded", 0) + stats.get("processed", 0)
 print(f"\nTotal loaded: {total_loaded}")
 
 if total_loaded >= 15:
@@ -94,13 +86,13 @@ result = orch.conn.execute("""
     MATCH (a:Article)
     RETURN COUNT(a) AS total_articles
 """)
-total = result.get_as_df().iloc[0]['total_articles']
+total = result.get_as_df().iloc[0]["total_articles"]
 
 result = orch.conn.execute("""
     MATCH (s:Section)
     RETURN COUNT(s) AS total_sections
 """)
-sections = result.get_as_df().iloc[0]['total_sections']
+sections = result.get_as_df().iloc[0]["total_sections"]
 
 print(f"Total articles: {total}")
 print(f"Total sections: {sections}")

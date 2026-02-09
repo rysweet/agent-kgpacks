@@ -9,21 +9,21 @@ Tests different optimization strategies:
 """
 
 import sys
-sys.path.insert(0, '..')
 
-import time
+sys.path.insert(0, "..")
+
 import concurrent.futures
-from typing import List
 import logging
+import time
 
-from src.wikipedia import WikipediaAPIClient
 from src.embeddings import EmbeddingGenerator
+from src.wikipedia import WikipediaAPIClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def test_sequential_fetching(titles: List[str]) -> float:
+def test_sequential_fetching(titles: list[str]) -> float:
     """Test sequential Wikipedia fetching"""
     client = WikipediaAPIClient()
 
@@ -42,7 +42,7 @@ def test_sequential_fetching(titles: List[str]) -> float:
     return elapsed, len(articles)
 
 
-def test_parallel_fetching(titles: List[str], max_workers: int = 5) -> float:
+def test_parallel_fetching(titles: list[str], max_workers: int = 5) -> float:
     """Test parallel Wikipedia fetching"""
     client = WikipediaAPIClient()
 
@@ -128,13 +128,13 @@ def main():
     print("OPTIMIZATION SUMMARY")
     print("=" * 70)
     print(f"\n✓ Parallel fetching: {speedup:.2f}x faster than sequential")
-    print(f"✓ Optimal batch size: 32-64 for embeddings")
+    print("✓ Optimal batch size: 32-64 for embeddings")
     print("\nRecommendations:")
     print("  1. Use 5 parallel workers for Wikipedia fetching")
     print("  2. Use batch_size=32 for embeddings")
     print("  3. Implement bulk database inserts (10 articles per transaction)")
     print("\nExpected speedup for 1K articles:")
-    print(f"  Before: ~75 minutes")
+    print("  Before: ~75 minutes")
     print(f"  After: ~{75 / speedup:.0f} minutes")
 
 

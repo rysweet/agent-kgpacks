@@ -1,0 +1,38 @@
+{
+  "include": [
+    "bootstrap/src",
+    "bootstrap/schema",
+    "bootstrap/scripts"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+    "**/.eggs",
+    "**/examples",
+    "**/tests"
+  ],
+  "strict": [],
+  "typeCheckingMode": "off",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "reportUnusedImport": "warning",
+  "reportUnusedClass": "warning",
+  "reportUnusedFunction": "warning",
+  "reportUnusedVariable": "warning",
+  "reportDuplicateImport": "warning",
+  "pythonVersion": "3.10",
+  "pythonPlatform": "Linux",
+  "executionEnvironments": [
+    {
+      "root": "bootstrap/src",
+      "pythonVersion": "3.10",
+      "extraPaths": []
+    }
+  ],
+  "venvPath": ".",
+  "venv": "venv"
+}

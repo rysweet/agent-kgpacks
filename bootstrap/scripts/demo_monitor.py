@@ -8,7 +8,8 @@ This demonstrates how the monitor tracks changing metrics over time.
 
 import sys
 import time
-sys.path.insert(0, '/home/azureuser/src/wikigr/bootstrap/scripts')
+
+sys.path.insert(0, "/home/azureuser/src/wikigr/bootstrap/scripts")
 
 from monitor_expansion import ExpansionMonitor
 
@@ -27,11 +28,11 @@ def demo_monitor_with_static_data():
     input("Press Enter to start...")
 
     # Create monitor instance
-    monitor = ExpansionMonitor('data/test_100_articles.db', target_count=1000)
+    monitor = ExpansionMonitor("data/test_100_articles.db", target_count=1000)
 
     # Show 3 refresh cycles
     for i in range(3):
-        print(f"\n--- Refresh cycle {i+1}/3 ---")
+        print(f"\n--- Refresh cycle {i + 1}/3 ---")
         monitor.display()
         if i < 2:
             time.sleep(5)
@@ -47,7 +48,7 @@ def show_monitor_features():
     print("MONITOR FEATURES DEMONSTRATION")
     print("=" * 80)
 
-    monitor = ExpansionMonitor('data/test_10_articles.db', target_count=50)
+    monitor = ExpansionMonitor("data/test_10_articles.db", target_count=50)
 
     print("\n1. State Distribution")
     print("-" * 40)

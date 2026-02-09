@@ -10,8 +10,9 @@ Demonstrates:
 """
 
 import sys
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -34,7 +35,7 @@ def main():
         "Machine learning is a subset of artificial intelligence",
         "Deep learning uses neural networks with many layers",
         "Python is a popular programming language",
-        "The quick brown fox jumps over the lazy dog"
+        "The quick brown fox jumps over the lazy dog",
     ]
 
     embeddings = gen.generate(texts, show_progress=False)

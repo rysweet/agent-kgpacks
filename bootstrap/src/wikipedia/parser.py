@@ -6,10 +6,9 @@ stripping formatting, and filtering by content length.
 """
 
 import re
-from typing import List, Dict
 
 
-def parse_sections(wikitext: str) -> List[Dict[str, any]]:
+def parse_sections(wikitext: str) -> list[dict[str, any]]:
     """
     Extract H2 and H3 sections from wikitext.
 
@@ -58,7 +57,7 @@ def parse_sections(wikitext: str) -> List[Dict[str, any]]:
     # \s*               - Optional whitespace
     # \1                - Same number of equals signs as opening
     # $                 - End of line
-    heading_pattern = r'^(={2,3})\s*(.+?)\s*\1$'
+    heading_pattern = r"^(={2,3})\s*(.+?)\s*\1$"
 
     # Find all headings with their positions
     for match in re.finditer(heading_pattern, wikitext, re.MULTILINE):
@@ -66,30 +65,26 @@ def parse_sections(wikitext: str) -> List[Dict[str, any]]:
         title = match.group(2).strip()
         start_pos = match.end()
 
-        sections.append({
-            'level': level,
-            'title': title,
-            'start_pos': start_pos,
-            'content': ''
-        })
+        sections.append({"level": level, "title": title, "start_pos": start_pos, "content": ""})
 
     # Extract content between sections
     for i, section in enumerate(sections):
-        start = section['start_pos']
+        start = section["start_pos"]
         # End is either next section start or end of wikitext
-        end = sections[i + 1]['start_pos'] - len(sections[i + 1]['title']) - 10 if i + 1 < len(sections) else len(wikitext)
+        end = (
+            sections[i + 1]["start_pos"] - len(sections[i + 1]["title"]) - 10
+            if i + 1 < len(sections)
+            else len(wikitext)
+        )
 
         raw_content = wikitext[start:end].strip()
         cleaned_content = strip_wikitext(raw_content)
 
-        section['content'] = cleaned_content
-        del section['start_pos']  # Remove internal tracking field
+        section["content"] = cleaned_content
+        del section["start_pos"]  # Remove internal tracking field
 
     # Filter sections with content >= 100 characters
-    filtered_sections = [
-        section for section in sections
-        if len(section['content']) >= 100
-    ]
+    filtered_sections = [section for section in sections if len(section["content"]) >= 100]
 
     return filtered_sections
 
@@ -118,45 +113,45 @@ def strip_wikitext(text: str) -> str:
         'This is a example with  markup.'
     """
     # Remove HTML comments
-    text = re.sub(r'<!--.*?-->', '', text, flags=re.DOTALL)
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
 
     # Remove templates (nested braces supported via recursive pattern)
     # Start with innermost templates and work outward
-    while '{{' in text:
+    while "{{" in text:
         # Match {{...}} non-greedily, avoiding nested braces issues
         old_text = text
-        text = re.sub(r'\{\{[^{}]*\}\}', ' ', text)
+        text = re.sub(r"\{\{[^{}]*\}\}", " ", text)
         # Break if no more changes (avoid infinite loop on malformed templates)
         if text == old_text:
             break
 
     # Remove references with content: <ref>...</ref>
-    text = re.sub(r'<ref[^>]*>.*?</ref>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"<ref[^>]*>.*?</ref>", "", text, flags=re.DOTALL | re.IGNORECASE)
 
     # Remove self-closing references: <ref name="..." />
-    text = re.sub(r'<ref[^/>]*/?>', '', text, flags=re.IGNORECASE)
+    text = re.sub(r"<ref[^/>]*/?>", "", text, flags=re.IGNORECASE)
 
     # Remove file/image links: [[File:...]] or [[Image:...]]
-    text = re.sub(r'\[\[(File|Image):[^\]]+\]\]', '', text, flags=re.IGNORECASE)
+    text = re.sub(r"\[\[(File|Image):[^\]]+\]\]", "", text, flags=re.IGNORECASE)
 
     # Convert piped links to display text: [[Article|Display]] -> Display
-    text = re.sub(r'\[\[[^\]|]+\|([^\]]+)\]\]', r'\1', text)
+    text = re.sub(r"\[\[[^\]|]+\|([^\]]+)\]\]", r"\1", text)
 
     # Convert simple links to text: [[Article]] -> Article
-    text = re.sub(r'\[\[([^\]]+)\]\]', r'\1', text)
+    text = re.sub(r"\[\[([^\]]+)\]\]", r"\1", text)
 
     # Remove HTML tags: <tag>...</tag> or <tag />
-    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r"<[^>]+>", "", text)
 
     # Clean up multiple spaces and newlines
-    text = re.sub(r'\n\s*\n', '\n', text)  # Multiple newlines -> single
-    text = re.sub(r' +', ' ', text)  # Multiple spaces -> single
+    text = re.sub(r"\n\s*\n", "\n", text)  # Multiple newlines -> single
+    text = re.sub(r" +", " ", text)  # Multiple spaces -> single
 
     return text.strip()
 
 
 # Test code
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Sample wikitext from a typical Wikipedia article
     sample_wikitext = """
 == Introduction ==
@@ -223,5 +218,7 @@ Too short.
         result = strip_wikitext(input_text)
         print(f"{i}. Input:  {input_text}")
         print(f"   Output: {result}")
-        print(f"   Status: {'✓' if expected_pattern in result or result.strip() == expected_pattern.strip() else '✗'}")
+        print(
+            f"   Status: {'✓' if expected_pattern in result or result.strip() == expected_pattern.strip() else '✗'}"
+        )
         print()

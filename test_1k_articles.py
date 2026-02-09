@@ -11,27 +11,25 @@ Full-scale test of WikiGR system:
 """
 
 import sys
-sys.path.insert(0, 'bootstrap')
+
+sys.path.insert(0, "bootstrap")
 
 import json
 import logging
-from pathlib import Path
 import shutil
 import time
-import numpy as np
+from pathlib import Path
 
+import numpy as np
+from schema.ryugraph_schema import create_schema
 from src.expansion import RyuGraphOrchestrator
 from src.query import semantic_search
-from schema.ryugraph_schema import create_schema
 
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/1k_expansion.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("logs/1k_expansion.log"), logging.StreamHandler()],
 )
 
 print("=" * 70)
@@ -48,7 +46,7 @@ print("\n1. Loading seeds...")
 with open(SEEDS_FILE) as f:
     seed_data = json.load(f)
 
-seeds = seed_data['seeds']
+seeds = seed_data["seeds"]
 print(f"   ✓ Loaded {len(seeds)} seeds from {len(set(s['category'] for s in seeds))} categories")
 
 # Create fresh database
@@ -69,20 +67,24 @@ print("\n3. Initializing orchestrator...")
 orch = RyuGraphOrchestrator(
     db_path=DB_PATH,
     max_depth=2,
-    batch_size=20  # Larger batch for efficiency
+    batch_size=20,  # Larger batch for efficiency
 )
 print("   ✓ Orchestrator initialized")
 
 # Initialize seeds
 print(f"\n4. Initializing {len(seeds)} seeds...")
 for seed in seeds:
-    result = orch.conn.execute("""
+    result = orch.conn.execute(
+        """
         MATCH (a:Article {title: $title})
         RETURN COUNT(a) AS count
-    """, {"title": seed['title']})
+    """,
+        {"title": seed["title"]},
+    )
 
-    if result.get_as_df().iloc[0]['count'] == 0:
-        orch.conn.execute("""
+    if result.get_as_df().iloc[0]["count"] == 0:
+        orch.conn.execute(
+            """
             CREATE (a:Article {
                 title: $title,
                 category: $category,
@@ -93,10 +95,9 @@ for seed in seeds:
                 processed_at: NULL,
                 retry_count: 0
             })
-        """, {
-            "title": seed['title'],
-            "category": seed['category']
-        })
+        """,
+            {"title": seed["title"], "category": seed["category"]},
+        )
 
 print(f"   ✓ {len(seeds)} seeds initialized")
 
@@ -119,15 +120,15 @@ print(f"Iterations: {stats['iterations']}")
 
 # Database statistics
 result = orch.conn.execute("MATCH (a:Article) WHERE a.word_count > 0 RETURN COUNT(a) AS count")
-loaded = result.get_as_df().iloc[0]['count']
+loaded = result.get_as_df().iloc[0]["count"]
 
 result = orch.conn.execute("MATCH (s:Section) RETURN COUNT(s) AS count")
-sections = result.get_as_df().iloc[0]['count']
+sections = result.get_as_df().iloc[0]["count"]
 
 result = orch.conn.execute("MATCH (a:Article) RETURN COUNT(a) AS count")
-total = result.get_as_df().iloc[0]['count']
+total = result.get_as_df().iloc[0]["count"]
 
-print(f"\nDatabase Statistics:")
+print("\nDatabase Statistics:")
 print(f"  Articles loaded: {loaded}")
 print(f"  Total sections: {sections}")
 print(f"  Avg sections/article: {sections/loaded if loaded > 0 else 0:.1f}")
@@ -146,7 +147,9 @@ for _, row in result.get_as_df().iterrows():
 
 # Database size
 if Path(DB_PATH).is_dir():
-    db_size_mb = sum(f.stat().st_size for f in Path(DB_PATH).rglob('*') if f.is_file()) / (1024 * 1024)
+    db_size_mb = sum(f.stat().st_size for f in Path(DB_PATH).rglob("*") if f.is_file()) / (
+        1024 * 1024
+    )
 else:
     db_size_mb = 0
 
@@ -170,7 +173,7 @@ precision_scores = []
 
 for query_title, category in test_queries:
     if loaded < 100:
-        print(f"\n⚠ Skipping queries (not enough articles loaded)")
+        print("\n⚠ Skipping queries (not enough articles loaded)")
         break
 
     print(f"\nQuery: '{query_title}'")
@@ -185,7 +188,7 @@ for query_title, category in test_queries:
     print(f"  Results: {len(results)}")
 
     if results:
-        print(f"  Top 3:")
+        print("  Top 3:")
         for r in results[:3]:
             print(f"    {r['rank']}. {r['article_title']}: {r['similarity']:.3f}")
 
@@ -194,7 +197,7 @@ if query_latencies:
     print("\n" + "=" * 70)
     print("PERFORMANCE SUMMARY")
     print("=" * 70)
-    print(f"\nQuery Latency:")
+    print("\nQuery Latency:")
     print(f"  Average: {np.mean(query_latencies):.1f} ms")
     print(f"  P50: {np.percentile(query_latencies, 50):.1f} ms")
     print(f"  P95: {np.percentile(query_latencies, 95):.1f} ms")
@@ -212,8 +215,10 @@ print("=" * 70)
 criteria = {
     "Articles loaded": (loaded >= 800, f"{loaded}/1000 (target: ≥800)"),
     "Database size": (db_size_mb < 1000, f"{db_size_mb:.1f} MB (target: <1000 MB)"),
-    "P95 latency": (np.percentile(query_latencies, 95) < 500 if query_latencies else False,
-                    f"{np.percentile(query_latencies, 95) if query_latencies else 0:.1f} ms (target: <500ms)"),
+    "P95 latency": (
+        np.percentile(query_latencies, 95) < 500 if query_latencies else False,
+        f"{np.percentile(query_latencies, 95) if query_latencies else 0:.1f} ms (target: <500ms)",
+    ),
 }
 
 all_pass = True
@@ -231,5 +236,5 @@ else:
     print("⚠ Some criteria not met - review results")
 print("=" * 70)
 
-print(f"\nDetailed logs: logs/1k_expansion.log")
+print("\nDetailed logs: logs/1k_expansion.log")
 print(f"Database: {DB_PATH}")

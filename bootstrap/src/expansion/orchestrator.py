@@ -9,16 +9,14 @@ Coordinates the entire expansion process:
 - Expand to target count
 """
 
-import kuzu
-from typing import List, Optional
 import logging
-from datetime import datetime
 import time
 
-from .work_queue import WorkQueueManager
-from .processor import ArticleProcessor
-from .link_discovery import LinkDiscovery
+import kuzu
 
+from .link_discovery import LinkDiscovery
+from .processor import ArticleProcessor
+from .work_queue import WorkQueueManager
 
 logger = logging.getLogger(__name__)
 
@@ -27,11 +25,7 @@ class RyuGraphOrchestrator:
     """Coordinates Wikipedia knowledge graph expansion"""
 
     def __init__(
-        self,
-        db_path: str,
-        max_depth: int = 2,
-        batch_size: int = 10,
-        claim_timeout: int = 300
+        self, db_path: str, max_depth: int = 2, batch_size: int = 10, claim_timeout: int = 300
     ):
         """
         Initialize expansion orchestrator
@@ -60,7 +54,7 @@ class RyuGraphOrchestrator:
         logger.info(f"  Max depth: {max_depth}")
         logger.info(f"  Batch size: {batch_size}")
 
-    def initialize_seeds(self, seed_titles: List[str], category: str = "General") -> str:
+    def initialize_seeds(self, seed_titles: list[str], category: str = "General") -> str:
         """
         Initialize expansion with seed articles
 
@@ -79,17 +73,21 @@ class RyuGraphOrchestrator:
 
         for title in seed_titles:
             # Check if article already exists
-            result = self.conn.execute("""
+            result = self.conn.execute(
+                """
                 MATCH (a:Article {title: $title})
                 RETURN COUNT(a) AS count
-            """, {"title": title})
+            """,
+                {"title": title},
+            )
 
-            if result.get_as_df().iloc[0]['count'] > 0:
+            if result.get_as_df().iloc[0]["count"] > 0:
                 logger.warning(f"  Seed already exists: {title}, skipping")
                 continue
 
             # Insert as discovered at depth 0
-            self.conn.execute("""
+            self.conn.execute(
+                """
                 CREATE (a:Article {
                     title: $title,
                     category: $category,
@@ -100,10 +98,9 @@ class RyuGraphOrchestrator:
                     processed_at: NULL,
                     retry_count: 0
                 })
-            """, {
-                "title": title,
-                "category": category
-            })
+            """,
+                {"title": title, "category": category},
+            )
 
             logger.info(f"  ✓ Initialized seed: {title}")
 
@@ -111,11 +108,7 @@ class RyuGraphOrchestrator:
 
         return session_id
 
-    def expand_to_target(
-        self,
-        target_count: int,
-        max_iterations: Optional[int] = None
-    ) -> dict:
+    def expand_to_target(self, target_count: int, max_iterations: int | None = None) -> dict:
         """
         Expand database to target number of loaded articles
 
@@ -150,7 +143,7 @@ class RyuGraphOrchestrator:
                 WHERE a.word_count > 0
                 RETURN COUNT(a) AS count
             """)
-            current_count = result.get_as_df().iloc[0]['count']
+            current_count = result.get_as_df().iloc[0]["count"]
 
             logger.info(f"\nIteration {iteration}: {current_count}/{target_count} loaded")
 
@@ -171,7 +164,7 @@ class RyuGraphOrchestrator:
                 logger.warning("  No more work available in queue")
 
                 # Check if we have undiscovered links
-                discovered_count = stats.get('discovered', 0)
+                discovered_count = stats.get("discovered", 0)
                 if discovered_count == 0:
                     logger.warning("  No discovered articles remaining - expansion stalled")
                     break
@@ -184,8 +177,8 @@ class RyuGraphOrchestrator:
 
             # Process batch
             for article_info in batch:
-                title = article_info['title']
-                depth = article_info['expansion_depth']
+                title = article_info["title"]
+                depth = article_info["expansion_depth"]
 
                 logger.info(f"  Processing: {title} (depth={depth})")
 
@@ -195,13 +188,13 @@ class RyuGraphOrchestrator:
                 # Process article
                 success, links, error = self.processor.process_article(
                     title=title,
-                    category=article_info.get('category', 'General'),
-                    expansion_depth=depth
+                    category=article_info.get("category", "General"),
+                    expansion_depth=depth,
                 )
 
                 if success:
                     # Advance to loaded
-                    self.work_queue.advance_state(title, 'loaded')
+                    self.work_queue.advance_state(title, "loaded")
                     logger.info(f"    ✓ Loaded ({len(links)} links)")
 
                     # Discover new links (if not at max depth)
@@ -210,17 +203,17 @@ class RyuGraphOrchestrator:
                             source_title=title,
                             links=links,
                             current_depth=depth,
-                            max_depth=self.max_depth
+                            max_depth=self.max_depth,
                         )
 
                         if discovered > 0:
                             logger.info(f"    ✓ Discovered {discovered} new articles")
 
                         # Mark as processed
-                        self.work_queue.advance_state(title, 'processed')
+                        self.work_queue.advance_state(title, "processed")
                     else:
-                        logger.info(f"    Max depth reached, not discovering links")
-                        self.work_queue.advance_state(title, 'processed')
+                        logger.info("    Max depth reached, not discovering links")
+                        self.work_queue.advance_state(title, "processed")
 
                 else:
                     # Handle failure
@@ -234,8 +227,8 @@ class RyuGraphOrchestrator:
         # Final statistics
         duration = time.time() - start_time
         final_stats = self.work_queue.get_queue_stats()
-        final_stats['iterations'] = iteration
-        final_stats['duration_seconds'] = duration
+        final_stats["iterations"] = iteration
+        final_stats["duration_seconds"] = duration
 
         logger.info(f"\nExpansion complete in {duration:.1f}s ({iteration} iterations)")
         logger.info(f"Final stats: {final_stats}")
@@ -266,22 +259,15 @@ def main():
 
     # Create schema
     from bootstrap.schema.ryugraph_schema import create_schema
+
     create_schema(db_path)
 
     # Initialize orchestrator
-    orch = RyuGraphOrchestrator(
-        db_path=db_path,
-        max_depth=2,
-        batch_size=5
-    )
+    orch = RyuGraphOrchestrator(db_path=db_path, max_depth=2, batch_size=5)
 
     # Test 1: Initialize seeds
     print("\n1. Initializing seeds...")
-    seeds = [
-        "Python (programming language)",
-        "Artificial intelligence",
-        "Machine learning"
-    ]
+    seeds = ["Python (programming language)", "Artificial intelligence", "Machine learning"]
 
     session_id = orch.initialize_seeds(seeds, category="Computer Science")
     print(f"   ✓ Initialized {len(seeds)} seeds (session: {session_id})")
@@ -290,7 +276,7 @@ def main():
     print("\n2. Expanding to 10 articles...")
     stats = orch.expand_to_target(target_count=10, max_iterations=20)
 
-    print(f"\n" + "=" * 70)
+    print("\n" + "=" * 70)
     print("EXPANSION RESULTS")
     print("=" * 70)
     print(f"Iterations: {stats['iterations']}")
@@ -311,12 +297,12 @@ def main():
 
 if __name__ == "__main__":
     import sys
-    sys.path.insert(0, 'bootstrap')
+
+    sys.path.insert(0, "bootstrap")
 
     # Set up logging
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     main()

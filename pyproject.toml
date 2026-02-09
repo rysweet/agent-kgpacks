@@ -1,0 +1,174 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wikigr"
+version = "0.1.0"
+description = "Wikipedia Knowledge Graph with semantic search and graph traversal"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "WikiGR Contributors" }
+]
+keywords = [
+    "wikipedia",
+    "knowledge-graph",
+    "semantic-search",
+    "vector-search",
+    "graph-database",
+    "kuzu",
+    "embeddings"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Database",
+]
+
+dependencies = [
+    "kuzu>=0.11.3,<0.12.0",
+    "sentence-transformers>=5.2.0,<6.0.0",
+    "requests>=2.32.0,<3.0.0",
+    "pandas>=3.0.0,<4.0.0",
+    "numpy>=2.4.0,<3.0.0",
+    "torch>=2.10.0,<3.0.0",
+    "transformers>=5.1.0,<6.0.0",
+    "safetensors>=0.7.0,<1.0.0",
+    "python-dateutil>=2.9.0,<3.0.0",
+    "tqdm>=4.67.0,<5.0.0",
+    "pyyaml>=6.0.0,<7.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0,<9.0.0",
+    "pytest-cov>=6.0.0,<7.0.0",
+    "pytest-asyncio>=0.24.0,<1.0.0",
+    "black>=24.10.0,<25.0.0",
+    "ruff>=0.8.0,<1.0.0",
+    "pyright>=1.1.0,<2.0.0",
+    "mypy>=1.13.0,<2.0.0",
+    "pre-commit>=4.0.0,<5.0.0",
+]
+
+test = [
+    "pytest>=8.3.0,<9.0.0",
+    "pytest-cov>=6.0.0,<7.0.0",
+    "pytest-asyncio>=0.24.0,<1.0.0",
+]
+
+[project.scripts]
+wikigr-monitor = "bootstrap.scripts.monitor_expansion:main"
+wikigr-schema = "bootstrap.schema.ryugraph_schema:main"
+
+[project.urls]
+Homepage = "https://github.com/rysweet/wikigr"
+Repository = "https://github.com/rysweet/wikigr"
+Documentation = "https://github.com/rysweet/wikigr/tree/main/bootstrap/docs"
+Issues = "https://github.com/rysweet/wikigr/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["bootstrap"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function calls in argument defaults
+    "B905",  # zip strict argument
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # Unused imports
+"test_*.py" = ["ARG001", "ARG002"]  # Unused function arguments in tests
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.pyright]
+include = ["bootstrap/src", "bootstrap/schema", "bootstrap/scripts"]
+exclude = [
+    "**/__pycache__",
+    "**/node_modules",
+    ".venv",
+    "venv",
+    "build",
+    "dist"
+]
+strict = ["bootstrap/src"]
+typeCheckingMode = "basic"
+reportMissingImports = true
+reportMissingTypeStubs = false
+pythonVersion = "3.10"
+pythonPlatform = "Linux"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["bootstrap/src/*/tests", "bootstrap/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--cov=bootstrap/src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=70",
+]
+
+[tool.coverage.run]
+source = ["bootstrap/src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+
+[[tool.mypy.overrides]]
+module = [
+    "kuzu.*",
+    "sentence_transformers.*",
+]
+ignore_missing_imports = true

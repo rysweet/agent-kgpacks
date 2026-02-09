@@ -2,16 +2,17 @@
 """Final validation test with 20 articles"""
 
 import sys
-sys.path.insert(0, 'bootstrap')
+
+sys.path.insert(0, "bootstrap")
 
 import logging
-from pathlib import Path
 import shutil
 import time
+from pathlib import Path
 
+from schema.ryugraph_schema import create_schema
 from src.expansion import RyuGraphOrchestrator
 from src.query import semantic_search
-from schema.ryugraph_schema import create_schema
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -45,7 +46,8 @@ seeds = [
 ]
 
 for title, category in seeds:
-    orch.conn.execute("""
+    orch.conn.execute(
+        """
         CREATE (a:Article {
             title: $title,
             category: $category,
@@ -56,7 +58,9 @@ for title, category in seeds:
             processed_at: NULL,
             retry_count: 0
         })
-    """, {"title": title, "category": category})
+    """,
+        {"title": title, "category": category},
+    )
 
 print(f"   ✓ {len(seeds)} seeds initialized")
 
@@ -74,13 +78,13 @@ print(f"Iterations: {stats['iterations']}")
 
 # Check actual content
 result = orch.conn.execute("MATCH (a:Article) WHERE a.word_count > 0 RETURN COUNT(a) AS count")
-loaded = result.get_as_df().iloc[0]['count']
+loaded = result.get_as_df().iloc[0]["count"]
 
 result = orch.conn.execute("MATCH (s:Section) RETURN COUNT(s) AS count")
-sections = result.get_as_df().iloc[0]['count']
+sections = result.get_as_df().iloc[0]["count"]
 
 result = orch.conn.execute("MATCH (a:Article) RETURN COUNT(a) AS count")
-total = result.get_as_df().iloc[0]['count']
+total = result.get_as_df().iloc[0]["count"]
 
 print(f"\nArticles with content: {loaded}")
 print(f"Total sections: {sections}")

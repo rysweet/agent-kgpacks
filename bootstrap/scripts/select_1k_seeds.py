@@ -145,11 +145,7 @@ def main():
 
     for category, seeds in SEEDS.items():
         for seed in seeds:
-            all_seeds.append({
-                "title": seed,
-                "category": category,
-                "expansion_depth": 0
-            })
+            all_seeds.append({"title": seed, "category": category, "expansion_depth": 0})
         category_counts[category] = len(seeds)
 
     print(f"\nTotal seeds: {len(all_seeds)}")
@@ -164,20 +160,20 @@ def main():
             "categories": len(SEEDS),
             "per_category": 10,
             "purpose": "1K article expansion test",
-            "created_date": "2026-02-08"
+            "created_date": "2026-02-08",
         },
-        "seeds": all_seeds
+        "seeds": all_seeds,
     }
 
     output_path = Path("bootstrap/data/seeds_1k.json")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         json.dump(output, f, indent=2)
 
     print(f"\n✓ Seeds saved to: {output_path}")
-    print(f"\nReady for 1K expansion:")
-    print(f"  python test_1k_articles.py")
+    print("\nReady for 1K expansion:")
+    print("  python test_1k_articles.py")
 
 
 if __name__ == "__main__":

@@ -14,10 +14,9 @@ Usage:
     python quickstart.py
 """
 
-import sys
 import os
 import shutil
-from pathlib import Path
+import sys
 
 print("=" * 60)
 print("WikiGR Quickstart Validation")
@@ -28,11 +27,11 @@ print("\n1. Checking dependencies...")
 
 missing_deps = []
 required_packages = {
-    'kuzu': 'kuzu',
-    'sentence_transformers': 'sentence-transformers',
-    'requests': 'requests',
-    'pandas': 'pandas',
-    'numpy': 'numpy'
+    "kuzu": "kuzu",
+    "sentence_transformers": "sentence-transformers",
+    "requests": "requests",
+    "pandas": "pandas",
+    "numpy": "numpy",
 }
 
 for module, package in required_packages.items():
@@ -45,19 +44,18 @@ for module, package in required_packages.items():
 
 if missing_deps:
     print(f"\n❌ Missing dependencies: {', '.join(missing_deps)}")
-    print(f"\nInstall with:")
+    print("\nInstall with:")
     print(f"   pip install {' '.join(missing_deps)}")
     sys.exit(1)
 
 print("   ✅ All dependencies installed")
 
 # Import after validation
+import re
+
 import kuzu
 import requests
-import numpy as np
 from sentence_transformers import SentenceTransformer
-from datetime import datetime
-import re
 
 # Step 2: Create test database
 print("\n2. Creating test database...")
@@ -118,38 +116,29 @@ except Exception as e:
 # Step 4: Fetch sample articles from Wikipedia
 print("\n4. Fetching sample articles from Wikipedia...")
 
-USER_AGENT = 'WikiGR-Quickstart/1.0 (Educational Project)'
-SAMPLE_ARTICLES = [
-    "Machine_Learning",
-    "Quantum_Computing",
-    "Deep_Learning"
-]
+USER_AGENT = "WikiGR-Quickstart/1.0 (Educational Project)"
+SAMPLE_ARTICLES = ["Machine_Learning", "Quantum_Computing", "Deep_Learning"]
+
 
 def fetch_article(title: str) -> dict:
     """Fetch article from Wikipedia Action API"""
-    params = {
-        'action': 'parse',
-        'page': title,
-        'prop': 'wikitext|links',
-        'format': 'json'
-    }
+    params = {"action": "parse", "page": title, "prop": "wikitext|links", "format": "json"}
 
     response = requests.get(
-        'https://en.wikipedia.org/w/api.php',
-        params=params,
-        headers={'User-Agent': USER_AGENT}
+        "https://en.wikipedia.org/w/api.php", params=params, headers={"User-Agent": USER_AGENT}
     )
 
     data = response.json()
 
-    if 'parse' not in data:
+    if "parse" not in data:
         raise ValueError(f"Article not found: {title}")
 
     return {
-        'title': data['parse']['title'],
-        'wikitext': data['parse']['wikitext']['*'],
-        'links': [link['*'] for link in data['parse'].get('links', [])]
+        "title": data["parse"]["title"],
+        "wikitext": data["parse"]["wikitext"]["*"],
+        "links": [link["*"] for link in data["parse"].get("links", [])],
     }
+
 
 articles_data = []
 for title in SAMPLE_ARTICLES:
@@ -164,12 +153,13 @@ for title in SAMPLE_ARTICLES:
 # Step 5: Parse sections
 print("\n5. Parsing sections...")
 
+
 def parse_sections(wikitext: str) -> list[dict]:
     """Extract H2 and H3 sections from wikitext"""
     sections = []
 
     # Match == Heading 2 == and === Heading 3 ===
-    pattern = r'^(={2,3})\s*(.+?)\s*\1$'
+    pattern = r"^(={2,3})\s*(.+?)\s*\1$"
 
     matches = list(re.finditer(pattern, wikitext, re.MULTILINE))
 
@@ -179,27 +169,32 @@ def parse_sections(wikitext: str) -> list[dict]:
 
         # Extract content (text between this heading and next)
         start = match.end()
-        end = matches[i+1].start() if i+1 < len(matches) else len(wikitext)
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(wikitext)
         content = wikitext[start:end].strip()
 
         # Filter out short sections
         if len(content) > 100:
-            sections.append({
-                'level': level,
-                'title': title,
-                'content': content[:1000]  # Limit to 1000 chars for demo
-            })
+            sections.append(
+                {
+                    "level": level,
+                    "title": title,
+                    "content": content[:1000],  # Limit to 1000 chars for demo
+                }
+            )
 
     return sections
 
+
 parsed_articles = []
 for article in articles_data:
-    sections = parse_sections(article['wikitext'])
-    parsed_articles.append({
-        'title': article['title'],
-        'sections': sections,
-        'word_count': len(article['wikitext'].split())
-    })
+    sections = parse_sections(article["wikitext"])
+    parsed_articles.append(
+        {
+            "title": article["title"],
+            "sections": sections,
+            "word_count": len(article["wikitext"].split()),
+        }
+    )
     print(f"   ✅ Parsed: {article['title']} ({len(sections)} sections)")
 
 # Step 6: Generate embeddings
@@ -207,18 +202,18 @@ print("\n6. Generating embeddings...")
 
 try:
     print("   Loading model: paraphrase-MiniLM-L3-v2...")
-    model = SentenceTransformer('paraphrase-MiniLM-L3-v2')
+    model = SentenceTransformer("paraphrase-MiniLM-L3-v2")
     print("   ✅ Model loaded")
 
     for article in parsed_articles:
-        texts = [s['content'] for s in article['sections']]
+        texts = [s["content"] for s in article["sections"]]
 
         if not texts:
             print(f"   ⚠️  No sections for {article['title']}, skipping")
             continue
 
         embeddings = model.encode(texts, show_progress_bar=False)
-        article['embeddings'] = embeddings
+        article["embeddings"] = embeddings
         print(f"   ✅ Generated embeddings for {article['title']}: {embeddings.shape}")
 
 except Exception as e:
@@ -231,26 +226,27 @@ print("\n7. Loading articles into database...")
 try:
     for article in parsed_articles:
         # Insert Article node
-        conn.execute("""
+        conn.execute(
+            """
             CREATE (a:Article {
                 title: $title,
                 category: 'Computer Science',
                 word_count: $word_count
             })
-        """, {
-            "title": article['title'],
-            "word_count": article['word_count']
-        })
+        """,
+            {"title": article["title"], "word_count": article["word_count"]},
+        )
 
         # Insert Section nodes and relationships
-        for i, section in enumerate(article['sections']):
-            if 'embeddings' not in article:
+        for i, section in enumerate(article["sections"]):
+            if "embeddings" not in article:
                 continue
 
             section_id = f"{article['title']}#{i}"
-            embedding = article['embeddings'][i].tolist()
+            embedding = article["embeddings"][i].tolist()
 
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE (s:Section {
                     section_id: $section_id,
                     title: $title,
@@ -258,30 +254,32 @@ try:
                     embedding: $embedding,
                     level: $level
                 })
-            """, {
-                "section_id": section_id,
-                "title": section['title'],
-                "content": section['content'],
-                "embedding": embedding,
-                "level": section['level']
-            })
+            """,
+                {
+                    "section_id": section_id,
+                    "title": section["title"],
+                    "content": section["content"],
+                    "embedding": embedding,
+                    "level": section["level"],
+                },
+            )
 
             # Create HAS_SECTION relationship
-            conn.execute("""
+            conn.execute(
+                """
                 MATCH (a:Article {title: $article_title}),
                       (s:Section {section_id: $section_id})
                 CREATE (a)-[:HAS_SECTION {section_index: $index}]->(s)
-            """, {
-                "article_title": article['title'],
-                "section_id": section_id,
-                "index": i
-            })
+            """,
+                {"article_title": article["title"], "section_id": section_id, "index": i},
+            )
 
         print(f"   ✅ Loaded: {article['title']}")
 
 except Exception as e:
     print(f"   ❌ Database loading failed: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
 
@@ -313,17 +311,20 @@ try:
         LIMIT 1
     """)
 
-    query_embedding = result.get_next()['embedding']
+    query_embedding = result.get_next()["embedding"]
 
     # Search for similar sections
-    result = conn.execute("""
+    result = conn.execute(
+        """
         CALL QUERY_VECTOR_INDEX(
             'Section',
             'embedding_idx',
             $query,
             10
         ) RETURN *
-    """, {"query": query_embedding})
+    """,
+        {"query": query_embedding},
+    )
 
     results_df = result.get_as_df()
 
@@ -331,20 +332,21 @@ try:
     print("\n   Top 3 results:")
 
     for i, row in results_df.head(3).iterrows():
-        node = row['node']
-        distance = row['distance']
+        node = row["node"]
+        distance = row["distance"]
 
         # Extract section info
-        section_id = node['_properties']['section_id']
-        section_title = node['_properties']['title']
-        article_title = section_id.split('#')[0]
+        section_id = node["_properties"]["section_id"]
+        section_title = node["_properties"]["title"]
+        article_title = section_id.split("#")[0]
 
-        print(f"      {i+1}. {article_title} > {section_title}")
+        print(f"      {i + 1}. {article_title} > {section_title}")
         print(f"         Distance: {distance:.4f}")
 
 except Exception as e:
     print(f"   ❌ Semantic search failed: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
 
@@ -354,7 +356,7 @@ print("\n10. Cleanup...")
 try:
     if os.path.exists(db_path):
         shutil.rmtree(db_path)
-    print(f"   ✅ Test database removed")
+    print("   ✅ Test database removed")
 except Exception as e:
     print(f"   ⚠️  Cleanup warning: {e}")
 

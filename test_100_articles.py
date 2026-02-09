@@ -11,26 +11,23 @@ Validates complete orchestrator with automatic expansion:
 """
 
 import sys
-sys.path.insert(0, 'bootstrap')
+
+sys.path.insert(0, "bootstrap")
 
 import logging
-from pathlib import Path
 import shutil
 import time
-import numpy as np
+from pathlib import Path
 
+from schema.ryugraph_schema import create_schema
 from src.expansion import RyuGraphOrchestrator
 from src.query import semantic_search
-from schema.ryugraph_schema import create_schema
 
 # Set up logging to file
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/100_article_test.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("logs/100_article_test.log"), logging.StreamHandler()],
 )
 
 print("=" * 70)
@@ -70,11 +67,7 @@ print("   ✓ Database ready")
 
 # Initialize orchestrator
 print("\n2. Initializing orchestrator...")
-orch = RyuGraphOrchestrator(
-    db_path=DB_PATH,
-    max_depth=2,
-    batch_size=10
-)
+orch = RyuGraphOrchestrator(db_path=DB_PATH, max_depth=2, batch_size=10)
 print("   ✓ Orchestrator initialized")
 
 # Initialize seeds
@@ -83,13 +76,17 @@ seed_titles = [title for title, _ in SEED_ARTICLES]
 
 # Insert seeds individually with categories
 for title, category in SEED_ARTICLES:
-    result = orch.conn.execute("""
+    result = orch.conn.execute(
+        """
         MATCH (a:Article {title: $title})
         RETURN COUNT(a) AS count
-    """, {"title": title})
+    """,
+        {"title": title},
+    )
 
-    if result.get_as_df().iloc[0]['count'] == 0:
-        orch.conn.execute("""
+    if result.get_as_df().iloc[0]["count"] == 0:
+        orch.conn.execute(
+            """
             CREATE (a:Article {
                 title: $title,
                 category: $category,
@@ -100,13 +97,15 @@ for title, category in SEED_ARTICLES:
                 processed_at: NULL,
                 retry_count: 0
             })
-        """, {"title": title, "category": category})
+        """,
+            {"title": title, "category": category},
+        )
         print(f"   ✓ {title}")
 
 print(f"   ✓ {len(SEED_ARTICLES)} seeds initialized")
 
 # Expand to 100 articles
-print(f"\n4. Expanding to 100 articles...")
+print("\n4. Expanding to 100 articles...")
 print("   (This may take 5-10 minutes)")
 print("-" * 70)
 
@@ -132,13 +131,13 @@ result = orch.conn.execute("""
     MATCH (a:Article)
     RETURN COUNT(a) AS total
 """)
-total_articles = result.get_as_df().iloc[0]['total']
+total_articles = result.get_as_df().iloc[0]["total"]
 
 result = orch.conn.execute("""
     MATCH (s:Section)
     RETURN COUNT(s) AS total
 """)
-total_sections = result.get_as_df().iloc[0]['total']
+total_sections = result.get_as_df().iloc[0]["total"]
 
 print(f"Total articles: {total_articles}")
 print(f"Total sections: {total_sections}")
@@ -169,7 +168,9 @@ for idx, row in result.get_as_df().iterrows():
 
 # Database size
 if Path(DB_PATH).is_dir():
-    db_size_mb = sum(f.stat().st_size for f in Path(DB_PATH).rglob('*') if f.is_file()) / (1024 * 1024)
+    db_size_mb = sum(f.stat().st_size for f in Path(DB_PATH).rglob("*") if f.is_file()) / (
+        1024 * 1024
+    )
 else:
     db_size_mb = 0
 
@@ -201,7 +202,7 @@ print("\n" + "=" * 70)
 print("SUCCESS CRITERIA")
 print("=" * 70)
 
-loaded_count = stats.get('loaded', 0) + stats.get('processed', 0)
+loaded_count = stats.get("loaded", 0) + stats.get("processed", 0)
 success_rate = loaded_count / total_articles * 100 if total_articles > 0 else 0
 
 criteria = {
@@ -226,5 +227,5 @@ else:
     print("⚠ Some criteria not met - review and adjust")
 print("=" * 70)
 
-print(f"\nTest results logged to: logs/100_article_test.log")
+print("\nTest results logged to: logs/100_article_test.log")
 print(f"Database saved at: {DB_PATH}")

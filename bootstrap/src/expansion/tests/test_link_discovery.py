@@ -2,11 +2,8 @@
 Tests for link discovery module
 """
 
-import pytest
 import kuzu
-import shutil
-from pathlib import Path
-from datetime import datetime
+import pytest
 
 from ..link_discovery import LinkDiscovery
 
@@ -71,7 +68,7 @@ def seed_article(test_connection):
             retry_count: 0
         })
     """)
-    return 'Python (programming language)'
+    return "Python (programming language)"
 
 
 class TestValidLinkFiltering:
@@ -196,17 +193,10 @@ class TestDiscoverLinks:
 
     def test_discover_new_articles(self, discovery, seed_article):
         """Test discovering new articles from links"""
-        links = [
-            "Machine Learning",
-            "Artificial Intelligence",
-            "Data Science"
-        ]
+        links = ["Machine Learning", "Artificial Intelligence", "Data Science"]
 
         new_count = discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=0,
-            max_depth=2
+            source_title=seed_article, links=links, current_depth=0, max_depth=2
         )
 
         assert new_count == 3
@@ -221,10 +211,7 @@ class TestDiscoverLinks:
         ]
 
         new_count = discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=0,
-            max_depth=2
+            source_title=seed_article, links=links, current_depth=0, max_depth=2
         )
 
         # Only "Valid Article" should be discovered
@@ -249,25 +236,22 @@ class TestDiscoverLinks:
         links = ["Existing Article"]
 
         new_count = discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=0,
-            max_depth=2
+            source_title=seed_article, links=links, current_depth=0, max_depth=2
         )
 
         # Should not discover (already exists)
         assert new_count == 0
 
         # But should create link
-        result = test_connection.execute("""
+        result = test_connection.execute(
+            """
             MATCH (source:Article {title: $source})-[r:LINKS_TO]->(target:Article {title: $target})
             RETURN COUNT(r) AS count
-        """, {
-            "source": seed_article,
-            "target": "Existing Article"
-        })
+        """,
+            {"source": seed_article, "target": "Existing Article"},
+        )
 
-        assert result.get_next()['count'] == 1
+        assert result.get_next()["count"] == 1
 
     def test_respects_max_depth(self, discovery, seed_article):
         """Test that max_depth is respected"""
@@ -275,10 +259,7 @@ class TestDiscoverLinks:
 
         # At max depth, should not discover
         new_count = discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=2,
-            max_depth=2
+            source_title=seed_article, links=links, current_depth=2, max_depth=2
         )
 
         assert new_count == 0
@@ -288,10 +269,7 @@ class TestDiscoverLinks:
         links = ["New Article"]
 
         discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=0,
-            max_depth=2
+            source_title=seed_article, links=links, current_depth=0, max_depth=2
         )
 
         # Check depth
@@ -300,40 +278,34 @@ class TestDiscoverLinks:
             RETURN a.expansion_depth AS depth
         """)
 
-        assert result.get_next()['depth'] == 1
+        assert result.get_next()["depth"] == 1
 
     def test_creates_links_to_relationship(self, test_connection, discovery, seed_article):
         """Test that LINKS_TO relationships are created"""
         links = ["Target Article"]
 
         discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=0,
-            max_depth=2
+            source_title=seed_article, links=links, current_depth=0, max_depth=2
         )
 
         # Check relationship
-        result = test_connection.execute("""
+        result = test_connection.execute(
+            """
             MATCH (source:Article {title: $source})-[r:LINKS_TO]->(target:Article {title: $target})
             RETURN r.link_type AS link_type
-        """, {
-            "source": seed_article,
-            "target": "Target Article"
-        })
+        """,
+            {"source": seed_article, "target": "Target Article"},
+        )
 
         assert result.has_next()
-        assert result.get_next()['link_type'] == 'internal'
+        assert result.get_next()["link_type"] == "internal"
 
     def test_handles_duplicate_links(self, test_connection, discovery, seed_article):
         """Test handling of duplicate links in list"""
         links = ["Article A", "Article A", "Article A"]
 
-        new_count = discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=0,
-            max_depth=2
+        discovery.discover_links(
+            source_title=seed_article, links=links, current_depth=0, max_depth=2
         )
 
         # Should only create once
@@ -345,49 +317,42 @@ class TestDiscoverLinks:
             RETURN COUNT(a) AS count
         """)
 
-        assert result.get_next()['count'] == 1
+        assert result.get_next()["count"] == 1
 
     def test_empty_links_list(self, discovery, seed_article):
         """Test with empty links list"""
         new_count = discovery.discover_links(
-            source_title=seed_article,
-            links=[],
-            current_depth=0,
-            max_depth=2
+            source_title=seed_article, links=[], current_depth=0, max_depth=2
         )
 
         assert new_count == 0
 
-    def test_does_not_create_duplicate_relationships(self, test_connection, discovery, seed_article):
+    def test_does_not_create_duplicate_relationships(
+        self, test_connection, discovery, seed_article
+    ):
         """Test that duplicate relationships are not created"""
         links = ["Target"]
 
         # Discover first time
         discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=0,
-            max_depth=2
+            source_title=seed_article, links=links, current_depth=0, max_depth=2
         )
 
         # Discover again
         discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=0,
-            max_depth=2
+            source_title=seed_article, links=links, current_depth=0, max_depth=2
         )
 
         # Should only have one relationship
-        result = test_connection.execute("""
+        result = test_connection.execute(
+            """
             MATCH (source:Article {title: $source})-[r:LINKS_TO]->(target:Article {title: $target})
             RETURN COUNT(r) AS count
-        """, {
-            "source": seed_article,
-            "target": "Target"
-        })
+        """,
+            {"source": seed_article, "target": "Target"},
+        )
 
-        assert result.get_next()['count'] == 1
+        assert result.get_next()["count"] == 1
 
 
 class TestGetDiscoveredCount:
@@ -420,7 +385,7 @@ class TestGetDiscoveredCount:
 
     def test_does_not_count_other_states(self, test_connection, discovery):
         """Test that only discovered state is counted"""
-        states = ['loaded', 'claimed', 'failed']
+        states = ["loaded", "claimed", "failed"]
 
         for i, state in enumerate(states):
             test_connection.execute(f"""
@@ -470,10 +435,7 @@ class TestIntegration:
 
         # Discover links
         new_count = discovery.discover_links(
-            source_title=seed_article,
-            links=links,
-            current_depth=0,
-            max_depth=2
+            source_title=seed_article, links=links, current_depth=0, max_depth=2
         )
 
         # Should discover 3 valid articles
@@ -489,12 +451,15 @@ class TestIntegration:
             assert state == "discovered"
 
         # Verify links created
-        result = test_connection.execute("""
+        result = test_connection.execute(
+            """
             MATCH (source:Article {title: $source})-[r:LINKS_TO]->(target:Article)
             RETURN COUNT(r) AS count
-        """, {"source": seed_article})
+        """,
+            {"source": seed_article},
+        )
 
-        assert result.get_next()['count'] == 3
+        assert result.get_next()["count"] == 3
 
     def test_multi_level_expansion(self, test_connection, discovery):
         """Test multi-level expansion scenario"""
@@ -514,10 +479,7 @@ class TestIntegration:
 
         # Discover at depth 1
         discovery.discover_links(
-            source_title='Depth 0',
-            links=['Depth 1 Article'],
-            current_depth=0,
-            max_depth=2
+            source_title="Depth 0", links=["Depth 1 Article"], current_depth=0, max_depth=2
         )
 
         # Mark depth 1 as loaded
@@ -528,10 +490,7 @@ class TestIntegration:
 
         # Discover at depth 2
         discovery.discover_links(
-            source_title='Depth 1 Article',
-            links=['Depth 2 Article'],
-            current_depth=1,
-            max_depth=2
+            source_title="Depth 1 Article", links=["Depth 2 Article"], current_depth=1, max_depth=2
         )
 
         # Try to discover at depth 3 (should fail)
@@ -541,10 +500,7 @@ class TestIntegration:
         """)
 
         new_count = discovery.discover_links(
-            source_title='Depth 2 Article',
-            links=['Should Not Exist'],
-            current_depth=2,
-            max_depth=2
+            source_title="Depth 2 Article", links=["Should Not Exist"], current_depth=2, max_depth=2
         )
 
         assert new_count == 0
@@ -556,8 +512,8 @@ class TestIntegration:
             ORDER BY depth, title
         """)
 
-        depths = {row['title']: row['depth'] for row in result}
-        assert depths['Depth 0'] == 0
-        assert depths['Depth 1 Article'] == 1
-        assert depths['Depth 2 Article'] == 2
-        assert 'Should Not Exist' not in depths
+        depths = {row["title"]: row["depth"] for row in result}
+        assert depths["Depth 0"] == 0
+        assert depths["Depth 1 Article"] == 1
+        assert depths["Depth 2 Article"] == 2
+        assert "Should Not Exist" not in depths

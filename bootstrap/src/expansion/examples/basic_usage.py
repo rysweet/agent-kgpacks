@@ -5,11 +5,12 @@ Demonstrates how to use LinkDiscovery to expand a graph from seed articles
 by discovering and inserting linked articles.
 """
 
-import kuzu
-from pathlib import Path
-
 # Add parent directory to path for imports
 import sys
+from pathlib import Path
+
+import kuzu
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from expansion import LinkDiscovery
@@ -28,6 +29,7 @@ def main():
 
     # Clean up existing database
     import shutil
+
     db_path_obj = Path(db_path)
     if db_path_obj.exists():
         if db_path_obj.is_dir():
@@ -89,7 +91,6 @@ def main():
         "Neural Networks",
         "Data Science",
         "Statistics",
-
         # Invalid links (will be filtered)
         "Wikipedia:About",
         "Help:Editing",
@@ -98,7 +99,7 @@ def main():
         "File:Neural_network.png",
     ]
 
-    print(f"\nDiscovering links from 'Machine Learning'...")
+    print("\nDiscovering links from 'Machine Learning'...")
     print(f"Processing {len(links)} candidate links...")
 
     # Discover links (depth 0 -> depth 1)
@@ -106,7 +107,7 @@ def main():
         source_title="Machine Learning",
         links=links,
         current_depth=0,
-        max_depth=2  # Allow expansion to depth 2
+        max_depth=2,  # Allow expansion to depth 2
     )
 
     print(f"✓ Discovered {new_count} new articles")
@@ -124,7 +125,7 @@ def main():
     """)
 
     df = result.get_as_df()
-    for idx, row in df.iterrows():
+    for _idx, row in df.iterrows():
         print(f"  • {row['title']} (depth={row['depth']})")
 
     # Check link relationships
@@ -139,7 +140,7 @@ def main():
     """)
 
     df = result.get_as_df()
-    for idx, row in df.iterrows():
+    for _idx, row in df.iterrows():
         print(f"  {row['source']} → {row['target']}")
 
     # Check discovery queue
@@ -173,10 +174,7 @@ def main():
     """)
 
     new_count = discovery.discover_links(
-        source_title="Artificial Intelligence",
-        links=links_from_ai,
-        current_depth=1,
-        max_depth=2
+        source_title="Artificial Intelligence", links=links_from_ai, current_depth=1, max_depth=2
     )
 
     print(f"✓ Discovered {new_count} new article(s)")
@@ -206,7 +204,7 @@ def main():
         source_title="Max Depth Article",
         links=["Should Not Be Discovered"],
         current_depth=2,
-        max_depth=2
+        max_depth=2,
     )
 
     print(f"✓ Articles discovered at max depth: {new_count} (expected: 0)")
@@ -224,7 +222,7 @@ def main():
 
     df = result.get_as_df()
     print("\nArticles by state:")
-    for idx, row in df.iterrows():
+    for _idx, row in df.iterrows():
         print(f"  {row['state']:12s}: {row['count']}")
 
     result = conn.execute("""
@@ -232,7 +230,7 @@ def main():
         RETURN COUNT(r) AS count
     """)
 
-    total_links = result.get_as_df().iloc[0]['count']
+    total_links = result.get_as_df().iloc[0]["count"]
     print(f"\nTotal relationships: {total_links}")
 
     print("\n✓ Example complete!")

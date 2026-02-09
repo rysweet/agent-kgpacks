@@ -2,7 +2,8 @@
 """Test the database loader"""
 
 import sys
-sys.path.insert(0, 'bootstrap')
+
+sys.path.insert(0, "bootstrap")
 
 from src.database import ArticleLoader
 
@@ -21,7 +22,7 @@ loader = ArticleLoader(db_path)
 test_articles = [
     ("Python (programming language)", "Computer Science"),
     ("Machine Learning", "Computer Science"),
-    ("Quantum Computing", "Physics")
+    ("Quantum Computing", "Physics"),
 ]
 
 print(f"\nLoading {len(test_articles)} test articles...")
@@ -35,7 +36,7 @@ for title, category in test_articles:
         print(f"  ✗ {title}: {error}")
 
 # Check results
-print(f"\n" + "=" * 60)
+print("\n" + "=" * 60)
 print("RESULTS")
 print("=" * 60)
 print(f"Articles in database: {loader.get_article_count()}")

@@ -16,34 +16,37 @@ Example:
 """
 
 import time
-import requests
 from dataclasses import dataclass
-from typing import Optional
-from urllib.parse import urlencode
+
+import requests
 
 
 @dataclass
 class WikipediaArticle:
     """Structured representation of a Wikipedia article."""
+
     title: str
     wikitext: str
     links: list[str]
     categories: list[str]
-    pageid: Optional[int] = None
+    pageid: int | None = None
 
 
 class WikipediaAPIError(Exception):
     """Base exception for Wikipedia API errors."""
+
     pass
 
 
 class RateLimitError(WikipediaAPIError):
     """Exception raised when rate limit is violated."""
+
     pass
 
 
 class ArticleNotFoundError(WikipediaAPIError):
     """Exception raised when article is not found."""
+
     pass
 
 
@@ -77,10 +80,10 @@ class WikipediaAPIClient:
         cache_enabled: bool = False,
         rate_limit_delay: float = 0.1,
         max_retries: int = 3,
-        timeout: int = 30
+        timeout: int = 30,
     ):
         self.session = requests.Session()
-        self.session.headers.update({'User-Agent': self.USER_AGENT})
+        self.session.headers.update({"User-Agent": self.USER_AGENT})
         self.cache_enabled = cache_enabled
         self.rate_limit_delay = rate_limit_delay
         self.max_retries = max_retries
@@ -116,20 +119,16 @@ class WikipediaAPIClient:
         self._enforce_rate_limit()
 
         try:
-            response = self.session.get(
-                self.BASE_URL,
-                params=params,
-                timeout=self.timeout
-            )
+            response = self.session.get(self.BASE_URL, params=params, timeout=self.timeout)
 
             # Handle HTTP errors
             if response.status_code == 404:
-                raise ArticleNotFoundError(f"Article not found")
+                raise ArticleNotFoundError("Article not found")
 
             if response.status_code == 429:
                 # Rate limited by Wikipedia
                 if retry_count < self.max_retries:
-                    backoff_delay = (2 ** retry_count) * self.rate_limit_delay
+                    backoff_delay = (2**retry_count) * self.rate_limit_delay
                     time.sleep(backoff_delay)
                     return self._make_request(params, retry_count + 1)
                 raise RateLimitError("Rate limit exceeded after retries")
@@ -137,7 +136,7 @@ class WikipediaAPIClient:
             if response.status_code >= 500:
                 # Server error - retry with backoff
                 if retry_count < self.max_retries:
-                    backoff_delay = (2 ** retry_count) * 1.0  # Start with 1 second
+                    backoff_delay = (2**retry_count) * 1.0  # Start with 1 second
                     time.sleep(backoff_delay)
                     return self._make_request(params, retry_count + 1)
                 raise WikipediaAPIError(
@@ -149,7 +148,7 @@ class WikipediaAPIClient:
 
         except requests.Timeout:
             if retry_count < self.max_retries:
-                backoff_delay = (2 ** retry_count) * 1.0
+                backoff_delay = (2**retry_count) * 1.0
                 time.sleep(backoff_delay)
                 return self._make_request(params, retry_count + 1)
             raise WikipediaAPIError(f"Request timeout after {self.max_retries} retries")
@@ -182,48 +181,45 @@ class WikipediaAPIClient:
             return self._cache[title]
 
         params = {
-            'action': 'parse',
-            'page': title,
-            'prop': 'wikitext|links|categories',
-            'format': 'json'
+            "action": "parse",
+            "page": title,
+            "prop": "wikitext|links|categories",
+            "format": "json",
         }
 
         data = self._make_request(params)
 
         # Check for API-level errors
-        if 'error' in data:
-            error_info = data['error']
-            if error_info.get('code') == 'missingtitle':
+        if "error" in data:
+            error_info = data["error"]
+            if error_info.get("code") == "missingtitle":
                 raise ArticleNotFoundError(f"Article '{title}' not found")
             raise WikipediaAPIError(f"API error: {error_info.get('info', 'Unknown error')}")
 
-        if 'parse' not in data:
+        if "parse" not in data:
             raise WikipediaAPIError("Unexpected API response format")
 
-        parse_data = data['parse']
+        parse_data = data["parse"]
 
         # Extract wikitext
-        wikitext = parse_data.get('wikitext', {}).get('*', '')
+        wikitext = parse_data.get("wikitext", {}).get("*", "")
 
         # Extract links (only namespace 0 - main articles)
         links = [
-            link['*']
-            for link in parse_data.get('links', [])
-            if link.get('ns') == 0  # Main namespace only
+            link["*"]
+            for link in parse_data.get("links", [])
+            if link.get("ns") == 0  # Main namespace only
         ]
 
         # Extract categories
-        categories = [
-            cat['*']
-            for cat in parse_data.get('categories', [])
-        ]
+        categories = [cat["*"] for cat in parse_data.get("categories", [])]
 
         article = WikipediaArticle(
-            title=parse_data.get('title', title),
+            title=parse_data.get("title", title),
             wikitext=wikitext,
             links=links,
             categories=categories,
-            pageid=parse_data.get('pageid')
+            pageid=parse_data.get("pageid"),
         )
 
         # Cache if enabled
@@ -233,11 +229,8 @@ class WikipediaAPIClient:
         return article
 
     def fetch_batch(
-        self,
-        titles: list[str],
-        max_concurrent: int = 5,
-        continue_on_error: bool = True
-    ) -> list[tuple[str, Optional[WikipediaArticle], Optional[Exception]]]:
+        self, titles: list[str], max_concurrent: int = 5, continue_on_error: bool = True
+    ) -> list[tuple[str, WikipediaArticle | None, Exception | None]]:
         """Fetch multiple articles sequentially with rate limiting.
 
         Note: Despite the max_concurrent parameter, this implementation

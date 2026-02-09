@@ -5,10 +5,9 @@ Discovers new articles from links in existing articles, managing
 expansion depth and creating LINKS_TO relationships.
 """
 
-import kuzu
-from typing import Optional
 import logging
 
+import kuzu
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +25,7 @@ class LinkDiscovery:
         self.conn = conn
 
     def discover_links(
-        self,
-        source_title: str,
-        links: list[str],
-        current_depth: int,
-        max_depth: int = 2
+        self, source_title: str, links: list[str], current_depth: int, max_depth: int = 2
     ) -> int:
         """
         Discover new articles from links
@@ -89,9 +84,11 @@ class LinkDiscovery:
                 if exists:
                     # Article exists - create LINKS_TO relationship only
                     # Only create link if target is in a loaded or claimed state
-                    if state in ['loaded', 'claimed', 'discovered']:
+                    if state in ["loaded", "claimed", "discovered"]:
                         self._create_link(source_title, link)
-                        logger.debug(f"Linked '{source_title}' -> '{link}' (existing, state={state})")
+                        logger.debug(
+                            f"Linked '{source_title}' -> '{link}' (existing, state={state})"
+                        )
                 else:
                     # New article - insert as discovered
                     self._insert_discovered_article(link, next_depth)
@@ -147,17 +144,17 @@ class LinkDiscovery:
 
         # Namespace prefixes to filter out
         invalid_prefixes = [
-            'Wikipedia:',
-            'Help:',
-            'Template:',
-            'File:',
-            'Image:',
-            'Category:',
-            'Portal:',
-            'Talk:',
-            'User:',
-            'MediaWiki:',
-            'Special:',
+            "Wikipedia:",
+            "Help:",
+            "Template:",
+            "File:",
+            "Image:",
+            "Category:",
+            "Portal:",
+            "Talk:",
+            "User:",
+            "MediaWiki:",
+            "Special:",
         ]
 
         # Check for invalid prefixes (case-insensitive)
@@ -166,16 +163,13 @@ class LinkDiscovery:
                 return False
 
         # Filter list pages
-        if title.startswith('List of '):
+        if title.startswith("List of "):
             return False
 
         # Filter disambiguation pages
-        if '(disambiguation)' in title:
-            return False
+        return "(disambiguation)" not in title
 
-        return True
-
-    def article_exists(self, title: str) -> tuple[bool, Optional[str]]:
+    def article_exists(self, title: str) -> tuple[bool, str | None]:
         """
         Check if article exists in database
 
@@ -193,14 +187,17 @@ class LinkDiscovery:
             >>> if exists:
             ...     print(f"Article exists with state: {state}")
         """
-        result = self.conn.execute("""
+        result = self.conn.execute(
+            """
             MATCH (a:Article {title: $title})
             RETURN a.expansion_state AS state
-        """, {"title": title})
+        """,
+            {"title": title},
+        )
 
         df = result.get_as_df()
         if len(df) > 0:
-            return (True, df.iloc[0]['state'])
+            return (True, df.iloc[0]["state"])
         else:
             return (False, None)
 
@@ -212,7 +209,8 @@ class LinkDiscovery:
             title: Article title
             depth: Expansion depth
         """
-        self.conn.execute("""
+        self.conn.execute(
+            """
             CREATE (a:Article {
                 title: $title,
                 category: NULL,
@@ -223,10 +221,9 @@ class LinkDiscovery:
                 processed_at: NULL,
                 retry_count: 0
             })
-        """, {
-            "title": title,
-            "depth": depth
-        })
+        """,
+            {"title": title, "depth": depth},
+        )
 
     def _create_link(self, source_title: str, target_title: str):
         """
@@ -237,27 +234,27 @@ class LinkDiscovery:
             target_title: Target article title
         """
         # Check if relationship already exists
-        result = self.conn.execute("""
+        result = self.conn.execute(
+            """
             MATCH (source:Article {title: $source})-[r:LINKS_TO]->(target:Article {title: $target})
             RETURN COUNT(r) AS count
-        """, {
-            "source": source_title,
-            "target": target_title
-        })
+        """,
+            {"source": source_title, "target": target_title},
+        )
 
         # Only create if doesn't exist
         df = result.get_as_df()
-        if len(df) > 0 and df.iloc[0]['count'] > 0:
+        if len(df) > 0 and df.iloc[0]["count"] > 0:
             return
 
-        self.conn.execute("""
+        self.conn.execute(
+            """
             MATCH (source:Article {title: $source}),
                   (target:Article {title: $target})
             CREATE (source)-[:LINKS_TO {link_type: 'internal'}]->(target)
-        """, {
-            "source": source_title,
-            "target": target_title
-        })
+        """,
+            {"source": source_title, "target": target_title},
+        )
 
     def get_discovered_count(self) -> int:
         """
@@ -279,13 +276,12 @@ class LinkDiscovery:
 
         df = result.get_as_df()
         if len(df) > 0:
-            return df.iloc[0]['count']
+            return df.iloc[0]["count"]
         return 0
 
 
 def main():
     """Test link discovery"""
-    import sys
     from pathlib import Path
 
     print("=" * 60)
@@ -298,6 +294,7 @@ def main():
 
     # Clean up if exists
     import shutil
+
     db_path_obj = Path(db_path)
     if db_path_obj.exists():
         if db_path_obj.is_dir():
@@ -366,10 +363,7 @@ def main():
 
     print(f"\nProcessing {len(test_links)} links...")
     new_count = discovery.discover_links(
-        source_title="Python (programming language)",
-        links=test_links,
-        current_depth=0,
-        max_depth=2
+        source_title="Python (programming language)", links=test_links, current_depth=0, max_depth=2
     )
 
     print(f"\n✓ Discovered {new_count} new articles")
@@ -388,7 +382,7 @@ def main():
 
     print("\nArticles in database:")
     df = result.get_as_df()
-    for idx, row in df.iterrows():
+    for _idx, row in df.iterrows():
         print(f"  [{row['state']:10s}] {row['title']} (depth={row['depth']})")
 
     # Check links
@@ -403,7 +397,7 @@ def main():
     if len(df) == 0:
         print("  (none)")
     else:
-        for idx, row in df.iterrows():
+        for _idx, row in df.iterrows():
             print(f"  {row['source']} -> {row['target']} [{row['type']}]")
 
     # Check discovered count
@@ -431,10 +425,7 @@ def main():
 
     # Try to discover links from it (should be blocked)
     new_count = discovery.discover_links(
-        source_title="Deep Article",
-        links=["Should Not Discover"],
-        current_depth=2,
-        max_depth=2
+        source_title="Deep Article", links=["Should Not Discover"], current_depth=2, max_depth=2
     )
 
     print(f"Attempted discovery at max depth: {new_count} articles (should be 0)")

@@ -6,11 +6,12 @@ Validates all monitoring features work correctly.
 """
 
 import sys
-sys.path.insert(0, '/home/azureuser/src/wikigr/bootstrap/scripts')
+
+sys.path.insert(0, "/home/azureuser/src/wikigr/bootstrap/scripts")
+
+from pathlib import Path
 
 from monitor_expansion import ExpansionMonitor
-import kuzu
-from pathlib import Path
 
 
 def test_basic_metrics():
@@ -78,7 +79,7 @@ def test_display_functions():
     assert bar_0.count("█") == 0, "0% should have no filled blocks"
     assert bar_50.count("█") == 10, "50% should be half filled"
     assert bar_100.count("█") == 20, "100% should be fully filled"
-    print(f"   ✓ Progress bars render correctly")
+    print("   ✓ Progress bars render correctly")
     print(f"      0%:   [{bar_0}]")
     print(f"     50%:   [{bar_50}]")
     print(f"    100%:   [{bar_100}]")
@@ -89,7 +90,7 @@ def test_display_functions():
     assert monitor.format_duration(90) == "1.5m"
     assert monitor.format_duration(3600) == "1h 0m"
     assert monitor.format_duration(3750) == "1h 2m"
-    print(f"   ✓ Duration formatting works")
+    print("   ✓ Duration formatting works")
     print(f"      30s:    {monitor.format_duration(30)}")
     print(f"      90s:    {monitor.format_duration(90)}")
     print(f"      3600s:  {monitor.format_duration(3600)}")
@@ -125,10 +126,7 @@ def test_with_different_databases():
     print("Test: Different Database Sizes")
     print("=" * 70)
 
-    test_dbs = [
-        ("data/test_10_articles.db", 10),
-        ("data/test_100_articles.db", 100)
-    ]
+    test_dbs = [("data/test_10_articles.db", 10), ("data/test_100_articles.db", 100)]
 
     for db_path, expected_min in test_dbs:
         if not Path(db_path).exists():
@@ -142,7 +140,7 @@ def test_with_different_databases():
         total = sum(state_dist.values())
 
         print(f"   Total articles: {total}")
-        assert total > 0, f"Database should have articles"
+        assert total > 0, "Database should have articles"
         print(f"   ✓ {db_path} works correctly")
 
     print("\n✅ All database size tests passed!")
@@ -159,7 +157,7 @@ def main():
         ("Basic Metrics", test_basic_metrics),
         ("Display Functions", test_display_functions),
         ("Full Display", test_full_display),
-        ("Different Databases", test_with_different_databases)
+        ("Different Databases", test_with_different_databases),
     ]
 
     results = []
@@ -170,6 +168,7 @@ def main():
         except Exception as e:
             print(f"\n❌ Test '{name}' crashed: {e}")
             import traceback
+
             traceback.print_exc()
             results.append((name, False))
 

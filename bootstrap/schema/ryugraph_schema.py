@@ -13,10 +13,11 @@ Usage:
     python bootstrap/schema/ryugraph_schema.py --db data/wikigr.db
 """
 
-import kuzu
 import argparse
 import sys
 from pathlib import Path
+
+import kuzu
 
 
 def create_schema(db_path: str, drop_existing: bool = False):
@@ -37,6 +38,7 @@ def create_schema(db_path: str, drop_existing: bool = False):
     if drop_existing and Path(db_path).exists():
         print("⚠️  Dropping existing database...")
         import shutil
+
         db_path_obj = Path(db_path)
         if db_path_obj.is_dir():
             shutil.rmtree(db_path)
@@ -180,11 +182,18 @@ def create_schema(db_path: str, drop_existing: bool = False):
         result = conn.execute("CALL SHOW_TABLES() RETURN *")
         tables = result.get_as_df()
         print("\n   Tables created:")
-        for idx, row in tables.iterrows():
+        for _idx, row in tables.iterrows():
             print(f"      - {row['name']}")
 
-        expected_tables = {'Article', 'Section', 'Category', 'HAS_SECTION', 'LINKS_TO', 'IN_CATEGORY'}
-        actual_tables = set(tables['name'].tolist())
+        expected_tables = {
+            "Article",
+            "Section",
+            "Category",
+            "HAS_SECTION",
+            "LINKS_TO",
+            "IN_CATEGORY",
+        }
+        actual_tables = set(tables["name"].tolist())
 
         if expected_tables.issubset(actual_tables):
             print("\n   ✅ All tables created successfully")
@@ -216,7 +225,8 @@ def create_schema(db_path: str, drop_existing: bool = False):
 
         # Insert test section
         test_embedding = [0.1] * 384
-        conn.execute("""
+        conn.execute(
+            """
             CREATE (s:Section {
                 section_id: 'Test Article#0',
                 title: 'Introduction',
@@ -225,7 +235,9 @@ def create_schema(db_path: str, drop_existing: bool = False):
                 level: 2,
                 word_count: 10
             })
-        """, {"embedding": test_embedding})
+        """,
+            {"embedding": test_embedding},
+        )
 
         # Create relationship
         conn.execute("""
@@ -242,9 +254,9 @@ def create_schema(db_path: str, drop_existing: bool = False):
 
         df = result.get_as_df()
         assert len(df) == 1
-        assert df.iloc[0]['article_title'] == 'Test Article'
-        assert df.iloc[0]['section_title'] == 'Introduction'
-        assert df.iloc[0]['level'] == 2
+        assert df.iloc[0]["article_title"] == "Test Article"
+        assert df.iloc[0]["section_title"] == "Introduction"
+        assert df.iloc[0]["level"] == 2
 
         # Clean up test data
         conn.execute("MATCH (a:Article {title: 'Test Article'}) DETACH DELETE a")
@@ -255,6 +267,7 @@ def create_schema(db_path: str, drop_existing: bool = False):
     except Exception as e:
         print(f"   ❌ Basic operations failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -273,14 +286,10 @@ def create_schema(db_path: str, drop_existing: bool = False):
 def main():
     parser = argparse.ArgumentParser(description="Create WikiGR database schema")
     parser.add_argument(
-        "--db",
-        default="data/wikigr.db",
-        help="Path to Kuzu database (default: data/wikigr.db)"
+        "--db", default="data/wikigr.db", help="Path to Kuzu database (default: data/wikigr.db)"
     )
     parser.add_argument(
-        "--drop",
-        action="store_true",
-        help="Drop existing database before creating schema"
+        "--drop", action="store_true", help="Drop existing database before creating schema"
     )
 
     args = parser.parse_args()

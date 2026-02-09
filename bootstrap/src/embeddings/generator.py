@@ -5,9 +5,9 @@ Generates vector embeddings using sentence-transformers model.
 Model: paraphrase-MiniLM-L3-v2 (384 dimensions, 1055 texts/sec)
 """
 
-from sentence_transformers import SentenceTransformer
 import numpy as np
 import torch
+from sentence_transformers import SentenceTransformer
 
 
 class EmbeddingGenerator:
@@ -18,7 +18,7 @@ class EmbeddingGenerator:
     See bootstrap/docs/embedding-model-choice.md for model selection rationale.
     """
 
-    def __init__(self, model_name='paraphrase-MiniLM-L3-v2', use_gpu=None):
+    def __init__(self, model_name="paraphrase-MiniLM-L3-v2", use_gpu=None):
         """
         Initialize embedding generator.
 
@@ -35,7 +35,7 @@ class EmbeddingGenerator:
         if use_gpu is None:
             use_gpu = torch.cuda.is_available()
 
-        device = 'cuda' if use_gpu else 'cpu'
+        device = "cuda" if use_gpu else "cpu"
         self.model = SentenceTransformer(model_name, device=device)
         self.device = device
         self.model_name = model_name
@@ -68,10 +68,7 @@ class EmbeddingGenerator:
             raise ValueError("texts list cannot be empty")
 
         embeddings = self.model.encode(
-            texts,
-            batch_size=batch_size,
-            show_progress_bar=show_progress,
-            convert_to_numpy=True
+            texts, batch_size=batch_size, show_progress_bar=show_progress, convert_to_numpy=True
         )
         return embeddings
 
@@ -112,7 +109,7 @@ def test_embedding_generator():
 
     # Verify non-zero
     assert not np.allclose(embeddings, 0), "Embeddings are all zero"
-    print(f"✓ Embeddings are non-zero")
+    print("✓ Embeddings are non-zero")
 
     # Check L2 norms (should be close to 1.0 for normalized embeddings)
     norms = np.linalg.norm(embeddings, axis=1)
@@ -132,14 +129,16 @@ def test_embedding_generator():
     # Test cosine similarity between similar texts
     text1_emb = small_embeddings[0]  # "Machine learning"
     text2_emb = small_embeddings[1]  # "Deep learning"
-    cosine_sim = np.dot(text1_emb, text2_emb) / (np.linalg.norm(text1_emb) * np.linalg.norm(text2_emb))
+    cosine_sim = np.dot(text1_emb, text2_emb) / (
+        np.linalg.norm(text1_emb) * np.linalg.norm(text2_emb)
+    )
     print(f"✓ Cosine similarity (Machine/Deep learning): {cosine_sim:.4f}")
     assert cosine_sim > 0.5, "Similar texts should have similarity > 0.5"
 
     # Test error handling
     try:
         gen.generate([])
-        assert False, "Should raise ValueError for empty list"
+        raise AssertionError("Should raise ValueError for empty list")
     except ValueError as e:
         print(f"✓ Error handling works: {e}")
 
