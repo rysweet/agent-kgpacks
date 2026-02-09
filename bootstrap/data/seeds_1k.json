@@ -1,0 +1,511 @@
+{
+  "metadata": {
+    "total_seeds": 100,
+    "categories": 10,
+    "per_category": 10,
+    "purpose": "1K article expansion test",
+    "created_date": "2026-02-08"
+  },
+  "seeds": [
+    {
+      "title": "Artificial intelligence",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Machine learning",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Deep learning",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Natural language processing",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Computer vision",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Neural network (machine learning)",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Python (programming language)",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Algorithm",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Data structure",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Software engineering",
+      "category": "Computer Science & AI",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Quantum mechanics",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "General relativity",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Thermodynamics",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Electromagnetism",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Quantum computing",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Particle physics",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Astrophysics",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Optics",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Condensed matter physics",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Nuclear physics",
+      "category": "Physics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "DNA",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Evolution",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Genetics",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Cell biology",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Molecular biology",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Neuroscience",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Immunology",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Ecology",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Biochemistry",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Microbiology",
+      "category": "Biology & Medicine",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Calculus",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Linear algebra",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Probability theory",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Statistics",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Topology",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Number theory",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Graph theory",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Differential equation",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Complex analysis",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Abstract algebra",
+      "category": "Mathematics",
+      "expansion_depth": 0
+    },
+    {
+      "title": "World War II",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Ancient Rome",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Industrial Revolution",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Renaissance",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Cold War",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Ancient Egypt",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "World War I",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "American Revolution",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "French Revolution",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Medieval Europe",
+      "category": "History",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Philosophy",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Ethics",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Metaphysics",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Epistemology",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Logic",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Political philosophy",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Philosophy of mind",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Existentialism",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Phenomenology",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Philosophy of science",
+      "category": "Philosophy",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Democracy",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Sociology",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Psychology",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Economics",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Political science",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Anthropology",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Capitalism",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Cognitive science",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Game theory",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Behavioral economics",
+      "category": "Social Sciences",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Electrical engineering",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Mechanical engineering",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Civil engineering",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Aerospace engineering",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Chemical engineering",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Software engineering",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Robotics",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Control theory",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Materials science",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Nanotechnology",
+      "category": "Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Organic chemistry",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Inorganic chemistry",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Physical chemistry",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Analytical chemistry",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Biochemistry",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Chemical bond",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Periodic table",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Chemical reaction",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Quantum chemistry",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Electrochemistry",
+      "category": "Chemistry",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Art",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Music",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Literature",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Theatre",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Film",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Architecture",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Classical music",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Renaissance art",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Poetry",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Sculpture",
+      "category": "Arts & Culture",
+      "expansion_depth": 0
+    }
+  ]
+}
