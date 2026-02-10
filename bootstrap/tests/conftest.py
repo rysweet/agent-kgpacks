@@ -1,8 +1,5 @@
 """Shared fixtures for WikiGR tests."""
 
-import shutil
-from pathlib import Path
-
 import kuzu
 import pytest
 

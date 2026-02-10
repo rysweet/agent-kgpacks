@@ -80,7 +80,10 @@ jobs:
       - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: uv pip install --system -e ".[dev,test]"
       - name: Run integration tests
-        run: pytest bootstrap/tests/test_integration.py -v -m integration --timeout=120
+        run: |
+          pytest bootstrap/tests/test_integration.py \
+            -v -m integration --timeout=120 \
+            --cov=bootstrap/src --cov-report=xml:integration-coverage.xml
 
   documentation:
     name: Check Documentation

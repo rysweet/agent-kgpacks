@@ -54,6 +54,20 @@ class RyuGraphOrchestrator:
         logger.info(f"  Max depth: {max_depth}")
         logger.info(f"  Batch size: {batch_size}")
 
+    def close(self):
+        """Release database resources."""
+        self.work_queue = None  # type: ignore[assignment]
+        self.processor = None  # type: ignore[assignment]
+        self.link_discovery = None  # type: ignore[assignment]
+        self.conn = None  # type: ignore[assignment]
+        self.db = None  # type: ignore[assignment]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
     def initialize_seeds(self, seed_titles: list[str], category: str = "General") -> str:
         """
         Initialize expansion with seed articles
@@ -159,7 +173,7 @@ class RyuGraphOrchestrator:
                     logger.info(f"  Reclaimed {reclaimed} stale claims")
 
             # Claim batch of work
-            batch = self.work_queue.claim_work(self.batch_size, self.claim_timeout)
+            batch = self.work_queue.claim_work(self.batch_size)
 
             if not batch:
                 logger.warning("  No more work available in queue")
@@ -195,8 +209,6 @@ class RyuGraphOrchestrator:
                 )
 
                 if success:
-                    # Advance to loaded
-                    self.work_queue.advance_state(title, "loaded")
                     logger.info(f"    ✓ Loaded ({len(links)} links)")
 
                     # Discover new links (if not at max depth)
@@ -210,16 +222,15 @@ class RyuGraphOrchestrator:
 
                         if discovered > 0:
                             logger.info(f"    ✓ Discovered {discovered} new articles")
-
-                        # Mark as processed
-                        self.work_queue.advance_state(title, "processed")
                     else:
                         logger.info("    Max depth reached, not discovering links")
-                        self.work_queue.advance_state(title, "processed")
+
+                    # Advance directly to processed (processor already sets loaded during insertion)
+                    self.work_queue.advance_state(title, "processed")
 
                 else:
                     # Handle failure
-                    self.work_queue.mark_failed(title, error)
+                    self.work_queue.mark_failed(title, error or "Unknown error")
                     logger.warning(f"    ✗ Failed: {error}")
 
             # Progress summary
@@ -260,7 +271,7 @@ def main():
             Path(db_path).unlink()
 
     # Create schema
-    from bootstrap.schema.ryugraph_schema import create_schema
+    from bootstrap.schema.ryugraph_schema import create_schema  # type: ignore[import-not-found]
 
     create_schema(db_path)
 

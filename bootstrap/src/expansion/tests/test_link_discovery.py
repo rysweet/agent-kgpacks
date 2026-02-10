@@ -251,7 +251,7 @@ class TestDiscoverLinks:
             {"source": seed_article, "target": "Existing Article"},
         )
 
-        assert result.get_next()["count"] == 1
+        assert result.get_as_df().iloc[0]["count"] == 1
 
     def test_respects_max_depth(self, discovery, seed_article):
         """Test that max_depth is respected"""
@@ -278,7 +278,7 @@ class TestDiscoverLinks:
             RETURN a.expansion_depth AS depth
         """)
 
-        assert result.get_next()["depth"] == 1
+        assert result.get_as_df().iloc[0]["depth"] == 1
 
     def test_creates_links_to_relationship(self, test_connection, discovery, seed_article):
         """Test that LINKS_TO relationships are created"""
@@ -298,7 +298,7 @@ class TestDiscoverLinks:
         )
 
         assert result.has_next()
-        assert result.get_next()["link_type"] == "internal"
+        assert result.get_as_df().iloc[0]["link_type"] == "internal"
 
     def test_handles_duplicate_links(self, test_connection, discovery, seed_article):
         """Test handling of duplicate links in list"""
@@ -317,7 +317,7 @@ class TestDiscoverLinks:
             RETURN COUNT(a) AS count
         """)
 
-        assert result.get_next()["count"] == 1
+        assert result.get_as_df().iloc[0]["count"] == 1
 
     def test_empty_links_list(self, discovery, seed_article):
         """Test with empty links list"""
@@ -352,7 +352,7 @@ class TestDiscoverLinks:
             {"source": seed_article, "target": "Target"},
         )
 
-        assert result.get_next()["count"] == 1
+        assert result.get_as_df().iloc[0]["count"] == 1
 
 
 class TestGetDiscoveredCount:
@@ -459,7 +459,7 @@ class TestIntegration:
             {"source": seed_article},
         )
 
-        assert result.get_next()["count"] == 3
+        assert result.get_as_df().iloc[0]["count"] == 3
 
     def test_multi_level_expansion(self, test_connection, discovery):
         """Test multi-level expansion scenario"""

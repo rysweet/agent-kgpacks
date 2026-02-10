@@ -21,9 +21,9 @@ class WorkQueueManager:
     and automatic reclamation of stale claims.
 
     State transitions:
-        discovered -> claimed -> loaded/failed
-        claimed -> discovered (timeout reclaim)
-        failed -> discovered (retry if under max_retries)
+        discovered -> claimed -> processed (success path)
+        discovered -> claimed -> failed (after max retries)
+        claimed -> discovered (timeout reclaim or retry)
     """
 
     def __init__(self, conn: kuzu.Connection, max_retries: int = 3):
@@ -43,7 +43,7 @@ class WorkQueueManager:
         self.max_retries = max_retries
         logger.info("WorkQueueManager initialized")
 
-    def claim_work(self, batch_size: int = 10, timeout_seconds: int = 300) -> list[dict]:
+    def claim_work(self, batch_size: int = 10) -> list[dict]:
         """
         Claim a batch of articles for processing.
 
@@ -52,8 +52,6 @@ class WorkQueueManager:
 
         Args:
             batch_size: Number of articles to claim
-            timeout_seconds: How long to hold claim before reclaim (unused here,
-                           passed to reclaim_stale)
 
         Returns:
             List of claimed articles: [{'title': str, 'expansion_depth': int,
@@ -208,7 +206,7 @@ class WorkQueueManager:
             logger.error(f"Error reclaiming stale claims: {e}", exc_info=True)
             return 0
 
-    VALID_STATES = {'discovered', 'claimed', 'loaded', 'processed', 'failed'}
+    VALID_STATES = {"discovered", "claimed", "loaded", "processed", "failed"}
 
     def advance_state(self, article_title: str, new_state: str):
         """

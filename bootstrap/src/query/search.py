@@ -56,7 +56,7 @@ def semantic_search(
     # Step 2: For each query embedding, find similar sections
     all_matches = []
 
-    for _idx, row in query_df.iterrows():
+    for _, row in query_df.iterrows():
         query_embedding = row["embedding"]
 
         # Query vector index

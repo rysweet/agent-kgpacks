@@ -128,7 +128,7 @@ pythonPlatform = "Linux"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["bootstrap/src/*/tests", "bootstrap/tests"]
+testpaths = ["bootstrap/src/embeddings/tests", "bootstrap/src/expansion/tests", "bootstrap/src/wikipedia/tests", "bootstrap/src/database/tests", "bootstrap/src/query/tests", "bootstrap/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

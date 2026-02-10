@@ -109,7 +109,12 @@ class ArticleProcessor:
             return (False, [], error_msg)
 
     def _insert_article_with_sections(
-        self, article, sections: list[dict], embeddings: np.ndarray, category: str, expansion_depth: int
+        self,
+        article,
+        sections: list[dict],
+        embeddings: np.ndarray,
+        category: str,
+        expansion_depth: int,
     ):
         """Insert article and sections into database"""
         from datetime import datetime
