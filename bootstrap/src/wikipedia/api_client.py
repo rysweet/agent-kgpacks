@@ -57,7 +57,7 @@ class WikipediaAPIClient:
         - Rate limiting (100ms between requests)
         - Retry logic with exponential backoff
         - Error handling for 404, 500, timeout
-        - Batch fetching with concurrency control
+        - Sequential batch fetching
 
     Args:
         cache_enabled: Enable response caching (default: False)
@@ -229,15 +229,12 @@ class WikipediaAPIClient:
         return article
 
     def fetch_batch(
-        self, titles: list[str], _max_concurrent: int = 5, continue_on_error: bool = True
+        self, titles: list[str], continue_on_error: bool = True
     ) -> list[tuple[str, WikipediaArticle | None, Exception | None]]:
         """Fetch multiple articles sequentially with rate limiting.
 
-        Note: This implementation fetches sequentially to respect rate limits.
-
         Args:
             titles: List of article titles to fetch
-            _max_concurrent: Unused, reserved for future async implementation
             continue_on_error: Continue fetching if one article fails
 
         Returns:

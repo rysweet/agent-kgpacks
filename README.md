@@ -27,7 +27,7 @@ python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+uv pip install -e ".[dev]"
 ```
 
 ### 2. Validate Setup
@@ -105,8 +105,8 @@ results = semantic_search(
     top_k=10
 )
 
-for article, similarity in results:
-    print(f"{article}: {similarity:.4f}")
+for r in results:
+    print(f"{r['article_title']}: {r['similarity']:.4f}")
 ```
 
 ### Graph Traversal
@@ -122,8 +122,8 @@ neighbors = graph_traversal(
     max_results=50
 )
 
-for neighbor, hops in neighbors:
-    print(f"{neighbor} ({hops} hops)")
+for n in neighbors:
+    print(f"{n['article_title']} ({n['hops']} hops)")
 ```
 
 ## Development

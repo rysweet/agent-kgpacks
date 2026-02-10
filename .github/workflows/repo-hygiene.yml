@@ -42,7 +42,7 @@ jobs:
       - name: Check for .gitignore violations
         run: |
           exit_code=0
-          for pattern in ".claude/" "data/*.db" "worktrees/" "logs/" ".env"; do
+          for pattern in ".claude/" "data/*.db" "bootstrap/data/*.db" "worktrees/" "logs/" ".env"; do
             matches=$(git ls-files "$pattern" 2>/dev/null)
             if [ -n "$matches" ]; then
               echo "ERROR: Tracked files violate .gitignore ($pattern): $matches"

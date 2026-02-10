@@ -189,7 +189,7 @@ The module structure supports future additions:
 ## Notes
 
 ### Sequential Batch Fetching
-The current implementation fetches articles sequentially to ensure rate limit compliance. The `max_concurrent` parameter in `fetch_batch()` is reserved for future async implementations.
+The current implementation fetches articles sequentially to ensure rate limit compliance.
 
 ### Main Namespace Only
 Links are filtered to namespace 0 (main articles). This excludes:

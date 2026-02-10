@@ -43,6 +43,15 @@ else
   echo "  OK"
 fi
 
+# Also check for except Exception: pass pattern
+swallowed=$(git grep -nP -A1 'except\s+(Exception|BaseException)' \
+  -- 'bootstrap/src/**/*.py' ':!bootstrap/src/*/tests/*' 2>/dev/null | \
+  grep -B1 '^\s*pass\s*$' || true)
+if [ -n "$swallowed" ]; then
+  echo "WARNING: Potential swallowed exceptions found"
+  echo "$swallowed"
+fi
+
 # 4. Debug artifacts in source code
 echo ""
 echo "--- Check 4: Debug artifacts ---"

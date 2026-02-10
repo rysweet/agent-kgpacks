@@ -189,7 +189,8 @@ def graph_traversal(
 
     logger.info(f"Graph traversal from: {seed_title} (max_hops={max_hops})")
 
-    # Build query dynamically
+    # NOTE: max_hops is validated to int 1-10 above, making f-string safe here.
+    # Kuzu does not support parameterized variable-length path patterns.
     if category:
         query = f"""
             MATCH path = (seed:Article {{title: $seed_title}})-[:LINKS_TO*1..{max_hops}]->(neighbor:Article)

@@ -360,7 +360,7 @@ class WorkQueueManager:
 
         except Exception as e:
             logger.error(f"Failed to get queue stats: {e}", exc_info=True)
-            return {"error": str(e)}
+            raise  # Don't swallow - let caller handle
 
 
 def test_work_queue_manager():

@@ -120,6 +120,66 @@ class TestEmbeddingIntegration:
         assert sim > 0.5
 
 
+class TestArticleLoaderIntegration:
+    """Test the full article loading pipeline."""
+
+    @pytest.mark.timeout(60)
+    def test_load_single_article(self, tmp_path):
+        """Load one real article and verify it's in the database."""
+        from bootstrap.schema.ryugraph_schema import create_schema
+        from bootstrap.src.database import ArticleLoader
+
+        db_path = str(tmp_path / "loader_test.db")
+        create_schema(db_path, drop_existing=True)
+
+        loader = ArticleLoader(db_path)
+        success, error = loader.load_article(
+            "Python (programming language)", category="Computer Science"
+        )
+
+        assert success, f"Article load failed: {error}"
+        assert loader.get_article_count() == 1
+        assert loader.get_section_count() >= 3
+        assert loader.article_exists("Python (programming language)")
+
+    @pytest.mark.timeout(60)
+    def test_load_nonexistent_article(self, tmp_path):
+        """Loading a nonexistent article returns failure, not an exception."""
+        from bootstrap.schema.ryugraph_schema import create_schema
+        from bootstrap.src.database import ArticleLoader
+
+        db_path = str(tmp_path / "loader_test_missing.db")
+        create_schema(db_path, drop_existing=True)
+
+        loader = ArticleLoader(db_path)
+        success, error = loader.load_article("This_Article_Does_Not_Exist_XYZZY_99999")
+
+        assert not success
+        assert error is not None
+
+
+class TestExpansionIntegration:
+    """Test orchestrator expansion pipeline."""
+
+    @pytest.mark.timeout(120)
+    def test_expand_from_seed(self, tmp_path):
+        """Start from 1 seed, expand to 3 articles."""
+        from bootstrap.schema.ryugraph_schema import create_schema
+        from bootstrap.src.expansion import RyuGraphOrchestrator
+
+        db_path = str(tmp_path / "expansion_test.db")
+        create_schema(db_path, drop_existing=True)
+
+        orch = RyuGraphOrchestrator(db_path=db_path, max_depth=1, batch_size=5)
+        orch.initialize_seeds(["Python (programming language)"], category="CS")
+
+        stats = orch.expand_to_target(target_count=3, max_iterations=10)
+
+        # Should have loaded at least the seed article
+        loaded = stats.get("loaded", 0) + stats.get("processed", 0)
+        assert loaded >= 1, f"Expected at least 1 loaded article, got stats: {stats}"
+
+
 class TestWorkQueueIntegration:
     def test_claim_advance_lifecycle(self):
         from bootstrap.src.expansion.work_queue import WorkQueueManager

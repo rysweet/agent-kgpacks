@@ -38,7 +38,5 @@
       "pythonVersion": "3.10",
       "extraPaths": []
     }
-  ],
-  "venvPath": ".",
-  "venv": "venv"
+  ]
 }

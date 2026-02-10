@@ -170,6 +170,16 @@ class ArticleProcessor:
                 },
             )
 
+        # Delete existing sections if article already exists (prevents duplicates on re-processing)
+        if article_exists:
+            self.conn.execute(
+                """
+                MATCH (a:Article {title: $title})-[r:HAS_SECTION]->(s:Section)
+                DELETE r, s
+            """,
+                {"title": article.title},
+            )
+
         # Insert Section nodes and relationships
         for i, (section, embedding) in enumerate(zip(sections, embeddings)):
             section_id = f"{article.title}#{i}"

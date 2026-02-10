@@ -164,8 +164,9 @@ class RyuGraphOrchestrator:
             if not batch:
                 logger.warning("  No more work available in queue")
 
-                # Check if we have undiscovered links
-                discovered_count = stats.get("discovered", 0)
+                # Check if we have undiscovered links (fetch fresh stats, not stale from previous iteration)
+                fresh_stats = self.work_queue.get_queue_stats()
+                discovered_count = fresh_stats.get("discovered", 0)
                 if discovered_count == 0:
                     logger.warning("  No discovered articles remaining - expansion stalled")
                     break
