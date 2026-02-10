@@ -8,7 +8,7 @@ stripping formatting, and filtering by content length.
 import re
 
 
-def parse_sections(wikitext: str) -> list[dict[str, any]]:
+def parse_sections(wikitext: str) -> list[dict[str, str | int]]:
     """
     Extract H2 and H3 sections from wikitext.
 

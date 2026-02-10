@@ -111,7 +111,7 @@ class WorkQueueManager:
                 )
                 logger.debug(f"Claimed article: {title} (depth={article['expansion_depth']})")
             except Exception as e:
-                logger.warning(f"Failed to claim article {title}: {e}")
+                logger.warning(f"Failed to claim article {title}: {e}", exc_info=True)
 
         logger.info(f"Claimed {len(claimed)} articles for processing")
         return claimed
@@ -143,7 +143,7 @@ class WorkQueueManager:
 
             logger.debug(f"Updated heartbeat for: {article_title}")
         except Exception as e:
-            logger.warning(f"Failed to update heartbeat for {article_title}: {e}")
+            logger.warning(f"Failed to update heartbeat for {article_title}: {e}", exc_info=True)
 
     def reclaim_stale(self, timeout_seconds: int = 300) -> int:
         """
@@ -199,29 +199,37 @@ class WorkQueueManager:
                     reclaimed += 1
                     logger.debug(f"Reclaimed stale claim: {title}")
                 except Exception as e:
-                    logger.warning(f"Failed to reclaim {title}: {e}")
+                    logger.warning(f"Failed to reclaim {title}: {e}", exc_info=True)
 
             logger.info(f"Reclaimed {reclaimed} stale claims")
             return reclaimed
 
         except Exception as e:
-            logger.error(f"Error reclaiming stale claims: {e}")
+            logger.error(f"Error reclaiming stale claims: {e}", exc_info=True)
             return 0
+
+    VALID_STATES = {'discovered', 'claimed', 'loaded', 'processed', 'failed'}
 
     def advance_state(self, article_title: str, new_state: str):
         """
         Advance article to new state.
 
         Updates expansion_state and sets processed_at timestamp.
-        Valid states: 'loaded', 'failed', 'processed'
+        Valid states: 'discovered', 'claimed', 'loaded', 'processed', 'failed'
 
         Args:
             article_title: Article title
-            new_state: New state (loaded, failed, processed)
+            new_state: New state (discovered, claimed, loaded, processed, failed)
+
+        Raises:
+            ValueError: If new_state is not a valid state
 
         Example:
             >>> manager.advance_state("Python (programming language)", "loaded")
         """
+        if new_state not in self.VALID_STATES:
+            raise ValueError(f"Invalid state: {new_state}. Must be one of {self.VALID_STATES}")
+
         now = datetime.now()
 
         try:
@@ -351,7 +359,7 @@ class WorkQueueManager:
             return stats
 
         except Exception as e:
-            logger.error(f"Failed to get queue stats: {e}")
+            logger.error(f"Failed to get queue stats: {e}", exc_info=True)
             return {"error": str(e)}
 
 

@@ -1,6 +1,5 @@
 # Seed Article Selection Strategy
 
-**Date:** February 7, 2026
 **Target:** 3,000 seed articles
 **Purpose:** Initialize WikiGR with diverse, high-quality articles for expansion to 30K
 
@@ -705,15 +704,3 @@ print(f"Quality (max): {max(quality_scores):.2f}")
 
 ---
 
-## Next Steps
-
-1. Run `python bootstrap/scripts/collect_seeds.py`
-2. Validate `bootstrap/data/seeds.json`
-3. Use seeds for Phase 3 expansion testing (1K from 100 seeds)
-4. Use all 3K seeds for Phase 4 expansion to 30K
-
----
-
-**Prepared by:** Claude Code (Sonnet 4.5)
-**Review Status:** Ready for implementation
-**Decision:** ✅ Proceed with Wikipedia Category Sampling

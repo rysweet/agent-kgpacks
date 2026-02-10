@@ -185,6 +185,8 @@ def graph_traversal(
             ...
         ]
     """
+    max_hops = max(1, min(int(max_hops), 10))  # Validate: integer 1-10
+
     logger.info(f"Graph traversal from: {seed_title} (max_hops={max_hops})")
 
     # Build query dynamically

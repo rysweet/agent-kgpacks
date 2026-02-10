@@ -129,6 +129,7 @@ class RyuGraphOrchestrator:
 
         start_time = time.time()
         iteration = 0
+        stats = self.work_queue.get_queue_stats()
 
         while True:
             iteration += 1

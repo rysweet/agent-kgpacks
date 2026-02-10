@@ -51,11 +51,11 @@ if missing_deps:
 print("   ✅ All dependencies installed")
 
 # Import after validation
-import re
+import re  # noqa: E402
 
-import kuzu
-import requests
-from sentence_transformers import SentenceTransformer
+import kuzu  # noqa: E402
+import requests  # noqa: E402
+from sentence_transformers import SentenceTransformer  # noqa: E402
 
 # Step 2: Create test database
 print("\n2. Creating test database...")

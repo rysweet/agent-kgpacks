@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def test_sequential_fetching(titles: list[str]) -> float:
+def test_sequential_fetching(titles: list[str]) -> tuple[float, int]:
     """Test sequential Wikipedia fetching"""
     client = WikipediaAPIClient()
 
@@ -42,7 +42,7 @@ def test_sequential_fetching(titles: list[str]) -> float:
     return elapsed, len(articles)
 
 
-def test_parallel_fetching(titles: list[str], max_workers: int = 5) -> float:
+def test_parallel_fetching(titles: list[str], max_workers: int = 5) -> tuple[float, int]:
     """Test parallel Wikipedia fetching"""
     client = WikipediaAPIClient()
 
@@ -64,7 +64,7 @@ def test_parallel_fetching(titles: list[str], max_workers: int = 5) -> float:
     return elapsed, successful
 
 
-def test_batch_embedding(num_texts: int = 1000, batch_size: int = 32) -> float:
+def test_batch_embedding(num_texts: int = 1000, batch_size: int = 32) -> tuple[float, int]:
     """Test batch embedding generation"""
     generator = EmbeddingGenerator()
 

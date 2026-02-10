@@ -9,6 +9,7 @@ import logging
 from datetime import datetime
 
 import kuzu
+import numpy as np
 
 from ..embeddings import EmbeddingGenerator
 from ..wikipedia import ArticleNotFoundError, WikipediaAPIClient, WikipediaArticle
@@ -108,7 +109,7 @@ class ArticleLoader:
         self,
         article: WikipediaArticle,
         sections: list[dict],
-        embeddings,
+        embeddings: np.ndarray,
         category: str,
         expansion_state: str,
         expansion_depth: int,

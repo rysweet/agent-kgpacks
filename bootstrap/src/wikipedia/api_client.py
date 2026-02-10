@@ -146,15 +146,15 @@ class WikipediaAPIClient:
             response.raise_for_status()
             return response.json()
 
-        except requests.Timeout:
+        except requests.Timeout as e:
             if retry_count < self.max_retries:
                 backoff_delay = (2**retry_count) * 1.0
                 time.sleep(backoff_delay)
                 return self._make_request(params, retry_count + 1)
-            raise WikipediaAPIError(f"Request timeout after {self.max_retries} retries")
+            raise WikipediaAPIError(f"Request timeout after {self.max_retries} retries") from e
 
         except requests.RequestException as e:
-            raise WikipediaAPIError(f"Request failed: {str(e)}")
+            raise WikipediaAPIError(f"Request failed: {str(e)}") from e
 
     def fetch_article(self, title: str) -> WikipediaArticle:
         """Fetch a single article from Wikipedia.
@@ -177,7 +177,7 @@ class WikipediaAPIClient:
             >>> assert len(article.links) > 0
         """
         # Check cache
-        if self.cache_enabled and title in self._cache:
+        if self._cache is not None and title in self._cache:
             return self._cache[title]
 
         params = {
@@ -223,23 +223,21 @@ class WikipediaAPIClient:
         )
 
         # Cache if enabled
-        if self.cache_enabled:
+        if self._cache is not None:
             self._cache[title] = article
 
         return article
 
     def fetch_batch(
-        self, titles: list[str], max_concurrent: int = 5, continue_on_error: bool = True
+        self, titles: list[str], _max_concurrent: int = 5, continue_on_error: bool = True
     ) -> list[tuple[str, WikipediaArticle | None, Exception | None]]:
         """Fetch multiple articles sequentially with rate limiting.
 
-        Note: Despite the max_concurrent parameter, this implementation
-        fetches sequentially to respect rate limits. The parameter is
-        included for API compatibility with future async implementations.
+        Note: This implementation fetches sequentially to respect rate limits.
 
         Args:
             titles: List of article titles to fetch
-            max_concurrent: Reserved for future use (currently sequential)
+            _max_concurrent: Unused, reserved for future async implementation
             continue_on_error: Continue fetching if one article fails
 
         Returns:

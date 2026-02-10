@@ -1,0 +1,1 @@
+"""WikiGR bootstrap package"""

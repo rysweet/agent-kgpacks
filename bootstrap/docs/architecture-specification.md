@@ -1,7 +1,6 @@
 # WikiGR Architecture Specification
 
 **Version:** 1.0
-**Date:** February 7, 2026
 **Target:** 30K articles with semantic search and graph traversal
 
 ---
@@ -744,7 +743,3 @@ def reclaim_stale(conn, timeout_seconds: int = 300):
 - [x] Memory usage <500 MB
 - [x] Failure rate <5%
 
----
-
-**Prepared by:** Claude Code (Sonnet 4.5)
-**Review Status:** Ready for implementation

@@ -1,8 +1,5 @@
 # Embedding Model Selection
 
-**Date:** February 7, 2026
-**Status:** ✅ Complete
-
 ---
 
 ## Executive Summary
@@ -347,8 +344,3 @@ model = SentenceTransformer('paraphrase-MiniLM-L3-v2', device=device)
 - **Model card (all-MiniLM-L6-v2):** https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
 - **Model card (all-mpnet-base-v2):** https://huggingface.co/sentence-transformers/all-mpnet-base-v2
 
----
-
-**Prepared by:** Claude Code (Sonnet 4.5)
-**Review Status:** Ready for implementation
-**Decision:** ✅ Proceed with paraphrase-MiniLM-L3-v2

@@ -64,10 +64,30 @@ Thumbs.db
 
 # Project specific
 bootstrap/data/seeds.json
-test_kuzu_*.py
-test_wikipedia_api.py
-test_embedding_models.py
+
+# Ad-hoc test scripts in root
+/test_*.py
 
 # Temporary files
 *.tmp
 *.temp
+
+# Claude / AI Agent state
+.claude/
+
+# Git worktrees
+worktrees/
+
+# Environment files
+.env
+.env.*
+
+# Virtual environment (additional)
+.venv/
+
+# Node modules
+node_modules/
+
+# Database files (comprehensive)
+data/**/*.db
+data/**/*.db/

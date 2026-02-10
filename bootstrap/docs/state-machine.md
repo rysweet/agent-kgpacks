@@ -1,6 +1,5 @@
 # Expansion State Machine
 
-**Date:** February 7, 2026
 **Purpose:** Document article expansion states and transitions
 
 ---
@@ -487,7 +486,3 @@ while True:
         print(f"Reclaimed {reclaimed} stale claims")
 ```
 
----
-
-**Prepared by:** Claude Code (Sonnet 4.5)
-**Status:** Design complete, ready for implementation

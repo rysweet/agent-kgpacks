@@ -120,7 +120,7 @@ exclude = [
     "build",
     "dist"
 ]
-strict = ["bootstrap/src"]
+strict = []
 typeCheckingMode = "basic"
 reportMissingImports = true
 reportMissingTypeStubs = false

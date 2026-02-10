@@ -97,7 +97,7 @@ class LinkDiscovery:
                     logger.debug(f"Discovered new article '{link}' at depth {next_depth}")
 
             except Exception as e:
-                logger.warning(f"Failed to process link '{link}': {e}")
+                logger.warning(f"Failed to process link '{link}': {e}", exc_info=True)
                 continue
 
         logger.info(

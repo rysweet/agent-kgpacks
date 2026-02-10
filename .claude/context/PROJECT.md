@@ -20,53 +20,72 @@ A semantic search and graph traversal system for Wikipedia articles using embedd
 
 ### Key Components
 
-- **Component 1**: [Purpose and responsibilities]
-- **Component 2**: [Purpose and responsibilities]
-- **Component 3**: [Purpose and responsibilities]
+- **bootstrap/src/wikipedia/**: Wikipedia API client with rate limiting, retry logic, and batch fetching
+- **bootstrap/src/embeddings/**: Embedding generation using paraphrase-MiniLM-L3-v2 (384 dimensions)
+- **bootstrap/src/database/**: Database loader integrating fetch, parse, embed, and store pipeline
+- **bootstrap/src/expansion/**: Orchestrator, work queue, link discovery, and article processor for automated graph expansion
+- **bootstrap/src/query/**: Semantic search and graph traversal query functions
+- **worktrees/feat-visualization-pwa/backend/**: FastAPI backend for visualization PWA
 
 ### Technology Stack
 
-- **Language**: Python
-- **Framework**: [Main framework if applicable]
-- **Database**: [Database system if applicable]
+- **Language**: Python 3.10+
+- **Framework**: FastAPI (backend API)
+- **Database**: Kuzu 0.11.3 (embedded graph database with HNSW vector index)
 
 ## Development Guidelines
 
 ### Code Organization
 
-[How is your code organized? What are the main directories?]
+- `bootstrap/src/` - Core library modules (wikipedia, embeddings, database, query, expansion)
+- `bootstrap/schema/` - Kuzu database schema definitions
+- `bootstrap/scripts/` - Utility and optimization scripts
+- `bootstrap/tests/` - Integration and validation tests
+- `worktrees/feat-visualization-pwa/` - Visualization PWA with FastAPI backend
 
 ### Key Patterns
 
-[What architectural patterns or conventions does your project follow?]
+- Bricks & Studs: Self-contained modules with clear `__init__.py` exports via `__all__`
+- Pipeline: Fetch -> Parse -> Embed -> Load -> Expand
+- Work queue with claim/heartbeat/reclaim for distributed processing
+- State machine for article expansion: discovered -> claimed -> loaded/failed
 
 ### Testing Strategy
 
-[How do you test? Unit tests, integration tests, E2E?]
+- Unit tests per module in `bootstrap/src/*/tests/`
+- Integration tests via `bootstrap/quickstart.py` (3-article end-to-end validation)
+- pytest with coverage reporting (minimum 70%)
 
 ## Domain Knowledge
 
 ### Business Context
 
-[What problem does this project solve? Who are the users?]
+Educational project building a semantic search and graph traversal system over Wikipedia articles. Users explore knowledge connections through vector similarity and link relationships.
 
 ### Key Terminology
 
-[Important domain-specific terms that agents should understand]
+- **Expansion**: Automatic discovery and loading of linked articles from seeds
+- **HNSW**: Hierarchical Navigable Small World index for approximate nearest neighbor vector search
+- **Depth**: How many link hops from the original seed articles (0 = seed, 1 = direct link, 2 = two hops)
 
 ## Common Tasks
 
 ### Development Workflow
 
-[How do developers typically work on this project?]
+1. `pip install -r requirements.txt` to install dependencies
+2. `python bootstrap/quickstart.py` to validate setup
+3. `ruff check` and `ruff format` for linting/formatting, `pyright` for type checking
+4. `pytest bootstrap/tests/` for test suite
 
 ### Deployment Process
 
-[How is the project deployed?]
+Embedded database; no server deployment needed for core functionality. The visualization PWA backend runs via `uvicorn`.
 
 ## Important Notes
 
-[Any special considerations, gotchas, or critical information]
+- Kuzu is an embedded database, so no external DB server is required
+- Wikipedia API has rate limits; the client enforces 100ms between requests
+- Embeddings use paraphrase-MiniLM-L3-v2 (384 dimensions, cosine similarity)
 
 ---
 
