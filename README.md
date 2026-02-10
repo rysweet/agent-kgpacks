@@ -165,9 +165,10 @@ pyright bootstrap/
 
 - **Research Findings**: `bootstrap/docs/research-findings.md`
 - **Architecture**: `bootstrap/docs/architecture-specification.md`
-- **Implementation Roadmap**: `bootstrap/docs/implementation-roadmap.md`
+- **State Machine**: `bootstrap/docs/state-machine.md`
 - **API Documentation**: `bootstrap/docs/wikipedia-api-validation.md`
 - **Embedding Models**: `bootstrap/docs/embedding-model-choice.md`
+- **Seed Strategy**: `bootstrap/docs/seed-selection-strategy.md`
 
 ## Roadmap
 

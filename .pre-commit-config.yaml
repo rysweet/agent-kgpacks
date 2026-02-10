@@ -44,19 +44,30 @@ repos:
       - id: debug-statements
       - id: mixed-line-ending
 
-  # Pytest with coverage (disabled by default - run manually with 'pre-commit run pytest-check')
-  # - repo: local
-  #   hooks:
-  #     - id: pytest-check
-  #       name: pytest-check
-  #       entry: pytest
-  #       language: system
-  #       pass_filenames: false
-  #       always_run: false
-  #       args: [
-  #         "bootstrap/src/*/tests",
-  #         "--cov=bootstrap/src",
-  #         "--cov-report=term-missing:skip-covered",
-  #         "--cov-fail-under=50",
-  #         "-q"
-  #       ]
+  # Repository hygiene hooks
+  - repo: local
+    hooks:
+      - id: no-temporal-docs
+        name: No temporal documentation
+        entry: bash -c 'for f in "$@"; do case "$(basename "$f")" in PROGRESS_*|FINAL_*|*COMPLETE*|*_REPORT.md|*_SUMMARY.md|RELEASE_NOTES_*) echo "Blocked temporal doc: $f"; exit 1;; esac; done' --
+        language: system
+        types: [markdown]
+
+      - id: no-root-test-scripts
+        name: No root-level test scripts
+        entry: bash -c 'for f in "$@"; do case "$f" in test_*.py) echo "Blocked: $f (use bootstrap/tests/)"; exit 1;; esac; done' --
+        language: system
+        files: ^test_.*\.py$
+
+      - id: banned-patterns
+        name: Banned code patterns
+        entry: bash .github/scripts/check-banned-patterns.sh
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      - id: no-env-files
+        name: No .env files
+        entry: bash -c 'for f in "$@"; do case "$(basename "$f")" in .env|.env.*) echo "Blocked: $f"; exit 1;; esac; done' --
+        language: system
+        files: \.env

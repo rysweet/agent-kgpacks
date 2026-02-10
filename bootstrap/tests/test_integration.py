@@ -1,0 +1,147 @@
+"""
+Integration tests for WikiGR pipeline.
+
+Validates end-to-end: schema, API fetch, parsing, embeddings, work queue.
+"""
+
+import shutil
+from pathlib import Path
+
+import kuzu
+import numpy as np
+import pytest
+
+pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(scope="module")
+def test_db_path(tmp_path_factory):
+    db_path = tmp_path_factory.mktemp("integration") / "test.db"
+    yield str(db_path)
+    p = Path(str(db_path))
+    if p.exists():
+        shutil.rmtree(str(db_path)) if p.is_dir() else p.unlink()
+
+
+@pytest.fixture(scope="module")
+def schema_db(test_db_path):
+    from bootstrap.schema.ryugraph_schema import create_schema
+
+    create_schema(test_db_path, drop_existing=True)
+    return test_db_path
+
+
+@pytest.fixture(scope="module")
+def db_connection(schema_db):
+    db = kuzu.Database(schema_db)
+    conn = kuzu.Connection(db)
+    yield conn
+
+
+class TestSchemaIntegration:
+    def test_creates_all_node_tables(self, db_connection):
+        result = db_connection.execute("CALL SHOW_TABLES() RETURN *")
+        names = set(result.get_as_df()["name"].tolist())
+        assert {"Article", "Section", "Category"}.issubset(names)
+
+    def test_creates_all_relationship_tables(self, db_connection):
+        result = db_connection.execute("CALL SHOW_TABLES() RETURN *")
+        names = set(result.get_as_df()["name"].tolist())
+        assert {"HAS_SECTION", "LINKS_TO", "IN_CATEGORY"}.issubset(names)
+
+    def test_section_supports_384_dim_embeddings(self, db_connection):
+        embedding = [0.1] * 384
+        db_connection.execute(
+            """CREATE (s:Section {
+                section_id: '__test__#0', title: 'Test', content: 'Test',
+                embedding: $e, level: 2, word_count: 1
+            })""",
+            {"e": embedding},
+        )
+        result = db_connection.execute(
+            "MATCH (s:Section {section_id: '__test__#0'}) RETURN s.embedding AS e"
+        )
+        assert len(result.get_as_df().iloc[0]["e"]) == 384
+        db_connection.execute(
+            "MATCH (s:Section {section_id: '__test__#0'}) DELETE s"
+        )
+
+
+class TestWikipediaAPIIntegration:
+    @pytest.mark.timeout(30)
+    def test_fetch_known_article(self):
+        from bootstrap.src.wikipedia import WikipediaAPIClient
+
+        client = WikipediaAPIClient()
+        article = client.fetch_article("Python (programming language)")
+        assert article.title == "Python (programming language)"
+        assert len(article.wikitext) > 1000
+        assert len(article.links) > 10
+
+    @pytest.mark.timeout(30)
+    def test_fetch_nonexistent_raises(self):
+        from bootstrap.src.wikipedia import ArticleNotFoundError, WikipediaAPIClient
+
+        client = WikipediaAPIClient()
+        with pytest.raises(ArticleNotFoundError):
+            client.fetch_article("This_Article_Does_Not_Exist_XYZZY_99999")
+
+
+class TestParserIntegration:
+    @pytest.mark.timeout(30)
+    def test_parse_real_article(self):
+        from bootstrap.src.wikipedia import WikipediaAPIClient
+        from bootstrap.src.wikipedia.parser import parse_sections
+
+        client = WikipediaAPIClient()
+        article = client.fetch_article("Python (programming language)")
+        sections = parse_sections(article.wikitext)
+        assert len(sections) >= 3
+        for s in sections:
+            assert s["level"] in (2, 3)
+            assert len(s["content"]) >= 100
+
+
+class TestEmbeddingIntegration:
+    def test_correct_shape(self):
+        from bootstrap.src.embeddings import EmbeddingGenerator
+
+        gen = EmbeddingGenerator(use_gpu=False)
+        embeddings = gen.generate(["Machine learning", "Python programming"])
+        assert embeddings.shape == (2, 384)
+        assert not np.allclose(embeddings, 0)
+
+    def test_similar_texts_high_similarity(self):
+        from bootstrap.src.embeddings import EmbeddingGenerator
+
+        gen = EmbeddingGenerator(use_gpu=False)
+        e = gen.generate(["Machine learning algorithms", "Deep learning models"])
+        sim = np.dot(e[0], e[1]) / (np.linalg.norm(e[0]) * np.linalg.norm(e[1]))
+        assert sim > 0.5
+
+
+class TestWorkQueueIntegration:
+    def test_claim_advance_lifecycle(self):
+        from bootstrap.src.expansion.work_queue import WorkQueueManager
+
+        db = kuzu.Database()
+        conn = kuzu.Connection(db)
+        conn.execute("""CREATE NODE TABLE Article(
+            title STRING, category STRING, word_count INT32,
+            expansion_state STRING, expansion_depth INT32,
+            claimed_at TIMESTAMP, processed_at TIMESTAMP,
+            retry_count INT32, PRIMARY KEY(title))""")
+        conn.execute("""CREATE (a:Article {
+            title: 'Test', category: 'Test', word_count: 0,
+            expansion_state: 'discovered', expansion_depth: 0,
+            claimed_at: NULL, processed_at: NULL, retry_count: 0})""")
+
+        mgr = WorkQueueManager(conn)
+        claimed = mgr.claim_work(batch_size=1)
+        assert len(claimed) == 1
+
+        mgr.advance_state("Test", "loaded")
+        result = conn.execute(
+            "MATCH (a:Article {title: 'Test'}) RETURN a.expansion_state AS s"
+        )
+        assert result.get_as_df().iloc[0]["s"] == "loaded"

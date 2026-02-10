@@ -6,54 +6,52 @@ on:
   pull_request:
     branches: [main, develop]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
 jobs:
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv pip install --system -e ".[dev]"
+      - name: Check formatting
+        run: ruff format --check bootstrap/
+      - name: Lint
+        run: ruff check bootstrap/
+      - name: Type check
+        run: pyright bootstrap/src bootstrap/schema
+
   test:
     name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
-
+    timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "latest"
-
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          uv pip install --system -e ".[dev,test]"
-
-      - name: Check formatting with ruff
-        run: |
-          ruff format --check bootstrap/
-
-      - name: Lint with ruff
-        run: |
-          ruff check bootstrap/
-
-      - name: Type check with pyright
-        run: |
-          pyright bootstrap/src bootstrap/schema
-
-      - name: Run tests with pytest
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install ${{ matrix.python-version }}
+      - run: uv pip install --system -e ".[dev,test]"
+      - name: Run tests with coverage
         run: |
           pytest bootstrap/src/*/tests \
             --cov=bootstrap/src \
             --cov-report=term-missing \
-            --cov-report=xml \
+            --cov-report=xml:coverage.xml \
             --cov-fail-under=70 \
-            -v
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+            -v --timeout=60
+      - uses: codecov/codecov-action@v4
         if: matrix.python-version == '3.11'
         with:
           file: ./coverage.xml
@@ -62,100 +60,90 @@ jobs:
   schema-validation:
     name: Validate Kuzu Schema
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Install dependencies
-        run: |
-          uv pip install --system -e ".[test]"
-
-      - name: Create and validate schema
-        run: |
-          python3 bootstrap/schema/ryugraph_schema.py --db /tmp/test_schema.db --drop
-          echo "✓ Schema validation passed"
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv pip install --system -e ".[test]"
+      - run: python3 bootstrap/schema/ryugraph_schema.py --db /tmp/test_schema.db --drop
 
   integration-test:
-    name: Integration Test (10 articles)
+    name: Integration Test
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     if: github.event_name == 'pull_request'
-
+    needs: [lint, schema-validation]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Install dependencies
-        run: |
-          uv pip install --system -e ".[test]"
-
-      - name: Run 10-article integration test
-        run: |
-          python3 test_10_articles.py
-        timeout-minutes: 15
-
-      - name: Upload test database as artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-database
-          path: data/test_10_articles.db
-          retention-days: 7
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv pip install --system -e ".[dev,test]"
+      - name: Run integration tests
+        run: pytest bootstrap/tests/test_integration.py -v -m integration --timeout=120
 
   documentation:
     name: Check Documentation
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check for broken links in markdown
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
-        with:
-          use-quiet-mode: 'yes'
-          config-file: '.github/markdown-link-check-config.json'
-          folder-path: 'bootstrap/docs'
-
+      - uses: actions/checkout@v4
       - name: Validate documentation structure
         run: |
-          # Check that all modules have documentation
+          exit_code=0
           for module in bootstrap/src/*/; do
-            if [ ! -f "$module/README.md" ] && [ ! -f "${module%/}.md" ]; then
-              echo "⚠ Missing documentation for $module"
+            module_name=$(basename "$module")
+            if [ "$module_name" = "__pycache__" ]; then continue; fi
+            if [ ! -f "$module/README.md" ]; then
+              echo "ERROR: Missing README.md for module: $module"
+              exit_code=1
             fi
           done
+          while IFS= read -r line; do
+            doc_path=$(echo "$line" | grep -oP 'bootstrap/docs/[a-zA-Z0-9_-]+\.md' || true)
+            if [ -n "$doc_path" ] && [ ! -f "$doc_path" ]; then
+              echo "ERROR: README.md references non-existent doc: $doc_path"
+              exit_code=1
+            fi
+          done < README.md
+          exit $exit_code
 
   pre-commit:
     name: Pre-commit Hooks
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv pip install --system pre-commit
+      - run: pre-commit run --all-files
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+  backend-test:
+    name: Backend API Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    if: hashFiles('backend/') != ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: uv pip install --system -r backend/requirements.txt && uv pip install --system pytest pytest-asyncio httpx
+      - run: pytest backend/tests/ -v
 
-      - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Install dependencies
-        run: |
-          uv pip install --system pre-commit
-
-      - name: Run pre-commit
-        run: |
-          pre-commit run --all-files
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    if: hashFiles('frontend/package.json') != ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+        working-directory: frontend
+      - run: npm test -- --run
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend

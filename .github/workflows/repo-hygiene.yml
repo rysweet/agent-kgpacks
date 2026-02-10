@@ -1,0 +1,81 @@
+name: Repository Hygiene
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  hygiene:
+    name: Repository Hygiene Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for temporal documentation files
+        run: |
+          exit_code=0
+          for pattern in "PROGRESS_*.md" "FINAL_*.md" "phase*-summary.md" \
+            "*COMPLETE*.md" "*COMPLETION*.md" "*_REPORT.md" "*_SUMMARY.md" \
+            "RELEASE_NOTES_*.md"; do
+            matches=$(git ls-files "$pattern" 2>/dev/null)
+            if [ -n "$matches" ]; then
+              echo "ERROR: Temporal document tracked: $matches"
+              exit_code=1
+            fi
+          done
+          exit $exit_code
+
+      - name: Check for root-level ad-hoc test scripts
+        run: |
+          root_tests=$(git ls-files 'test_*.py' | grep -v '/' || true)
+          if [ -n "$root_tests" ]; then
+            echo "ERROR: Root ad-hoc test scripts tracked:"
+            echo "$root_tests"
+            exit 1
+          fi
+
+      - name: Check for .gitignore violations
+        run: |
+          exit_code=0
+          for pattern in ".claude/" "data/*.db" "worktrees/" "logs/" ".env"; do
+            matches=$(git ls-files "$pattern" 2>/dev/null)
+            if [ -n "$matches" ]; then
+              echo "ERROR: Tracked files violate .gitignore ($pattern): $matches"
+              exit_code=1
+            fi
+          done
+          exit $exit_code
+
+      - name: Check for large files (>1MB)
+        run: |
+          exit_code=0
+          allowed="frontend/package-lock.json bootstrap/data/seeds_1k.json"
+          while IFS= read -r file; do
+            echo "$allowed" | grep -qw "$file" && continue
+            size=$(git cat-file -s "HEAD:$file" 2>/dev/null || echo 0)
+            if [ "$size" -gt 1048576 ]; then
+              echo "ERROR: Large file: $file ($(( size / 1024 ))KB)"
+              exit_code=1
+            fi
+          done < <(git ls-files)
+          exit $exit_code
+
+      - name: Run banned patterns check
+        run: bash .github/scripts/check-banned-patterns.sh
+
+      - name: Check for sensitive data patterns
+        run: |
+          exit_code=0
+          for pattern in 'AKIA[0-9A-Z]{16}' 'sk-[a-zA-Z0-9]{20,}' 'ghp_[a-zA-Z0-9]{36}'; do
+            matches=$(git grep -lP "$pattern" -- '*.py' '*.yaml' '*.yml' '*.json' ':!*test*' 2>/dev/null || true)
+            if [ -n "$matches" ]; then
+              echo "WARNING: Potential secret pattern in: $matches"
+              exit_code=1
+            fi
+          done
+          exit $exit_code

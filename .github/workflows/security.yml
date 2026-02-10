@@ -1,0 +1,56 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  dependency-audit:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.11
+      - run: uv pip install --system -e ".[dev]" pip-audit
+      - name: Run pip-audit
+        run: pip-audit --desc 2>&1 || true
+      - name: Check for .env files committed
+        run: |
+          env_files=$(git ls-files '.env' '.env.*' '**/.env' 2>/dev/null || true)
+          if [ -n "$env_files" ]; then
+            echo "ERROR: .env files tracked: $env_files"
+            exit 1
+          fi
+
+  frontend-audit:
+    name: Frontend Dependency Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: hashFiles('frontend/package-lock.json') != ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm audit --production --audit-level=high
+        working-directory: frontend
+        continue-on-error: true
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified
+        continue-on-error: true
