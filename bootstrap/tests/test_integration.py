@@ -62,9 +62,7 @@ class TestSchemaIntegration:
             "MATCH (s:Section {section_id: '__test__#0'}) RETURN s.embedding AS e"
         )
         assert len(result.get_as_df().iloc[0]["e"]) == 384
-        db_connection.execute(
-            "MATCH (s:Section {section_id: '__test__#0'}) DELETE s"
-        )
+        db_connection.execute("MATCH (s:Section {section_id: '__test__#0'}) DELETE s")
 
 
 class TestWikipediaAPIIntegration:
@@ -175,9 +173,116 @@ class TestExpansionIntegration:
 
         stats = orch.expand_to_target(target_count=3, max_iterations=10)
 
-        # Should have loaded at least the seed article
-        loaded = stats.get("loaded", 0) + stats.get("processed", 0)
-        assert loaded >= 1, f"Expected at least 1 loaded article, got stats: {stats}"
+        # Verify the seed was processed (it may or may not expand further
+        # depending on which links are discovered first)
+        result = orch.conn.execute(
+            "MATCH (a:Article) WHERE a.word_count > 0 RETURN COUNT(a) AS c"
+        )
+        loaded = result.get_as_df().iloc[0]["c"]
+        assert loaded >= 1, f"Expected at least 1 loaded article, got {loaded}"
+
+
+class TestQueryIntegration:
+    """Integration tests for graph_traversal and semantic_search query functions."""
+
+    @pytest.mark.timeout(60)
+    def test_graph_traversal_returns_neighbors(self, tmp_path):
+        """After loading articles with LINKS_TO, traversal finds them."""
+        from bootstrap.schema.ryugraph_schema import create_schema
+        from bootstrap.src.query.search import graph_traversal
+
+        db_path = str(tmp_path / "traversal_test.db")
+        create_schema(db_path, drop_existing=True)
+
+        db = kuzu.Database(db_path)
+        conn = kuzu.Connection(db)
+
+        # Create two articles and a LINKS_TO relationship
+        conn.execute("""
+            CREATE (a:Article {
+                title: 'Source', category: 'Test', word_count: 100,
+                expansion_state: 'processed', expansion_depth: 0,
+                claimed_at: NULL, processed_at: NULL, retry_count: 0
+            })
+        """)
+        conn.execute("""
+            CREATE (a:Article {
+                title: 'Target', category: 'Test', word_count: 100,
+                expansion_state: 'processed', expansion_depth: 1,
+                claimed_at: NULL, processed_at: NULL, retry_count: 0
+            })
+        """)
+        conn.execute("""
+            MATCH (s:Article {title: 'Source'}), (t:Article {title: 'Target'})
+            CREATE (s)-[:LINKS_TO {link_type: 'internal'}]->(t)
+        """)
+
+        results = graph_traversal(conn, seed_title="Source", max_hops=1)
+        titles = [r["article_title"] for r in results]
+        assert "Target" in titles
+
+    @pytest.mark.timeout(60)
+    def test_semantic_search_excludes_self(self, tmp_path):
+        """Semantic search for an article should not return itself."""
+        from bootstrap.schema.ryugraph_schema import create_schema
+        from bootstrap.src.embeddings import EmbeddingGenerator
+        from bootstrap.src.query.search import semantic_search
+
+        db_path = str(tmp_path / "semantic_test.db")
+        create_schema(db_path, drop_existing=True)
+
+        db = kuzu.Database(db_path)
+        conn = kuzu.Connection(db)
+
+        gen = EmbeddingGenerator(use_gpu=False)
+        emb_a = gen.generate(["Machine learning algorithms"]).tolist()[0]
+        emb_b = gen.generate(["Deep learning neural networks"]).tolist()[0]
+
+        # Create articles
+        conn.execute("""
+            CREATE (a:Article {
+                title: 'Article A', category: 'CS', word_count: 200,
+                expansion_state: 'processed', expansion_depth: 0,
+                claimed_at: NULL, processed_at: NULL, retry_count: 0
+            })
+        """)
+        conn.execute("""
+            CREATE (a:Article {
+                title: 'Article B', category: 'CS', word_count: 200,
+                expansion_state: 'processed', expansion_depth: 0,
+                claimed_at: NULL, processed_at: NULL, retry_count: 0
+            })
+        """)
+
+        # Create sections with embeddings
+        conn.execute(
+            """CREATE (s:Section {
+                section_id: 'Article A#0', title: 'Intro A', content: 'ML content',
+                embedding: $e, level: 2, word_count: 50
+            })""",
+            {"e": emb_a},
+        )
+        conn.execute(
+            """CREATE (s:Section {
+                section_id: 'Article B#0', title: 'Intro B', content: 'DL content',
+                embedding: $e, level: 2, word_count: 50
+            })""",
+            {"e": emb_b},
+        )
+
+        # Create HAS_SECTION relationships
+        conn.execute("""
+            MATCH (a:Article {title: 'Article A'}), (s:Section {section_id: 'Article A#0'})
+            CREATE (a)-[:HAS_SECTION]->(s)
+        """)
+        conn.execute("""
+            MATCH (a:Article {title: 'Article B'}), (s:Section {section_id: 'Article B#0'})
+            CREATE (a)-[:HAS_SECTION]->(s)
+        """)
+
+        results = semantic_search(conn, query_title="Article A", top_k=10)
+        result_titles = [r["article_title"] for r in results]
+        assert "Article A" not in result_titles
 
 
 class TestWorkQueueIntegration:
@@ -201,7 +306,5 @@ class TestWorkQueueIntegration:
         assert len(claimed) == 1
 
         mgr.advance_state("Test", "loaded")
-        result = conn.execute(
-            "MATCH (a:Article {title: 'Test'}) RETURN a.expansion_state AS s"
-        )
+        result = conn.execute("MATCH (a:Article {title: 'Test'}) RETURN a.expansion_state AS s")
         assert result.get_as_df().iloc[0]["s"] == "loaded"

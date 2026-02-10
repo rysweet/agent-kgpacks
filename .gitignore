@@ -91,4 +91,5 @@ node_modules/
 # Database files (comprehensive)
 data/**/*.db
 data/**/*.db/
+data/**/*.wal
 bootstrap/data/*.db

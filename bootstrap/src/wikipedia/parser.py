@@ -59,29 +59,17 @@ def parse_sections(wikitext: str) -> list[dict[str, str | int]]:
     # $                 - End of line
     heading_pattern = r"^(={2,3})\s*(.+?)\s*\1$"
 
-    # Find all headings with their positions
-    for match in re.finditer(heading_pattern, wikitext, re.MULTILINE):
+    # Store match start AND end positions
+    matches = list(re.finditer(heading_pattern, wikitext, re.MULTILINE))
+    for i, match in enumerate(matches):
         level = len(match.group(1))  # 2 or 3
         title = match.group(2).strip()
-        start_pos = match.end()
+        start = match.end()  # Content starts after heading
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(wikitext)
+        content = wikitext[start:end].strip()
+        cleaned_content = strip_wikitext(content)
 
-        sections.append({"level": level, "title": title, "start_pos": start_pos, "content": ""})
-
-    # Extract content between sections
-    for i, section in enumerate(sections):
-        start = section["start_pos"]
-        # End is either next section start or end of wikitext
-        end = (
-            sections[i + 1]["start_pos"] - len(sections[i + 1]["title"]) - 10
-            if i + 1 < len(sections)
-            else len(wikitext)
-        )
-
-        raw_content = wikitext[start:end].strip()
-        cleaned_content = strip_wikitext(raw_content)
-
-        section["content"] = cleaned_content
-        del section["start_pos"]  # Remove internal tracking field
+        sections.append({"level": level, "title": title, "content": cleaned_content})
 
     # Filter sections with content >= 100 characters
     filtered_sections = [section for section in sections if len(section["content"]) >= 100]
@@ -197,8 +185,8 @@ Too short.
 
     for i, section in enumerate(sections, 1):
         print(f"{i}. [H{section['level']}] {section['title']}")
-        print(f"   Content length: {len(section['content'])} chars")
-        print(f"   Preview: {section['content'][:100]}...")
+        print(f"   Content length: {len(str(section['content']))} chars")
+        print(f"   Preview: {str(section['content'])[:100]}...")
         print()
 
     print("=" * 60)
