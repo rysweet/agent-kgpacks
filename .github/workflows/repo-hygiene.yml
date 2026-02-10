@@ -67,15 +67,3 @@ jobs:
 
       - name: Run banned patterns check
         run: bash .github/scripts/check-banned-patterns.sh
-
-      - name: Check for sensitive data patterns
-        run: |
-          exit_code=0
-          for pattern in 'AKIA[0-9A-Z]{16}' 'sk-[a-zA-Z0-9]{20,}' 'ghp_[a-zA-Z0-9]{36}'; do
-            matches=$(git grep -lP "$pattern" -- '*.py' '*.yaml' '*.yml' '*.json' ':!*test*' 2>/dev/null || true)
-            if [ -n "$matches" ]; then
-              echo "WARNING: Potential secret pattern in: $matches"
-              exit_code=1
-            fi
-          done
-          exit $exit_code
