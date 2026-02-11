@@ -41,6 +41,23 @@ Expected output: All systems validated ✅
 python bootstrap/scripts/load_articles.py --count 10
 ```
 
+### Explore the Graph
+
+Visualize your knowledge graph interactively using [Kuzu Explorer](https://github.com/kuzudb/explorer),
+a browser-based UI that runs via Docker.
+
+```bash
+# Launch interactive graph explorer (requires Docker)
+python bootstrap/scripts/explore.py --db data/wikigr_1k.db
+# Opens browser at http://localhost:8000
+```
+
+Or use the installed entry point:
+
+```bash
+wikigr-explore --db data/wikigr_1k.db --port 8000
+```
+
 ## Project Structure
 
 ```

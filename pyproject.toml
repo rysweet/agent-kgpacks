@@ -68,6 +68,7 @@ test = [
 [project.scripts]
 wikigr-monitor = "bootstrap.scripts.monitor_expansion:main"
 wikigr-schema = "bootstrap.schema.ryugraph_schema:main"
+wikigr-explore = "bootstrap.scripts.explore:main"
 
 [project.urls]
 Homepage = "https://github.com/rysweet/wikigr"
