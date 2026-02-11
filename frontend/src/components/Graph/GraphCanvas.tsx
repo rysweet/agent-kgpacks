@@ -2,9 +2,12 @@
  * GraphCanvas Component
  *
  * D3.js force-directed graph visualization with zoom, pan, and interaction.
+ * Simulation lifecycle is decoupled from selection state to avoid rebuilds
+ * on every click. D3 operates on deep-cloned data to prevent mutation of
+ * React/Zustand store state.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import type { GraphNode, GraphEdge } from '../../types/graph';
 
@@ -25,10 +28,58 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   selectedNodeId,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  const simulationRef = useRef<d3.Simulation<GraphNode, GraphEdge> | null>(null);
+  const simulationRef = useRef<d3.Simulation<GraphNode, GraphEdge> | null>(
+    null
+  );
+  // Keep a stable reference to the latest onNodeClick so the simulation
+  // effect closure always invokes the current callback without needing
+  // onNodeClick in its dependency array.
+  const onNodeClickRef = useRef(onNodeClick);
+  onNodeClickRef.current = onNodeClick;
 
+  // Drag behavior factory -- returned handlers mutate the simulation via
+  // simulationRef so they stay valid across re-renders.
+  const makeDrag = useCallback(() => {
+    function dragStarted(
+      event: d3.D3DragEvent<SVGCircleElement, GraphNode, GraphNode>,
+      d: GraphNode
+    ) {
+      if (!event.active) simulationRef.current?.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(
+      event: d3.D3DragEvent<SVGCircleElement, GraphNode, GraphNode>,
+      d: GraphNode
+    ) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragEnded(
+      event: d3.D3DragEvent<SVGCircleElement, GraphNode, GraphNode>,
+      d: GraphNode
+    ) {
+      if (!event.active) simulationRef.current?.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    return d3
+      .drag<SVGCircleElement, GraphNode>()
+      .on('start', dragStarted)
+      .on('drag', dragged)
+      .on('end', dragEnded);
+  }, []);
+
+  // --- Simulation effect: only rebuilds when the graph data changes ---
   useEffect(() => {
     if (!svgRef.current || nodes.length === 0) return;
+
+    // Deep-clone data so D3 mutations (x, y, vx, vy) never touch store state
+    const simNodes: GraphNode[] = structuredClone(nodes);
+    const simEdges: GraphEdge[] = structuredClone(edges);
 
     const svg = d3.select(svgRef.current);
     const width = svgRef.current.clientWidth;
@@ -40,13 +91,13 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     // Create container for zoom
     const g = svg.append('g').attr('class', 'graph-layer');
 
-    // Create force simulation
+    // Create force simulation on cloned data
     const simulation = d3
-      .forceSimulation(nodes)
+      .forceSimulation(simNodes)
       .force(
         'link',
         d3
-          .forceLink<GraphNode, GraphEdge>(edges)
+          .forceLink<GraphNode, GraphEdge>(simEdges)
           .id((d) => d.id)
           .distance(100)
       )
@@ -62,7 +113,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     // Draw edges
     const edgeElements = g
       .selectAll<SVGLineElement, GraphEdge>('.edge')
-      .data(edges)
+      .data(simEdges)
       .join('line')
       .attr('class', 'edge')
       .attr('stroke', '#999')
@@ -72,7 +123,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     // Draw nodes
     const nodeElements = g
       .selectAll<SVGCircleElement, GraphNode>('.node')
-      .data(nodes)
+      .data(simNodes, (d) => d.id)
       .join('circle')
       .attr('class', 'node')
       .attr('r', (d) => 5 + d.links_count * 0.5)
@@ -81,17 +132,22 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       .attr('stroke-width', 1.5)
       .style('cursor', 'pointer')
       .on('click', (_event, d) => {
-        if (onNodeClick) {
-          onNodeClick(d.id);
-        }
-      });
+        onNodeClickRef.current?.(d.id);
+      })
+      .call(makeDrag());
 
-    // Update node appearance based on selection
-    if (selectedNodeId) {
-      nodeElements
-        .attr('stroke', (d) => (d.id === selectedNodeId ? '#000' : '#fff'))
-        .attr('stroke-width', (d) => (d.id === selectedNodeId ? 3 : 1.5));
-    }
+    // Draw labels
+    const labelElements = g
+      .selectAll<SVGTextElement, GraphNode>('.node-label')
+      .data(simNodes, (d) => d.id)
+      .join('text')
+      .attr('class', 'node-label')
+      .text((d) => d.title)
+      .attr('font-size', 10)
+      .attr('dx', (d) => 8 + d.links_count * 0.5)
+      .attr('dy', 3)
+      .attr('fill', '#333')
+      .attr('pointer-events', 'none');
 
     // Update positions on simulation tick
     simulation.on('tick', () => {
@@ -102,6 +158,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         .attr('y2', (d) => (d.target as GraphNode).y!);
 
       nodeElements.attr('cx', (d) => d.x!).attr('cy', (d) => d.y!);
+
+      labelElements.attr('x', (d) => d.x!).attr('y', (d) => d.y!);
     });
 
     // Zoom behavior
@@ -128,7 +186,19 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       simulation.stop();
       window.removeEventListener('resize', handleResize);
     };
-  }, [nodes, edges, onNodeClick, selectedNodeId]);
+  }, [nodes, edges, makeDrag]);
+
+  // --- Selection effect: updates visual highlight without rebuilding ---
+  useEffect(() => {
+    if (!svgRef.current) return;
+
+    const svg = d3.select(svgRef.current);
+
+    svg
+      .selectAll<SVGCircleElement, GraphNode>('.node')
+      .attr('stroke', (d) => (d.id === selectedNodeId ? '#000' : '#fff'))
+      .attr('stroke-width', (d) => (d.id === selectedNodeId ? 3 : 1.5));
+  }, [selectedNodeId]);
 
   return (
     <svg
