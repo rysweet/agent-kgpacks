@@ -85,20 +85,28 @@ class WorkQueueManager:
             logger.debug("No work available to claim")
             return []
 
-        # Update each article to claimed state
+        # Claim each article atomically with MATCH+WHERE+SET+RETURN.
+        # If another worker claimed the article between the SELECT above
+        # and this UPDATE, the WHERE guard prevents the SET and the RETURN
+        # yields an empty result -- no separate re-verify query needed.
         claimed = []
         for article in articles:
             title = article["title"]
             try:
-                self.conn.execute(
+                result = self.conn.execute(
                     """
                     MATCH (a:Article {title: $title})
                     WHERE a.expansion_state = 'discovered'
                     SET a.expansion_state = 'claimed',
                         a.claimed_at = $now
+                    RETURN a.title AS title
                 """,
                     {"title": title, "now": now},
                 )
+
+                if result.get_as_df().empty:
+                    logger.debug(f"Claim lost race for article: {title}")
+                    continue
 
                 claimed.append(
                     {

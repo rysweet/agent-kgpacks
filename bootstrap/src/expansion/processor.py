@@ -9,6 +9,7 @@ Integrates all modules to process a single article:
 5. Extract links for expansion
 """
 
+import contextlib
 import logging
 
 import kuzu
@@ -116,9 +117,35 @@ class ArticleProcessor:
         category: str,
         expansion_depth: int,
     ):
-        """Insert article and sections into database"""
+        """Insert article and sections into database.
+
+        All inserts are wrapped in an explicit transaction so that a failure
+        mid-way (e.g. after creating the Article node but before all Sections
+        are inserted) does not leave the graph in an inconsistent state.
+        """
         from datetime import datetime
 
+        self.conn.execute("BEGIN TRANSACTION")
+        try:
+            self._do_insert_article_with_sections(
+                article, sections, embeddings, category, expansion_depth, datetime.now()
+            )
+            self.conn.execute("COMMIT")
+        except Exception:
+            with contextlib.suppress(RuntimeError):
+                self.conn.execute("ROLLBACK")  # Kuzu may have auto-rolled-back
+            raise
+
+    def _do_insert_article_with_sections(
+        self,
+        article,
+        sections: list[dict],
+        embeddings: np.ndarray,
+        category: str,
+        expansion_depth: int,
+        now,
+    ):
+        """Internal: execute all insert queries within the current transaction."""
         # Calculate word count
         word_count = len(article.wikitext.split())
 
@@ -148,7 +175,7 @@ class ArticleProcessor:
                     "title": article.title,
                     "word_count": word_count,
                     "category": category,
-                    "now": datetime.now(),
+                    "now": now,
                 },
             )
         else:
@@ -171,7 +198,7 @@ class ArticleProcessor:
                     "category": category,
                     "word_count": word_count,
                     "expansion_depth": expansion_depth,
-                    "now": datetime.now(),
+                    "now": now,
                 },
             )
 
