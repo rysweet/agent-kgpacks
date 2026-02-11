@@ -85,7 +85,15 @@ class WorkQueueManager:
             logger.debug("No work available to claim")
             return []
 
-        # Update each article to claimed state
+        # Update each article to claimed state.
+        #
+        # TOCTOU mitigation: The SELECT above finds candidates, but another
+        # worker may have claimed the same article between the SELECT and
+        # UPDATE. The UPDATE's WHERE clause guards against this (it only
+        # modifies articles still in 'discovered' state). After the UPDATE
+        # we re-verify the article's state to confirm the claim succeeded;
+        # if the state is not 'claimed', another worker won the race and
+        # we skip this article.
         claimed = []
         for article in articles:
             title = article["title"]
@@ -99,6 +107,24 @@ class WorkQueueManager:
                 """,
                     {"title": title, "now": now},
                 )
+
+                # Re-verify: confirm the claim actually took effect.
+                # If another worker claimed between SELECT and UPDATE,
+                # the WHERE guard causes the SET to be a no-op, so the
+                # state will not be 'claimed' by us.
+                verify = self.conn.execute(
+                    """
+                    MATCH (a:Article {title: $title})
+                    RETURN a.expansion_state AS state
+                """,
+                    {"title": title},
+                )
+                verified_state = verify.get_as_df().iloc[0]["state"]
+                if verified_state != "claimed":
+                    logger.debug(
+                        f"Claim lost race for article: {title} " f"(state={verified_state})"
+                    )
+                    continue
 
                 claimed.append(
                     {
