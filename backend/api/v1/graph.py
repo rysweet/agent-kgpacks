@@ -8,12 +8,13 @@ import logging
 from datetime import datetime, timezone
 
 import kuzu
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
 
 from backend.db import get_db
 from backend.models.common import ErrorResponse
 from backend.models.graph import GraphResponse
+from backend.rate_limit import limiter
 from backend.services import GraphService
 
 logger = logging.getLogger(__name__)
@@ -30,12 +31,14 @@ router = APIRouter(prefix="/api/v1", tags=["graph"])
         500: {"model": ErrorResponse},
     },
 )
+@limiter.limit("20/minute")
 async def get_graph(
+    request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
-    article: str = Query(..., description="Seed article title"),
+    article: str = Query(..., max_length=500, description="Seed article title"),
     depth: int = Query(2, ge=1, le=3, description="Maximum depth to traverse"),
     limit: int = Query(50, ge=1, le=200, description="Maximum number of nodes"),
-    category: str | None = Query(None, description="Optional category filter"),
+    category: str | None = Query(None, max_length=200, description="Optional category filter"),
     conn: kuzu.Connection = Depends(get_db),
 ):
     """

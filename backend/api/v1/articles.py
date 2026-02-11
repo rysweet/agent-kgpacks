@@ -8,13 +8,14 @@ import logging
 from datetime import datetime, timezone
 
 import kuzu
-from fastapi import APIRouter, Depends, Path, Response
+from fastapi import APIRouter, Depends, Path, Request, Response
 from fastapi.responses import JSONResponse
 
 from backend.config import settings
 from backend.db import get_db
 from backend.models.article import ArticleDetail, CategoryListResponse, StatsResponse
 from backend.models.common import ErrorResponse
+from backend.rate_limit import limiter
 from backend.services import ArticleService
 
 logger = logging.getLogger(__name__)
@@ -30,9 +31,11 @@ router = APIRouter(prefix="/api/v1", tags=["articles"])
         500: {"model": ErrorResponse},
     },
 )
+@limiter.limit("30/minute")
 async def get_article(
+    request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
-    title: str = Path(..., description="Article title (URL-encoded)"),
+    title: str = Path(..., max_length=500, description="Article title (URL-encoded)"),
     conn: kuzu.Connection = Depends(get_db),
 ):
     """
@@ -79,7 +82,9 @@ async def get_article(
     response_model=CategoryListResponse,
     responses={500: {"model": ErrorResponse}},
 )
+@limiter.limit("30/minute")
 async def get_categories(
+    request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
     conn: kuzu.Connection = Depends(get_db),
 ):
@@ -114,7 +119,9 @@ async def get_categories(
     response_model=StatsResponse,
     responses={500: {"model": ErrorResponse}},
 )
+@limiter.limit("30/minute")
 async def get_stats(
+    request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
     conn: kuzu.Connection = Depends(get_db),
 ):

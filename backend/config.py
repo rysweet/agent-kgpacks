@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     api_description: str = "RESTful API for Wikipedia knowledge graph queries"
 
     # Server Settings
-    host: str = "0.0.0.0"
+    host: str = "127.0.0.1"
     port: int = 8000
 
     # CORS Settings
