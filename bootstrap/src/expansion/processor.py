@@ -9,6 +9,7 @@ Integrates all modules to process a single article:
 5. Extract links for expansion
 """
 
+import contextlib
 import logging
 
 import kuzu
@@ -131,7 +132,8 @@ class ArticleProcessor:
             )
             self.conn.execute("COMMIT")
         except Exception:
-            self.conn.execute("ROLLBACK")
+            with contextlib.suppress(RuntimeError):
+                self.conn.execute("ROLLBACK")  # Kuzu may have auto-rolled-back
             raise
 
     def _do_insert_article_with_sections(

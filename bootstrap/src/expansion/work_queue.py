@@ -110,19 +110,24 @@ class WorkQueueManager:
 
                 # Re-verify: confirm the claim actually took effect.
                 # If another worker claimed between SELECT and UPDATE,
-                # the WHERE guard causes the SET to be a no-op, so the
-                # state will not be 'claimed' by us.
+                # the WHERE guard causes the SET to be a no-op.
+                # We compare claimed_at against our own timestamp to
+                # distinguish our claim from another worker's -- just
+                # checking state='claimed' is insufficient because the
+                # other worker also sets state='claimed'.
                 verify = self.conn.execute(
                     """
                     MATCH (a:Article {title: $title})
-                    RETURN a.expansion_state AS state
+                    RETURN a.expansion_state AS state,
+                           a.claimed_at AS claimed_at
                 """,
                     {"title": title},
                 )
-                verified_state = verify.get_as_df().iloc[0]["state"]
-                if verified_state != "claimed":
+                row = verify.get_as_df().iloc[0]
+                if row["state"] != "claimed" or row["claimed_at"] != now:
                     logger.debug(
-                        f"Claim lost race for article: {title} " f"(state={verified_state})"
+                        f"Claim lost race for article: {title} "
+                        f"(state={row['state']}, claimed_at={row['claimed_at']})"
                     )
                     continue
 
