@@ -10,6 +10,7 @@ import time
 import kuzu
 
 from backend.models.graph import Edge, GraphResponse, Node
+from backend.services.summary_utils import get_article_summaries
 
 logger = logging.getLogger(__name__)
 
@@ -43,15 +44,21 @@ class GraphService:
         """
         start_time = time.time()
 
-        # Clamp depth to safe range regardless of caller validation
-        depth = max(1, min(int(depth), 3))
+        # Validate depth strictly instead of silently clamping, so callers
+        # receive clear feedback when they pass an out-of-range value.
+        depth = int(depth)
+        if depth < 1 or depth > 3:
+            raise ValueError(f"depth must be between 1 and 3, got {depth}")
 
         # Validate seed article exists
         result = conn.execute("MATCH (a:Article {title: $title}) RETURN a", {"title": article})
         if not result.has_next():
             raise ValueError(f"Article not found: {article}")
 
-        # Build query for graph traversal
+        # Build query for graph traversal.
+        # NOTE: depth is interpolated via f-string because Kuzu does not
+        # support parameterised variable-length path bounds (e.g. *0..$depth).
+        # The value is validated to int 1-3 above, so injection is not possible.
         if category:
             query = f"""
                 MATCH path = (seed:Article {{title: $seed}})-[:LINKS_TO*0..{depth}]->(neighbor:Article)
@@ -112,26 +119,8 @@ class GraphService:
             for _, lrow in links_result.get_as_df().iterrows():
                 link_counts[lrow["title"]] = int(lrow["links"])
 
-        # Batch query for summaries (replaces N individual queries)
-        summaries: dict[str, str] = {}
-        if titles:
-            summary_result = conn.execute(
-                """
-                MATCH (a:Article)-[:HAS_SECTION]->(s:Section)
-                WHERE a.title IN $titles
-                WITH a.title AS title, s.content AS content, s.section_id AS sid
-                ORDER BY title, sid ASC
-                RETURN DISTINCT title, content
-                """,
-                {"titles": titles},
-            )
-            for _, srow in summary_result.get_as_df().iterrows():
-                if srow["title"] not in summaries:
-                    content = srow["content"]
-                    if content:
-                        summaries[srow["title"]] = (
-                            content[:200] + "..." if len(content) > 200 else content
-                        )
+        # Batch query for summaries (shared helper avoids duplicated logic)
+        summaries = get_article_summaries(conn, titles) if titles else {}
 
         # Assemble node objects from batch results
         for row in node_rows:
