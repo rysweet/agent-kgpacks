@@ -24,11 +24,11 @@ jobs:
       - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: uv pip install --system -e ".[dev]"
       - name: Check formatting
-        run: ruff format --check bootstrap/
+        run: ruff format --check bootstrap/ backend/
       - name: Lint
-        run: ruff check bootstrap/
+        run: ruff check bootstrap/ backend/
       - name: Type check
-        run: pyright bootstrap/src bootstrap/schema
+        run: pyright bootstrap/src bootstrap/schema backend/
 
   test:
     name: Test Python ${{ matrix.python-version }}
