@@ -111,7 +111,7 @@ indent-style = "space"
 line-ending = "auto"
 
 [tool.pyright]
-include = ["bootstrap/src", "bootstrap/schema", "bootstrap/scripts"]
+include = ["bootstrap/src", "bootstrap/schema", "bootstrap/scripts", "backend"]
 exclude = [
     "**/__pycache__",
     "**/node_modules",

@@ -2,7 +2,8 @@
   "include": [
     "bootstrap/src",
     "bootstrap/schema",
-    "bootstrap/scripts"
+    "bootstrap/scripts",
+    "backend"
   ],
   "exclude": [
     "**/__pycache__",
@@ -35,6 +36,11 @@
   "executionEnvironments": [
     {
       "root": "bootstrap/src",
+      "pythonVersion": "3.10",
+      "extraPaths": []
+    },
+    {
+      "root": "backend",
       "pythonVersion": "3.10",
       "extraPaths": []
     }
