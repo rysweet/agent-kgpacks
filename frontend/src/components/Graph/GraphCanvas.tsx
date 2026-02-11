@@ -37,6 +37,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   const onNodeClickRef = useRef(onNodeClick);
   onNodeClickRef.current = onNodeClick;
 
+  // Stable ref for selectedNodeId so hover handlers always see current value
+  const selectedNodeIdRef = useRef(selectedNodeId);
+  selectedNodeIdRef.current = selectedNodeId;
+
   // Drag behavior factory -- returned handlers mutate the simulation via
   // simulationRef so they stay valid across re-renders.
   const makeDrag = useCallback(() => {
@@ -134,9 +138,19 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       .on('click', (_event, d) => {
         onNodeClickRef.current?.(d.id);
       })
+      .on('mouseover', (_event, d) => {
+        g.selectAll<SVGTextElement, GraphNode>('.node-label')
+          .filter((ld) => ld.id === d.id)
+          .attr('opacity', 1);
+      })
+      .on('mouseout', (_event, d) => {
+        g.selectAll<SVGTextElement, GraphNode>('.node-label')
+          .filter((ld) => ld.id === d.id)
+          .attr('opacity', (ld) => (ld.id === selectedNodeIdRef.current ? 1 : 0));
+      })
       .call(makeDrag());
 
-    // Draw labels
+    // Draw labels (hidden by default; shown on hover or when selected)
     const labelElements = g
       .selectAll<SVGTextElement, GraphNode>('.node-label')
       .data(simNodes, (d) => d.id)
@@ -147,7 +161,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       .attr('dx', (d) => 8 + d.links_count * 0.5)
       .attr('dy', 3)
       .attr('fill', '#333')
-      .attr('pointer-events', 'none');
+      .attr('pointer-events', 'none')
+      .attr('opacity', 0);
 
     // Update positions on simulation tick
     simulation.on('tick', () => {
@@ -198,6 +213,11 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       .selectAll<SVGCircleElement, GraphNode>('.node')
       .attr('stroke', (d) => (d.id === selectedNodeId ? '#000' : '#fff'))
       .attr('stroke-width', (d) => (d.id === selectedNodeId ? 3 : 1.5));
+
+    // Keep selected node label visible, hide previously selected
+    svg
+      .selectAll<SVGTextElement, GraphNode>('.node-label')
+      .attr('opacity', (d) => (d.id === selectedNodeId ? 1 : 0));
   }, [selectedNodeId]);
 
   return (
