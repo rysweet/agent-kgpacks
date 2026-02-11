@@ -30,6 +30,7 @@ function App() {
   const [searchError, setSearchError] = useState<string | null>(null);
 
   // Get filtered nodes and compute filtered edges
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- getFilteredNodes is a store method; nodes and filters are the real deps
   const filteredNodes = useMemo(() => getFilteredNodes(), [nodes, filters]);
   const filteredNodeIds = useMemo(
     () => new Set(filteredNodes.map((n) => n.id)),

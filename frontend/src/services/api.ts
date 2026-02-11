@@ -55,6 +55,11 @@ async function withRetry<T>(
     } catch (error) {
       lastError = error as Error;
 
+      // Don't retry cancelled requests (AbortController)
+      if (axios.isCancel(error)) {
+        throw error;
+      }
+
       // Don't retry on 4xx errors
       if (axios.isAxiosError(error) && error.response) {
         if (error.response.status >= 400 && error.response.status < 500) {
