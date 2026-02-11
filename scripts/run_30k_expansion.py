@@ -58,8 +58,8 @@ def main():
     conn.execute(
         "CREATE NODE TABLE Section(section_id STRING, title STRING, content STRING, word_count INT32, level INT32, embedding FLOAT[384], PRIMARY KEY(section_id))"
     )
-    conn.execute("CREATE NODE TABLE Category(name STRING, PRIMARY KEY(name))")
-    conn.execute("CREATE REL TABLE HAS_SECTION(FROM Article TO Section)")
+    conn.execute("CREATE NODE TABLE Category(name STRING, article_count INT32, PRIMARY KEY(name))")
+    conn.execute("CREATE REL TABLE HAS_SECTION(FROM Article TO Section, section_index INT32)")
     conn.execute("CREATE REL TABLE LINKS_TO(FROM Article TO Article, link_type STRING)")
     conn.execute("CREATE REL TABLE IN_CATEGORY(FROM Article TO Category)")
     conn.execute(
