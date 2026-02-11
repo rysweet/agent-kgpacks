@@ -35,9 +35,8 @@ def get_article_summaries(
         """
         MATCH (a:Article)-[:HAS_SECTION]->(s:Section)
         WHERE a.title IN $titles
-        WITH a.title AS title, s.content AS content, s.section_id AS sid
+        RETURN a.title AS title, s.content AS content, s.section_id AS sid
         ORDER BY title, sid ASC
-        RETURN DISTINCT title, content
         """,
         {"titles": titles},
     )
