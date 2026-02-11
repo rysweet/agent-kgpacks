@@ -5,15 +5,18 @@ FastAPI application providing RESTful API for Wikipedia knowledge graph queries.
 """
 
 import logging
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, Request, Response
+import kuzu
+from fastapi import Depends, FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.api.v1 import articles, graph, search
 from backend.config import settings
+from backend.db import get_db
 from backend.models.common import HealthResponse
 
 # Configure logging
@@ -24,11 +27,23 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Application lifespan handler for startup and shutdown."""
+    logger.info(f"Starting {settings.api_title} v{settings.api_version}")
+    logger.info(f"Database: {settings.database_path}")
+    logger.info(f"CORS origins: {settings.cors_origins}")
+    yield
+    logger.info("Shutting down WikiGR Visualization API")
+
+
 # Create FastAPI app
 app = FastAPI(
     title=settings.api_title,
     version=settings.api_version,
     description=settings.api_description,
+    lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
@@ -50,7 +65,10 @@ app.include_router(articles.router)
 
 
 @app.get("/health", response_model=HealthResponse)
-async def health_check(response: Response):
+async def health_check(
+    response: Response,
+    conn: kuzu.Connection = Depends(get_db),
+):
     """
     Health check endpoint.
 
@@ -63,9 +81,6 @@ async def health_check(response: Response):
 
     try:
         # Test database connection
-        from backend.db import get_db
-
-        conn = next(get_db())
         result = conn.execute("RETURN 1 AS test")
         result.has_next()
 
@@ -137,20 +152,6 @@ async def global_exception_handler(_request, exc):
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         },
     )
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Application startup event."""
-    logger.info(f"Starting {settings.api_title} v{settings.api_version}")
-    logger.info(f"Database: {settings.database_path}")
-    logger.info(f"CORS origins: {settings.cors_origins}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Application shutdown event."""
-    logger.info("Shutting down WikiGR Visualization API")
 
 
 if __name__ == "__main__":

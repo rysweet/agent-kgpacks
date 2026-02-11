@@ -104,3 +104,6 @@ def get_db() -> Generator[kuzu.Connection, None, None]:
     except Exception as e:
         logger.error(f"Database error: {e}")
         raise
+    finally:
+        # Connection cleanup (kuzu connections are lightweight but should be released)
+        del conn
