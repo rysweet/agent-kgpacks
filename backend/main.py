@@ -63,7 +63,9 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-XSS-Protection"] = "0"
-    response.headers["Content-Security-Policy"] = "default-src 'none'"
+    # Strict CSP for API routes; skip for docs pages that need inline scripts
+    if request.url.path not in ("/docs", "/redoc", "/openapi.json"):
+        response.headers["Content-Security-Policy"] = "default-src 'none'"
     return response
 
 
