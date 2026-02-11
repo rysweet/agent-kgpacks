@@ -94,7 +94,14 @@ export const useGraphStore = create<GraphState>()(
 
       addEdges: (newEdges: GraphEdge[]) => {
         const { edges } = get();
-        set({ edges: [...edges, ...newEdges] });
+        const edgeKey = (e: GraphEdge): string => {
+          const src = typeof e.source === 'string' ? e.source : e.source.id;
+          const tgt = typeof e.target === 'string' ? e.target : e.target.id;
+          return `${src}-${tgt}-${e.type}`;
+        };
+        const existing = new Set(edges.map(edgeKey));
+        const deduped = newEdges.filter((e) => !existing.has(edgeKey(e)));
+        set({ edges: [...edges, ...deduped] });
       },
 
       setSelectedNode: (nodeId: string | null) => {
@@ -141,8 +148,26 @@ export const useGraphStore = create<GraphState>()(
     {
       name: 'wikigr-graph',
       partialize: (state) => ({
-        nodes: state.nodes,
-        edges: state.edges,
+        // Strip D3-injected simulation fields (x, y, vx, vy, fx, fy) so we
+        // only persist clean API data.
+        nodes: state.nodes.map((n) => ({
+          id: n.id,
+          title: n.title,
+          category: n.category,
+          word_count: n.word_count,
+          depth: n.depth,
+          links_count: n.links_count,
+          ...(n.summary !== undefined && { summary: n.summary }),
+        })),
+        edges: state.edges.map((e) => ({
+          // After D3 resolves links, source/target become objects; persist ids
+          source:
+            typeof e.source === 'string' ? e.source : (e.source as GraphNode).id,
+          target:
+            typeof e.target === 'string' ? e.target : (e.target as GraphNode).id,
+          type: e.type,
+          weight: e.weight,
+        })),
       }),
       onRehydrateStorage: () => (state) => {
         // Handle corrupted localStorage data
