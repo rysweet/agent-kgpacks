@@ -162,57 +162,68 @@ class SearchService:
                 if match["distance"] < article_best_matches[article]["distance"]:
                     article_best_matches[article] = match
 
-        # Step 4: Filter by category if specified
+        # Step 4: Batch-fetch article metadata and summaries (fixes N+1 query pattern)
+        all_titles = list(article_best_matches.keys())
+
+        metadata: dict[str, dict] = {}
+        if all_titles:
+            meta_result = conn.execute(
+                """
+                MATCH (a:Article)
+                WHERE a.title IN $titles
+                RETURN a.title AS title, a.category AS category, a.word_count AS word_count
+                """,
+                {"titles": all_titles},
+            )
+            for _, row in meta_result.get_as_df().iterrows():
+                title = str(row["title"])
+                metadata[title] = {
+                    "category": str(row["category"]),
+                    "word_count": int(str(row["word_count"])),
+                }
+
+        summaries: dict[str, str] = {}
+        if all_titles:
+            summary_result = conn.execute(
+                """
+                MATCH (a:Article)-[:HAS_SECTION]->(s:Section)
+                WHERE a.title IN $titles
+                WITH a.title AS title, s.content AS content, s.section_id AS sid
+                ORDER BY title, sid ASC
+                RETURN DISTINCT title, content
+                """,
+                {"titles": all_titles},
+            )
+            for _, row in summary_result.get_as_df().iterrows():
+                title = str(row["title"])
+                if title not in summaries:
+                    raw_content = row["content"]
+                    content = str(raw_content) if raw_content is not None else ""
+                    if content:
+                        summaries[title] = content[:200] + "..." if len(content) > 200 else content
+
+        # Step 5: Build results from batch data, applying category filter
         results = []
 
         for article_title, match in article_best_matches.items():
-            # Get article details
-            article_result = conn.execute(
-                """
-                MATCH (a:Article {title: $title})
-                RETURN a.category AS category, a.word_count AS word_count
-                """,
-                {"title": article_title},
-            )
-
-            article_df = article_result.get_as_df()
-            if len(article_df) == 0:
+            if article_title not in metadata:
                 continue
 
-            article_category = article_df.iloc[0]["category"]
-            word_count = int(article_df.iloc[0]["word_count"])
+            meta = metadata[article_title]
 
-            # Apply category filter
-            if category and article_category != category:
+            if category and meta["category"] != category:
                 continue
-
-            # Get summary (first section content)
-            summary_result = conn.execute(
-                """
-                MATCH (a:Article {title: $title})-[:HAS_SECTION]->(s:Section)
-                RETURN s.content AS content
-                ORDER BY s.section_id ASC
-                LIMIT 1
-                """,
-                {"title": article_title},
-            )
-            summary_df = summary_result.get_as_df()
-            summary = ""
-            if len(summary_df) > 0:
-                content = summary_df.iloc[0]["content"]
-                if content:
-                    summary = content[:200] + "..." if len(content) > 200 else content
 
             result = SearchResult(
                 article=article_title,
                 similarity=match["similarity"],
-                category=article_category,
-                word_count=word_count,
-                summary=summary,
+                category=meta["category"],
+                word_count=meta["word_count"],
+                summary=summaries.get(article_title, ""),
             )
             results.append(result)
 
-        # Step 5: Sort by similarity (descending)
+        # Step 6: Sort by similarity (descending)
         results.sort(key=lambda x: x.similarity, reverse=True)
 
         return results[:top_k]
