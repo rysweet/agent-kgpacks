@@ -15,6 +15,7 @@ from backend.models.search import (
     SearchResponse,
     SearchResult,
 )
+from backend.services.summary_utils import get_article_summaries
 
 logger = logging.getLogger(__name__)
 
@@ -162,53 +163,50 @@ class SearchService:
                 if match["distance"] < article_best_matches[article]["distance"]:
                     article_best_matches[article] = match
 
-        # Step 4: Filter by category if specified
+        # Step 4: Batch-fetch article details and summaries, then filter
+        candidate_titles = list(article_best_matches.keys())
+
+        # Batch query for article metadata (category, word_count)
+        article_details: dict[str, dict] = {}
+        if candidate_titles:
+            details_result = conn.execute(
+                """
+                MATCH (a:Article)
+                WHERE a.title IN $titles
+                RETURN a.title AS title, a.category AS category,
+                       a.word_count AS word_count
+                """,
+                {"titles": candidate_titles},
+            )
+            for _, drow in details_result.get_as_df().iterrows():
+                article_details[drow["title"]] = {
+                    "category": drow["category"],
+                    "word_count": int(drow["word_count"]),
+                }
+
+        # Batch query for summaries (shared helper)
+        summaries = get_article_summaries(conn, candidate_titles)
+
         results = []
 
         for article_title, match in article_best_matches.items():
-            # Get article details
-            article_result = conn.execute(
-                """
-                MATCH (a:Article {title: $title})
-                RETURN a.category AS category, a.word_count AS word_count
-                """,
-                {"title": article_title},
-            )
-
-            article_df = article_result.get_as_df()
-            if len(article_df) == 0:
+            details = article_details.get(article_title)
+            if details is None:
                 continue
 
-            article_category = article_df.iloc[0]["category"]
-            word_count = int(article_df.iloc[0]["word_count"])
+            article_category = details["category"]
+            word_count = details["word_count"]
 
             # Apply category filter
             if category and article_category != category:
                 continue
-
-            # Get summary (first section content)
-            summary_result = conn.execute(
-                """
-                MATCH (a:Article {title: $title})-[:HAS_SECTION]->(s:Section)
-                RETURN s.content AS content
-                ORDER BY s.section_id ASC
-                LIMIT 1
-                """,
-                {"title": article_title},
-            )
-            summary_df = summary_result.get_as_df()
-            summary = ""
-            if len(summary_df) > 0:
-                content = summary_df.iloc[0]["content"]
-                if content:
-                    summary = content[:200] + "..." if len(content) > 200 else content
 
             result = SearchResult(
                 article=article_title,
                 similarity=match["similarity"],
                 category=article_category,
                 word_count=word_count,
-                summary=summary,
+                summary=summaries.get(article_title, ""),
             )
             results.append(result)
 
@@ -240,10 +238,10 @@ class SearchService:
         if len(q) < 2:
             raise ValueError("Query must be at least 2 characters")
 
-        # Search for articles with title starting with query
+        # Search for articles with title starting with query (case-insensitive)
         query = """
             MATCH (a:Article)
-            WHERE a.title STARTS WITH $prefix
+            WHERE lower(a.title) STARTS WITH lower($prefix)
             RETURN a.title AS title, a.category AS category
             ORDER BY a.title ASC
             LIMIT $limit
@@ -261,12 +259,13 @@ class SearchService:
             )
             suggestions.append(suggestion)
 
-        # If not enough results, search for contains
+        # If not enough results, search for contains (case-insensitive)
         if len(suggestions) < limit:
             remaining = limit - len(suggestions)
             contains_query = """
                 MATCH (a:Article)
-                WHERE a.title CONTAINS $substring AND NOT a.title STARTS WITH $prefix
+                WHERE lower(a.title) CONTAINS lower($substring)
+                  AND NOT lower(a.title) STARTS WITH lower($prefix)
                 RETURN a.title AS title, a.category AS category
                 ORDER BY a.title ASC
                 LIMIT $limit
