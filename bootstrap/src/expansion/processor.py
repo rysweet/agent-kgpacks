@@ -9,7 +9,6 @@ Integrates all modules to process a single article:
 5. Extract links for expansion
 """
 
-import contextlib
 import logging
 
 import kuzu
@@ -119,22 +118,16 @@ class ArticleProcessor:
     ):
         """Insert article and sections into database.
 
-        All inserts are wrapped in an explicit transaction so that a failure
-        mid-way (e.g. after creating the Article node but before all Sections
-        are inserted) does not leave the graph in an inconsistent state.
+        Note: Explicit transactions are not used here because Kuzu's
+        single-connection model auto-commits each statement. Using
+        BEGIN TRANSACTION would conflict with work queue writes on
+        the same connection (write-write conflict).
         """
         from datetime import datetime
 
-        self.conn.execute("BEGIN TRANSACTION")
-        try:
-            self._do_insert_article_with_sections(
-                article, sections, embeddings, category, expansion_depth, datetime.now()
-            )
-            self.conn.execute("COMMIT")
-        except Exception:
-            with contextlib.suppress(RuntimeError):
-                self.conn.execute("ROLLBACK")  # Kuzu may have auto-rolled-back
-            raise
+        self._do_insert_article_with_sections(
+            article, sections, embeddings, category, expansion_depth, datetime.now()
+        )
 
     def _do_insert_article_with_sections(
         self,
@@ -202,15 +195,15 @@ class ArticleProcessor:
                 },
             )
 
-        # Delete existing sections if article already exists (prevents duplicates on re-processing)
-        if article_exists:
-            self.conn.execute(
-                """
-                MATCH (a:Article {title: $title})-[r:HAS_SECTION]->(s:Section)
-                DELETE r, s
-            """,
-                {"title": article.title},
-            )
+        # Always delete existing sections before (re)inserting to prevent
+        # duplicate primary key errors from partial inserts or retries
+        self.conn.execute(
+            """
+            MATCH (a:Article {title: $title})-[r:HAS_SECTION]->(s:Section)
+            DELETE r, s
+        """,
+            {"title": article.title},
+        )
 
         # Insert Section nodes and relationships
         for i, (section, embedding) in enumerate(zip(sections, embeddings)):
