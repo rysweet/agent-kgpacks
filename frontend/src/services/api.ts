@@ -109,10 +109,14 @@ export async function searchSemantic(
 /**
  * Get full article details
  */
-export async function getArticle(title: string): Promise<Article> {
+export async function getArticle(
+  title: string,
+  signal?: AbortSignal
+): Promise<Article> {
   return withRetry(async () => {
     const response = await apiClient.get<Article>(
-      `/api/v1/articles/${encodeURIComponent(title)}`
+      `/api/v1/articles/${encodeURIComponent(title)}`,
+      { signal }
     );
     return response.data;
   });
