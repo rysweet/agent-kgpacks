@@ -24,13 +24,17 @@ def test_db_path():
 
 @pytest.fixture(scope="session")
 def setup_test_env(test_db_path):
-    """Setup test environment with database path."""
+    """Setup test environment with database path and disabled rate limiting."""
     # Set database path in config for tests
     os.environ["WIKIGR_DATABASE_PATH"] = test_db_path
+    # Disable rate limiting during tests to avoid 429 responses
+    os.environ["WIKIGR_RATE_LIMIT_ENABLED"] = "false"
     yield
     # Cleanup
     if "WIKIGR_DATABASE_PATH" in os.environ:
         del os.environ["WIKIGR_DATABASE_PATH"]
+    if "WIKIGR_RATE_LIMIT_ENABLED" in os.environ:
+        del os.environ["WIKIGR_RATE_LIMIT_ENABLED"]
 
 
 @pytest.fixture
