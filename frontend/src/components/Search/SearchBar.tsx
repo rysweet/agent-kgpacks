@@ -5,7 +5,6 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import type { AutocompleteSuggestion } from '../../types/graph';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -187,7 +186,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       </form>
 
       {/* Autocomplete dropdown */}
-      {suggestions.length > 0 && (
+      {showSuggestions && suggestions.length > 0 && (
         <ul
           role="listbox"
           className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto"

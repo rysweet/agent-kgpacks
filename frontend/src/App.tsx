@@ -4,41 +4,60 @@
  * Root component that integrates all UI elements.
  */
 
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { GraphCanvas } from './components/Graph/GraphCanvas';
 import { SearchBar } from './components/Search/SearchBar';
 import { NodeInfo } from './components/Sidebar/NodeInfo';
 import { FilterPanel } from './components/Sidebar/FilterPanel';
 import { useGraphStore } from './store/graphStore';
-import { searchSemantic } from './services/api';
-import type { SearchResult } from './types/graph';
+import { searchSemantic, autocomplete } from './services/api';
 
 function App() {
-  const {
-    nodes,
-    edges,
-    selectedNode,
-    setSelectedNode,
-    loadGraph,
-    applyFilters,
-    loading,
-    error,
-  } = useGraphStore();
+  // Individual Zustand selectors to avoid unnecessary re-renders
+  const nodes = useGraphStore((s) => s.nodes);
+  const edges = useGraphStore((s) => s.edges);
+  const selectedNode = useGraphStore((s) => s.selectedNode);
+  const setSelectedNode = useGraphStore((s) => s.setSelectedNode);
+  const loadGraph = useGraphStore((s) => s.loadGraph);
+  const applyFilters = useGraphStore((s) => s.applyFilters);
+  const getFilteredNodes = useGraphStore((s) => s.getFilteredNodes);
+  const filters = useGraphStore((s) => s.filters);
+  const loading = useGraphStore((s) => s.loading);
+  const error = useGraphStore((s) => s.error);
 
   const [searchMode, setSearchMode] = useState<'text' | 'semantic'>('semantic');
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  // Get unique categories from nodes
-  const categories = Array.from(new Set(nodes.map((n) => n.category)));
+  // Get filtered nodes and compute filtered edges
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- getFilteredNodes is a store method; nodes and filters are the real deps
+  const filteredNodes = useMemo(() => getFilteredNodes(), [nodes, filters]);
+  const filteredNodeIds = useMemo(
+    () => new Set(filteredNodes.map((n) => n.id)),
+    [filteredNodes]
+  );
+  const filteredEdges = useMemo(
+    () =>
+      edges.filter((e) => {
+        const sourceId = typeof e.source === 'string' ? e.source : e.source.id;
+        const targetId = typeof e.target === 'string' ? e.target : e.target.id;
+        return filteredNodeIds.has(sourceId) && filteredNodeIds.has(targetId);
+      }),
+    [edges, filteredNodeIds]
+  );
 
-  // Get selected node object
+  // Get unique categories from all nodes (not filtered)
+  const categories = useMemo(
+    () => Array.from(new Set(nodes.map((n) => n.category))),
+    [nodes]
+  );
+
+  // Get selected node object from filtered nodes
   const selectedNodeObj = selectedNode
-    ? nodes.find((n) => n.id === selectedNode) || null
+    ? filteredNodes.find((n) => n.id === selectedNode) || null
     : null;
 
-  // Handle search
+  // Handle search - dispatches based on searchMode
   const handleSearch = useCallback(async (query: string) => {
     if (!query.trim()) return;
 
@@ -46,20 +65,30 @@ function App() {
     setSearchError(null);
 
     try {
-      const results = await searchSemantic(query, 10);
-      setSearchResults(results);
+      if (searchMode === 'semantic') {
+        const results = await searchSemantic(query, 10);
 
-      // Load graph for first result
-      if (results.length > 0) {
-        await loadGraph(results[0].article, 2);
-        setSelectedNode(results[0].article);
+        // Load graph for first result
+        if (results.length > 0) {
+          await loadGraph(results[0].article, 2);
+          setSelectedNode(results[0].article);
+        }
+      } else {
+        // Text mode: use autocomplete to find matching articles by title
+        const suggestions = await autocomplete(query, 10);
+
+        if (suggestions.length > 0) {
+          // Load graph for the best title match
+          await loadGraph(suggestions[0].title, 2);
+          setSelectedNode(suggestions[0].title);
+        }
       }
     } catch (err) {
       setSearchError((err as Error).message);
     } finally {
       setSearchLoading(false);
     }
-  }, [loadGraph, setSelectedNode]);
+  }, [searchMode, loadGraph, setSelectedNode]);
 
   // Handle node click
   const handleNodeClick = useCallback((nodeId: string) => {
@@ -67,13 +96,13 @@ function App() {
   }, [setSelectedNode]);
 
   // Handle filter change
-  const handleFilterChange = useCallback((filters: {
+  const handleFilterChange = useCallback((filterUpdate: {
     selectedCategories?: string[];
     depth?: number;
   }) => {
     applyFilters({
-      categories: filters.selectedCategories,
-      maxDepth: filters.depth,
+      categories: filterUpdate.selectedCategories,
+      maxDepth: filterUpdate.depth,
     });
   }, [applyFilters]);
 
@@ -132,7 +161,7 @@ function App() {
             </div>
           )}
 
-          {!loading && !error && nodes.length === 0 && (
+          {!loading && !error && filteredNodes.length === 0 && nodes.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-gray-500">
                 <p className="text-xl mb-2">Search for an article to begin</p>
@@ -141,10 +170,10 @@ function App() {
             </div>
           )}
 
-          {nodes.length > 0 && (
+          {filteredNodes.length > 0 && (
             <GraphCanvas
-              nodes={nodes}
-              edges={edges}
+              nodes={filteredNodes}
+              edges={filteredEdges}
               onNodeClick={handleNodeClick}
               selectedNodeId={selectedNode}
             />
