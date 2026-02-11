@@ -53,24 +53,32 @@ class TestConnectionManager:
         result = conn.execute("RETURN 1 AS test")
         assert result.has_next()
 
-    def test_connection_reuse(self, connection_manager):
-        """Test that connections are reused."""
+    def test_fresh_connection_per_call(self, connection_manager):
+        """Test that each get_connection call returns a new connection."""
         conn1 = connection_manager.get_connection()
         conn2 = connection_manager.get_connection()
 
-        # Should return same connection instance
-        assert conn1 is conn2
+        # Should return distinct connection instances (request isolation)
+        assert conn1 is not conn2
+
+        # Both should be functional
+        result1 = conn1.execute("RETURN 1 AS test")
+        assert result1.has_next()
+        result2 = conn2.execute("RETURN 1 AS test")
+        assert result2.has_next()
 
     def test_connection_cleanup(self, connection_manager):
-        """Test that connections are properly cleaned up."""
+        """Test that close releases the database and new connections work after."""
         connection_manager.get_connection()
 
         # Cleanup should not raise errors
         connection_manager.close()
 
-        # After close, getting connection should create new one
+        # After close, getting connection should re-open the database
         new_conn = connection_manager.get_connection()
         assert new_conn is not None
+        result = new_conn.execute("RETURN 1 AS test")
+        assert result.has_next()
 
     def test_connection_survives_errors(self, connection_manager):
         """Test that connection remains valid after query errors."""
@@ -98,7 +106,6 @@ class TestConnectionManager:
         # Create new manager instance
         manager = ConnectionManager()
         manager._database = None
-        manager._connection = None
 
         # Should raise appropriate error
         with pytest.raises(FileNotFoundError):
@@ -133,13 +140,18 @@ class TestDatabaseConfig:
 class TestConnectionPooling:
     """Tests for connection pooling behavior."""
 
-    def test_connection_pool_size(self, connection_manager):
-        """Test that connection pool doesn't grow unbounded."""
+    def test_connections_share_database(self, connection_manager):
+        """Test that all connections share the same Database instance."""
         # Get multiple connections
         connections = [connection_manager.get_connection() for _ in range(10)]
 
-        # All should be the same instance (singleton pattern)
-        assert all(conn is connections[0] for conn in connections)
+        # Each should be a distinct connection (per-request isolation)
+        assert len({id(c) for c in connections}) == 10
+
+        # All should be functional (backed by the same database)
+        for conn in connections:
+            result = conn.execute("RETURN 1 AS test")
+            assert result.has_next()
 
     def test_thread_safety(self, connection_manager):
         """Test that connection manager is thread-safe."""

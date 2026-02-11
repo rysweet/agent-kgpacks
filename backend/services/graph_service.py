@@ -43,6 +43,9 @@ class GraphService:
         """
         start_time = time.time()
 
+        # Clamp depth to safe range regardless of caller validation
+        depth = max(1, min(int(depth), 3))
+
         # Validate seed article exists
         result = conn.execute("MATCH (a:Article {title: $title}) RETURN a", {"title": article})
         if not result.has_next():
@@ -81,52 +84,66 @@ class GraphService:
         result = conn.execute(query, params)
         df = result.get_as_df()
 
-        # Build nodes
+        # Build deduplicated node data, preserving traversal order
         nodes = []
         node_set = set()
+        node_rows = []
 
         for _, row in df.iterrows():
             title = row["title"]
             if title in node_set:
                 continue
             node_set.add(title)
+            node_rows.append(row)
 
-            # Get outgoing links count
+        titles = [row["title"] for row in node_rows]
+
+        # Batch query for link counts (replaces N individual queries)
+        link_counts: dict[str, int] = {}
+        if titles:
             links_result = conn.execute(
                 """
-                MATCH (a:Article {title: $title})-[:LINKS_TO]->(target)
-                RETURN count(target) AS count
+                MATCH (a:Article)-[:LINKS_TO]->(t:Article)
+                WHERE a.title IN $titles
+                RETURN a.title AS title, COUNT(t) AS links
                 """,
-                {"title": title},
+                {"titles": titles},
             )
-            links_df = links_result.get_as_df()
-            links_count = int(links_df.iloc[0]["count"]) if len(links_df) > 0 else 0
+            for _, lrow in links_result.get_as_df().iterrows():
+                link_counts[lrow["title"]] = int(lrow["links"])
 
-            # Get summary (first section content)
+        # Batch query for summaries (replaces N individual queries)
+        summaries: dict[str, str] = {}
+        if titles:
             summary_result = conn.execute(
                 """
-                MATCH (a:Article {title: $title})-[:HAS_SECTION]->(s:Section)
-                RETURN s.content AS content
-                ORDER BY s.section_id ASC
-                LIMIT 1
+                MATCH (a:Article)-[:HAS_SECTION]->(s:Section)
+                WHERE a.title IN $titles
+                WITH a.title AS title, s.content AS content, s.section_id AS sid
+                ORDER BY title, sid ASC
+                RETURN DISTINCT title, content
                 """,
-                {"title": title},
+                {"titles": titles},
             )
-            summary_df = summary_result.get_as_df()
-            summary = ""
-            if len(summary_df) > 0:
-                content = summary_df.iloc[0]["content"]
-                if content:
-                    # Take first 200 characters as summary
-                    summary = content[:200] + "..." if len(content) > 200 else content
+            for _, srow in summary_result.get_as_df().iterrows():
+                if srow["title"] not in summaries:
+                    content = srow["content"]
+                    if content:
+                        summaries[srow["title"]] = (
+                            content[:200] + "..." if len(content) > 200 else content
+                        )
 
+        # Assemble node objects from batch results
+        for row in node_rows:
+            title = row["title"]
+            summary = summaries.get(title, "")
             node = Node(
                 id=title,
                 title=title,
                 category=row["category"],
                 word_count=int(row["word_count"]),
                 depth=int(row["depth"]),
-                links_count=links_count,
+                links_count=link_counts.get(title, 0),
                 summary=summary,
             )
             nodes.append(node)

@@ -175,77 +175,6 @@ curl "http://localhost:8000/api/v1/graph?article=Quantum+Mechanics&depth=1&limit
 
 ---
 
-### Hybrid Query
-
-**POST** `/api/v1/hybrid`
-
-Combine semantic search and graph traversal.
-
-**Request Body:**
-```json
-{
-  "query": "Machine Learning",
-  "category": "Computer Science",
-  "depth": 2,
-  "limit": 10,
-  "semantic_weight": 0.7,
-  "graph_weight": 0.3,
-  "threshold": 0.5
-}
-```
-
-**Parameters:**
-
-| Parameter         | Type   | Required | Default | Description                       |
-| ----------------- | ------ | -------- | ------- | --------------------------------- |
-| `query`           | string | Yes      | -       | Search query                      |
-| `category`        | string | No       | null    | Category filter                   |
-| `depth`           | int    | No       | 2       | Graph traversal depth (1-3)       |
-| `limit`           | int    | No       | 10      | Max results (1-100)               |
-| `semantic_weight` | float  | No       | 0.7     | Semantic score weight (0.0-1.0)   |
-| `graph_weight`    | float  | No       | 0.3     | Graph proximity weight (0.0-1.0)  |
-| `threshold`       | float  | No       | 0.5     | Min combined score (0.0-1.0)      |
-
-**Response:**
-```json
-{
-  "query": "Machine Learning",
-  "results": [
-    {
-      "article": "Deep Learning",
-      "semantic_score": 0.89,
-      "graph_distance": 1,
-      "combined_score": 0.82,
-      "category": "Computer Science",
-      "summary": "Deep learning is..."
-    }
-  ],
-  "total": 1,
-  "execution_time_ms": 89
-}
-```
-
-**Status Codes:**
-- `200`: Success
-- `400`: Invalid parameters
-- `404`: Query article not found
-- `422`: Validation error (weights don't sum to 1.0)
-- `500`: Server error
-
-**Example:**
-```bash
-curl -X POST http://localhost:8000/api/v1/hybrid \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query": "Machine Learning",
-    "category": "Computer Science",
-    "semantic_weight": 0.8,
-    "graph_weight": 0.2
-  }'
-```
-
----
-
 ### Article Details
 
 **GET** `/api/v1/articles/{title}`
@@ -480,37 +409,8 @@ All errors follow this format:
 | `MISSING_PARAMETER`   | 400    | Required parameter missing      |
 | `NOT_FOUND`           | 404    | Article/resource not found      |
 | `VALIDATION_ERROR`    | 422    | Request body validation failed  |
-| `RATE_LIMIT_EXCEEDED` | 429    | Too many requests               |
 | `SERVER_ERROR`        | 500    | Internal server error           |
 | `DATABASE_ERROR`      | 500    | Database connection/query error |
-
----
-
-## Rate Limiting
-
-**Limits:**
-- 100 requests per minute per IP
-- 1000 requests per hour per IP
-
-**Headers:**
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1644508800
-```
-
-**Exceeded response:**
-```json
-{
-  "error": {
-    "code": "RATE_LIMIT_EXCEEDED",
-    "message": "Rate limit exceeded. Try again in 32 seconds.",
-    "retry_after": 32
-  }
-}
-```
-
-**Status:** `429 Too Many Requests`
 
 ---
 
@@ -561,67 +461,6 @@ Content-Encoding: gzip
 | `/api/v1/stats` | `public, max-age=300`         | 5 minute cache         |
 | `/api/v1/articles/*` | `public, max-age=86400` | 24 hour cache          |
 
-**ETag support:**
-```
-ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
-If-None-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4"
-```
-
-**Response:** `304 Not Modified` if content unchanged
-
----
-
-## WebSocket API (Real-time Updates)
-
-**Endpoint:** `ws://localhost:8000/ws/graph`
-
-**Connect:**
-```javascript
-const ws = new WebSocket('ws://localhost:8000/ws/graph');
-
-ws.onopen = () => {
-  ws.send(JSON.stringify({
-    type: 'subscribe',
-    article: 'Machine Learning'
-  }));
-};
-
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  console.log('Graph update:', data);
-};
-```
-
-**Messages:**
-
-**Subscribe:**
-```json
-{
-  "type": "subscribe",
-  "article": "Machine Learning",
-  "depth": 2
-}
-```
-
-**Update:**
-```json
-{
-  "type": "node_added",
-  "node": {
-    "id": "Deep Learning",
-    "title": "Deep Learning",
-    "category": "Computer Science"
-  }
-}
-```
-
-**Unsubscribe:**
-```json
-{
-  "type": "unsubscribe"
-}
-```
-
 ---
 
 ## Performance Benchmarks
@@ -632,50 +471,7 @@ ws.onmessage = (event) => {
 | ------------------ | ---- | ---- | ---- | ----------------- |
 | `/api/v1/search`   | 45ms | 120ms| 250ms| 30K articles      |
 | `/api/v1/graph`    | 67ms | 180ms| 400ms| Depth=2, Limit=50 |
-| `/api/v1/hybrid`   | 89ms | 220ms| 500ms| Combined query    |
 | `/api/v1/articles` | 12ms | 35ms | 80ms | Single article    |
-
----
-
-## Client Libraries
-
-**Python:**
-```python
-from wikigr_client import WikiGRClient
-
-client = WikiGRClient(base_url="http://localhost:8000")
-
-# Search
-results = client.search("Machine Learning", limit=10)
-
-# Graph
-graph = client.graph("Machine Learning", depth=2)
-
-# Article details
-article = client.get_article("Machine Learning")
-```
-
-**JavaScript/TypeScript:**
-```typescript
-import { WikiGRClient } from 'wikigr-client';
-
-const client = new WikiGRClient('http://localhost:8000');
-
-// Search
-const results = await client.search('Machine Learning', { limit: 10 });
-
-// Graph
-const graph = await client.graph('Machine Learning', { depth: 2 });
-```
-
-**Installation:**
-```bash
-# Python
-pip install wikigr-client
-
-# JavaScript
-npm install wikigr-client
-```
 
 ---
 

@@ -5,7 +5,7 @@ Handles article details, categories, and statistics.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import kuzu
@@ -114,7 +114,7 @@ class ArticleService:
         wikipedia_url = f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}"
 
         # Use current timestamp as last_updated
-        last_updated = datetime.utcnow()
+        last_updated = datetime.now(timezone.utc)
 
         return ArticleDetail(
             title=title,
@@ -259,7 +259,7 @@ class ArticleService:
 
         database = {
             "size_mb": round(db_size_mb, 2),
-            "last_updated": datetime.utcnow().isoformat() + "Z",
+            "last_updated": datetime.now(timezone.utc).isoformat() + "Z",
         }
 
         return StatsResponse(

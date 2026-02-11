@@ -20,8 +20,9 @@ class ConnectionManager:
     """
     Singleton connection manager for Kuzu database.
 
-    Ensures single Database instance is shared across application.
-    Connections are thread-safe and reusable.
+    Keeps a single Database instance (thread-safe) and creates a new
+    Connection per request to avoid sharing a non-thread-safe connection
+    across concurrent async handlers.
     """
 
     _instance = None
@@ -43,7 +44,6 @@ class ConnectionManager:
 
         # Always read from settings (can be overridden by env var)
         self._database = None
-        self._connection = None
         self._initialized = True
 
     @property
@@ -52,38 +52,33 @@ class ConnectionManager:
         return settings.database_path
 
     def _get_database(self) -> kuzu.Database:
-        """Get or create Database instance."""
+        """Get or create Database instance (thread-safe singleton)."""
         if self._database is None:
-            db_path = Path(self.db_path)
+            with self._lock:
+                if self._database is None:
+                    db_path = Path(self.db_path)
 
-            if not db_path.exists():
-                raise FileNotFoundError(f"Database not found: {db_path}")
+                    if not db_path.exists():
+                        raise FileNotFoundError(f"Database not found: {db_path}")
 
-            logger.info(f"Opening Kuzu database: {db_path}")
-            self._database = kuzu.Database(str(db_path))
+                    logger.info(f"Opening Kuzu database: {db_path}")
+                    self._database = kuzu.Database(str(db_path))
 
         return self._database
 
     def get_connection(self) -> kuzu.Connection:
         """
-        Get Kuzu connection.
+        Create a new Kuzu connection for each request.
 
         Returns:
-            Kuzu Connection instance
+            Fresh Kuzu Connection instance
         """
-        if self._connection is None:
-            database = self._get_database()
-            self._connection = kuzu.Connection(database)
-            logger.debug("Created new Kuzu connection")
-
-        return self._connection
+        database = self._get_database()
+        logger.debug("Creating new Kuzu connection for request")
+        return kuzu.Connection(database)
 
     def close(self):
-        """Close database connection."""
-        if self._connection is not None:
-            self._connection = None
-            logger.info("Closed Kuzu connection")
-
+        """Close database (release Database instance)."""
         if self._database is not None:
             self._database = None
             logger.info("Closed Kuzu database")
@@ -97,8 +92,11 @@ def get_db() -> Generator[kuzu.Connection, None, None]:
     """
     FastAPI dependency for database connection.
 
+    Creates a fresh connection per request so concurrent async handlers
+    do not share a single non-thread-safe connection.
+
     Yields:
-        Kuzu Connection instance
+        Fresh Kuzu Connection instance
     """
     conn = _manager.get_connection()
     try:
