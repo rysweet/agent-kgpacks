@@ -39,7 +39,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.wikigr\.example\.com\/api\/v1\/.*/i,
+            urlPattern: /\/api\/v1\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
