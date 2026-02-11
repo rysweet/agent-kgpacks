@@ -75,6 +75,10 @@ class WikipediaAPIClient:
     BASE_URL = "https://en.wikipedia.org/w/api.php"
     USER_AGENT = "WikiGR/1.0 (Educational Project)"
 
+    # Maximum number of articles to keep in the response cache.
+    # Prevents unbounded memory growth during long bootstrap runs.
+    _CACHE_MAX_SIZE = 100
+
     def __init__(
         self,
         cache_enabled: bool = False,
@@ -222,8 +226,11 @@ class WikipediaAPIClient:
             pageid=parse_data.get("pageid"),
         )
 
-        # Cache if enabled
+        # Cache if enabled (evict oldest entry when at capacity)
         if self._cache is not None:
+            if len(self._cache) >= self._CACHE_MAX_SIZE:
+                oldest_key = next(iter(self._cache))
+                del self._cache[oldest_key]
             self._cache[title] = article
 
         return article

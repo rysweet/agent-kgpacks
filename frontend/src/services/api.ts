@@ -55,6 +55,11 @@ async function withRetry<T>(
     } catch (error) {
       lastError = error as Error;
 
+      // Don't retry cancelled requests (AbortController)
+      if (axios.isCancel(error)) {
+        throw error;
+      }
+
       // Don't retry on 4xx errors
       if (axios.isAxiosError(error) && error.response) {
         if (error.response.status >= 400 && error.response.status < 500) {
@@ -109,10 +114,14 @@ export async function searchSemantic(
 /**
  * Get full article details
  */
-export async function getArticle(title: string): Promise<Article> {
+export async function getArticle(
+  title: string,
+  signal?: AbortSignal
+): Promise<Article> {
   return withRetry(async () => {
     const response = await apiClient.get<Article>(
-      `/api/v1/articles/${encodeURIComponent(title)}`
+      `/api/v1/articles/${encodeURIComponent(title)}`,
+      { signal }
     );
     return response.data;
   });

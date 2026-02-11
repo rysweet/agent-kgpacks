@@ -23,21 +23,29 @@ export const NodeInfo: React.FC<NodeInfoProps> = ({ selectedNode }) => {
       return;
     }
 
+    const controller = new AbortController();
+
     const fetchArticle = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const data = await getArticle(selectedNode.title);
+        const data = await getArticle(selectedNode.title, controller.signal);
         setArticle(data);
       } catch (err) {
+        // Ignore aborted requests (user navigated away or selected another node)
+        if (controller.signal.aborted) return;
         setError((err as Error).message || 'Failed to load article');
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchArticle();
+
+    return () => controller.abort();
   }, [selectedNode]);
 
   if (!selectedNode) {
