@@ -11,7 +11,6 @@ import kuzu
 def get_article_summaries(
     conn: kuzu.Connection,
     titles: list[str],
-    max_length: int = 200,
 ) -> dict[str, str]:
     """
     Fetch the first section content for each article as a summary.
@@ -22,7 +21,6 @@ def get_article_summaries(
     Args:
         conn: Kuzu database connection
         titles: List of article titles to fetch summaries for
-        max_length: Maximum character length for each summary (truncated with "...")
 
     Returns:
         Dict mapping article title to its summary string.
@@ -47,8 +45,6 @@ def get_article_summaries(
         if title not in summaries:
             content = row["content"]
             if content:
-                summaries[title] = (
-                    content[:max_length] + "..." if len(content) > max_length else content
-                )
+                summaries[title] = content[:200] + "..." if len(content) > 200 else content
 
     return summaries
