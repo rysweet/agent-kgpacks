@@ -176,10 +176,9 @@ class SearchService:
                 {"titles": all_titles},
             )
             for _, row in meta_result.get_as_df().iterrows():
-                title = str(row["title"])
-                metadata[title] = {
-                    "category": str(row["category"]),
-                    "word_count": int(str(row["word_count"])),
+                metadata[row["title"]] = {
+                    "category": row["category"],
+                    "word_count": int(row["word_count"]),
                 }
 
         summaries: dict[str, str] = {}
@@ -190,15 +189,14 @@ class SearchService:
                 WHERE a.title IN $titles
                 WITH a.title AS title, s.content AS content, s.section_id AS sid
                 ORDER BY title, sid ASC
-                RETURN DISTINCT title, content
+                RETURN title, content
                 """,
                 {"titles": all_titles},
             )
             for _, row in summary_result.get_as_df().iterrows():
-                title = str(row["title"])
+                title = row["title"]
                 if title not in summaries:
-                    raw_content = row["content"]
-                    content = str(raw_content) if raw_content is not None else ""
+                    content = row["content"] or ""
                     if content:
                         summaries[title] = content[:200] + "..." if len(content) > 200 else content
 
