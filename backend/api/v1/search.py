@@ -8,12 +8,13 @@ import logging
 from datetime import datetime, timezone
 
 import kuzu
-from fastapi import APIRouter, Depends, Query, Response
+from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
 
 from backend.db import get_db
 from backend.models.common import ErrorResponse
 from backend.models.search import AutocompleteResponse, SearchResponse
+from backend.rate_limit import limiter
 from backend.services import SearchService
 
 logger = logging.getLogger(__name__)
@@ -30,10 +31,12 @@ router = APIRouter(prefix="/api/v1", tags=["search"])
         500: {"model": ErrorResponse},
     },
 )
+@limiter.limit("10/minute")
 async def search(
+    request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
-    query: str = Query(..., description="Search query (article title)"),
-    category: str | None = Query(None, description="Optional category filter"),
+    query: str = Query(..., max_length=200, description="Search query (article title)"),
+    category: str | None = Query(None, max_length=200, description="Optional category filter"),
     limit: int = Query(10, ge=1, le=100, description="Maximum results"),
     threshold: float = Query(0.0, ge=0.0, le=1.0, description="Minimum similarity threshold"),
     conn: kuzu.Connection = Depends(get_db),
@@ -105,9 +108,13 @@ async def search(
         500: {"model": ErrorResponse},
     },
 )
+@limiter.limit("60/minute")
 async def autocomplete(
+    request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
-    q: str = Query(..., min_length=2, description="Query string (minimum 2 characters)"),
+    q: str = Query(
+        ..., min_length=2, max_length=200, description="Query string (minimum 2 characters)"
+    ),
     limit: int = Query(10, ge=1, le=20, description="Maximum suggestions"),
     conn: kuzu.Connection = Depends(get_db),
 ):
