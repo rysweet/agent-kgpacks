@@ -85,50 +85,27 @@ class WorkQueueManager:
             logger.debug("No work available to claim")
             return []
 
-        # Update each article to claimed state.
-        #
-        # TOCTOU mitigation: The SELECT above finds candidates, but another
-        # worker may have claimed the same article between the SELECT and
-        # UPDATE. The UPDATE's WHERE clause guards against this (it only
-        # modifies articles still in 'discovered' state). After the UPDATE
-        # we re-verify the article's state to confirm the claim succeeded;
-        # if the state is not 'claimed', another worker won the race and
-        # we skip this article.
+        # Claim each article atomically with MATCH+WHERE+SET+RETURN.
+        # If another worker claimed the article between the SELECT above
+        # and this UPDATE, the WHERE guard prevents the SET and the RETURN
+        # yields an empty result -- no separate re-verify query needed.
         claimed = []
         for article in articles:
             title = article["title"]
             try:
-                self.conn.execute(
+                result = self.conn.execute(
                     """
                     MATCH (a:Article {title: $title})
                     WHERE a.expansion_state = 'discovered'
                     SET a.expansion_state = 'claimed',
                         a.claimed_at = $now
+                    RETURN a.title AS title
                 """,
                     {"title": title, "now": now},
                 )
 
-                # Re-verify: confirm the claim actually took effect.
-                # If another worker claimed between SELECT and UPDATE,
-                # the WHERE guard causes the SET to be a no-op.
-                # We compare claimed_at against our own timestamp to
-                # distinguish our claim from another worker's -- just
-                # checking state='claimed' is insufficient because the
-                # other worker also sets state='claimed'.
-                verify = self.conn.execute(
-                    """
-                    MATCH (a:Article {title: $title})
-                    RETURN a.expansion_state AS state,
-                           a.claimed_at AS claimed_at
-                """,
-                    {"title": title},
-                )
-                row = verify.get_as_df().iloc[0]
-                if row["state"] != "claimed" or row["claimed_at"] != now:
-                    logger.debug(
-                        f"Claim lost race for article: {title} "
-                        f"(state={row['state']}, claimed_at={row['claimed_at']})"
-                    )
+                if result.get_as_df().empty:
+                    logger.debug(f"Claim lost race for article: {title}")
                     continue
 
                 claimed.append(
