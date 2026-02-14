@@ -16,6 +16,13 @@ import sys
 import time
 from pathlib import Path
 
+# Prevent loky/tokenizers semaphore leak that crashes long-running processes.
+# sentence-transformers uses joblib/loky for parallel tokenization, which
+# leaks semaphores over thousands of encode() calls, eventually triggering
+# a resource_tracker crash after ~6K articles.
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["LOKY_MAX_CPU_COUNT"] = "1"
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from bootstrap.src.expansion.orchestrator import RyuGraphOrchestrator
