@@ -73,13 +73,28 @@ class ArticleProcessor:
                 logger.warning(error_msg)
                 return (False, [], error_msg)
 
-            # Step 2: Parse sections
+            # Step 2: Handle redirects and parse sections
+            import re
+
+            redirect_match = re.match(r"#REDIRECT\s*\[\[(.+?)\]\]", article.wikitext, re.IGNORECASE)
+            if redirect_match:
+                redirect_target = redirect_match.group(1)
+                logger.info(f"  Redirect: {title} -> {redirect_target}")
+                # Re-fetch the actual article
+                try:
+                    article = self.wikipedia_client.fetch_article(redirect_target)
+                    logger.info(f"  Fetched redirect target: {len(article.wikitext)} chars")
+                except Exception:
+                    # Skip unfollowable redirects — mark as processed (not failed)
+                    logger.info(f"  Skipping unfollowable redirect: {title}")
+                    return (True, [], None)
+
             sections = parse_sections(article.wikitext)
 
             if not sections:
-                error_msg = f"No sections parsed from article: {title}"
-                logger.warning(error_msg)
-                return (False, article.links, error_msg)
+                # Stub articles with no parseable content — skip, don't fail
+                logger.info(f"  Skipping stub article (no sections): {title}")
+                return (True, article.links if hasattr(article, "links") else [], None)
 
             logger.info(f"  Parsed {len(sections)} sections")
 
