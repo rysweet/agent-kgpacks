@@ -16,16 +16,29 @@ import sys
 import time
 from pathlib import Path
 
+import joblib
+import torch.multiprocessing
+
 # Prevent loky/tokenizers semaphore leak that crashes long-running processes.
 # sentence-transformers uses joblib/loky for parallel tokenization, which
 # leaks semaphores over thousands of encode() calls, eventually triggering
-# a resource_tracker crash after ~6K articles.
+# a resource_tracker crash after ~5-6K articles.
+#
+# Four-layer defense (must happen before any imports that load the model):
+# 1. Disable HuggingFace tokenizer parallelism entirely
+# 2. Force joblib to use sequential backend instead of loky
+# 3. Set torch multiprocessing to spawn mode (prevents semaphore inheritance)
+# 4. Cap loky CPU count as final fallback
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["JOBLIB_START_METHOD"] = "fork"
 os.environ["LOKY_MAX_CPU_COUNT"] = "1"
+
+joblib.parallel.DEFAULT_BACKEND = "sequential"
+torch.multiprocessing.set_start_method("spawn", force=True)
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from bootstrap.src.expansion.orchestrator import RyuGraphOrchestrator
+from bootstrap.src.expansion.orchestrator import RyuGraphOrchestrator  # noqa: E402
 
 DB_PATH = "data/wikigr_30k.db"
 SEEDS_PATH = "bootstrap/data/seeds_1k.json"
