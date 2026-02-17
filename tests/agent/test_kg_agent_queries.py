@@ -16,7 +16,7 @@ def agent():
     # Use the 30K DB once it's ready, fall back to 1K for now
 
     # Use test DB for fast iteration
-    db_path = "data/test_agent.db"
+    db_path = "data/wikigr_30k.db"
     agent = KnowledgeGraphAgent(db_path=db_path, read_only=True)
     yield agent
     agent.close()
