@@ -93,3 +93,7 @@ data/**/*.db
 data/**/*.db/
 data/**/*.wal
 bootstrap/data/*.db
+
+# Amplihack runtime directories (auto-generated)
+.claude/logs/
+.claude/runtime/
