@@ -37,7 +37,7 @@ DB_PATH = "data/wikigr_30k.db"
 TARGET = 30000
 FETCH_WORKERS = 10
 LLM_WORKERS = 20  # Claude API supports high concurrency
-BATCH_SIZE = 50  # Large batches for the pools
+BATCH_SIZE = 20  # Smaller batches to prevent OOM (20 articles × ~100KB = 2MB per batch)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -68,7 +68,9 @@ class ParallelLLMPipeline:
         self.conn = kuzu.Connection(self.db)
         self.queue_mgr = WorkQueueManager(self.conn)
         self.discovery = LinkDiscovery(self.conn)
-        self.embedder = EmbeddingGenerator()
+        self.embedder = (
+            EmbeddingGenerator()
+        )  # Shared (sentence-transformers is thread-safe for encode)
 
         self.loaded = 0
         self.failed = 0
@@ -240,9 +242,13 @@ class ParallelLLMPipeline:
             batch = self.queue_mgr.claim_work(BATCH_SIZE)
             if not batch:
                 stats = self.queue_mgr.get_queue_stats()
+                logger.info(f"No batch claimed. Stats: {stats}")
                 if stats.get("discovered", 0) == 0:
-                    logger.info("Complete")
+                    logger.info("No discovered articles remaining. Expansion complete.")
                     break
+                # Try reclaiming stale
+                reclaimed = self.queue_mgr.reclaim_stale(120)
+                logger.info(f"Reclaimed {reclaimed} stale claims")
                 time.sleep(5)
                 continue
 
@@ -289,6 +295,9 @@ class ParallelLLMPipeline:
                     logger.error(f"DB write failed {data.title}: {e}")
                     self.queue_mgr.mark_failed(data.title, str(e))
                     self.failed += 1
+
+            # Clear results to free memory
+            results.clear()
 
             if iteration % 5 == 0:
                 elapsed = time.time() - start

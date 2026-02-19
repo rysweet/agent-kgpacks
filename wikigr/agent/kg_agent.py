@@ -18,19 +18,20 @@ logger = logging.getLogger(__name__)
 class KnowledgeGraphAgent:
     """Agent that queries WikiGR knowledge graph and synthesizes answers."""
 
-    def __init__(self, db_path: str, anthropic_api_key: str | None = None):
+    def __init__(self, db_path: str, anthropic_api_key: str | None = None, read_only: bool = True):
         """
         Initialize agent with database connection and Claude API.
 
         Args:
             db_path: Path to WikiGR Kuzu database
             anthropic_api_key: Anthropic API key (or from ANTHROPIC_API_KEY env var)
+            read_only: Open database in read-only mode (allows concurrent access during expansion)
         """
-        self.db = kuzu.Database(db_path)
+        self.db = kuzu.Database(db_path, read_only=read_only)
         self.conn = kuzu.Connection(self.db)
         self.claude = Anthropic(api_key=anthropic_api_key)
 
-        logger.info(f"KnowledgeGraphAgent initialized with db: {db_path}")
+        logger.info(f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only})")
 
     def query(self, question: str, max_results: int = 10) -> dict[str, Any]:
         """
@@ -97,14 +98,14 @@ Classify the question type and generate a Cypher query:
 5. **entity_relationships**: "What did X do?" or "Who founded Y?"
    → Find Entity → ENTITY_RELATION (with specific relation type)
 
-Return JSON:
+You MUST return ONLY valid JSON in this exact format (no extra text):
 {{
-  "type": "entity_search|relationship_path|fact_retrieval|semantic_search|entity_relationships",
+  "type": "entity_search",
   "cypher": "MATCH ... RETURN ...",
-  "explanation": "Why this query type"
+  "explanation": "Why this query"
 }}
 
-Generate efficient Cypher with LIMIT 10."""
+Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
 
         response = self.claude.messages.create(
             model="claude-3-5-haiku-20241022",
@@ -140,24 +141,38 @@ Generate efficient Cypher with LIMIT 10."""
                 return {"sources": [], "entities": [], "facts": [], "raw": []}
 
             # Structure results based on columns
+            raw_records = df.to_dict(orient="records")[:limit]
             structured = {
                 "sources": [],
                 "entities": [],
                 "facts": [],
-                "raw": df.to_dict(orient="records")[:limit],
+                "raw": raw_records,
             }
 
-            # Extract sources (article titles)
-            if "title" in df.columns:
-                structured["sources"] = df["title"].dropna().unique().tolist()[:limit]
+            # Extract sources (article titles) - handle both columns and nested node objects
+            for record in raw_records:
+                # Check for direct title column
+                for key, value in record.items():
+                    if "title" in key.lower() and isinstance(value, str):
+                        structured["sources"].append(value)
+                    # Check for nested Article node
+                    elif isinstance(value, dict) and value.get("_label") == "Article":
+                        title = value.get("title")
+                        if title:
+                            structured["sources"].append(title)
 
-            # Extract entities
-            if "name" in df.columns and "type" in df.columns:
+            structured["sources"] = list(set(structured["sources"]))[:limit]  # Dedupe
+
+            # Extract entities - handle both "name" and "e.name" column names
+            name_cols = [c for c in df.columns if "name" in c.lower()]
+            if name_cols:
                 for _, row in df.iterrows():
-                    if row.get("name"):
-                        structured["entities"].append(
-                            {"name": row["name"], "type": row.get("type", "unknown")}
-                        )
+                    name = row.get(name_cols[0])
+                    if name:
+                        # Try to get type from any column with "type" in name
+                        type_cols = [c for c in df.columns if "type" in c.lower()]
+                        entity_type = row.get(type_cols[0], "unknown") if type_cols else "unknown"
+                        structured["entities"].append({"name": name, "type": entity_type})
 
             # Extract facts
             if "content" in df.columns:
@@ -171,18 +186,22 @@ Generate efficient Cypher with LIMIT 10."""
 
     def _synthesize_answer(self, question: str, kg_results: dict, query_plan: dict) -> str:
         """Use Claude to synthesize natural language answer from KG results."""
+        # Handle error case
+        if "error" in kg_results:
+            return f"Query execution failed: {kg_results['error']}"
+
         # Prepare context from KG
         context = f"""Query Type: {query_plan["type"]}
 Cypher: {query_plan["cypher"]}
 
-Sources: {", ".join(kg_results["sources"][:5])}
+Sources: {", ".join(kg_results.get("sources", [])[:5])}
 
-Entities found: {json.dumps(kg_results["entities"][:10], indent=2)}
+Entities found: {json.dumps(kg_results.get("entities", [])[:10], indent=2)}
 
 Facts:
-{chr(10).join(f"- {fact}" for fact in kg_results["facts"][:10])}
+{chr(10).join(f"- {fact}" for fact in kg_results.get("facts", [])[:10])}
 
-Raw results: {json.dumps(kg_results["raw"][:5], indent=2)}
+Raw results: {json.dumps(kg_results.get("raw", [])[:5], indent=2)}
 """
 
         prompt = f"""Using the knowledge graph query results below, answer this question concisely.
@@ -248,12 +267,11 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         Returns:
             List of paths with relationships
         """
+        # Simplified query without path list comprehensions (Kuzu limitation)
         result = self.conn.execute(
             f"""
             MATCH path = (src:Entity {{name: $src}})-[:ENTITY_RELATION*1..{max_hops}]->(tgt:Entity {{name: $tgt}})
-            RETURN [rel in relationships(path) | rel.relation] AS relations,
-                   [node in nodes(path) | node.name] AS entities,
-                   length(path) AS hops
+            RETURN src.name AS source, tgt.name AS target, length(path) AS hops
             ORDER BY hops ASC
             LIMIT 5
             """,
@@ -267,7 +285,12 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         paths = []
         for _, row in df.iterrows():
             paths.append(
-                {"entities": row["entities"], "relations": row["relations"], "hops": row["hops"]}
+                {
+                    "source": row["source"],
+                    "target": row["target"],
+                    "hops": row["hops"],
+                    "note": "Full path details require multiple queries in Kuzu",
+                }
             )
 
         return paths
