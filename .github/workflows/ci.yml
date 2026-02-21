@@ -133,7 +133,6 @@ jobs:
     name: Backend API Tests
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -146,7 +145,6 @@ jobs:
     name: Frontend Tests
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

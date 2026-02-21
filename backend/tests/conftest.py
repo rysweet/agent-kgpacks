@@ -13,7 +13,8 @@ from fastapi.testclient import TestClient
 def test_db_path():
     """Path to test Kuzu database."""
     # Use existing test database from project root
-    base_path = Path(__file__).parent.parent.parent.parent.parent
+    # Project root is 2 levels up from backend/tests/
+    base_path = Path(__file__).parent.parent.parent
     db_path = base_path / "data" / "test_10_articles.db"
 
     if not db_path.exists():

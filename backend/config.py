@@ -44,9 +44,9 @@ def load_config() -> dict[str, Any]:
     Returns:
         Configuration dictionary
     """
-    # Find config.yaml in parent directory
+    # Find config.yaml in project root (one level above backend/)
     backend_dir = Path(__file__).parent
-    config_path = backend_dir.parent.parent.parent / "config.yaml"
+    config_path = backend_dir.parent / "config.yaml"
 
     if not config_path.exists():
         raise FileNotFoundError(f"Config file not found: {config_path}")
@@ -82,7 +82,7 @@ def get_settings() -> Settings:
 
     # Resolve relative to project root
     backend_dir = Path(__file__).parent
-    project_root = backend_dir.parent.parent.parent
+    project_root = backend_dir.parent
     absolute_db_path = project_root / db_path
 
     settings = Settings()
