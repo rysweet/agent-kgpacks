@@ -41,6 +41,7 @@ class KnowledgeGraphAgent:
         self.db = kuzu.Database(db_path, read_only=read_only)
         self.conn = kuzu.Connection(self.db)
         self.claude = Anthropic(api_key=anthropic_api_key)
+        self._embedding_generator = None
 
         logger.info(f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only})")
 
@@ -48,6 +49,18 @@ class KnowledgeGraphAgent:
         """Raise RuntimeError if the agent has been closed."""
         if self.conn is None:
             raise RuntimeError("KnowledgeGraphAgent is closed. Create a new instance.")
+
+    def _get_embedding_generator(self):
+        """Lazily initialize and return the embedding generator.
+
+        The sentence-transformers model is only loaded the first time this
+        method is called, keeping startup fast when semantic search is not used.
+        """
+        if self._embedding_generator is None:
+            from bootstrap.src.embeddings.generator import EmbeddingGenerator
+
+            self._embedding_generator = EmbeddingGenerator()
+        return self._embedding_generator
 
     def query(self, question: str, max_results: int = 10) -> dict[str, Any]:
         """
@@ -427,8 +440,13 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         """
         Semantic search over article sections.
 
+        Supports both article title lookups (fast path) and arbitrary free-text
+        queries. When the query matches an existing article title, the embedding
+        from that article's first section is used directly. Otherwise, an
+        embedding is generated on the fly using sentence-transformers.
+
         Args:
-            query: Search query (must be an existing article title)
+            query: Search query -- an article title or arbitrary free text
             top_k: Number of results
 
         Returns:
@@ -438,7 +456,7 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         if not isinstance(top_k, int) or not (1 <= top_k <= 500):
             raise ValueError(f"top_k must be an integer between 1 and 500, got {top_k!r}")
 
-        # Get embedding for query (if it's an article title)
+        # Fast path: use an existing article's section embedding
         result = self.conn.execute(
             """
             MATCH (a:Article {title: $query})-[:HAS_SECTION]->(s:Section)
@@ -449,10 +467,14 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         )
 
         df = result.get_as_df()
-        if df.empty:
-            return []
-
-        query_embedding = df.iloc[0]["embedding"]
+        if not df.empty:
+            query_embedding = df.iloc[0]["embedding"]
+        else:
+            # Fallback: generate embedding on the fly for free-text queries
+            logger.info(f"No article titled {query!r}; generating embedding on the fly")
+            generator = self._get_embedding_generator()
+            embeddings = generator.generate([query])
+            query_embedding = embeddings[0].tolist()
 
         # Vector search
         result = self.conn.execute(
@@ -492,6 +514,7 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         self.close()
 
     def close(self):
-        """Close database connection."""
+        """Close database connection and release embedding model if loaded."""
         self.conn = None  # type: ignore[assignment]
         self.db = None  # type: ignore[assignment]
+        self._embedding_generator = None
