@@ -143,10 +143,10 @@ class ArticleProcessor:
         BEGIN TRANSACTION would conflict with work queue writes on
         the same connection (write-write conflict).
         """
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         self._do_insert_article_with_sections(
-            article, sections, embeddings, category, expansion_depth, datetime.now()
+            article, sections, embeddings, category, expansion_depth, datetime.now(tz=timezone.utc)
         )
 
     def _do_insert_article_with_sections(

@@ -6,7 +6,7 @@ Implements the expansion state machine for coordinating work across workers.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import kuzu
 
@@ -63,7 +63,7 @@ class WorkQueueManager:
             >>> for article in articles:
             ...     print(f"Claimed: {article['title']} at depth {article['expansion_depth']}")
         """
-        now = datetime.now()
+        now = datetime.now(tz=timezone.utc)
 
         # Find and claim articles in discovered state
         # Order by depth ASC to process seeds (depth=0) first
@@ -135,7 +135,7 @@ class WorkQueueManager:
         Example:
             >>> manager.update_heartbeat("Python (programming language)")
         """
-        now = datetime.now()
+        now = datetime.now(tz=timezone.utc)
 
         try:
             self.conn.execute(
@@ -168,7 +168,7 @@ class WorkQueueManager:
             >>> reclaimed = manager.reclaim_stale(timeout_seconds=300)
             >>> print(f"Reclaimed {reclaimed} stale articles")
         """
-        cutoff = datetime.now() - timedelta(seconds=timeout_seconds)
+        cutoff = datetime.now(tz=timezone.utc) - timedelta(seconds=timeout_seconds)
 
         try:
             # Find stale claims
@@ -246,7 +246,7 @@ class WorkQueueManager:
         }
         predecessors = valid_predecessors.get(new_state, set())
 
-        now = datetime.now()
+        now = datetime.now(tz=timezone.utc)
 
         try:
             # Guard: only transition from legal predecessor states (parameterized)
@@ -323,7 +323,7 @@ class WorkQueueManager:
                     {
                         "title": article_title,
                         "new_retry_count": new_retry_count,
-                        "now": datetime.now(),
+                        "now": datetime.now(tz=timezone.utc),
                     },
                 )
                 logger.error(
@@ -486,7 +486,7 @@ def test_work_queue_manager():
     # Test 3: Reclaim stale claims
     print("\nTest 3: Reclaim stale claims")
     # Manually set old claimed_at for Article_2
-    old_time = datetime.now() - timedelta(seconds=400)
+    old_time = datetime.now(tz=timezone.utc) - timedelta(seconds=400)
     conn.execute(
         """
         MATCH (a:Article {title: 'Article_2'})

@@ -61,6 +61,10 @@ class RyuGraphOrchestrator:
         self.processor = ArticleProcessor(self.conn)
         self.link_discovery = LinkDiscovery(self.conn)
 
+        # Shared embedding generator (loaded once, reused across workers)
+        # Thread-safe for inference — sentence-transformers model.encode() is safe
+        self._shared_embedding_generator = self.processor.embedding_generator
+
         logger.info(f"RyuGraphOrchestrator initialized: {db_path}")
         logger.info(f"  Max depth: {max_depth}")
         logger.info(f"  Batch size: {batch_size}")
@@ -155,7 +159,9 @@ class RyuGraphOrchestrator:
         depth = article_info["expansion_depth"]
 
         worker_queue = WorkQueueManager(worker_conn)
-        worker_processor = ArticleProcessor(worker_conn)
+        worker_processor = ArticleProcessor(
+            worker_conn, embedding_generator=self._shared_embedding_generator
+        )
         worker_link_disc = LinkDiscovery(worker_conn)
 
         logger.info(f"  Processing: {title} (depth={depth})")
