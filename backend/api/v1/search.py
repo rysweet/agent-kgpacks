@@ -47,7 +47,7 @@ def search(
     Finds articles semantically similar to the query article.
     """
     # Set cache headers
-    response.headers["Cache-Control"] = "private, max-age=3600"
+    response.headers["Cache-Control"] = "public, max-age=3600"
 
     try:
         result = SearchService.semantic_search(
@@ -124,7 +124,7 @@ def autocomplete(
     Returns articles with titles matching the query.
     """
     # Set cache headers
-    response.headers["Cache-Control"] = "private, max-age=3600"
+    response.headers["Cache-Control"] = "public, max-age=3600"
 
     try:
         result = SearchService.autocomplete(

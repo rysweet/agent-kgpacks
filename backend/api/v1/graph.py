@@ -47,7 +47,7 @@ def get_graph(
     Returns nodes and edges within specified depth from seed article.
     """
     # Set cache headers
-    response.headers["Cache-Control"] = "private, max-age=3600"
+    response.headers["Cache-Control"] = "public, max-age=3600"
 
     try:
         result = GraphService.get_graph_neighbors(

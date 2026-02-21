@@ -93,10 +93,15 @@ class LinkDiscovery:
                         )
                 else:
                     # New article - insert as discovered
-                    self._insert_discovered_article(link, next_depth)
+                    try:
+                        self._insert_discovered_article(link, next_depth)
+                        new_articles_count += 1
+                        logger.debug(f"Discovered new article '{link}' at depth {next_depth}")
+                    except Exception as insert_err:
+                        # PK violation if another article already discovered this link
+                        logger.debug(f"Insert race for '{link}': {insert_err}")
+                    # Always create the link edge, even if insert raced
                     self._create_link(source_title, link)
-                    new_articles_count += 1
-                    logger.debug(f"Discovered new article '{link}' at depth {next_depth}")
 
             except Exception as e:
                 logger.warning(f"Failed to process link '{link}': {e}", exc_info=True)

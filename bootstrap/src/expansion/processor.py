@@ -84,10 +84,15 @@ class ArticleProcessor:
                 try:
                     article = self.wikipedia_client.fetch_article(redirect_target)
                     logger.info(f"  Fetched redirect target: {len(article.wikitext)} chars")
-                except Exception:
-                    # Skip unfollowable redirects — mark as processed (not failed)
+                except ArticleNotFoundError:
+                    # Redirect target doesn't exist — skip gracefully
                     logger.info(f"  Skipping unfollowable redirect: {title}")
                     return (True, [], None)
+                except Exception as e:
+                    # Transient error — report failure so article gets retried
+                    error_msg = f"Redirect target fetch failed: {e}"
+                    logger.warning(f"  {error_msg}")
+                    return (False, [], error_msg)
 
             sections = parse_sections(article.wikitext)
 

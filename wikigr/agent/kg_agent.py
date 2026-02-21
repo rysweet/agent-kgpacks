@@ -16,6 +16,16 @@ from anthropic import Anthropic
 logger = logging.getLogger(__name__)
 
 
+def _safe_json_loads(value: object) -> dict:
+    """Parse JSON string to dict, returning {} on any failure."""
+    if not isinstance(value, str):
+        return value if isinstance(value, dict) else {}
+    try:
+        return json.loads(value)
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
 class KnowledgeGraphAgent:
     """Agent that queries WikiGR knowledge graph and synthesizes answers."""
 
@@ -34,13 +44,18 @@ class KnowledgeGraphAgent:
 
         logger.info(f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only})")
 
+    def _check_open(self) -> None:
+        """Raise RuntimeError if the agent has been closed."""
+        if self.conn is None:
+            raise RuntimeError("KnowledgeGraphAgent is closed. Create a new instance.")
+
     def query(self, question: str, max_results: int = 10) -> dict[str, Any]:
         """
         Answer a question using the knowledge graph.
 
         Args:
             question: Natural language question
-            max_results: Maximum number of results to retrieve from graph
+            max_results: Maximum number of results to retrieve from graph (1-1000)
 
         Returns:
             {
@@ -51,6 +66,12 @@ class KnowledgeGraphAgent:
                 "cypher_query": "MATCH ... (for transparency)"
             }
         """
+        self._check_open()
+        if not isinstance(max_results, int) or not (1 <= max_results <= 1000):
+            raise ValueError(
+                f"max_results must be an integer between 1 and 1000, got {max_results!r}"
+            )
+
         # Step 1: Classify query type and generate Cypher
         query_plan = self._plan_query(question)
 
@@ -154,12 +175,16 @@ Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
 
     @staticmethod
     def _validate_cypher(cypher: str) -> None:
-        """Reject Cypher queries containing write operations.
+        """Reject Cypher queries containing write or DDL operations.
 
-        Raises ValueError if the query contains destructive keywords.
+        Raises ValueError if the query contains destructive keywords
+        or unbounded variable-length paths.
         """
-        # Normalize whitespace for matching
-        normalized = re.sub(r"\s+", " ", cypher.upper())
+        # Strip string literals to avoid false positives on keywords inside quotes
+        stripped = re.sub(r"'[^']*'", "''", cypher)
+        stripped = re.sub(r'"[^"]*"', '""', stripped)
+        normalized = re.sub(r"\s+", " ", stripped.upper())
+
         write_keywords = [
             "CREATE ",
             "DELETE ",
@@ -168,10 +193,21 @@ Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
             "SET ",
             "MERGE ",
             "REMOVE ",
+            "CALL ",
         ]
+        # Allow CALL QUERY_VECTOR_INDEX (read-only vector search)
+        if "CALL QUERY_VECTOR_INDEX" in normalized:
+            write_keywords = [k for k in write_keywords if k != "CALL "]
+
         for keyword in write_keywords:
             if keyword in normalized:
                 raise ValueError(f"Write operation rejected: query contains {keyword.strip()}")
+
+        # Block unbounded variable-length paths like [*] or [:REL*]
+        if re.search(r"\[\s*:?\s*\w*\s*\*\s*\]", stripped):
+            raise ValueError(
+                "Unbounded variable-length path rejected: use [*1..N] with upper bound"
+            )
 
     def _execute_query(self, cypher: str, limit: int, params: dict | None = None) -> dict:
         """Execute Cypher query and structure results."""
@@ -282,6 +318,7 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         Returns:
             Entity details with type, properties, and source articles
         """
+        self._check_open()
         result = self.conn.execute(
             """
             MATCH (e:Entity {name: $name})
@@ -300,11 +337,7 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         return {
             "name": row["name"],
             "type": row["type"],
-            "properties": (
-                json.loads(row["properties"])
-                if isinstance(row["properties"], str)
-                else row["properties"] or {}
-            ),
+            "properties": _safe_json_loads(row["properties"]),
             "source_articles": row["source_articles"],
         }
 
@@ -322,6 +355,7 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         Returns:
             List of paths with relationships
         """
+        self._check_open()
         if not isinstance(max_hops, int) or not (1 <= max_hops <= 10):
             raise ValueError(f"max_hops must be an integer between 1 and 10, got {max_hops!r}")
 
@@ -363,6 +397,7 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         Returns:
             List of fact strings
         """
+        self._check_open()
         # Try as article first
         result = self.conn.execute(
             """
@@ -399,6 +434,10 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         Returns:
             List of similar articles with similarity scores
         """
+        self._check_open()
+        if not isinstance(top_k, int) or not (1 <= top_k <= 500):
+            raise ValueError(f"top_k must be an integer between 1 and 500, got {top_k!r}")
+
         # Get embedding for query (if it's an article title)
         result = self.conn.execute(
             """

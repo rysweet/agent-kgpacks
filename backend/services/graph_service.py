@@ -53,7 +53,7 @@ class GraphService:
         # Validate seed article exists
         result = conn.execute("MATCH (a:Article {title: $title}) RETURN a", {"title": article})
         if not result.has_next():
-            raise ValueError(f"Article not found: {article}")
+            raise ValueError("Article not found")
 
         # Build query for graph traversal.
         # NOTE: depth is interpolated via f-string because Kuzu does not
@@ -149,6 +149,7 @@ class GraphService:
                 MATCH (source:Article)-[link:LINKS_TO]->(target:Article)
                 WHERE source.title IN $titles AND target.title IN $titles
                 RETURN source.title AS source, target.title AS target
+                LIMIT 1000
             """
             edges_result = conn.execute(edges_query, {"titles": node_titles})
             edges_df = edges_result.get_as_df()

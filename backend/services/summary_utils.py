@@ -29,12 +29,12 @@ def get_article_summaries(
     if not titles:
         return {}
 
+    # Only fetch the lead section (index 0) per article to avoid fetching all sections
     result = conn.execute(
         """
-        MATCH (a:Article)-[:HAS_SECTION]->(s:Section)
+        MATCH (a:Article)-[:HAS_SECTION {section_index: 0}]->(s:Section)
         WHERE a.title IN $titles
-        RETURN a.title AS title, s.content AS content, s.section_id AS sid
-        ORDER BY title, sid ASC
+        RETURN a.title AS title, s.content AS content
         """,
         {"titles": titles},
     )
@@ -42,9 +42,8 @@ def get_article_summaries(
     summaries: dict[str, str] = {}
     for _, row in result.get_as_df().iterrows():
         title = row["title"]
-        if title not in summaries:
-            content = row["content"]
-            if content:
-                summaries[title] = content[:200] + "..." if len(content) > 200 else content
+        content = row["content"]
+        if content and title not in summaries:
+            summaries[title] = content[:200] + "..." if len(content) > 200 else content
 
     return summaries

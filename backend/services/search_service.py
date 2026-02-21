@@ -52,7 +52,7 @@ class SearchService:
         # Validate query article exists
         result = conn.execute("MATCH (a:Article {title: $title}) RETURN a", {"title": query})
         if not result.has_next():
-            raise ValueError(f"Article not found: {query}")
+            raise ValueError("Article not found")
 
         # Use semantic search logic from bootstrap
         results = SearchService._semantic_search_impl(conn, query, category=category, top_k=limit)
@@ -119,7 +119,7 @@ class SearchService:
                 """,
                 {
                     "query_embedding": query_embedding,
-                    "top_k": top_k * 5,  # Over-fetch for aggregation
+                    "top_k": min(top_k * 5, 200),  # Over-fetch for aggregation, capped
                 },
             )
 
@@ -149,7 +149,7 @@ class SearchService:
                     {
                         "article_title": article_title,
                         "distance": distance,
-                        "similarity": 1.0 - distance,
+                        "similarity": max(0.0, min(1.0, 1.0 - distance)),
                     }
                 )
 
