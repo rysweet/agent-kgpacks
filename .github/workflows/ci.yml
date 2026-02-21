@@ -126,27 +126,39 @@ jobs:
     name: Backend API Tests
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    if: hashFiles('backend/**') != ''
     steps:
       - uses: actions/checkout@v4
+      - name: Check if backend exists
+        id: check
+        run: test -d backend/tests && echo "exists=true" >> "$GITHUB_OUTPUT" || echo "exists=false" >> "$GITHUB_OUTPUT"
       - uses: astral-sh/setup-uv@v5
+        if: steps.check.outputs.exists == 'true'
       - run: uv python install ${{ env.PYTHON_VERSION }}
+        if: steps.check.outputs.exists == 'true'
       - run: uv pip install --system -r backend/requirements.txt
+        if: steps.check.outputs.exists == 'true'
       - run: pytest backend/tests/ -v
+        if: steps.check.outputs.exists == 'true'
 
   frontend-test:
     name: Frontend Tests
     runs-on: ubuntu-latest
     timeout-minutes: 8
-    if: hashFiles('frontend/package.json') != ''
     steps:
       - uses: actions/checkout@v4
+      - name: Check if frontend exists
+        id: check
+        run: test -f frontend/package.json && echo "exists=true" >> "$GITHUB_OUTPUT" || echo "exists=false" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
+        if: steps.check.outputs.exists == 'true'
         with:
           node-version: '20'
       - run: npm ci
+        if: steps.check.outputs.exists == 'true'
         working-directory: frontend
       - run: npm test -- --run
+        if: steps.check.outputs.exists == 'true'
         working-directory: frontend
       - run: npm run build
+        if: steps.check.outputs.exists == 'true'
         working-directory: frontend
