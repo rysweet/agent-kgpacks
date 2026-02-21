@@ -120,8 +120,9 @@ class TestEmbeddingGenerator:
         emb_batch_2 = generator.generate(texts, batch_size=2)
         emb_batch_5 = generator.generate(texts, batch_size=5)
 
-        # Different batch sizes should produce identical results
-        assert np.allclose(emb_batch_2, emb_batch_5)
+        # Different batch sizes should produce near-identical results
+        # (minor float32 differences from batching are expected)
+        assert np.allclose(emb_batch_2, emb_batch_5, atol=1e-5)
 
     def test_show_progress_parameter(self, generator, sample_texts):
         """Test show_progress parameter doesn't affect output."""

@@ -146,7 +146,7 @@ class TestLevel5_TemporalAndCausal:
             "How has artificial intelligence evolved from early expert systems to modern deep learning?"
         )
         # Should reference multiple time periods/approaches
-        answer_lower = result["answer"].lower()
+        assert result["answer"]  # non-empty answer
         assert len(result["sources"]) >= 2
 
     def test_cause_and_effect(self, agent):
