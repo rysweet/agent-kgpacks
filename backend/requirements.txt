@@ -5,6 +5,7 @@ fastapi>=0.115.0,<1.0.0
 uvicorn[standard]>=0.34.0,<1.0.0
 python-multipart>=0.0.20,<1.0.0
 slowapi==0.1.9
+sse-starlette>=2.0.0,<3.0.0
 
 # Database
 kuzu==0.11.3

@@ -578,13 +578,8 @@ Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
             logger.error(f"Query execution failed: {e}")
             return {"sources": [], "entities": [], "facts": [], "error": str(e)}
 
-    def _synthesize_answer(self, question: str, kg_results: dict, query_plan: dict) -> str:
-        """Use Claude to synthesize natural language answer from KG results."""
-        # Handle error case
-        if "error" in kg_results:
-            return f"Query execution failed: {kg_results['error']}"
-
-        # Prepare context from KG
+    def _build_synthesis_context(self, question: str, kg_results: dict, query_plan: dict) -> str:
+        """Build the synthesis prompt for Claude (used by both blocking and streaming)."""
         context = f"""Query Type: {query_plan["type"]}
 Cypher: {query_plan["cypher"]}
 
@@ -598,7 +593,7 @@ Facts:
 Raw results: {json.dumps(kg_results.get("raw", [])[:5], indent=2, default=str)}
 """
 
-        prompt = f"""Using the knowledge graph query results below, answer this question concisely.
+        return f"""Using the knowledge graph query results below, answer this question concisely.
 
 Question: {question}
 
@@ -606,6 +601,14 @@ Knowledge Graph Results:
 {context}
 
 Provide a clear, factual answer citing the sources. If the KG has no relevant data, say so."""
+
+    def _synthesize_answer(self, question: str, kg_results: dict, query_plan: dict) -> str:
+        """Use Claude to synthesize natural language answer from KG results."""
+        # Handle error case
+        if "error" in kg_results:
+            return f"Query execution failed: {kg_results['error']}"
+
+        prompt = self._build_synthesis_context(question, kg_results, query_plan)
 
         try:
             response = self.claude.messages.create(
