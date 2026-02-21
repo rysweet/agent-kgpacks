@@ -77,14 +77,16 @@ class LinkDiscovery:
             f"(filtered from {len(links)} total)"
         )
 
+        # Batch existence check to avoid N+1 queries
+        existing_articles = self._batch_article_exists(valid_links)
+
         for link in valid_links:
             try:
-                exists, state = self.article_exists(link)
+                state = existing_articles.get(link)
 
-                if exists:
+                if state is not None:
                     # Article exists - create LINKS_TO relationship only
-                    # Only create link if target is in a loaded or claimed state
-                    if state in ["loaded", "claimed", "discovered"]:
+                    if state in ["loaded", "claimed", "discovered", "processed"]:
                         self._create_link(source_title, link)
                         logger.debug(
                             f"Linked '{source_title}' -> '{link}' (existing, state={state})"
@@ -142,24 +144,29 @@ class LinkDiscovery:
         if not title or len(title) < 2:
             return False
 
-        # Namespace prefixes to filter out
+        # Namespace prefixes to filter out (lowercased for case-insensitive comparison)
         invalid_prefixes = [
-            "Wikipedia:",
-            "Help:",
-            "Template:",
-            "File:",
-            "Image:",
-            "Category:",
-            "Portal:",
-            "Talk:",
-            "User:",
-            "MediaWiki:",
-            "Special:",
+            "wikipedia:",
+            "help:",
+            "template:",
+            "file:",
+            "image:",
+            "category:",
+            "portal:",
+            "talk:",
+            "user:",
+            "mediawiki:",
+            "special:",
+            "draft:",
+            "module:",
+            "book:",
+            "timedtext:",
         ]
 
         # Check for invalid prefixes (case-insensitive)
+        title_lower = title.lower()
         for prefix in invalid_prefixes:
-            if title.startswith(prefix):
+            if title_lower.startswith(prefix):
                 return False
 
         # Filter list pages
@@ -200,6 +207,28 @@ class LinkDiscovery:
             return (True, df.iloc[0]["state"])
         else:
             return (False, None)
+
+    def _batch_article_exists(self, titles: list[str]) -> dict[str, str]:
+        """Check which articles exist in a single query.
+
+        Returns:
+            Dict mapping title -> expansion_state for articles that exist.
+            Titles not in the dict do not exist.
+        """
+        if not titles:
+            return {}
+
+        result = self.conn.execute(
+            """
+            MATCH (a:Article)
+            WHERE a.title IN $titles
+            RETURN a.title AS title, a.expansion_state AS state
+        """,
+            {"titles": titles},
+        )
+
+        df = result.get_as_df()
+        return dict(zip(df["title"], df["state"]))
 
     def _insert_discovered_article(self, title: str, depth: int):
         """

@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api/v1", tags=["graph"])
     },
 )
 @limiter.limit("20/minute")
-async def get_graph(
+def get_graph(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
     article: str = Query(..., max_length=500, description="Seed article title"),

@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api/v1", tags=["articles"])
     },
 )
 @limiter.limit("30/minute")
-async def get_article(
+def get_article(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
     title: str = Path(..., max_length=500, description="Article title (URL-encoded)"),
@@ -83,7 +83,7 @@ async def get_article(
     responses={500: {"model": ErrorResponse}},
 )
 @limiter.limit("30/minute")
-async def get_categories(
+def get_categories(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
     conn: kuzu.Connection = Depends(get_db),
@@ -120,7 +120,7 @@ async def get_categories(
     responses={500: {"model": ErrorResponse}},
 )
 @limiter.limit("30/minute")
-async def get_stats(
+def get_stats(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
     conn: kuzu.Connection = Depends(get_db),
