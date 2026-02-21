@@ -272,27 +272,16 @@ class ArticleProcessor:
             {"title": article.title},
         )
 
-        # Handle categories
+        # Handle categories (MERGE pattern — same as loader.py)
         for cat in article.categories[:3]:  # Limit to 3 main categories
-            # Create category if not exists
-            cat_result = self.conn.execute(
+            self.conn.execute(
                 """
-                MATCH (c:Category {name: $category})
-                RETURN COUNT(c) AS count
+                MERGE (c:Category {name: $category})
+                ON CREATE SET c.article_count = 1
+                ON MATCH SET c.article_count = c.article_count + 1
             """,
                 {"category": cat},
             )
-
-            if cat_result.get_as_df().iloc[0]["count"] == 0:
-                self.conn.execute(
-                    """
-                    CREATE (c:Category {
-                        name: $category,
-                        article_count: 0
-                    })
-                """,
-                    {"category": cat},
-                )
 
             # Create IN_CATEGORY relationship
             self.conn.execute(
