@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 
 from backend.config import settings
 from backend.models.chat import ChatRequest, ChatResponse
+from backend.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +27,10 @@ router = APIRouter(prefix="/api/v1", tags=["chat"])
         503: {"description": "Agent unavailable (missing API key or DB)"},
     },
 )
+@limiter.limit("5/minute")
 def chat(
     request_body: ChatRequest,
-    request: Request,  # noqa: ARG001 - available for future rate limiting
+    request: Request,  # noqa: ARG001 - required by slowapi limiter
 ) -> ChatResponse | JSONResponse:
     """
     Ask a question about the knowledge graph.

@@ -380,6 +380,7 @@ def cmd_update(args: argparse.Namespace) -> None:
         db_path=db_path,
         max_depth=args.max_depth,
         batch_size=args.batch_size,
+        num_workers=getattr(args, "workers", 1),
     )
 
     start_time = time.time()
@@ -484,6 +485,12 @@ def main() -> None:
         type=str,
         default=None,
         help="Path to seeds JSON to inject before expanding",
+    )
+    update_parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Number of parallel expansion workers (default: 1)",
     )
     update_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
     update_parser.set_defaults(func=cmd_update)
