@@ -87,3 +87,20 @@ export interface Filters {
   maxDepth?: number;
   minSimilarity?: number;
 }
+
+export interface ChatResponse {
+  answer: string;
+  sources: string[];
+  query_type: string;
+  execution_time_ms: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  sources?: string[];
+  queryType?: string;
+  executionTimeMs?: number;
+  timestamp: number;
+}

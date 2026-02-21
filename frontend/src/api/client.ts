@@ -9,5 +9,6 @@ export {
   searchSemantic,
   getArticle,
   autocomplete,
+  askQuestion,
   apiClient,
 } from '../services/api';
