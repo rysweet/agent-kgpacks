@@ -85,7 +85,7 @@ async def add_security_headers(request: Request, call_next):
 
 
 @app.get("/health", response_model=HealthResponse)
-async def health_check(
+def health_check(
     response: Response,
     conn: kuzu.Connection = Depends(get_db),
 ):
@@ -93,6 +93,7 @@ async def health_check(
     Health check endpoint.
 
     Returns service status and database connectivity.
+    Returns HTTP 503 when unhealthy so load balancers can detect failures.
     """
     # Set no-cache headers
     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
@@ -112,12 +113,17 @@ async def health_check(
         db_status = "disconnected"
         status = "unhealthy"
 
-    return HealthResponse(
+    health = HealthResponse(
         status=status,
         version=settings.api_version,
         database=db_status,
         timestamp=datetime.now(timezone.utc),
     )
+
+    if status == "unhealthy":
+        return JSONResponse(status_code=503, content=health.model_dump(mode="json"))
+
+    return health
 
 
 @app.exception_handler(RequestValidationError)

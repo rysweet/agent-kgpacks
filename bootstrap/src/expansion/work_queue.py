@@ -268,7 +268,7 @@ class WorkQueueManager:
             >>> manager.mark_failed("Invalid Article", "404 Not Found")
         """
         try:
-            # Get current retry count
+            # Get current retry count and increment in one query
             result = self.conn.execute(
                 """
                 MATCH (a:Article {title: $title})
@@ -282,44 +282,36 @@ class WorkQueueManager:
                 logger.warning(f"Article not found: {article_title}")
                 return
 
-            current_retries = df.iloc[0]["retry_count"]
-            new_retry_count = int(current_retries) + 1
+            new_retry_count = int(df.iloc[0]["retry_count"]) + 1
 
-            # Increment retry count
-            self.conn.execute(
-                """
-                MATCH (a:Article {title: $title})
-                SET a.retry_count = $new_retry_count
-            """,
-                {"title": article_title, "new_retry_count": new_retry_count},
-            )
-
-            # Check if max retries exceeded
+            # Increment retry count and set state in a single query
             if new_retry_count >= self.max_retries:
-                # Mark as failed
                 self.conn.execute(
                     """
                     MATCH (a:Article {title: $title})
-                    SET a.expansion_state = 'failed',
+                    SET a.retry_count = $new_retry_count,
+                        a.expansion_state = 'failed',
                         a.processed_at = $now
                 """,
-                    {"title": article_title, "now": datetime.now()},
+                    {
+                        "title": article_title,
+                        "new_retry_count": new_retry_count,
+                        "now": datetime.now(),
+                    },
                 )
-
                 logger.error(
                     f"Article failed after {new_retry_count} retries: {article_title} - {error}"
                 )
             else:
-                # Reset to discovered for retry
                 self.conn.execute(
                     """
                     MATCH (a:Article {title: $title})
-                    SET a.expansion_state = 'discovered',
+                    SET a.retry_count = $new_retry_count,
+                        a.expansion_state = 'discovered',
                         a.claimed_at = NULL
                 """,
-                    {"title": article_title},
+                    {"title": article_title, "new_retry_count": new_retry_count},
                 )
-
                 logger.warning(
                     f"Article retry {new_retry_count}/{self.max_retries}: {article_title} - {error}"
                 )
@@ -353,7 +345,14 @@ class WorkQueueManager:
 
             df = result.get_as_df()
 
-            stats = {"discovered": 0, "claimed": 0, "loaded": 0, "failed": 0, "total": 0}
+            stats = {
+                "discovered": 0,
+                "claimed": 0,
+                "loaded": 0,
+                "processed": 0,
+                "failed": 0,
+                "total": 0,
+            }
 
             for _, row in df.iterrows():
                 state = row["state"]

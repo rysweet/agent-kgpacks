@@ -100,9 +100,11 @@ class SearchService:
             return []
 
         # Step 2: For each query embedding, find similar sections
+        # Cap at 5 sections to avoid unbounded N queries per article
         all_matches = []
+        max_sections = 5
 
-        for _idx, row in query_df.iterrows():
+        for _idx, row in query_df.head(max_sections).iterrows():
             query_embedding = row["embedding"]
 
             # Query vector index

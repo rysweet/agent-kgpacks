@@ -168,9 +168,24 @@ Return ONLY valid JSON:
                 max_tokens=1024,
                 messages=[{"role": "user", "content": prompt}],
             )
+        except Exception as e:
+            error_name = type(e).__name__
+            # Re-raise auth errors — they won't resolve by retrying
+            if "authentication" in error_name.lower() or "auth" in str(e).lower():
+                raise ValueError(
+                    "Anthropic API authentication failed. "
+                    "Set ANTHROPIC_API_KEY or pass anthropic_api_key=."
+                ) from e
+            logger.error(f"Failed to generate titles for '{topic}': {error_name}: {e}")
+            return []
 
-            content = response.content[0].text
+        if not response.content:
+            logger.warning(f"Empty response from Claude for topic '{topic}'")
+            return []
 
+        content = response.content[0].text
+
+        try:
             # Handle markdown code blocks
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()
@@ -182,8 +197,8 @@ Return ONLY valid JSON:
 
             return [{"title": a["title"], "category": category} for a in data.get("articles", [])]
 
-        except Exception as e:
-            logger.error(f"Failed to generate titles for '{topic}': {e}")
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.error(f"Failed to parse titles for '{topic}': {e}")
             return []
 
     def _validate_titles(self, candidates: list[dict]) -> list[dict]:

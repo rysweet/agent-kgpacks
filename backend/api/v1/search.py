@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api/v1", tags=["search"])
     },
 )
 @limiter.limit("10/minute")
-async def search(
+def search(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
     query: str = Query(..., max_length=200, description="Search query (article title)"),
@@ -109,7 +109,7 @@ async def search(
     },
 )
 @limiter.limit("60/minute")
-async def autocomplete(
+def autocomplete(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
     q: str = Query(

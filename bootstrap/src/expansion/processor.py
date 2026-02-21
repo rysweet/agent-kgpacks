@@ -257,6 +257,16 @@ class ArticleProcessor:
                 {"article_title": article.title, "section_id": section_id, "index": i},
             )
 
+        # Clean up existing IN_CATEGORY relationships before re-creating
+        # (prevents duplicate edges on retry/reprocess)
+        self.conn.execute(
+            """
+            MATCH (a:Article {title: $title})-[r:IN_CATEGORY]->()
+            DELETE r
+        """,
+            {"title": article.title},
+        )
+
         # Handle categories
         for cat in article.categories[:3]:  # Limit to 3 main categories
             # Create category if not exists

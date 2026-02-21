@@ -7,6 +7,7 @@ No MCP server, no daemon, just a Python class.
 
 import json
 import logging
+import re
 from typing import Any
 
 import kuzu
@@ -54,7 +55,9 @@ class KnowledgeGraphAgent:
         query_plan = self._plan_query(question)
 
         # Step 2: Execute Cypher query
-        kg_results = self._execute_query(query_plan["cypher"], max_results)
+        kg_results = self._execute_query(
+            query_plan["cypher"], max_results, query_plan.get("cypher_params")
+        )
 
         # Step 3: Synthesize answer with Claude
         answer = self._synthesize_answer(question, kg_results, query_plan)
@@ -107,11 +110,29 @@ You MUST return ONLY valid JSON in this exact format (no extra text):
 
 Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
 
-        response = self.claude.messages.create(
-            model="claude-3-5-haiku-20241022",
-            max_tokens=1024,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        try:
+            response = self.claude.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=1024,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except Exception as e:
+            logger.warning(f"Claude API error in _plan_query: {e}")
+            return {
+                "type": "entity_search",
+                "cypher": "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($q) RETURN a.title AS title LIMIT 10",
+                "cypher_params": {"q": question},
+                "explanation": f"Fallback query due to API error: {type(e).__name__}",
+            }
+
+        if not response.content:
+            logger.warning("Empty response from Claude in _plan_query")
+            return {
+                "type": "entity_search",
+                "cypher": "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($q) RETURN a.title AS title LIMIT 10",
+                "cypher_params": {"q": question},
+                "explanation": "Fallback query due to empty response",
+            }
 
         content = response.content[0].text
         if "```json" in content:
@@ -123,18 +144,40 @@ Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
             return json.loads(content)
         except json.JSONDecodeError as e:
             logger.warning(f"JSON parse failed: {e}. Response: {content[:200]}")
-            # Fallback: simple entity search
-            safe_question = question.replace("'", "")
+            # Fallback: simple entity search using parameterized query
             return {
                 "type": "entity_search",
-                "cypher": f"MATCH (a:Article) WHERE lower(a.title) CONTAINS lower('{safe_question}') RETURN a.title AS title LIMIT 10",
+                "cypher": "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($q) RETURN a.title AS title LIMIT 10",
+                "cypher_params": {"q": question},
                 "explanation": "Fallback query due to JSON parse error",
             }
 
-    def _execute_query(self, cypher: str, limit: int) -> dict:
+    @staticmethod
+    def _validate_cypher(cypher: str) -> None:
+        """Reject Cypher queries containing write operations.
+
+        Raises ValueError if the query contains destructive keywords.
+        """
+        # Normalize whitespace for matching
+        normalized = re.sub(r"\s+", " ", cypher.upper())
+        write_keywords = [
+            "CREATE ",
+            "DELETE ",
+            "DETACH ",
+            "DROP ",
+            "SET ",
+            "MERGE ",
+            "REMOVE ",
+        ]
+        for keyword in write_keywords:
+            if keyword in normalized:
+                raise ValueError(f"Write operation rejected: query contains {keyword.strip()}")
+
+    def _execute_query(self, cypher: str, limit: int, params: dict | None = None) -> dict:
         """Execute Cypher query and structure results."""
         try:
-            result = self.conn.execute(cypher)
+            self._validate_cypher(cypher)
+            result = self.conn.execute(cypher, params or {})
             df = result.get_as_df()
 
             if df.empty:
@@ -201,7 +244,7 @@ Entities found: {json.dumps(kg_results.get("entities", [])[:10], indent=2)}
 Facts:
 {chr(10).join(f"- {fact}" for fact in kg_results.get("facts", [])[:10])}
 
-Raw results: {json.dumps(kg_results.get("raw", [])[:5], indent=2)}
+Raw results: {json.dumps(kg_results.get("raw", [])[:5], indent=2, default=str)}
 """
 
         prompt = f"""Using the knowledge graph query results below, answer this question concisely.
@@ -213,11 +256,19 @@ Knowledge Graph Results:
 
 Provide a clear, factual answer citing the sources. If the KG has no relevant data, say so."""
 
-        response = self.claude.messages.create(
-            model="claude-3-5-haiku-20241022",
-            max_tokens=512,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        try:
+            response = self.claude.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=512,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except Exception as e:
+            logger.warning(f"Claude API error in _synthesize_answer: {e}")
+            sources = ", ".join(kg_results.get("sources", [])[:5])
+            return f"Found relevant sources: {sources}" if sources else "No results found."
+
+        if not response.content:
+            return "Unable to synthesize answer: empty response from Claude."
 
         return response.content[0].text
 
@@ -249,7 +300,11 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         return {
             "name": row["name"],
             "type": row["type"],
-            "properties": json.loads(row["properties"]) if row["properties"] else {},
+            "properties": (
+                json.loads(row["properties"])
+                if isinstance(row["properties"], str)
+                else row["properties"] or {}
+            ),
             "source_articles": row["source_articles"],
         }
 
@@ -267,6 +322,9 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         Returns:
             List of paths with relationships
         """
+        if not isinstance(max_hops, int) or not (1 <= max_hops <= 10):
+            raise ValueError(f"max_hops must be an integer between 1 and 10, got {max_hops!r}")
+
         # Simplified query without path list comprehensions (Kuzu limitation)
         result = self.conn.execute(
             f"""
@@ -335,7 +393,7 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         Semantic search over article sections.
 
         Args:
-            query: Search query (can be an article title or free text)
+            query: Search query (must be an existing article title)
             top_k: Number of results
 
         Returns:
@@ -388,7 +446,13 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         results = sorted(articles.values(), key=lambda x: x["similarity"], reverse=True)
         return results[:top_k]
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
     def close(self):
         """Close database connection."""
-        del self.conn
-        del self.db
+        self.conn = None  # type: ignore[assignment]
+        self.db = None  # type: ignore[assignment]
