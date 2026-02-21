@@ -512,7 +512,8 @@ class TestIntegration:
             ORDER BY depth, title
         """)
 
-        depths = {row["title"]: row["depth"] for row in result}
+        df = result.get_as_df()
+        depths = dict(zip(df["title"], df["depth"]))
         assert depths["Depth 0"] == 0
         assert depths["Depth 1 Article"] == 1
         assert depths["Depth 2 Article"] == 2

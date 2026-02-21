@@ -266,6 +266,65 @@ class WikipediaAPIClient:
 
         return results
 
+    def validate_titles(self, titles: list[str]) -> dict[str, str | None]:
+        """Validate that article titles exist on Wikipedia using the Query API.
+
+        Uses the lightweight query endpoint (not Parse) to check up to 50
+        titles per request. Follows redirects and normalization.
+
+        Args:
+            titles: List of article titles to validate
+
+        Returns:
+            Dict mapping each input title to its canonical Wikipedia title,
+            or None if the article does not exist.
+        """
+        result: dict[str, str | None] = {}
+
+        for i in range(0, len(titles), 50):
+            batch = titles[i : i + 50]
+            batch_results = self._validate_batch(batch)
+            result.update(batch_results)
+
+        return result
+
+    def _validate_batch(self, titles: list[str]) -> dict[str, str | None]:
+        """Validate a single batch of up to 50 titles via Query API."""
+        params = {
+            "action": "query",
+            "titles": "|".join(titles),
+            "format": "json",
+            "redirects": "1",
+        }
+
+        data = self._make_request(params)
+        query = data.get("query", {})
+
+        # Build normalization chain: input title -> normalized form
+        normalize_map: dict[str, str] = {}
+        for entry in query.get("normalized", []):
+            normalize_map[entry["from"]] = entry["to"]
+
+        # Build redirect chain: normalized title -> canonical title
+        redirect_map: dict[str, str] = {}
+        for entry in query.get("redirects", []):
+            redirect_map[entry["from"]] = entry["to"]
+
+        # Collect valid canonical titles from pages response
+        valid_titles: set[str] = set()
+        for page_info in query.get("pages", {}).values():
+            if "missing" not in page_info:
+                valid_titles.add(page_info["title"])
+
+        # Resolve each input title through normalize -> redirect -> check
+        result: dict[str, str | None] = {}
+        for title in titles:
+            resolved = normalize_map.get(title, title)
+            resolved = redirect_map.get(resolved, resolved)
+            result[title] = resolved if resolved in valid_titles else None
+
+        return result
+
     def clear_cache(self):
         """Clear the response cache."""
         if self._cache is not None:

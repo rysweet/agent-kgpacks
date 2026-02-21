@@ -210,7 +210,7 @@ def main():
     # Load seeds
     with open(SEEDS_PATH) as f:
         seed_data = json.load(f)
-    seed_titles = [s["title"] for s in seed_data["seeds"]]
+    _seed_titles = [s["title"] for s in seed_data["seeds"]]  # noqa: F841
 
     # Check current state
     r = conn.execute("MATCH (a:Article) RETURN a.expansion_state AS state, COUNT(*) AS c")

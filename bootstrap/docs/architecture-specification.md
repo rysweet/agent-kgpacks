@@ -742,4 +742,3 @@ def reclaim_stale(conn, timeout_seconds: int = 300):
 - [x] Database size <10 GB
 - [x] Memory usage <500 MB
 - [x] Failure rate <5%
-
