@@ -7,6 +7,15 @@ Usage:
 
     wikigr create --seeds seeds.json [--db data/my.db] [--target 1000]
         Creates a single database from a pre-generated seeds file.
+
+    wikigr update --db data/kg.db --target 2000 [--max-depth 3] [--batch-size 10]
+        Resumes expansion on an existing database to a new target count.
+
+    wikigr update --db data/kg.db --add-seeds new_seeds.json --target 5000
+        Injects additional seed articles and resumes expansion.
+
+    wikigr status --db data/kg.db
+        Shows database statistics (articles, sections, edges by state).
 """
 
 import argparse
@@ -139,7 +148,7 @@ def _expand_seeds(seed_data: dict, db_path: str, args: argparse.Namespace) -> No
     try:
         stats = orch.expand_to_target(target_count=args.target)
         elapsed = time.time() - start_time
-        print(f"  Done in {elapsed / 60:.1f} minutes — {stats}")
+        print(f"  Done in {elapsed / 60:.1f} minutes -- {stats}")
     except KeyboardInterrupt:
         elapsed = time.time() - start_time
         print(f"\n  Interrupted after {elapsed / 60:.1f} minutes")
@@ -213,6 +222,204 @@ def cmd_create(args: argparse.Namespace) -> None:
         print(f"\nKnowledge graph ready at: {args.db}")
 
 
+def _get_db_stats(db_path: str) -> dict:
+    """Query an existing Kuzu database for comprehensive statistics.
+
+    Returns a dict with keys: loaded, discovered, claimed, processed,
+    failed, total_articles, sections, edges.
+    """
+    import kuzu
+
+    db = kuzu.Database(db_path)
+    conn = kuzu.Connection(db)
+
+    # Article counts by expansion state
+    result = conn.execute("""
+        MATCH (a:Article)
+        WHERE a.expansion_state IS NOT NULL
+        RETURN a.expansion_state AS state, COUNT(a) AS count
+    """)
+    df = result.get_as_df()
+
+    stats: dict = {
+        "discovered": 0,
+        "claimed": 0,
+        "loaded": 0,
+        "processed": 0,
+        "failed": 0,
+        "total_articles": 0,
+    }
+    for _, row in df.iterrows():
+        state = row["state"]
+        count = int(row["count"])
+        if state in stats:
+            stats[state] = count
+        stats["total_articles"] += count
+
+    # Loaded = articles with actual content (word_count > 0)
+    result = conn.execute("""
+        MATCH (a:Article) WHERE a.word_count > 0
+        RETURN COUNT(a) AS count
+    """)
+    stats["loaded_with_content"] = int(result.get_as_df().iloc[0]["count"])
+
+    # Sections
+    result = conn.execute("MATCH (s:Section) RETURN COUNT(s) AS count")
+    stats["sections"] = int(result.get_as_df().iloc[0]["count"])
+
+    # Edges (all relationship types)
+    edge_count = 0
+    for rel_table in ["HAS_SECTION", "LINKS_TO", "IN_CATEGORY"]:
+        try:
+            result = conn.execute(f"MATCH ()-[r:{rel_table}]->() RETURN COUNT(r) AS count")
+            edge_count += int(result.get_as_df().iloc[0]["count"])
+        except Exception:
+            pass  # Table may not exist in older schemas
+    stats["edges"] = edge_count
+
+    # Categories
+    try:
+        result = conn.execute("MATCH (c:Category) RETURN COUNT(c) AS count")
+        stats["categories"] = int(result.get_as_df().iloc[0]["count"])
+    except Exception:
+        stats["categories"] = 0
+
+    del conn
+    del db
+
+    return stats
+
+
+def cmd_update(args: argparse.Namespace) -> None:
+    """Execute the 'update' subcommand: resume expansion on an existing database."""
+    # Prevent sentence-transformers semaphore leak in long runs
+    os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+    os.environ.setdefault("JOBLIB_START_METHOD", "fork")
+    os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
+
+    db_path = args.db
+    if not Path(db_path).exists():
+        print(f"Error: database not found: {db_path}", file=sys.stderr)
+        sys.exit(1)
+
+    # Check current state
+    import kuzu
+
+    db = kuzu.Database(db_path)
+    conn = kuzu.Connection(db)
+    result = conn.execute("MATCH (a:Article) WHERE a.word_count > 0 RETURN COUNT(a) AS count")
+    current = int(result.get_as_df().iloc[0]["count"])
+    print(f"Current articles: {current}, target: {args.target}")
+
+    # Inject additional seeds if requested
+    if args.add_seeds:
+        seeds_path = args.add_seeds
+        if not Path(seeds_path).exists():
+            print(f"Error: seeds file not found: {seeds_path}", file=sys.stderr)
+            del conn, db
+            sys.exit(1)
+
+        with open(seeds_path) as f:
+            seed_data = json.load(f)
+
+        seed_titles = [s["title"] for s in seed_data.get("seeds", [])]
+        if not seed_titles:
+            print("Warning: seeds file contains no seed entries", file=sys.stderr)
+        else:
+            added = 0
+            for title in seed_titles:
+                # Check if article already exists
+                check = conn.execute(
+                    "MATCH (a:Article {title: $title}) RETURN COUNT(a) AS count",
+                    {"title": title},
+                )
+                if int(check.get_as_df().iloc[0]["count"]) > 0:
+                    logger.info(f"Seed already exists, skipping: {title}")
+                    continue
+
+                # Determine category from seed data
+                category = "General"
+                for s in seed_data["seeds"]:
+                    if s["title"] == title:
+                        category = s.get("category", "General")
+                        break
+
+                conn.execute(
+                    """
+                    CREATE (a:Article {
+                        title: $title,
+                        category: $category,
+                        word_count: 0,
+                        expansion_state: 'discovered',
+                        expansion_depth: 0,
+                        claimed_at: NULL,
+                        processed_at: NULL,
+                        retry_count: 0
+                    })
+                    """,
+                    {"title": title, "category": category},
+                )
+                added += 1
+
+            print(f"Added {added} new seed articles from {seeds_path}")
+
+    # Release the connection before the orchestrator opens its own
+    del conn, db
+
+    if current >= args.target:
+        print("Already at or above target. Nothing to do.")
+        return
+
+    # Resume expansion
+    from bootstrap.src.expansion.orchestrator import RyuGraphOrchestrator
+
+    orch = RyuGraphOrchestrator(
+        db_path=db_path,
+        max_depth=args.max_depth,
+        batch_size=args.batch_size,
+    )
+
+    start_time = time.time()
+    remaining = args.target - current
+    print(
+        f"Expanding from {current} to {args.target} articles"
+        f" ({remaining} remaining, max_depth={args.max_depth})..."
+    )
+
+    try:
+        stats = orch.expand_to_target(target_count=args.target)
+        elapsed = time.time() - start_time
+        print(f"  Done in {elapsed / 60:.1f} minutes -- {stats}")
+    except KeyboardInterrupt:
+        elapsed = time.time() - start_time
+        print(f"\n  Interrupted after {elapsed / 60:.1f} minutes")
+        raise
+    finally:
+        orch.close()
+
+
+def cmd_status(args: argparse.Namespace) -> None:
+    """Execute the 'status' subcommand: show database statistics."""
+    db_path = args.db
+    if not Path(db_path).exists():
+        print(f"Error: database not found: {db_path}", file=sys.stderr)
+        sys.exit(1)
+
+    stats = _get_db_stats(db_path)
+
+    print(f"Database: {db_path}")
+    print(f"{'=' * 50}")
+    print(f"  Articles (total):       {stats['total_articles']:>8}")
+    print(f"    Loaded (content):     {stats['loaded_with_content']:>8}")
+    print(f"    Discovered (queued):  {stats['discovered']:>8}")
+    print(f"    Claimed (in-flight):  {stats['claimed']:>8}")
+    print(f"    Processed:            {stats['processed']:>8}")
+    print(f"    Failed:               {stats['failed']:>8}")
+    print(f"  Sections:               {stats['sections']:>8}")
+    print(f"  Categories:             {stats['categories']:>8}")
+    print(f"  Edges (total):          {stats['edges']:>8}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="wikigr",
@@ -254,6 +461,31 @@ def main() -> None:
     create_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
 
     create_parser.set_defaults(func=cmd_create)
+
+    # 'update' subcommand
+    update_parser = subparsers.add_parser("update", help="Resume expansion on an existing database")
+    update_parser.add_argument(
+        "--db", type=str, required=True, help="Path to existing Kuzu database"
+    )
+    update_parser.add_argument("--target", type=int, required=True, help="Target article count")
+    update_parser.add_argument("--max-depth", type=int, default=3, help="Max expansion depth")
+    update_parser.add_argument("--batch-size", type=int, default=10, help="Expansion batch size")
+    update_parser.add_argument(
+        "--add-seeds",
+        type=str,
+        default=None,
+        help="Path to seeds JSON to inject before expanding",
+    )
+    update_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
+    update_parser.set_defaults(func=cmd_update)
+
+    # 'status' subcommand
+    status_parser = subparsers.add_parser("status", help="Show database statistics")
+    status_parser.add_argument(
+        "--db", type=str, required=True, help="Path to existing Kuzu database"
+    )
+    status_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
+    status_parser.set_defaults(func=cmd_status)
 
     args = parser.parse_args()
 
