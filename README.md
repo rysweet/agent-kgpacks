@@ -4,10 +4,12 @@ A semantic search and graph traversal system for Wikipedia articles using embedd
 
 ## Features
 
+- **Custom Knowledge Graphs**: Build topic-specific graphs from a simple list of topics
 - **Semantic Search**: Find articles by meaning using vector embeddings
 - **Graph Traversal**: Explore link relationships between articles
 - **Hybrid Queries**: Combine semantic similarity and graph proximity
-- **Incremental Expansion**: Start with 3K seeds, expand to 30K articles
+- **Incremental Expansion**: Start with seeds, expand to any scale
+- **Natural Language Queries**: Ask questions about the graph using the Knowledge Graph Agent
 - **Zero Cost**: Embedded database with no external dependencies
 
 ## Architecture
@@ -25,20 +27,38 @@ A semantic search and graph traversal system for Wikipedia articles using embedd
 uv pip install -e ".[dev]"
 ```
 
-### 2. Validate Setup
+### 2. Build a Knowledge Graph from Topics
+
+Create a topics file:
+
+```bash
+cat > topics.md << 'EOF'
+- Quantum Computing
+- Marine Biology
+- Renaissance Art
+EOF
+```
+
+Build one knowledge graph per topic:
+
+```bash
+export ANTHROPIC_API_KEY=your-key-here
+wikigr create --topics topics.md --db data/ --target 500
+```
+
+This generates seeds using Claude, validates them against Wikipedia, then expands each topic into its own database under `data/`.
+
+### 3. Query the Graph
+
+```bash
+python examples/query_kg_agent.py "What is quantum entanglement?" data/quantum-computing.db
+```
+
+### Alternative: Validate Setup
 
 ```bash
 # Run quickstart validation (3 sample articles)
 python bootstrap/quickstart.py
-```
-
-Expected output: All systems validated ✅
-
-### 3. Run with 10 Articles
-
-```bash
-# Load 10 articles and test semantic search
-python bootstrap/scripts/load_articles.py --count 10
 ```
 
 ### Explore the Graph
@@ -62,7 +82,12 @@ wikigr-explore --db data/wikigr_1k.db --port 8000
 
 ```
 wikigr/
-├── bootstrap/              # Bootstrap implementation
+├── wikigr/                 # Python package (CLI + agents)
+│   ├── cli.py             # wikigr create CLI
+│   └── agent/             # AI agents
+│       ├── kg_agent.py    # Knowledge Graph query agent
+│       └── seed_agent.py  # Seed generation agent
+├── bootstrap/              # Expansion pipeline
 │   ├── docs/              # Documentation
 │   ├── schema/            # Database schema
 │   ├── src/               # Source code
@@ -71,14 +96,12 @@ wikigr/
 │   │   ├── database/      # Database operations
 │   │   ├── query/         # Query functions
 │   │   └── expansion/     # Expansion orchestrator
-│   ├── tests/             # Test queries and scripts
+│   ├── tests/             # Integration tests
 │   ├── scripts/           # Utility scripts
-│   ├── data/              # Seed data
-│   └── quickstart.py      # Validation script
+│   └── data/              # Seed data
+├── tests/                 # Agent tests
 ├── data/                  # Database storage
-├── logs/                  # Log files
-├── requirements.txt       # Dependencies
-└── README.md             # This file
+└── README.md
 ```
 
 ## Usage
@@ -175,6 +198,7 @@ pyright bootstrap/
 
 ## Documentation
 
+- **Seed Agent & CLI**: `bootstrap/docs/seed-agent.md`
 - **Research Findings**: `bootstrap/docs/research-findings.md`
 - **Architecture**: `bootstrap/docs/architecture-specification.md`
 - **State Machine**: `bootstrap/docs/state-machine.md`

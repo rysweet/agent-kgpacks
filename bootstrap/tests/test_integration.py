@@ -171,13 +171,11 @@ class TestExpansionIntegration:
         orch = RyuGraphOrchestrator(db_path=db_path, max_depth=1, batch_size=5)
         orch.initialize_seeds(["Python (programming language)"], category="CS")
 
-        stats = orch.expand_to_target(target_count=3, max_iterations=10)
+        orch.expand_to_target(target_count=3, max_iterations=10)
 
         # Verify the seed was processed (it may or may not expand further
         # depending on which links are discovered first)
-        result = orch.conn.execute(
-            "MATCH (a:Article) WHERE a.word_count > 0 RETURN COUNT(a) AS c"
-        )
+        result = orch.conn.execute("MATCH (a:Article) WHERE a.word_count > 0 RETURN COUNT(a) AS c")
         loaded = result.get_as_df().iloc[0]["c"]
         assert loaded >= 1, f"Expected at least 1 loaded article, got {loaded}"
 
