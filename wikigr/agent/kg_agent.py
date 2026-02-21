@@ -29,7 +29,12 @@ def _safe_json_loads(value: object) -> dict:
 class KnowledgeGraphAgent:
     """Agent that queries WikiGR knowledge graph and synthesizes answers."""
 
-    def __init__(self, db_path: str, anthropic_api_key: str | None = None, read_only: bool = True):
+    def __init__(
+        self,
+        db_path: str,
+        anthropic_api_key: str | None = None,
+        read_only: bool = True,
+    ):
         """
         Initialize agent with database connection and Claude API.
 
@@ -62,13 +67,20 @@ class KnowledgeGraphAgent:
             self._embedding_generator = EmbeddingGenerator()
         return self._embedding_generator
 
-    def query(self, question: str, max_results: int = 10) -> dict[str, Any]:
+    def query(
+        self,
+        question: str,
+        max_results: int = 10,
+        use_graph_rag: bool = False,
+    ) -> dict[str, Any]:
         """
         Answer a question using the knowledge graph.
 
         Args:
             question: Natural language question
             max_results: Maximum number of results to retrieve from graph (1-1000)
+            use_graph_rag: If True, delegate to graph_query() for multi-hop
+                retrieval that follows LINKS_TO edges before synthesizing.
 
         Returns:
             {
@@ -80,6 +92,8 @@ class KnowledgeGraphAgent:
             }
         """
         self._check_open()
+        if use_graph_rag:
+            return self.graph_query(question)
         if not isinstance(max_results, int) or not (1 <= max_results <= 1000):
             raise ValueError(
                 f"max_results must be an integer between 1 and 1000, got {max_results!r}"
@@ -104,6 +118,281 @@ class KnowledgeGraphAgent:
             "cypher_query": query_plan["cypher"],
             "query_type": query_plan["type"],
         }
+
+    # ------------------------------------------------------------------
+    # Graph-Aware RAG (multi-hop retrieval)
+    # ------------------------------------------------------------------
+
+    def graph_query(
+        self,
+        question: str,
+        max_hops: int = 2,
+        max_context_articles: int = 5,
+    ) -> dict[str, Any]:
+        """Answer using graph-aware multi-hop retrieval.
+
+        Follows LINKS_TO edges from seed articles to gather context from
+        related articles before synthesizing an answer.  This produces
+        richer responses by exploiting the knowledge graph structure.
+
+        Steps:
+            1. Use Claude to identify seed entity/article names from the question.
+            2. Traverse LINKS_TO edges up to *max_hops* to gather related articles.
+            3. Collect the lead section content from each traversed article.
+            4. Synthesize an answer using all gathered context.
+
+        Args:
+            question: Natural language question.
+            max_hops: Maximum depth of LINKS_TO traversal (1-10).
+            max_context_articles: Maximum number of related articles to
+                collect per seed (1-50).
+
+        Returns:
+            Dictionary with keys: answer, sources, hops_traversed,
+            articles_consulted, cypher_queries.
+        """
+        self._check_open()
+
+        if not isinstance(max_hops, int) or not (1 <= max_hops <= 10):
+            raise ValueError(f"max_hops must be an integer between 1 and 10, got {max_hops!r}")
+        if not isinstance(max_context_articles, int) or not (1 <= max_context_articles <= 50):
+            raise ValueError(
+                f"max_context_articles must be an integer between 1 and 50, "
+                f"got {max_context_articles!r}"
+            )
+
+        cypher_queries: list[str] = []
+
+        # ------------------------------------------------------------------
+        # Step 1: Ask Claude to extract seed article titles from the question
+        # ------------------------------------------------------------------
+        seed_titles = self._identify_seed_articles(question)
+        logger.info(f"Graph RAG seeds identified: {seed_titles}")
+
+        # ------------------------------------------------------------------
+        # Step 2: Traverse LINKS_TO edges from each seed
+        # ------------------------------------------------------------------
+        all_related_titles: list[str] = []
+        for seed_title in seed_titles:
+            traversal_cypher = (
+                f"MATCH (seed:Article {{title: $title}})"
+                f"-[:LINKS_TO*1..{max_hops}]->"
+                f"(related:Article) "
+                f"WHERE related.word_count > 0 "
+                f"RETURN DISTINCT related.title AS title "
+                f"LIMIT $limit"
+            )
+            cypher_queries.append(traversal_cypher)
+            try:
+                result = self.conn.execute(
+                    traversal_cypher,
+                    {"title": seed_title, "limit": max_context_articles},
+                )
+                df = result.get_as_df()
+                if not df.empty:
+                    all_related_titles.extend(df["title"].tolist())
+            except Exception as e:
+                logger.warning(f"Traversal failed for seed '{seed_title}': {e}")
+
+        # Deduplicate while preserving order; include seeds themselves
+        seen: set[str] = set()
+        unique_titles: list[str] = []
+        for title in seed_titles + all_related_titles:
+            if title not in seen:
+                seen.add(title)
+                unique_titles.append(title)
+
+        # ------------------------------------------------------------------
+        # Step 3: Gather lead-section content from each article
+        # ------------------------------------------------------------------
+        context_parts: list[str] = []
+        section_cypher = (
+            "MATCH (a:Article {title: $title})"
+            "-[:HAS_SECTION {section_index: 0}]->(s:Section) "
+            "RETURN s.content AS content"
+        )
+        cypher_queries.append(section_cypher)
+        for title in unique_titles:
+            try:
+                result = self.conn.execute(section_cypher, {"title": title})
+                df = result.get_as_df()
+                if not df.empty:
+                    content = df.iloc[0]["content"]
+                    if content:
+                        context_parts.append(f"## {title}\n{content}")
+            except Exception as e:
+                logger.warning(f"Section fetch failed for '{title}': {e}")
+
+        # ------------------------------------------------------------------
+        # Step 4: Synthesize the answer with Claude
+        # ------------------------------------------------------------------
+        combined_context = "\n\n".join(context_parts) if context_parts else "(no context found)"
+        answer = self._synthesize_graph_rag_answer(question, combined_context, unique_titles)
+
+        return {
+            "answer": answer,
+            "sources": unique_titles,
+            "hops_traversed": max_hops,
+            "articles_consulted": len(context_parts),
+            "cypher_queries": cypher_queries,
+        }
+
+    def _identify_seed_articles(self, question: str) -> list[str]:
+        """Use Claude to extract likely Wikipedia article titles from a question.
+
+        Falls back to simple keyword extraction if the API call fails.
+        """
+        prompt = (
+            "You are an assistant that identifies Wikipedia article titles "
+            "relevant to a user question.  Given the question below, return a JSON list of "
+            "1-3 Wikipedia article titles that are most likely to appear in a knowledge graph "
+            "and would serve as good starting points for answering the question.\n\n"
+            "Return ONLY a JSON array of strings, nothing else.\n"
+            'Example: ["Machine Learning", "Neural Network"]\n\n'
+            f"Question: {question}"
+        )
+
+        try:
+            response = self.claude.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=256,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except Exception as e:
+            logger.warning(f"Claude API error in _identify_seed_articles: {e}")
+            return self._fallback_seed_extraction(question)
+
+        if not response.content:
+            return self._fallback_seed_extraction(question)
+
+        text = response.content[0].text.strip()
+        # Strip markdown fences if present
+        if "```" in text:
+            text = text.split("```")[1] if "```json" not in text else text.split("```json")[1]
+            text = text.split("```")[0].strip()
+
+        try:
+            titles = json.loads(text)
+            if isinstance(titles, list) and all(isinstance(t, str) for t in titles):
+                return titles[:3]
+        except (json.JSONDecodeError, TypeError):
+            logger.warning(f"Failed to parse seed titles JSON: {text[:200]}")
+
+        return self._fallback_seed_extraction(question)
+
+    @staticmethod
+    def _fallback_seed_extraction(question: str) -> list[str]:
+        """Extract candidate article titles from question using simple heuristics.
+
+        Capitalised multi-word phrases and known stop-word filtering provide a
+        reasonable fallback when the LLM is unavailable.
+        """
+        stop_words = {
+            "what",
+            "who",
+            "how",
+            "why",
+            "when",
+            "where",
+            "which",
+            "does",
+            "is",
+            "are",
+            "was",
+            "were",
+            "the",
+            "a",
+            "an",
+            "of",
+            "in",
+            "on",
+            "to",
+            "for",
+            "and",
+            "or",
+            "not",
+            "can",
+            "could",
+            "would",
+            "should",
+            "do",
+            "did",
+            "has",
+            "have",
+            "had",
+            "be",
+            "been",
+            "about",
+            "between",
+            "from",
+            "with",
+            "this",
+            "that",
+            "these",
+            "those",
+            "it",
+            "its",
+            "tell",
+            "me",
+            "us",
+            "find",
+            "explain",
+            "describe",
+            "relationship",
+            "related",
+            "knowledge",
+            "graph",
+            "article",
+            "articles",
+        }
+        words = question.replace("?", "").replace("!", "").replace(",", "").split()
+        candidates = [w for w in words if w.lower() not in stop_words and len(w) > 2]
+        # Title-case each candidate to match typical article titles
+        return [c.title() for c in candidates[:3]] if candidates else ["Artificial Intelligence"]
+
+    def _synthesize_graph_rag_answer(self, question: str, context: str, sources: list[str]) -> str:
+        """Synthesize an answer from multi-hop graph context.
+
+        Args:
+            question: The original user question.
+            context: Combined section content from traversed articles.
+            sources: List of article titles used as context.
+
+        Returns:
+            Natural language answer string.
+        """
+        prompt = (
+            "Using the following context gathered by traversing a Wikipedia "
+            "knowledge graph, answer the question below.  Cite specific article titles "
+            "where possible.\n\n"
+            f"Question: {question}\n\n"
+            f"Context from {len(sources)} articles:\n"
+            f"{context}\n\n"
+            "Provide a clear, factual answer. If the context is insufficient, say so."
+        )
+
+        try:
+            response = self.claude.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=1024,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        except Exception as e:
+            logger.warning(f"Claude API error in _synthesize_graph_rag_answer: {e}")
+            return (
+                f"Found {len(sources)} related articles: {', '.join(sources[:5])}"
+                if sources
+                else "No results found."
+            )
+
+        if not response.content:
+            return "Unable to synthesize answer: empty response from Claude."
+
+        return response.content[0].text
+
+    # ------------------------------------------------------------------
+    # Standard query helpers
+    # ------------------------------------------------------------------
 
     def _plan_query(self, question: str) -> dict:
         """Use Claude to classify question and generate Cypher query."""
@@ -320,6 +609,10 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
             return "Unable to synthesize answer: empty response from Claude."
 
         return response.content[0].text
+
+    # ------------------------------------------------------------------
+    # Entity and relationship methods
+    # ------------------------------------------------------------------
 
     def find_entity(self, entity_name: str) -> dict | None:
         """
