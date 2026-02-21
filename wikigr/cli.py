@@ -276,8 +276,9 @@ def _get_db_stats(db_path: str) -> dict:
         try:
             result = conn.execute(f"MATCH ()-[r:{rel_table}]->() RETURN COUNT(r) AS count")
             edge_count += int(result.get_as_df().iloc[0]["count"])
-        except Exception:
-            pass  # Table may not exist in older schemas
+        except Exception as e:
+            # Table may not exist in older schemas — safe to skip
+            logger.debug(f"Edge count query failed for {rel_table}: {e}")
     stats["edges"] = edge_count
 
     # Categories

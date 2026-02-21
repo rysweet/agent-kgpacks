@@ -54,9 +54,11 @@ def semantic_search(
     logger.info(f"  Found {len(query_df)} query sections")
 
     # Step 2: For each query embedding, find similar sections
+    # Cap at 5 sections to avoid unbounded N queries per article
     all_matches = []
+    max_sections = 5
 
-    for _, row in query_df.iterrows():
+    for _, row in query_df.head(max_sections).iterrows():
         query_embedding = row["embedding"]
 
         # Query vector index
@@ -71,7 +73,7 @@ def semantic_search(
         """,
             {
                 "query_embedding": query_embedding,
-                "top_k": top_k * 5,  # Over-fetch for aggregation
+                "top_k": min(top_k * 5, 200),  # Over-fetch for aggregation, capped
             },
         )
 
@@ -107,7 +109,7 @@ def semantic_search(
                     "section_title": section_title,
                     "section_id": section_id,
                     "distance": distance,
-                    "similarity": 1.0 - distance,  # Convert distance to similarity
+                    "similarity": max(0.0, min(1.0, 1.0 - distance)),
                 }
             )
 
@@ -124,25 +126,21 @@ def semantic_search(
             if match["distance"] < article_best_matches[article]["distance"]:
                 article_best_matches[article] = match
 
-    # Step 4: Filter by category if specified
+    # Step 4: Filter by category if specified (batch query, not N+1)
     if category:
-        filtered_matches = []
-
-        for article_title, match in article_best_matches.items():
-            # Check article category
-            cat_result = conn.execute(
-                """
-                MATCH (a:Article {title: $title})
-                RETURN a.category AS category
-            """,
-                {"title": article_title},
-            )
-
-            cat_df = cat_result.get_as_df()
-            if len(cat_df) > 0 and cat_df.iloc[0]["category"] == category:
-                filtered_matches.append(match)
-
-        results = filtered_matches
+        candidate_titles = list(article_best_matches.keys())
+        cat_result = conn.execute(
+            """
+            MATCH (a:Article)
+            WHERE a.title IN $titles AND a.category = $category
+            RETURN a.title AS title
+        """,
+            {"titles": candidate_titles, "category": category},
+        )
+        matching_titles = set(cat_result.get_as_df()["title"].tolist())
+        results = [
+            match for title, match in article_best_matches.items() if title in matching_titles
+        ]
     else:
         results = list(article_best_matches.values())
 

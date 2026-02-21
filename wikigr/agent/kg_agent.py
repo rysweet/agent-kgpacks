@@ -805,7 +805,7 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
             if article_title not in articles or distance < articles[article_title]["distance"]:
                 articles[article_title] = {
                     "title": article_title,
-                    "similarity": 1.0 - distance,
+                    "similarity": max(0.0, min(1.0, 1.0 - distance)),
                     "distance": distance,
                 }
 
