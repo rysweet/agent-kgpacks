@@ -487,8 +487,11 @@ Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
         or unbounded variable-length paths.
         """
         # Allowlist: only permit MATCH or CALL QUERY_VECTOR_INDEX
+        # Strip string literals and comments to prevent bypass
         stripped = re.sub(r"'[^']*'", "''", cypher)
         stripped = re.sub(r'"[^"]*"', '""', stripped)
+        stripped = re.sub(r"//.*$", "", stripped, flags=re.MULTILINE)
+        stripped = re.sub(r"/\*.*?\*/", "", stripped, flags=re.DOTALL)
         normalized = re.sub(r"\s+", " ", stripped.upper()).strip()
 
         allowed_prefixes = ("MATCH ", "CALL QUERY_VECTOR_INDEX")
