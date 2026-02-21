@@ -175,10 +175,10 @@ class KnowledgeGraphAgent:
         all_related_titles: list[str] = []
         for seed_title in seed_titles:
             traversal_cypher = (
-                f"MATCH (seed:Article {{title: $title}})"
+                f"MATCH (seed:Article)"
                 f"-[:LINKS_TO*1..{max_hops}]->"
                 f"(related:Article) "
-                f"WHERE related.word_count > 0 "
+                f"WHERE lower(seed.title) = lower($title) AND related.word_count > 0 "
                 f"RETURN DISTINCT related.title AS title "
                 f"LIMIT $limit"
             )
@@ -195,12 +195,16 @@ class KnowledgeGraphAgent:
                 logger.warning(f"Traversal failed for seed '{seed_title}': {e}")
 
         # Deduplicate while preserving order; include seeds themselves
+        # Cap total articles to prevent excessive API costs
+        max_total_articles = 15
         seen: set[str] = set()
         unique_titles: list[str] = []
         for title in seed_titles + all_related_titles:
             if title not in seen:
                 seen.add(title)
                 unique_titles.append(title)
+            if len(unique_titles) >= max_total_articles:
+                break
 
         # ------------------------------------------------------------------
         # Step 3: Gather lead-section content from each article
@@ -347,8 +351,8 @@ class KnowledgeGraphAgent:
         }
         words = question.replace("?", "").replace("!", "").replace(",", "").split()
         candidates = [w for w in words if w.lower() not in stop_words and len(w) > 2]
-        # Title-case each candidate to match typical article titles
-        return [c.title() for c in candidates[:3]] if candidates else ["Artificial Intelligence"]
+        # Preserve original casing — case-insensitive matching happens in the traversal query
+        return candidates[:3] if candidates else ["Artificial intelligence"]
 
     def _synthesize_graph_rag_answer(self, question: str, context: str, sources: list[str]) -> str:
         """Synthesize an answer from multi-hop graph context.
@@ -482,12 +486,17 @@ Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
         Raises ValueError if the query contains destructive keywords
         or unbounded variable-length paths.
         """
-        # Strip string literals to avoid false positives on keywords inside quotes
+        # Allowlist: only permit MATCH or CALL QUERY_VECTOR_INDEX
         stripped = re.sub(r"'[^']*'", "''", cypher)
         stripped = re.sub(r'"[^"]*"', '""', stripped)
-        normalized = re.sub(r"\s+", " ", stripped.upper())
+        normalized = re.sub(r"\s+", " ", stripped.upper()).strip()
 
-        write_keywords = [
+        allowed_prefixes = ("MATCH ", "CALL QUERY_VECTOR_INDEX")
+        if not any(normalized.startswith(p) for p in allowed_prefixes):
+            raise ValueError("Query rejected: must start with MATCH or CALL QUERY_VECTOR_INDEX")
+
+        # Blocklist for dangerous keywords (defense in depth)
+        dangerous = [
             "CREATE ",
             "DELETE ",
             "DETACH ",
@@ -495,13 +504,14 @@ Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
             "SET ",
             "MERGE ",
             "REMOVE ",
-            "CALL ",
+            "LOAD ",
+            "COPY ",
+            "ALTER ",
+            "INSTALL ",
+            "EXPORT ",
+            "IMPORT ",
         ]
-        # Allow CALL QUERY_VECTOR_INDEX (read-only vector search)
-        if "CALL QUERY_VECTOR_INDEX" in normalized:
-            write_keywords = [k for k in write_keywords if k != "CALL "]
-
-        for keyword in write_keywords:
+        for keyword in dangerous:
             if keyword in normalized:
                 raise ValueError(f"Write operation rejected: query contains {keyword.strip()}")
 

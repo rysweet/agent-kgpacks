@@ -312,11 +312,15 @@ class RyuGraphOrchestrator:
         Kuzu connection selected round-robin from *worker_conns*.
         """
         with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
-            futures = {}
-            for i, article_info in enumerate(batch):
-                conn = worker_conns[i % len(worker_conns)]
-                future = executor.submit(self._process_one, article_info, conn)
-                futures[future] = article_info["title"]
+            # Process in chunks of num_workers to ensure each connection
+            # is used by at most one thread at a time
+            for chunk_start in range(0, len(batch), len(worker_conns)):
+                chunk = batch[chunk_start : chunk_start + len(worker_conns)]
+                futures = {}
+                for i, article_info in enumerate(chunk):
+                    conn = worker_conns[i]
+                    future = executor.submit(self._process_one, article_info, conn)
+                    futures[future] = article_info["title"]
 
             for future in as_completed(futures):
                 title = futures[future]
