@@ -393,4 +393,3 @@ for row in result:
 - `/home/azureuser/src/wikigr/test_kuzu_vector_v3.py` - Full vector search validation
 
 ---
-

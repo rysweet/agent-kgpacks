@@ -343,4 +343,3 @@ model = SentenceTransformer('paraphrase-MiniLM-L3-v2', device=device)
 - **Model card (paraphrase-MiniLM-L3-v2):** https://huggingface.co/sentence-transformers/paraphrase-MiniLM-L3-v2
 - **Model card (all-MiniLM-L6-v2):** https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
 - **Model card (all-mpnet-base-v2):** https://huggingface.co/sentence-transformers/all-mpnet-base-v2
-

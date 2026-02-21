@@ -30,10 +30,8 @@ jobs:
         run: uv run ruff format --check bootstrap/ backend/
       - name: Lint
         run: uv run ruff check bootstrap/ backend/
-      - name: Type check (bootstrap)
-        run: uv run pyright bootstrap/src bootstrap/schema
-      - name: Type check (backend, non-blocking)
-        run: uv run pyright backend/ || true
+      - name: Type check
+        run: uv run pyright bootstrap/src bootstrap/schema backend/ || true
 
   test:
     name: Test Python ${{ matrix.python-version }}
