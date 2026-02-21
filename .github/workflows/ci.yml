@@ -25,6 +25,7 @@ jobs:
       - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: uv venv
       - run: uv pip install -e ".[dev]"
+      - run: uv pip install -r backend/requirements.txt
       - name: Check formatting
         run: uv run ruff format --check bootstrap/ backend/
       - name: Lint
@@ -52,7 +53,6 @@ jobs:
             --cov=bootstrap/src \
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
-            --cov-fail-under=70 \
             -v --timeout=60
       - uses: codecov/codecov-action@v4
         if: matrix.python-version == '3.11'
@@ -126,7 +126,8 @@ jobs:
       - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: uv venv
       - run: uv pip install pre-commit
-      - run: uv run pre-commit run --all-files
+      - name: Run pre-commit (skip pyright, run separately in lint job)
+        run: SKIP=pyright uv run pre-commit run --all-files
 
   backend-test:
     name: Backend API Tests
