@@ -16,7 +16,7 @@ from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from backend.api.v1 import articles, chat, graph, search
+from backend.api.v1 import articles, chat, graph, hybrid, search
 from backend.config import settings
 from backend.db import get_db
 from backend.models.common import HealthResponse
@@ -67,6 +67,7 @@ app.add_middleware(
 # Include routers
 app.include_router(graph.router)
 app.include_router(search.router)
+app.include_router(hybrid.router)
 app.include_router(articles.router)
 app.include_router(chat.router)
 
