@@ -80,14 +80,18 @@ class LinkDiscovery:
         # Batch existence check to avoid N+1 queries
         existing_articles = self._batch_article_exists(valid_links)
 
+        # Batch link check: pre-fetch all existing edges from source (1 query)
+        existing_links = self._get_existing_links(source_title)
+
         for link in valid_links:
             try:
                 state = existing_articles.get(link)
 
                 if state is not None:
-                    # Article exists - create LINKS_TO relationship only
+                    # Article exists - create LINKS_TO only if edge doesn't exist
                     if state in ["loaded", "claimed", "discovered", "processed"]:
-                        self._create_link(source_title, link)
+                        if link not in existing_links:
+                            self._create_link(source_title, link)
                         logger.debug(
                             f"Linked '{source_title}' -> '{link}' (existing, state={state})"
                         )
@@ -100,7 +104,7 @@ class LinkDiscovery:
                     except Exception as insert_err:
                         # PK violation if another article already discovered this link
                         logger.debug(f"Insert race for '{link}': {insert_err}")
-                    # Always create the link edge, even if insert raced
+                    # Always create the link edge for new articles
                     self._create_link(source_title, link)
 
             except Exception as e:
@@ -259,28 +263,24 @@ class LinkDiscovery:
             {"title": title, "depth": depth},
         )
 
-    def _create_link(self, source_title: str, target_title: str):
-        """
-        Create LINKS_TO relationship between articles
-
-        Args:
-            source_title: Source article title
-            target_title: Target article title
-        """
-        # Check if relationship already exists
+    def _get_existing_links(self, source_title: str) -> set[str]:
+        """Get all existing LINKS_TO targets from a source article in one query."""
         result = self.conn.execute(
             """
-            MATCH (source:Article {title: $source})-[r:LINKS_TO]->(target:Article {title: $target})
-            RETURN COUNT(r) AS count
+            MATCH (source:Article {title: $source})-[:LINKS_TO]->(target:Article)
+            RETURN target.title AS title
         """,
-            {"source": source_title, "target": target_title},
+            {"source": source_title},
         )
-
-        # Only create if doesn't exist
         df = result.get_as_df()
-        if len(df) > 0 and df.iloc[0]["count"] > 0:
-            return
+        return set(df["title"].tolist()) if not df.empty else set()
 
+    def _create_link(self, source_title: str, target_title: str):
+        """
+        Create LINKS_TO relationship between articles.
+
+        Callers should pre-check with _get_existing_links for batch efficiency.
+        """
         self.conn.execute(
             """
             MATCH (source:Article {title: $source}),
