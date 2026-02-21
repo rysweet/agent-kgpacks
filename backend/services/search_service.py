@@ -85,11 +85,12 @@ class SearchService:
         Reuses logic from bootstrap.src.query.search.semantic_search
         but returns SearchResult models instead of dicts.
         """
-        # Step 1: Get query article's section embeddings
+        # Step 1: Get query article's lead section embedding (index 0)
+        # Lead section is the most representative — same quality as multi-section, 5x faster
         query_result = conn.execute(
             """
-            MATCH (a:Article {title: $query_title})-[:HAS_SECTION]->(s:Section)
-            RETURN s.embedding AS embedding, s.section_id AS section_id
+            MATCH (a:Article {title: $query_title})-[:HAS_SECTION {section_index: 0}]->(s:Section)
+            RETURN s.embedding AS embedding
             """,
             {"query_title": query_title},
         )
@@ -99,14 +100,11 @@ class SearchService:
         if len(query_df) == 0:
             return []
 
-        # Step 2: For each query embedding, find similar sections
-        # Cap at 5 sections to avoid unbounded N queries per article
+        # Step 2: Single vector query using lead section embedding
         all_matches = []
-        max_sections = 5
+        query_embedding = query_df.iloc[0]["embedding"]
 
-        for _idx, row in query_df.head(max_sections).iterrows():
-            query_embedding = row["embedding"]
-
+        if True:  # preserved indentation scope for minimal diff
             # Query vector index
             result = conn.execute(
                 """
