@@ -87,6 +87,7 @@ class ArticleService:
             MATCH (a:Article {title: $title})-[:LINKS_TO]->(target:Article)
             RETURN target.title AS title
             ORDER BY title ASC
+            LIMIT 500
             """,
             {"title": title},
         )
@@ -100,6 +101,7 @@ class ArticleService:
             MATCH (source:Article)-[:LINKS_TO]->(a:Article {title: $title})
             RETURN source.title AS title
             ORDER BY title ASC
+            LIMIT 500
             """,
             {"title": title},
         )

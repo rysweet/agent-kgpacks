@@ -249,21 +249,31 @@ class WorkQueueManager:
         now = datetime.now()
 
         try:
-            # Guard: only transition from legal predecessor states
-            where_clause = ""
+            # Guard: only transition from legal predecessor states (parameterized)
             if predecessors:
-                pred_list = ", ".join(f"'{s}'" for s in predecessors)
-                where_clause = f"AND a.expansion_state IN [{pred_list}]"
-
-            self.conn.execute(
-                f"""
-                MATCH (a:Article {{title: $title}})
-                WHERE TRUE {where_clause}
-                SET a.expansion_state = $new_state,
-                    a.processed_at = $now
-            """,
-                {"title": article_title, "new_state": new_state, "now": now},
-            )
+                self.conn.execute(
+                    """
+                    MATCH (a:Article {title: $title})
+                    WHERE a.expansion_state IN $predecessors
+                    SET a.expansion_state = $new_state,
+                        a.processed_at = $now
+                """,
+                    {
+                        "title": article_title,
+                        "new_state": new_state,
+                        "now": now,
+                        "predecessors": list(predecessors),
+                    },
+                )
+            else:
+                self.conn.execute(
+                    """
+                    MATCH (a:Article {title: $title})
+                    SET a.expansion_state = $new_state,
+                        a.processed_at = $now
+                """,
+                    {"title": article_title, "new_state": new_state, "now": now},
+                )
 
             logger.info(f"Advanced {article_title} to state: {new_state}")
         except Exception as e:

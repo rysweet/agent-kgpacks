@@ -314,16 +314,27 @@ class RyuGraphOrchestrator:
         with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
             # Process in chunks of num_workers to ensure each connection
             # is used by at most one thread at a time
+            all_futures: dict = {}
             for chunk_start in range(0, len(batch), len(worker_conns)):
                 chunk = batch[chunk_start : chunk_start + len(worker_conns)]
-                futures = {}
+                # Wait for previous chunk to complete before starting next
+                # (ensures connection reuse safety)
+                for future in as_completed(all_futures):
+                    title = all_futures[future]
+                    try:
+                        future.result()
+                    except Exception:
+                        logger.error(f"Worker exception for {title}", exc_info=True)
+                all_futures.clear()
+
                 for i, article_info in enumerate(chunk):
                     conn = worker_conns[i]
                     future = executor.submit(self._process_one, article_info, conn)
-                    futures[future] = article_info["title"]
+                    all_futures[future] = article_info["title"]
 
-            for future in as_completed(futures):
-                title = futures[future]
+            # Process remaining futures from last chunk
+            for future in as_completed(all_futures):
+                title = all_futures[future]
                 try:
                     future.result()
                 except Exception:

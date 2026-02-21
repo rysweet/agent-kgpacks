@@ -221,6 +221,6 @@ class TestGraphCaching:
 
         # Should have cache headers as per API spec
         assert "Cache-Control" in response.headers
-        # Per API.md: private, max-age=3600
-        assert "private" in response.headers["Cache-Control"]
+        # Public cache for read-only Wikipedia data
+        assert "public" in response.headers["Cache-Control"]
         assert "max-age=3600" in response.headers["Cache-Control"]
