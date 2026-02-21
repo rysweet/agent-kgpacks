@@ -53,7 +53,7 @@ class ArticleService:
 
         df = result.get_as_df()
         if len(df) == 0:
-            raise ValueError(f"Article not found: {title}")
+            raise ValueError("Article not found")
 
         category = df.iloc[0]["category"]
         word_count = int(df.iloc[0]["word_count"])
@@ -110,8 +110,12 @@ class ArticleService:
         # Get categories (for now, just return the main category)
         categories = [category] if category else []
 
-        # Generate Wikipedia URL
-        wikipedia_url = f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}"
+        # Generate Wikipedia URL (properly encoded)
+        from urllib.parse import quote
+
+        wikipedia_url = (
+            f"https://en.wikipedia.org/wiki/{quote(title.replace(' ', '_'), safe='/:@')}"
+        )
 
         # Use current timestamp as last_updated
         last_updated = datetime.now(timezone.utc)
@@ -245,17 +249,24 @@ class ArticleService:
             "avg_per_article": round(avg_links_per_article, 1),
         }
 
-        # Database information
+        # Database information (capped traversal for safety)
         db_file = Path(db_path)
         db_size_mb = 0
         if db_file.exists():
-            # Get directory size (Kuzu database is a directory)
-            if db_file.is_dir():
-                db_size_mb = sum(f.stat().st_size for f in db_file.rglob("*") if f.is_file()) / (
-                    1024 * 1024
-                )
-            else:
-                db_size_mb = db_file.stat().st_size / (1024 * 1024)
+            try:
+                if db_file.is_dir():
+                    # Cap file count to prevent unbounded traversal
+                    total = 0
+                    for i, f in enumerate(db_file.rglob("*")):
+                        if i > 10000:
+                            break
+                        if f.is_file():
+                            total += f.stat().st_size
+                    db_size_mb = total / (1024 * 1024)
+                else:
+                    db_size_mb = db_file.stat().st_size / (1024 * 1024)
+            except OSError:
+                db_size_mb = 0
 
         database = {
             "size_mb": round(db_size_mb, 2),

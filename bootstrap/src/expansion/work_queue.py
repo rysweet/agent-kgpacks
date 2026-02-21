@@ -236,12 +236,29 @@ class WorkQueueManager:
         if new_state not in self.VALID_STATES:
             raise ValueError(f"Invalid state: {new_state}. Must be one of {self.VALID_STATES}")
 
+        # Legal state transitions
+        valid_predecessors = {
+            "claimed": {"discovered"},
+            "loaded": {"claimed"},
+            "processed": {"loaded", "claimed"},
+            "failed": {"claimed", "discovered"},
+            "discovered": {"claimed", "failed"},  # retry/reclaim
+        }
+        predecessors = valid_predecessors.get(new_state, set())
+
         now = datetime.now()
 
         try:
+            # Guard: only transition from legal predecessor states
+            where_clause = ""
+            if predecessors:
+                pred_list = ", ".join(f"'{s}'" for s in predecessors)
+                where_clause = f"AND a.expansion_state IN [{pred_list}]"
+
             self.conn.execute(
-                """
-                MATCH (a:Article {title: $title})
+                f"""
+                MATCH (a:Article {{title: $title}})
+                WHERE TRUE {where_clause}
                 SET a.expansion_state = $new_state,
                     a.processed_at = $now
             """,
@@ -340,6 +357,7 @@ class WorkQueueManager:
         try:
             result = self.conn.execute("""
                 MATCH (a:Article)
+                WHERE a.expansion_state IS NOT NULL
                 RETURN a.expansion_state AS state, COUNT(a) AS count
             """)
 

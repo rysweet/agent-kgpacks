@@ -169,14 +169,18 @@ Return ONLY valid JSON:
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:
-            error_name = type(e).__name__
             # Re-raise auth errors — they won't resolve by retrying
-            if "authentication" in error_name.lower() or "auth" in str(e).lower():
-                raise ValueError(
-                    "Anthropic API authentication failed. "
-                    "Set ANTHROPIC_API_KEY or pass anthropic_api_key=."
-                ) from e
-            logger.error(f"Failed to generate titles for '{topic}': {error_name}: {e}")
+            try:
+                from anthropic import AuthenticationError
+
+                if isinstance(e, AuthenticationError):
+                    raise ValueError(
+                        "Anthropic API authentication failed. "
+                        "Set ANTHROPIC_API_KEY or pass anthropic_api_key=."
+                    ) from e
+            except ImportError:
+                pass
+            logger.error(f"Failed to generate titles for '{topic}': {type(e).__name__}: {e}")
             return []
 
         if not response.content:

@@ -98,11 +98,23 @@ def _expand_seeds(seed_data: dict, db_path: str, args: argparse.Namespace) -> No
 
     os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
 
-    # Remove stale DB files
+    # Remove stale DB files (with safety check)
     for suffix in ["", ".wal"]:
         p = Path(db_path + suffix)
         if p.exists():
-            if p.is_dir():
+            if p.is_symlink():
+                p.unlink()
+            elif p.is_dir():
+                # Safety: only remove if it looks like a Kuzu database directory
+                if any(p.iterdir()) and not any(
+                    f.name in ("catalog", "data.kz") for f in p.iterdir()
+                ):
+                    print(
+                        f"Warning: {p} exists but doesn't look like a Kuzu database. "
+                        f"Remove it manually or use a different --db path.",
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
                 import shutil
 
                 shutil.rmtree(p)
@@ -144,6 +156,9 @@ def cmd_create(args: argparse.Namespace) -> None:
     os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
 
     if args.topics:
+        if not os.path.isfile(args.topics):
+            print(f"Error: topics file not found: {args.topics}", file=sys.stderr)
+            sys.exit(1)
         topics = parse_topics_file(args.topics)
         if not topics:
             print(f"Error: no topics found in {args.topics}", file=sys.stderr)
