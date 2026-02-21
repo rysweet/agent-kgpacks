@@ -1,6 +1,7 @@
 """Pydantic models for API requests and responses."""
 
 from .article import Article, ArticleDetail, Section
+from .chat import ChatRequest, ChatResponse
 from .common import ErrorResponse, HealthResponse
 from .graph import Edge, GraphResponse, Node
 from .search import AutocompleteResponse, AutocompleteResult, SearchResponse, SearchResult
@@ -16,6 +17,8 @@ __all__ = [
     "Article",
     "Section",
     "ArticleDetail",
+    "ChatRequest",
+    "ChatResponse",
     "ErrorResponse",
     "HealthResponse",
 ]

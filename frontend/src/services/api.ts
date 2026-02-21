@@ -10,6 +10,7 @@ import type {
   SearchResult,
   Article,
   AutocompleteSuggestion,
+  ChatResponse,
 } from '../types/graph';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -147,4 +148,18 @@ export async function autocomplete(
     );
     return response.data.suggestions;
   });
+}
+
+/**
+ * Ask a question to the KG chat agent
+ */
+export async function askQuestion(
+  question: string,
+  maxResults = 10
+): Promise<ChatResponse> {
+  const response = await apiClient.post<ChatResponse>('/api/v1/chat', {
+    question,
+    max_results: maxResults,
+  });
+  return response.data;
 }

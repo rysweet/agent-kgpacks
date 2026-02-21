@@ -9,6 +9,7 @@ import { GraphCanvas } from './components/Graph/GraphCanvas';
 import { SearchBar } from './components/Search/SearchBar';
 import { NodeInfo } from './components/Sidebar/NodeInfo';
 import { FilterPanel } from './components/Sidebar/FilterPanel';
+import { ChatPanel } from './components/Chat/ChatPanel';
 import { useGraphStore } from './store/graphStore';
 import { searchSemantic, autocomplete } from './services/api';
 
@@ -180,6 +181,9 @@ function App() {
           )}
         </main>
       </div>
+
+      {/* Chat panel */}
+      <ChatPanel />
     </div>
   );
 }

@@ -16,7 +16,7 @@ from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from backend.api.v1 import articles, graph, search
+from backend.api.v1 import articles, chat, graph, search
 from backend.config import settings
 from backend.db import get_db
 from backend.models.common import HealthResponse
@@ -60,7 +60,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_methods=["GET", "OPTIONS"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Accept"],
 )
 
@@ -68,6 +68,7 @@ app.add_middleware(
 app.include_router(graph.router)
 app.include_router(search.router)
 app.include_router(articles.router)
+app.include_router(chat.router)
 
 
 @app.middleware("http")
