@@ -7,10 +7,14 @@ Coordinates the entire expansion process:
 - Process articles
 - Discover links
 - Expand to target count
+
+Supports parallel expansion with multiple worker threads, each using
+its own Kuzu connection for thread safety.
 """
 
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import kuzu
 
@@ -25,7 +29,12 @@ class RyuGraphOrchestrator:
     """Coordinates Wikipedia knowledge graph expansion"""
 
     def __init__(
-        self, db_path: str, max_depth: int = 2, batch_size: int = 10, claim_timeout: int = 300
+        self,
+        db_path: str,
+        max_depth: int = 2,
+        batch_size: int = 10,
+        claim_timeout: int = 300,
+        num_workers: int = 1,
     ):
         """
         Initialize expansion orchestrator
@@ -35,17 +44,19 @@ class RyuGraphOrchestrator:
             max_depth: Maximum expansion depth from seeds
             batch_size: Articles to process per batch
             claim_timeout: Timeout for claim reclamation (seconds)
+            num_workers: Number of parallel worker threads (1 = sequential)
         """
         self.db_path = db_path
         self.max_depth = max_depth
         self.batch_size = batch_size
         self.claim_timeout = claim_timeout
+        self.num_workers = max(1, min(num_workers, 10))
 
         # Initialize database connection
         self.db = kuzu.Database(db_path)
         self.conn = kuzu.Connection(self.db)
 
-        # Initialize components
+        # Initialize components (used for seeds, stats, and single-worker mode)
         self.work_queue = WorkQueueManager(self.conn)
         self.processor = ArticleProcessor(self.conn)
         self.link_discovery = LinkDiscovery(self.conn)
@@ -53,6 +64,7 @@ class RyuGraphOrchestrator:
         logger.info(f"RyuGraphOrchestrator initialized: {db_path}")
         logger.info(f"  Max depth: {max_depth}")
         logger.info(f"  Batch size: {batch_size}")
+        logger.info(f"  Workers: {self.num_workers}")
 
     def close(self):
         """Release database resources."""
@@ -116,11 +128,73 @@ class RyuGraphOrchestrator:
                 {"title": title, "category": category},
             )
 
-            logger.info(f"  ✓ Initialized seed: {title}")
+            logger.info(f"  Initialized seed: {title}")
 
         logger.info(f"Seeds initialized: {len(seed_titles)} articles")
 
         return session_id
+
+    def _process_one(
+        self,
+        article_info: dict,
+        worker_conn: kuzu.Connection,
+    ) -> tuple[str, bool, str | None]:
+        """Process a single article with a dedicated worker connection.
+
+        Each call creates its own component instances bound to *worker_conn*
+        so there is no shared mutable state between threads.
+
+        Args:
+            article_info: Dict with 'title', 'expansion_depth', and optionally 'category'.
+            worker_conn: A Kuzu connection owned exclusively by this worker thread.
+
+        Returns:
+            (title, success, error_message)
+        """
+        title = article_info["title"]
+        depth = article_info["expansion_depth"]
+
+        worker_queue = WorkQueueManager(worker_conn)
+        worker_processor = ArticleProcessor(worker_conn)
+        worker_link_disc = LinkDiscovery(worker_conn)
+
+        logger.info(f"  Processing: {title} (depth={depth})")
+
+        # Update heartbeat
+        worker_queue.update_heartbeat(title)
+
+        # Process article
+        success, links, error = worker_processor.process_article(
+            title=title,
+            category=article_info.get("category", "General"),
+            expansion_depth=depth,
+        )
+
+        if success:
+            logger.info(f"    Loaded ({len(links)} links)")
+
+            # Discover new links (if not at max depth)
+            if depth < self.max_depth:
+                discovered = worker_link_disc.discover_links(
+                    source_title=title,
+                    links=links,
+                    current_depth=depth,
+                    max_depth=self.max_depth,
+                )
+
+                if discovered > 0:
+                    logger.info(f"    Discovered {discovered} new articles")
+            else:
+                logger.info("    Max depth reached, not discovering links")
+
+            # Advance directly to processed (processor already sets loaded during insertion)
+            worker_queue.advance_state(title, "processed")
+        else:
+            # Handle failure
+            worker_queue.mark_failed(title, error or "Unknown error")
+            logger.warning(f"    Failed: {error}")
+
+        return (title, success, error)
 
     def expand_to_target(self, target_count: int, max_iterations: int | None = None) -> dict:
         """
@@ -145,97 +219,73 @@ class RyuGraphOrchestrator:
         iteration = 0
         stats = self.work_queue.get_queue_stats()
 
-        while True:
-            iteration += 1
+        # Create per-worker connections for parallel mode.
+        # In single-worker mode we reuse self.conn (no extra connections).
+        worker_conns: list[kuzu.Connection] = []
+        if self.num_workers > 1:
+            worker_conns = [kuzu.Connection(self.db) for _ in range(self.num_workers)]
 
-            if max_iterations and iteration > max_iterations:
-                logger.warning(f"Max iterations ({max_iterations}) reached")
-                break
+        try:
+            while True:
+                iteration += 1
 
-            # Check current progress (count articles with actual content)
-            result = self.conn.execute("""
-                MATCH (a:Article)
-                WHERE a.word_count > 0
-                RETURN COUNT(a) AS count
-            """)
-            current_count = result.get_as_df().iloc[0]["count"]
-
-            logger.info(f"\nIteration {iteration}: {current_count}/{target_count} loaded")
-
-            if current_count >= target_count:
-                logger.info(f"✓ Target reached: {current_count} articles")
-                break
-
-            # Reclaim stale claims periodically
-            if iteration % 5 == 0:
-                reclaimed = self.work_queue.reclaim_stale(self.claim_timeout)
-                if reclaimed > 0:
-                    logger.info(f"  Reclaimed {reclaimed} stale claims")
-
-            # Claim batch of work
-            batch = self.work_queue.claim_work(self.batch_size)
-
-            if not batch:
-                logger.warning("  No more work available in queue")
-
-                # Check if we have undiscovered links (fetch fresh stats, not stale from previous iteration)
-                fresh_stats = self.work_queue.get_queue_stats()
-                discovered_count = fresh_stats.get("discovered", 0)
-                if discovered_count == 0:
-                    logger.warning("  No discovered articles remaining - expansion stalled")
+                if max_iterations and iteration > max_iterations:
+                    logger.warning(f"Max iterations ({max_iterations}) reached")
                     break
 
-                # Wait briefly for reclaim or retry
-                time.sleep(2)
-                continue
+                # Check current progress (count articles with actual content)
+                result = self.conn.execute("""
+                    MATCH (a:Article)
+                    WHERE a.word_count > 0
+                    RETURN COUNT(a) AS count
+                """)
+                current_count = result.get_as_df().iloc[0]["count"]
 
-            logger.info(f"  Claimed {len(batch)} articles")
+                logger.info(f"\nIteration {iteration}: {current_count}/{target_count} loaded")
 
-            # Process batch
-            for article_info in batch:
-                title = article_info["title"]
-                depth = article_info["expansion_depth"]
+                if current_count >= target_count:
+                    logger.info(f"Target reached: {current_count} articles")
+                    break
 
-                logger.info(f"  Processing: {title} (depth={depth})")
+                # Reclaim stale claims periodically
+                if iteration % 5 == 0:
+                    reclaimed = self.work_queue.reclaim_stale(self.claim_timeout)
+                    if reclaimed > 0:
+                        logger.info(f"  Reclaimed {reclaimed} stale claims")
 
-                # Update heartbeat
-                self.work_queue.update_heartbeat(title)
+                # Claim batch of work
+                batch = self.work_queue.claim_work(self.batch_size)
 
-                # Process article
-                success, links, error = self.processor.process_article(
-                    title=title,
-                    category=article_info.get("category", "General"),
-                    expansion_depth=depth,
-                )
+                if not batch:
+                    logger.warning("  No more work available in queue")
 
-                if success:
-                    logger.info(f"    ✓ Loaded ({len(links)} links)")
+                    # Check if we have undiscovered links
+                    fresh_stats = self.work_queue.get_queue_stats()
+                    discovered_count = fresh_stats.get("discovered", 0)
+                    if discovered_count == 0:
+                        logger.warning("  No discovered articles remaining - expansion stalled")
+                        break
 
-                    # Discover new links (if not at max depth)
-                    if depth < self.max_depth:
-                        discovered = self.link_discovery.discover_links(
-                            source_title=title,
-                            links=links,
-                            current_depth=depth,
-                            max_depth=self.max_depth,
-                        )
+                    # Wait briefly for reclaim or retry
+                    time.sleep(2)
+                    continue
 
-                        if discovered > 0:
-                            logger.info(f"    ✓ Discovered {discovered} new articles")
-                    else:
-                        logger.info("    Max depth reached, not discovering links")
+                logger.info(f"  Claimed {len(batch)} articles")
 
-                    # Advance directly to processed (processor already sets loaded during insertion)
-                    self.work_queue.advance_state(title, "processed")
-
+                # Process batch: parallel or sequential
+                if self.num_workers > 1 and len(batch) > 1:
+                    self._process_batch_parallel(batch, worker_conns)
                 else:
-                    # Handle failure
-                    self.work_queue.mark_failed(title, error or "Unknown error")
-                    logger.warning(f"    ✗ Failed: {error}")
+                    self._process_batch_sequential(batch)
 
-            # Progress summary
-            stats = self.work_queue.get_queue_stats()
-            logger.info(f"  Queue: {stats}")
+                # Progress summary
+                stats = self.work_queue.get_queue_stats()
+                logger.info(f"  Queue: {stats}")
+
+        finally:
+            # Worker connections are released when they go out of scope;
+            # clearing the list makes intent explicit.
+            worker_conns.clear()
 
         # Final statistics
         duration = time.time() - start_time
@@ -247,6 +297,33 @@ class RyuGraphOrchestrator:
         logger.info(f"Final stats: {final_stats}")
 
         return final_stats
+
+    def _process_batch_sequential(self, batch: list[dict]) -> None:
+        """Process a batch of articles sequentially using self.conn."""
+        for article_info in batch:
+            self._process_one(article_info, self.conn)
+
+    def _process_batch_parallel(
+        self, batch: list[dict], worker_conns: list[kuzu.Connection]
+    ) -> None:
+        """Process a batch of articles in parallel using ThreadPoolExecutor.
+
+        Each article is submitted to the pool and processed with a dedicated
+        Kuzu connection selected round-robin from *worker_conns*.
+        """
+        with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
+            futures = {}
+            for i, article_info in enumerate(batch):
+                conn = worker_conns[i % len(worker_conns)]
+                future = executor.submit(self._process_one, article_info, conn)
+                futures[future] = article_info["title"]
+
+            for future in as_completed(futures):
+                title = futures[future]
+                try:
+                    future.result()
+                except Exception:
+                    logger.error(f"Worker exception for {title}", exc_info=True)
 
     def get_status(self) -> dict:
         """Get current expansion status"""
@@ -283,7 +360,7 @@ def main():
     seeds = ["Python (programming language)", "Artificial intelligence", "Machine learning"]
 
     session_id = orch.initialize_seeds(seeds, category="Computer Science")
-    print(f"   ✓ Initialized {len(seeds)} seeds (session: {session_id})")
+    print(f"   Initialized {len(seeds)} seeds (session: {session_id})")
 
     # Test 2: Expand to 10 articles
     print("\n2. Expanding to 10 articles...")
@@ -305,7 +382,7 @@ def main():
         else:
             Path(db_path).unlink()
 
-    print("\n✓ Test complete!")
+    print("\nTest complete!")
 
 
 if __name__ == "__main__":

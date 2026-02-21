@@ -126,15 +126,18 @@ def _expand_seeds(seed_data: dict, db_path: str, args: argparse.Namespace) -> No
 
     from bootstrap.src.expansion.orchestrator import RyuGraphOrchestrator
 
+    num_workers = getattr(args, "workers", 1)
     orch = RyuGraphOrchestrator(
         db_path=db_path,
         max_depth=args.max_depth,
         batch_size=args.batch_size,
+        num_workers=num_workers,
     )
     orch.initialize_seeds(seed_titles)
 
     start_time = time.time()
-    print(f"Expanding to {args.target} articles (max_depth={args.max_depth})...")
+    workers_msg = f", workers={num_workers}" if num_workers > 1 else ""
+    print(f"Expanding to {args.target} articles (max_depth={args.max_depth}{workers_msg})...")
 
     try:
         stats = orch.expand_to_target(target_count=args.target)
@@ -251,6 +254,12 @@ def main() -> None:
         "--seeds-output", type=str, help="Directory to save per-topic seed JSON files"
     )
     create_parser.add_argument("--batch-size", type=int, default=10, help="Expansion batch size")
+    create_parser.add_argument(
+        "--workers",
+        type=int,
+        default=1,
+        help="Number of parallel expansion workers (1 = sequential, max 10)",
+    )
     create_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
 
     create_parser.set_defaults(func=cmd_create)
