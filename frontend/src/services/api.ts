@@ -151,7 +151,7 @@ export async function autocomplete(
 }
 
 /**
- * Ask a question to the KG chat agent
+ * Ask a question to the KG chat agent (blocking)
  */
 export async function askQuestion(
   question: string,
@@ -162,4 +162,38 @@ export async function askQuestion(
     max_results: maxResults,
   });
   return response.data;
+}
+
+/**
+ * Ask a question with streaming response via SSE.
+ * Calls onToken for each text chunk, onSources when sources arrive,
+ * and onDone with metadata when complete.
+ */
+export function askQuestionStream(
+  question: string,
+  callbacks: {
+    onToken: (text: string) => void;
+    onSources: (sources: string[]) => void;
+    onDone: (meta: { query_type: string; execution_time_ms: number }) => void;
+    onError: (error: string) => void;
+  },
+  maxResults = 10
+): () => void {
+  const url = `${API_BASE_URL}/api/v1/chat/stream?question=${encodeURIComponent(question)}&max_results=${maxResults}`;
+  const eventSource = new EventSource(url);
+
+  eventSource.addEventListener('token', (e) => callbacks.onToken(e.data));
+  eventSource.addEventListener('sources', (e) => callbacks.onSources(JSON.parse(e.data)));
+  eventSource.addEventListener('done', (e) => {
+    callbacks.onDone(JSON.parse(e.data));
+    eventSource.close();
+  });
+  eventSource.addEventListener('error', (e) => {
+    const msg = (e as MessageEvent)?.data || 'Connection error';
+    callbacks.onError(msg);
+    eventSource.close();
+  });
+
+  // Return cleanup function
+  return () => eventSource.close();
 }

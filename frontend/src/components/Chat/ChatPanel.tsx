@@ -7,7 +7,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { askQuestion } from '../../services/api';
+import { askQuestionStream } from '../../services/api';
 import type { ChatMessage } from '../../types/graph';
 
 export const ChatPanel: React.FC = () => {
@@ -38,29 +38,53 @@ export const ChatPanel: React.FC = () => {
       setInput('');
       setIsLoading(true);
 
-      try {
-        const response = await askQuestion(question);
-        const botMsg: ChatMessage = {
-          id: `bot-${Date.now()}`,
-          role: 'assistant',
-          content: response.answer,
-          sources: response.sources,
-          queryType: response.query_type,
-          executionTimeMs: response.execution_time_ms,
-          timestamp: Date.now(),
-        };
-        setMessages((prev) => [...prev, botMsg]);
-      } catch (err) {
-        const errorMsg: ChatMessage = {
-          id: `err-${Date.now()}`,
-          role: 'assistant',
-          content: `Error: ${(err as Error).message}`,
-          timestamp: Date.now(),
-        };
-        setMessages((prev) => [...prev, errorMsg]);
-      } finally {
-        setIsLoading(false);
-      }
+      // Create a placeholder message for streaming
+      const botId = `bot-${Date.now()}`;
+      const botMsg: ChatMessage = {
+        id: botId,
+        role: 'assistant',
+        content: '',
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, botMsg]);
+
+      // Stream the response
+      askQuestionStream(question, {
+        onToken: (text) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === botId ? { ...m, content: m.content + text } : m
+            )
+          );
+        },
+        onSources: (sources) => {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === botId ? { ...m, sources } : m))
+          );
+        },
+        onDone: (meta) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === botId
+                ? {
+                    ...m,
+                    queryType: meta.query_type,
+                    executionTimeMs: meta.execution_time_ms,
+                  }
+                : m
+            )
+          );
+          setIsLoading(false);
+        },
+        onError: (error) => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === botId ? { ...m, content: `Error: ${error}` } : m
+            )
+          );
+          setIsLoading(false);
+        },
+      });
     },
     [input, isLoading]
   );
