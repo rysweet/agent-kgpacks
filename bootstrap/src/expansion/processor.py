@@ -225,15 +225,16 @@ class ArticleProcessor:
             {"title": article.title},
         )
 
-        # Insert Section nodes and relationships
+        # Insert Section nodes with HAS_SECTION relationships in a single
+        # query per section (avoids 2N queries by combining CREATE + relationship)
         for i, (section, embedding) in enumerate(zip(sections, embeddings)):
             section_id = f"{article.title}#{i}"
             section_word_count = len(section["content"].split())
 
-            # Insert Section node
             self.conn.execute(
                 """
-                CREATE (s:Section {
+                MATCH (a:Article {title: $article_title})
+                CREATE (a)-[:HAS_SECTION {section_index: $index}]->(s:Section {
                     section_id: $section_id,
                     title: $title,
                     content: $content,
@@ -243,23 +244,15 @@ class ArticleProcessor:
                 })
             """,
                 {
+                    "article_title": article.title,
                     "section_id": section_id,
                     "title": section["title"],
                     "content": section["content"],
                     "embedding": embedding.tolist(),
                     "level": section["level"],
                     "word_count": section_word_count,
+                    "index": i,
                 },
-            )
-
-            # Create HAS_SECTION relationship
-            self.conn.execute(
-                """
-                MATCH (a:Article {title: $article_title}),
-                      (s:Section {section_id: $section_id})
-                CREATE (a)-[:HAS_SECTION {section_index: $index}]->(s)
-            """,
-                {"article_title": article.title, "section_id": section_id, "index": i},
             )
 
         # Clean up existing IN_CATEGORY relationships before re-creating
