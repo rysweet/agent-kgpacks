@@ -420,33 +420,35 @@ class KnowledgeGraphAgent:
 
     def _plan_query_uncached(self, question: str) -> dict:
         """Generate a fresh query plan via Claude API (uncached)."""
-        prompt = f"""You are a Cypher query generator for a Wikipedia knowledge graph.
+        prompt = f"""You are a Cypher query generator for a Kuzu graph database (NOT Neo4j).
 
 The graph schema:
-- Article (title, category, word_count)
-- Entity (name, type, properties) - extracted entities like people, places, concepts
-- Fact (content, source_article) - key facts
-- Section (content, embedding) - article sections with semantic embeddings
-- Relationships: HAS_ENTITY, HAS_FACT, ENTITY_RELATION, LINKS_TO, HAS_SECTION
+- Article (title STRING PK, category STRING, word_count INT32)
+- Entity (name STRING PK, type STRING, properties STRING)
+- Fact (content STRING, source_article STRING)
+- Section (section_id STRING PK, content STRING, embedding FLOAT[384])
+- Relationships: HAS_ENTITY, HAS_FACT, ENTITY_RELATION (relation STRING, context STRING), LINKS_TO, HAS_SECTION
+
+IMPORTANT Kuzu syntax rules:
+- Use $param for parameters (NOT {{param}})
+- Use lower() for case-insensitive matching
+- Variable-length paths: [:REL*1..3] (NOT [:REL*])
+- No TYPE() function — use relationship property r.relation instead
+- No apoc.* functions
+
+Example queries for each type:
+
+1. entity_search: MATCH (e:Entity) WHERE lower(e.name) CONTAINS lower($name) RETURN e.name AS name, e.type AS type LIMIT 10
+
+2. relationship_path: MATCH (a:Entity)-[r:ENTITY_RELATION]->(b:Entity) WHERE lower(a.name) CONTAINS lower($source) RETURN a.name AS source, r.relation AS relation, b.name AS target LIMIT 10
+
+3. fact_retrieval: MATCH (a:Article)-[:HAS_FACT]->(f:Fact) WHERE lower(a.title) CONTAINS lower($title) RETURN f.content AS fact, a.title AS source LIMIT 10
+
+4. entity_relationships: MATCH (e:Entity)-[r:ENTITY_RELATION]->(t:Entity) WHERE lower(e.name) CONTAINS lower($entity) AND r.relation = $relation RETURN e.name AS source, r.relation AS relation, t.name AS target LIMIT 10
+
+5. semantic_search: MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($q) RETURN a.title AS title, a.category AS category LIMIT 10
 
 Question: {question}
-
-Classify the question type and generate a Cypher query:
-
-1. **entity_search**: "Who is X?" or "What is Y?"
-   → Find Entity or Article by name
-
-2. **relationship_path**: "How is X related to Y?"
-   → Find path between two entities via ENTITY_RELATION edges
-
-3. **fact_retrieval**: "What are facts about X?"
-   → Find Article → HAS_FACT → Fact
-
-4. **semantic_search**: "Articles similar to X"
-   → Use vector search on Section embeddings
-
-5. **entity_relationships**: "What did X do?" or "Who founded Y?"
-   → Find Entity → ENTITY_RELATION (with specific relation type)
 
 You MUST return ONLY valid JSON in this exact format (no extra text):
 {{
@@ -455,7 +457,7 @@ You MUST return ONLY valid JSON in this exact format (no extra text):
   "explanation": "Why this query"
 }}
 
-Generate efficient Cypher with LIMIT 10. Return ONLY the JSON, nothing else."""
+Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
 
         try:
             response = self.claude.messages.create(
