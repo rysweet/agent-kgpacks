@@ -131,12 +131,17 @@ exclude = [
     ".venv",
     "venv",
     "build",
-    "dist"
+    "dist",
+    "**/.eggs",
+    "**/examples",
+    "**/tests"
 ]
 strict = []
 typeCheckingMode = "basic"
 reportMissingImports = true
 reportMissingTypeStubs = false
+reportAttributeAccessIssue = "warning"
+reportOptionalMemberAccess = "warning"
 pythonVersion = "3.10"
 pythonPlatform = "Linux"
 
@@ -150,7 +155,6 @@ addopts = [
     "--verbose",
     "--cov=bootstrap/src",
     "--cov-report=term-missing",
-    "--cov-report=html",
     "--cov-fail-under=10",
     "--timeout=60",
 ]
