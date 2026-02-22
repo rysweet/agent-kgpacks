@@ -1,6 +1,7 @@
 """Article-related models."""
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -53,10 +54,10 @@ class CategoryListResponse(BaseModel):
 class StatsResponse(BaseModel):
     """Response for stats endpoint."""
 
-    articles: dict = Field(..., description="Article statistics")
-    sections: dict = Field(..., description="Section statistics")
-    links: dict = Field(..., description="Link statistics")
-    database: dict = Field(..., description="Database information")
-    performance: dict | None = Field(
+    articles: dict[str, Any] = Field(..., description="Article statistics")
+    sections: dict[str, Any] = Field(..., description="Section statistics")
+    links: dict[str, Any] = Field(..., description="Link statistics")
+    database: dict[str, Any] = Field(..., description="Database information")
+    performance: dict[str, Any] | None = Field(
         default=None, description="Performance metrics (populated when available)"
     )

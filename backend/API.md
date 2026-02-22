@@ -235,6 +235,57 @@ curl "http://localhost:8000/api/v1/articles/Machine%20Learning"
 
 ---
 
+### Hybrid Search
+
+**GET** `/api/v1/hybrid-search`
+
+Combines semantic similarity (70%) and graph proximity (30%) for richer results.
+
+**Query Parameters:**
+
+| Parameter   | Type   | Required | Default | Description                       |
+| ----------- | ------ | -------- | ------- | --------------------------------- |
+| `query`     | string | Yes      | -       | Seed article title                |
+| `category`  | string | No       | null    | Filter by category                |
+| `max_hops`  | int    | No       | 2       | Max graph hops (1-3)              |
+| `limit`     | int    | No       | 10      | Max results (1-100)               |
+
+**Response:** Same format as Semantic Search.
+
+**Rate Limit:** 10/minute
+
+**Example:**
+```bash
+curl "http://localhost:8000/api/v1/hybrid-search?query=Machine+Learning&max_hops=2&limit=10"
+```
+
+---
+
+### Chat
+
+**POST** `/api/v1/chat`
+
+Ask natural language questions about the knowledge graph. Supports SSE streaming.
+
+**Request Body:**
+```json
+{
+  "messages": [{"role": "user", "content": "What is quantum entanglement?"}],
+  "stream": true
+}
+```
+
+**Rate Limit:** 5/minute
+
+**Example:**
+```bash
+curl -X POST "http://localhost:8000/api/v1/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"messages": [{"role": "user", "content": "What is machine learning?"}], "stream": false}'
+```
+
+---
+
 ### Category List
 
 **GET** `/api/v1/categories`
@@ -247,21 +298,11 @@ List all available categories with article counts.
   "categories": [
     {
       "name": "Computer Science",
-      "article_count": 1234,
-      "subcategories": [
-        "Artificial Intelligence",
-        "Programming Languages",
-        "Algorithms"
-      ]
+      "article_count": 1234
     },
     {
       "name": "Physics",
-      "article_count": 892,
-      "subcategories": [
-        "Quantum Mechanics",
-        "Relativity",
-        "Thermodynamics"
-      ]
+      "article_count": 892
     }
   ],
   "total": 2
@@ -390,12 +431,7 @@ All errors follow this format:
 {
   "error": {
     "code": "INVALID_PARAMETER",
-    "message": "Limit must be between 1 and 100",
-    "details": {
-      "parameter": "limit",
-      "provided": 500,
-      "allowed": "1-100"
-    }
+    "message": "Limit must be between 1 and 100"
   },
   "timestamp": "2026-02-10T15:30:00Z"
 }
@@ -408,9 +444,8 @@ All errors follow this format:
 | `INVALID_PARAMETER`   | 400    | Parameter validation failed     |
 | `MISSING_PARAMETER`   | 400    | Required parameter missing      |
 | `NOT_FOUND`           | 404    | Article/resource not found      |
-| `VALIDATION_ERROR`    | 422    | Request body validation failed  |
-| `SERVER_ERROR`        | 500    | Internal server error           |
-| `DATABASE_ERROR`      | 500    | Database connection/query error |
+| `INTERNAL_ERROR`      | 500    | Internal server error           |
+| `AGENT_UNAVAILABLE`   | 503    | Chat agent not available        |
 
 ---
 
@@ -429,49 +464,22 @@ Access-Control-Allow-Headers: Content-Type
 
 ---
 
-## Compression
+## Rate Limiting
 
-**Supported:**
-- gzip
-- br (Brotli)
+All endpoints are rate-limited per IP address via slowapi:
 
-**Request header:**
-```
-Accept-Encoding: gzip, br
-```
+| Endpoint                | Limit     |
+| ----------------------- | --------- |
+| `/api/v1/search`        | 10/minute |
+| `/api/v1/autocomplete`  | 60/minute |
+| `/api/v1/graph`         | 20/minute |
+| `/api/v1/hybrid-search` | 10/minute |
+| `/api/v1/articles/*`    | 30/minute |
+| `/api/v1/categories`    | 30/minute |
+| `/api/v1/stats`         | 30/minute |
+| `/api/v1/chat`          | 5/minute  |
 
-**Response header:**
-```
-Content-Encoding: gzip
-```
-
-**Size reduction:** ~70% for JSON responses
-
----
-
-## Caching
-
-**Cache-Control headers:**
-
-| Endpoint        | Cache-Control                 | Notes                  |
-| --------------- | ----------------------------- | ---------------------- |
-| `/health`       | `no-cache`                    | Always fresh           |
-| `/api/v1/search`| `private, max-age=3600`       | 1 hour cache           |
-| `/api/v1/graph` | `private, max-age=3600`       | 1 hour cache           |
-| `/api/v1/stats` | `public, max-age=300`         | 5 minute cache         |
-| `/api/v1/articles/*` | `public, max-age=86400` | 24 hour cache          |
-
----
-
-## Performance Benchmarks
-
-**Hardware:** 8 vCPU, 16 GB RAM, SSD storage
-
-| Endpoint           | P50  | P95  | P99  | Notes             |
-| ------------------ | ---- | ---- | ---- | ----------------- |
-| `/api/v1/search`   | 45ms | 120ms| 250ms| 30K articles      |
-| `/api/v1/graph`    | 67ms | 180ms| 400ms| Depth=2, Limit=50 |
-| `/api/v1/articles` | 12ms | 35ms | 80ms | Single article    |
+Rate limiting can be disabled for testing via `WIKIGR_RATE_LIMIT_ENABLED=false`.
 
 ---
 
@@ -515,4 +523,4 @@ locust -f backend/tests/load_test.py
 
 **API Version:** 1.0.0
 **Updated:** February 2026
-**Server:** FastAPI 0.109.0 + Uvicorn
+**Server:** FastAPI 0.115+ + Uvicorn

@@ -284,7 +284,7 @@ class ArticleService:
 
         database = {
             "size_mb": round(db_size_mb, 2),
-            "last_updated": datetime.now(timezone.utc).isoformat() + "Z",
+            "last_updated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
 
         result = StatsResponse(
