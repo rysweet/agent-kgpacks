@@ -18,6 +18,97 @@ import anthropic
 
 logger = logging.getLogger(__name__)
 
+# Standard relation types for normalization. Maps common synonyms to canonical forms.
+_RELATION_SYNONYMS: dict[str, str] = {
+    "established": "founded",
+    "co-founded": "founded",
+    "co_founded": "founded",
+    "cofounded": "founded",
+    "set_up": "founded",
+    "built": "created",
+    "made": "created",
+    "constructed": "created",
+    "designed": "created",
+    "devised": "invented",
+    "conceived": "invented",
+    "patented": "invented",
+    "found": "discovered",
+    "uncovered": "discovered",
+    "identified": "discovered",
+    "built_on": "developed",
+    "advanced": "developed",
+    "improved": "developed",
+    "refined": "developed",
+    "headed": "led",
+    "managed": "led",
+    "chaired": "led",
+    "ran": "led",
+    "supervised": "directed",
+    "oversaw": "directed",
+    "wrote": "authored",
+    "published": "authored",
+    "co-authored": "authored",
+    "affected": "influenced",
+    "impacted": "influenced",
+    "shaped": "influenced",
+    "motivated": "inspired",
+    "component_of": "part_of",
+    "member_of": "part_of",
+    "belongs_to": "part_of",
+    "subset_of": "part_of",
+    "employs": "uses",
+    "utilizes": "uses",
+    "relies_on": "requires",
+    "depends_on": "requires",
+    "needs": "requires",
+    "led_to": "caused",
+    "triggered": "caused",
+    "produced": "resulted_in",
+    "generated": "resulted_in",
+    "battled_in": "fought_in",
+    "served_in": "participated_in",
+    "engaged_in": "participated_in",
+    "took_part_in": "participated_in",
+}
+
+STANDARD_RELATIONS: frozenset[str] = frozenset(
+    {
+        "founded",
+        "invented",
+        "discovered",
+        "developed",
+        "created",
+        "led",
+        "directed",
+        "authored",
+        "influenced",
+        "inspired",
+        "part_of",
+        "uses",
+        "requires",
+        "caused",
+        "resulted_in",
+        "fought_in",
+        "participated_in",
+        "born_in",
+        "died_in",
+        "located_in",
+        "related_to",
+    }
+)
+
+
+def normalize_relation(relation: str) -> str:
+    """Normalize a relation string to a standard canonical form.
+
+    Lowercases, replaces spaces with underscores, and maps synonyms.
+    Unknown relations are kept as-is.
+    """
+    normalized = relation.strip().lower().replace(" ", "_").replace("-", "_")
+    if normalized in STANDARD_RELATIONS:
+        return normalized
+    return _RELATION_SYNONYMS.get(normalized, normalized)
+
 
 @dataclass
 class Entity:
@@ -147,7 +238,7 @@ Focus on the most important entities and relationships. Be concise."""
             relationships = [
                 Relationship(
                     source=r["source"],
-                    relation=r.get("relation", "related_to"),
+                    relation=normalize_relation(r.get("relation", "related_to")),
                     target=r["target"],
                     context=r.get("context", ""),
                 )
