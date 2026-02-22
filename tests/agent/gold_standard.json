@@ -1,0 +1,82 @@
+[
+  {
+    "id": "entity_search_1",
+    "type": "entity_search",
+    "question": "What is Machine Learning?",
+    "expected_entities": ["Machine Learning"],
+    "expected_keywords": ["algorithm", "data", "learn"],
+    "min_answer_length": 50
+  },
+  {
+    "id": "entity_search_2",
+    "type": "entity_search",
+    "question": "Tell me about Deep Learning",
+    "expected_entities": ["Deep Learning"],
+    "expected_keywords": ["neural", "network"],
+    "min_answer_length": 50
+  },
+  {
+    "id": "relationship_path_1",
+    "type": "relationship_path",
+    "question": "How are Machine Learning and Artificial Intelligence related?",
+    "expected_entities": ["Machine Learning", "Artificial Intelligence"],
+    "expected_keywords": ["subset", "field", "branch"],
+    "min_answer_length": 30
+  },
+  {
+    "id": "relationship_path_2",
+    "type": "relationship_path",
+    "question": "What is the connection between Neural Networks and Deep Learning?",
+    "expected_entities": ["Neural Networks", "Deep Learning"],
+    "expected_keywords": ["layer", "architecture"],
+    "min_answer_length": 30
+  },
+  {
+    "id": "fact_retrieval_1",
+    "type": "fact_retrieval",
+    "question": "Who founded OpenAI?",
+    "expected_entities": ["OpenAI"],
+    "expected_keywords": ["founded", "Sam Altman", "Elon Musk"],
+    "min_answer_length": 20
+  },
+  {
+    "id": "fact_retrieval_2",
+    "type": "fact_retrieval",
+    "question": "When was the Turing machine invented?",
+    "expected_entities": ["Turing machine", "Alan Turing"],
+    "expected_keywords": ["1936", "Turing"],
+    "min_answer_length": 20
+  },
+  {
+    "id": "semantic_search_1",
+    "type": "semantic_search",
+    "question": "Find articles about natural language processing",
+    "expected_entities": ["Natural language processing"],
+    "expected_keywords": ["language", "text", "processing"],
+    "min_answer_length": 30
+  },
+  {
+    "id": "semantic_search_2",
+    "type": "semantic_search",
+    "question": "What topics are related to quantum computing?",
+    "expected_entities": ["Quantum computing"],
+    "expected_keywords": ["qubit", "quantum"],
+    "min_answer_length": 30
+  },
+  {
+    "id": "multi_hop_1",
+    "type": "multi_hop",
+    "question": "What discoveries were influenced by Alan Turing's work?",
+    "expected_entities": ["Alan Turing"],
+    "expected_keywords": ["computer", "computation", "machine"],
+    "min_answer_length": 40
+  },
+  {
+    "id": "complex_1",
+    "type": "complex",
+    "question": "Compare supervised learning and unsupervised learning",
+    "expected_entities": ["Supervised learning", "Unsupervised learning"],
+    "expected_keywords": ["label", "cluster"],
+    "min_answer_length": 50
+  }
+]
