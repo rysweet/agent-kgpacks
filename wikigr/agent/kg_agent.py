@@ -8,6 +8,7 @@ No MCP server, no daemon, just a Python class.
 import json
 import logging
 import re
+import time
 from typing import Any
 
 import kuzu
@@ -100,16 +101,42 @@ class KnowledgeGraphAgent:
                 f"max_results must be an integer between 1 and 1000, got {max_results!r}"
             )
 
+        t_start = time.perf_counter()
+
         # Step 1: Classify query type and generate Cypher
+        t_plan_start = time.perf_counter()
         query_plan = self._plan_query(question)
+        t_plan = time.perf_counter() - t_plan_start
 
         # Step 2: Execute Cypher query
+        t_exec_start = time.perf_counter()
         kg_results = self._execute_query(
             query_plan["cypher"], max_results, query_plan.get("cypher_params")
         )
+        t_exec = time.perf_counter() - t_exec_start
 
         # Step 3: Synthesize answer with Claude
+        t_synth_start = time.perf_counter()
         answer = self._synthesize_answer(question, kg_results, query_plan)
+        t_synth = time.perf_counter() - t_synth_start
+
+        t_total = time.perf_counter() - t_start
+
+        # Structured monitoring log
+        logger.info(
+            "query_monitor: type=%s total=%.2fs plan=%.2fs exec=%.2fs synth=%.2fs "
+            "sources=%d entities=%d facts=%d fallback=%s question=%r",
+            query_plan.get("type", "unknown"),
+            t_total,
+            t_plan,
+            t_exec,
+            t_synth,
+            len(kg_results.get("sources", [])),
+            len(kg_results.get("entities", [])),
+            len(kg_results.get("facts", [])),
+            kg_results.get("fallback", False),
+            question[:80],
+        )
 
         return {
             "answer": answer,
@@ -162,6 +189,7 @@ class KnowledgeGraphAgent:
                 f"got {max_context_articles!r}"
             )
 
+        t_start = time.perf_counter()
         cypher_queries: list[str] = []
 
         # ------------------------------------------------------------------
@@ -233,6 +261,16 @@ class KnowledgeGraphAgent:
         # ------------------------------------------------------------------
         combined_context = "\n\n".join(context_parts) if context_parts else "(no context found)"
         answer = self._synthesize_graph_rag_answer(question, combined_context, unique_titles)
+
+        t_total = time.perf_counter() - t_start
+        logger.info(
+            "graph_query_monitor: total=%.2fs hops=%d seeds=%d articles=%d question=%r",
+            t_total,
+            max_hops,
+            len(seed_titles),
+            len(context_parts),
+            question[:80],
+        )
 
         return {
             "answer": answer,
