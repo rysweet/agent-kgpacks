@@ -5,6 +5,7 @@ Handles article details, categories, and statistics.
 """
 
 import logging
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -19,6 +20,10 @@ from backend.models.article import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Stats cache: (result, timestamp). TTL = 60 seconds.
+_stats_cache: tuple | None = None
+_STATS_TTL = 60
 
 
 class ArticleService:
@@ -175,6 +180,8 @@ class ArticleService:
         """
         Get database statistics and metrics.
 
+        Results are cached for 60 seconds to avoid repeated full-table scans.
+
         Args:
             conn: Kuzu connection
             db_path: Path to database file
@@ -182,6 +189,11 @@ class ArticleService:
         Returns:
             StatsResponse with comprehensive statistics
         """
+        global _stats_cache
+        if _stats_cache is not None:
+            cached_result, cached_at = _stats_cache
+            if time.time() - cached_at < _STATS_TTL:
+                return cached_result
         # Article statistics
         articles_result = conn.execute(
             """
@@ -275,9 +287,14 @@ class ArticleService:
             "last_updated": datetime.now(timezone.utc).isoformat() + "Z",
         }
 
-        return StatsResponse(
+        result = StatsResponse(
             articles=articles,
             sections=sections,
             links=links,
             database=database,
         )
+
+        # Cache the result
+        _stats_cache = (result, time.time())
+
+        return result
