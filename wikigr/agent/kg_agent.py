@@ -547,58 +547,116 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             )
 
     def _execute_query(self, cypher: str, limit: int, params: dict | None = None) -> dict:
-        """Execute Cypher query and structure results."""
+        """Execute Cypher query and structure results.
+
+        If the primary query fails (e.g., invalid Cypher from LLM), falls back
+        to a simple title-contains search so the agent can still provide answers.
+        """
         try:
             self._validate_cypher(cypher)
             result = self.conn.execute(cypher, params or {})
             df = result.get_as_df()
+        except Exception as e:
+            logger.warning(f"Primary query failed ({type(e).__name__}: {e}), trying fallback")
+            return self._execute_fallback_query(params, limit, primary_error=str(e))
 
-            if df.empty:
-                return {"sources": [], "entities": [], "facts": [], "raw": []}
+        if df.empty:
+            return {"sources": [], "entities": [], "facts": [], "raw": []}
 
-            # Structure results based on columns
-            raw_records = df.to_dict(orient="records")[:limit]
-            structured = {
+        # Structure results based on columns
+        raw_records = df.to_dict(orient="records")[:limit]
+        structured: dict[str, Any] = {
+            "sources": [],
+            "entities": [],
+            "facts": [],
+            "raw": raw_records,
+        }
+
+        # Extract sources (article titles) - handle both columns and nested node objects
+        for record in raw_records:
+            for key, value in record.items():
+                if "title" in key.lower() and isinstance(value, str):
+                    structured["sources"].append(value)
+                elif isinstance(value, dict) and value.get("_label") == "Article":
+                    title = value.get("title")
+                    if title:
+                        structured["sources"].append(title)
+                # Handle string values in 'source' or 'target' columns as entity names
+                elif key.lower() in ("source", "target") and isinstance(value, str):
+                    structured["sources"].append(value)
+
+        structured["sources"] = list(set(structured["sources"]))[:limit]
+
+        # Extract entities - handle flexible column names (name, e.name, entity, etc.)
+        name_cols = [c for c in df.columns if "name" in c.lower() or "entity" in c.lower()]
+        if name_cols:
+            for _, row in df.iterrows():
+                name = row.get(name_cols[0])
+                if name and isinstance(name, str):
+                    type_cols = [c for c in df.columns if "type" in c.lower()]
+                    entity_type = row.get(type_cols[0], "unknown") if type_cols else "unknown"
+                    structured["entities"].append({"name": name, "type": entity_type})
+
+        # Extract facts from content, fact, or relation columns
+        fact_cols = [c for c in df.columns if c.lower() in ("content", "fact", "relation")]
+        if fact_cols:
+            structured["facts"] = df[fact_cols[0]].dropna().tolist()[:limit]
+
+        return structured
+
+    def _execute_fallback_query(self, params: dict | None, limit: int, primary_error: str) -> dict:
+        """Fallback query when LLM-generated Cypher fails."""
+        search_term = ""
+        if params:
+            # Use any string parameter as search term
+            for v in params.values():
+                if isinstance(v, str) and len(v) > 1:
+                    search_term = v
+                    break
+
+        if not search_term:
+            return {
                 "sources": [],
                 "entities": [],
                 "facts": [],
-                "raw": raw_records,
+                "raw": [],
+                "error": f"Primary query failed: {primary_error}",
             }
 
-            # Extract sources (article titles) - handle both columns and nested node objects
-            for record in raw_records:
-                # Check for direct title column
-                for key, value in record.items():
-                    if "title" in key.lower() and isinstance(value, str):
-                        structured["sources"].append(value)
-                    # Check for nested Article node
-                    elif isinstance(value, dict) and value.get("_label") == "Article":
-                        title = value.get("title")
-                        if title:
-                            structured["sources"].append(title)
+        try:
+            result = self.conn.execute(
+                "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($q) "
+                "RETURN a.title AS title, a.category AS category LIMIT $limit",
+                {"q": search_term, "limit": limit},
+            )
+            df = result.get_as_df()
+            if df.empty:
+                return {
+                    "sources": [],
+                    "entities": [],
+                    "facts": [],
+                    "raw": [],
+                    "error": f"Primary query failed and fallback found no results: {primary_error}",
+                }
 
-            structured["sources"] = list(set(structured["sources"]))[:limit]  # Dedupe
-
-            # Extract entities - handle both "name" and "e.name" column names
-            name_cols = [c for c in df.columns if "name" in c.lower()]
-            if name_cols:
-                for _, row in df.iterrows():
-                    name = row.get(name_cols[0])
-                    if name:
-                        # Try to get type from any column with "type" in name
-                        type_cols = [c for c in df.columns if "type" in c.lower()]
-                        entity_type = row.get(type_cols[0], "unknown") if type_cols else "unknown"
-                        structured["entities"].append({"name": name, "type": entity_type})
-
-            # Extract facts
-            if "content" in df.columns:
-                structured["facts"] = df["content"].dropna().tolist()[:limit]
-
-            return structured
-
-        except Exception as e:
-            logger.error(f"Query execution failed: {e}")
-            return {"sources": [], "entities": [], "facts": [], "error": str(e)}
+            records = df.to_dict(orient="records")[:limit]
+            return {
+                "sources": [r["title"] for r in records if r.get("title")],
+                "entities": [],
+                "facts": [],
+                "raw": records,
+                "fallback": True,
+                "primary_error": primary_error,
+            }
+        except Exception as fallback_error:
+            logger.error(f"Fallback query also failed: {fallback_error}")
+            return {
+                "sources": [],
+                "entities": [],
+                "facts": [],
+                "raw": [],
+                "error": f"Both primary and fallback queries failed: {primary_error}",
+            }
 
     def _build_synthesis_context(self, question: str, kg_results: dict, query_plan: dict) -> str:
         """Build the synthesis prompt for Claude (used by both blocking and streaming)."""
