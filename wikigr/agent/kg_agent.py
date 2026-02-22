@@ -47,6 +47,7 @@ class KnowledgeGraphAgent:
         self.conn = kuzu.Connection(self.db)
         self.claude = Anthropic(api_key=anthropic_api_key)
         self._embedding_generator = None
+        self._plan_cache: dict[str, dict] = {}
 
         logger.info(f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only})")
 
@@ -399,7 +400,26 @@ class KnowledgeGraphAgent:
     # ------------------------------------------------------------------
 
     def _plan_query(self, question: str) -> dict:
-        """Use Claude to classify question and generate Cypher query."""
+        """Use Claude to classify question and generate Cypher query.
+
+        Results are cached by normalized question text (lowered, stripped)
+        to avoid redundant Claude API calls for repeated questions.
+        """
+        cache_key = question.strip().lower()
+        if cache_key in self._plan_cache:
+            logger.info(f"Query plan cache hit for: {cache_key[:60]}")
+            return self._plan_cache[cache_key]
+
+        plan = self._plan_query_uncached(question)
+
+        # Only cache successful plans (not fallbacks from errors)
+        if len(self._plan_cache) < 128:
+            self._plan_cache[cache_key] = plan
+
+        return plan
+
+    def _plan_query_uncached(self, question: str) -> dict:
+        """Generate a fresh query plan via Claude API (uncached)."""
         prompt = f"""You are a Cypher query generator for a Wikipedia knowledge graph.
 
 The graph schema:
@@ -827,3 +847,4 @@ Provide a clear, factual answer citing the sources. If the KG has no relevant da
         self.conn = None  # type: ignore[assignment]
         self.db = None  # type: ignore[assignment]
         self._embedding_generator = None
+        self._plan_cache.clear()
