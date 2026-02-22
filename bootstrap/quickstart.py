@@ -311,7 +311,7 @@ try:
         LIMIT 1
     """)
 
-    query_embedding = result.get_next()["embedding"]
+    query_embedding = result.get_as_df().iloc[0]["embedding"]
 
     # Search for similar sections
     result = conn.execute(
