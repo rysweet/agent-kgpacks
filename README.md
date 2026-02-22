@@ -1,35 +1,50 @@
 # WikiGR - Wikipedia Knowledge Graph
 
-A semantic search and graph traversal system for Wikipedia articles using embedded graph database (Kuzu) and vector search (HNSW).
+Build topic-specific knowledge graphs from Wikipedia. Query them with natural language, semantic search, graph traversal, or a web UI.
 
-## Features
+## What It Does
 
-- **Custom Knowledge Graphs**: Build topic-specific graphs from a simple list of topics
-- **Semantic Search**: Find articles by meaning using vector embeddings
-- **Graph Traversal**: Explore link relationships between articles
-- **Hybrid Queries**: Combine semantic similarity and graph proximity
-- **Incremental Expansion**: Start with seeds, expand to any scale
-- **Natural Language Queries**: Ask questions about the graph using the Knowledge Graph Agent
-- **Zero Cost**: Embedded database with no external dependencies
+Give WikiGR a list of topics. It fetches Wikipedia articles, extracts entities and relationships using Claude, generates vector embeddings, and stores everything in an embedded Kuzu graph database. You can then:
+
+- **Ask questions in natural language** via the Knowledge Graph Agent
+- **Search by meaning** using vector similarity (not just keywords)
+- **Traverse the graph** to discover connections between articles
+- **Explore visually** through an interactive web interface with force-directed graph visualization
+
+## When This Is Useful (and When It Isn't)
+
+A knowledge graph adds value over just asking Claude or searching Wikipedia directly in specific cases:
+
+**Where a KG helps:**
+- **Structured relationship queries** — "What entities are connected to X within 3 hops?" is trivial for a graph database but hard for an LLM from training data
+- **Constrained domains** — Answers come only from your curated article set, preventing hallucination about topics outside the graph
+- **Offline/air-gapped** — The Kuzu database works locally with no internet
+- **Aggregation** — "How many articles are about biology?" or "What's the most connected entity?" are database queries, not LLM queries
+- **Provenance** — Every answer traces back to specific articles, sections, and extracted facts
+
+**Where a KG doesn't help:**
+- **General factual recall** — Claude already knows Wikipedia's content from training
+- **Coverage** — Your graph has thousands of articles; Wikipedia has 6.8 million
+- **Freshness** — The graph is a frozen snapshot
+- **Simple questions** — "What is quantum entanglement?" gets a better answer from Claude directly than from synthesizing extracted fragments
 
 ## Architecture
 
-- **Database**: Kuzu 0.11.3 (embedded graph database)
+- **Database**: Kuzu 0.11.3 (embedded graph database, zero external dependencies)
 - **Embeddings**: paraphrase-MiniLM-L3-v2 (384 dimensions)
 - **Vector Index**: HNSW with cosine similarity
 - **Data Source**: Wikipedia Action API
+- **LLM**: Claude (seed generation, entity extraction, query planning, answer synthesis)
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Install
 
 ```bash
 uv pip install -e ".[dev]"
 ```
 
-### 2. Build a Knowledge Graph from Topics
-
-Create a topics file:
+### 2. Build a Knowledge Graph
 
 ```bash
 cat > topics.md << 'EOF'
@@ -37,212 +52,167 @@ cat > topics.md << 'EOF'
 - Marine Biology
 - Renaissance Art
 EOF
-```
 
-Build one knowledge graph per topic:
-
-```bash
 export ANTHROPIC_API_KEY=your-key-here
 wikigr create --topics topics.md --db data/ --target 500
 ```
 
-This generates seeds using Claude, validates them against Wikipedia, then expands each topic into its own database under `data/`.
+This generates seed articles using Claude, validates them against Wikipedia, fetches and parses articles, generates embeddings, expands via link discovery, and extracts entities/relationships/facts via LLM.
 
-### 3. Query the Graph
+### 3. Query with Natural Language
 
 ```bash
 python examples/query_kg_agent.py "What is quantum entanglement?" data/quantum-computing.db
 ```
 
-### Alternative: Validate Setup
+Or in Python:
 
-```bash
-# Run quickstart validation (3 sample articles)
-python bootstrap/quickstart.py
+```python
+from wikigr.agent import KnowledgeGraphAgent
+
+with KnowledgeGraphAgent(db_path="data/quantum-computing.db") as agent:
+    # Natural language Q&A
+    result = agent.query("What is quantum entanglement?")
+    print(result["answer"])
+
+    # Graph-aware multi-hop retrieval (follows LINKS_TO edges)
+    result = agent.graph_query("How are qubits and error correction related?")
+    print(result["answer"])
+
+    # Direct entity/fact lookup
+    entity = agent.find_entity("Qubit")
+    facts = agent.get_entity_facts("Quantum Computing")
 ```
 
-### Explore the Graph
+### 4. Programmatic Search
 
-Visualize your knowledge graph interactively using [Kuzu Explorer](https://github.com/kuzudb/explorer),
-a browser-based UI that runs via Docker.
+```python
+import kuzu
+from bootstrap.src.query.search import semantic_search, graph_traversal
 
-```bash
-# Launch interactive graph explorer (requires Docker)
-python bootstrap/scripts/explore.py --db data/wikigr_1k.db
-# Opens browser at http://localhost:8000
+db = kuzu.Database("data/quantum-computing.db", read_only=True)
+conn = kuzu.Connection(db)
+
+# Find articles by meaning
+results = semantic_search(conn, query_title="Quantum Computing", top_k=10)
+
+# Explore link neighborhood
+neighbors = graph_traversal(conn, seed_title="Quantum Computing", max_hops=2)
 ```
 
-Or use the installed entry point:
+### 5. Web Interface
 
 ```bash
-wikigr-explore --db data/wikigr_1k.db --port 8000
+# Install backend dependencies
+uv pip install -e ".[backend]"
+
+# Terminal 1: Start API server
+WIKIGR_DATABASE_PATH=data/quantum-computing.db uvicorn backend.main:app --port 8000
+
+# Terminal 2: Start frontend
+cd frontend && npm install && npm run dev
+# Open http://localhost:5173
 ```
+
+The web UI provides:
+- Force-directed graph visualization (D3.js) with pan, zoom, and node selection
+- Semantic search with autocomplete
+- Hybrid search combining vector similarity and graph proximity
+- Chat panel for natural language Q&A with streaming responses
+- Category and depth filters
+
+### 6. Kuzu Explorer (Optional)
+
+Browse the raw graph with [Kuzu Explorer](https://github.com/kuzudb/explorer) (requires Docker):
+
+```bash
+wikigr-explore --db data/quantum-computing.db --port 8000
+```
+
+## REST API
+
+Start the backend with `uvicorn backend.main:app` and open `http://localhost:8000/docs` for interactive documentation.
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Service status and database connectivity |
+| `/api/v1/search` | GET | Semantic search by vector similarity |
+| `/api/v1/autocomplete` | GET | Article title suggestions |
+| `/api/v1/graph` | GET | Graph traversal around a seed article |
+| `/api/v1/hybrid-search` | GET | Combined semantic + graph proximity search |
+| `/api/v1/articles/{title}` | GET | Article details, sections, links, backlinks |
+| `/api/v1/categories` | GET | All categories with article counts |
+| `/api/v1/stats` | GET | Database statistics |
+| `/api/v1/chat` | POST | Natural language Q&A (SSE streaming) |
+
+All endpoints are rate-limited. See [backend/API.md](backend/API.md) for full parameter documentation.
 
 ## Project Structure
 
 ```
 wikigr/
 ├── wikigr/                 # Python package (CLI + agents)
-│   ├── cli.py             # wikigr create CLI
-│   └── agent/             # AI agents
+│   ├── cli.py             # wikigr create / update / status
+│   └── agent/
 │       ├── kg_agent.py    # Knowledge Graph query agent
 │       └── seed_agent.py  # Seed generation agent
-├── bootstrap/              # Expansion pipeline
-│   ├── docs/              # Documentation
-│   ├── schema/            # Database schema
-│   ├── src/               # Source code
-│   │   ├── wikipedia/     # Wikipedia API client
-│   │   ├── embeddings/    # Embedding generation
-│   │   ├── database/      # Database operations
-│   │   ├── query/         # Query functions
-│   │   └── expansion/     # Expansion orchestrator
-│   ├── tests/             # Integration tests
-│   ├── scripts/           # Utility scripts
-│   └── data/              # Seed data
-├── tests/                 # Agent tests
-├── data/                  # Database storage
-└── README.md
+├── backend/                # FastAPI REST API
+│   ├── api/v1/            # Endpoint routers
+│   ├── services/          # Business logic
+│   ├── models/            # Pydantic schemas
+│   └── db/                # Connection management
+├── frontend/               # React + TypeScript PWA
+│   └── src/
+│       ├── components/    # Graph, Search, Chat, Sidebar
+│       ├── store/         # Zustand state management
+│       └── services/      # API client
+├── bootstrap/              # Data pipeline
+│   ├── src/
+│   │   ├── wikipedia/     # Wikipedia API client + parser
+│   │   ├── embeddings/    # Sentence-transformers embeddings
+│   │   ├── expansion/     # Orchestrator, work queue, link discovery
+│   │   ├── extraction/    # LLM entity/relationship extraction
+│   │   └── query/         # Search functions
+│   ├── schema/            # Kuzu graph schema
+│   └── tests/             # Integration tests
+├── tests/agent/            # KG Agent tests + benchmarks
+└── data/                   # Database storage
 ```
 
-## Usage
+## Performance (30K articles)
 
-### Load Articles
-
-```python
-from bootstrap.src.expansion.orchestrator import RyuGraphOrchestrator
-
-# Initialize
-orch = RyuGraphOrchestrator("data/wikigr.db")
-
-# Initialize with seeds
-seeds = ["Machine Learning", "Quantum Computing", "Deep Learning"]
-orch.initialize_seeds(seeds)
-
-# Expand to target count
-orch.expand_to_target(target_count=100)
-```
-
-### Semantic Search
-
-```python
-from bootstrap.src.query.search import semantic_search
-import kuzu
-
-# Connect to database
-db = kuzu.Database("data/wikigr.db")
-conn = kuzu.Connection(db)
-
-# Search for similar articles
-results = semantic_search(
-    conn,
-    query_title="Machine Learning",
-    category="Computer Science",
-    top_k=10
-)
-
-for r in results:
-    print(f"{r['article_title']}: {r['similarity']:.4f}")
-```
-
-### Graph Traversal
-
-```python
-from bootstrap.src.query.search import graph_traversal
-
-# Explore neighborhood
-neighbors = graph_traversal(
-    conn,
-    seed_title="Machine Learning",
-    max_hops=2,
-    max_results=50
-)
-
-for n in neighbors:
-    print(f"{n['article_title']} ({n['hops']} hops)")
-```
+| Metric | Value |
+|--------|-------|
+| Articles | 31,777 |
+| Entities | 87,500 |
+| Relationships | 54,393 |
+| Article links | 6.2M |
+| Database size | 3.0 GB |
+| P95 query latency | 298ms |
+| Semantic precision | 100% |
+| Memory usage | ~350 MB |
 
 ## Development
 
-### Run Tests
-
 ```bash
 # Run all tests
-pytest bootstrap/tests/
+python3.10 -m pytest
 
-# With coverage
-pytest --cov=bootstrap bootstrap/tests/
-```
-
-### Code Formatting
-
-```bash
-# Format code
-ruff format bootstrap/
-
-# Check style
-ruff check bootstrap/
+# Lint + format
+ruff check . && ruff format .
 
 # Type checking
-pyright bootstrap/
+pyright
 ```
-
-## Performance
-
-| Metric | Target | Actual |
-|--------|--------|--------|
-| P95 query latency | <500ms | 298ms |
-| Semantic precision | >70% | 100% |
-| Database size (30K) | <10 GB | ~3 GB |
-| Memory usage | <500 MB | ~350 MB |
-| Expansion time (30K) | <2 hours | ~14 min (CPU) |
 
 ## Documentation
 
-- **Seed Agent & CLI**: `bootstrap/docs/seed-agent.md`
-- **Research Findings**: `bootstrap/docs/research-findings.md`
-- **Architecture**: `bootstrap/docs/architecture-specification.md`
-- **State Machine**: `bootstrap/docs/state-machine.md`
-- **API Documentation**: `bootstrap/docs/wikipedia-api-validation.md`
-- **Embedding Models**: `bootstrap/docs/embedding-model-choice.md`
-- **Seed Strategy**: `bootstrap/docs/seed-selection-strategy.md`
-
-## Roadmap
-
-- [x] Phase 1: Research & Assessment (Complete)
-- [x] Phase 2: Implementation Planning (Complete)
-- [x] Phase 3: Foundation - 10 articles validated
-- [x] Phase 3: Orchestrator - Automatic graph expansion working
-- [ ] Phase 4: Scale to 30K articles
+- [API Reference](backend/API.md)
+- [Architecture](bootstrap/docs/architecture-specification.md)
+- [Seed Agent & CLI](bootstrap/docs/seed-agent.md)
+- [Embedding Model Choice](bootstrap/docs/embedding-model-choice.md)
+- [Research Findings](bootstrap/docs/research-findings.md)
 
 ## License
 
-MIT License - See LICENSE file for details
-
-## Contributing
-
-This is an educational project. Contributions welcome!
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and formatting
-5. Submit a pull request
-
-## Support
-
-For issues, questions, or suggestions:
-- Open a GitHub issue
-- Check existing documentation in `bootstrap/docs/`
-
-## Acknowledgments
-
-- **Kuzu**: Embedded graph database
-- **sentence-transformers**: Pre-trained embedding models
-- **Wikipedia**: Data source via Action API
-- **Claude Code**: Development assistance
-
----
-
-**Status**: Phase 3 complete - Orchestrator working, scaling to 30K
-**Version**: 0.1.0-dev
-**Updated**: February 2026
+MIT
