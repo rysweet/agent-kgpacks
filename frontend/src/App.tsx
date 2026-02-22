@@ -29,6 +29,7 @@ function App() {
   const [searchMode, setSearchMode] = useState<'text' | 'semantic'>('semantic');
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Array<{ title: string; category: string }>>([]);
 
   // Get filtered nodes and compute filtered edges
   // eslint-disable-next-line react-hooks/exhaustive-deps -- getFilteredNodes is a store method; nodes and filters are the real deps
@@ -58,8 +59,23 @@ function App() {
     ? filteredNodes.find((n) => n.id === selectedNode) || null
     : null;
 
-  // Handle search - dispatches based on searchMode
+  // Handle autocomplete - lightweight fetch while typing
+  const handleAutocomplete = useCallback(async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const results = await autocomplete(query, 8);
+      setSuggestions(results);
+    } catch {
+      setSuggestions([]);
+    }
+  }, []);
+
+  // Handle search - dispatches based on searchMode (Enter/submit only)
   const handleSearch = useCallback(async (query: string) => {
+    setSuggestions([]); // Clear suggestions on submit
     if (!query.trim()) return;
 
     setSearchLoading(true);
@@ -116,8 +132,10 @@ function App() {
           <div className="flex-1 max-w-2xl">
             <SearchBar
               onSearch={handleSearch}
+              onAutocomplete={handleAutocomplete}
               onModeChange={setSearchMode}
               mode={searchMode}
+              suggestions={suggestions}
               isLoading={searchLoading}
               error={searchError}
             />
