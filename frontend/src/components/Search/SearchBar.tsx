@@ -145,12 +145,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             onKeyDown={handleKeyDown}
             placeholder="Search articles..."
             disabled={isLoading}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={showSuggestions && suggestions.length > 0}
+            aria-controls="search-suggestions"
+            aria-activedescendant={selectedIndex >= 0 ? `suggestion-${selectedIndex}` : undefined}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
 
           {isLoading && (
             <div
               role="status"
+              aria-label="Loading search results"
               className="absolute right-3 top-1/2 transform -translate-y-1/2"
             >
               <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full" />
@@ -188,12 +194,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       {/* Autocomplete dropdown */}
       {showSuggestions && suggestions.length > 0 && (
         <ul
+          id="search-suggestions"
           role="listbox"
           className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto"
         >
           {suggestions.map((suggestion, index) => (
             <li
               key={suggestion.title}
+              id={`suggestion-${index}`}
               role="option"
               aria-selected={index === selectedIndex}
               onClick={() => handleSelectSuggestion(suggestion)}
