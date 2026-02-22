@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
+  onAutocomplete?: (query: string) => void;
   onModeChange?: (mode: 'text' | 'semantic') => void;
   mode?: 'text' | 'semantic';
   suggestions?: Array<{ title: string; category: string }>;
@@ -19,6 +20,7 @@ interface SearchBarProps {
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   onSearch,
+  onAutocomplete,
   onModeChange,
   mode = 'text',
   suggestions = [],
@@ -40,27 +42,27 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, [autoFocus]);
 
-  // Debounced search
+  // Debounced autocomplete while typing
   const handleInputChange = useCallback(
     (value: string) => {
       setQuery(value);
 
-      // Cancel pending search
+      // Cancel pending autocomplete
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
 
-      // Schedule new search
-      if (value.length >= 2) {
+      // Schedule autocomplete fetch (lightweight, not full search)
+      if (value.length >= 2 && onAutocomplete) {
         timeoutRef.current = setTimeout(() => {
-          onSearch(value);
+          onAutocomplete(value);
         }, debounceMs);
       }
 
       // Show suggestions when typing
       setShowSuggestions(value.length >= 2 && suggestions.length > 0);
     },
-    [onSearch, debounceMs, suggestions.length]
+    [onAutocomplete, debounceMs, suggestions.length]
   );
 
   // Clear input

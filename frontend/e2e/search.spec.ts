@@ -1,6 +1,29 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Search workflows', () => {
+  test('autocomplete shows suggestions when typing', async ({ page }) => {
+    await page.goto('/');
+    const searchInput = page.getByRole('combobox');
+    await searchInput.fill('art');
+    // Wait for debounce + API response
+    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5000 });
+    // Should show "Artificial intelligence" as a suggestion
+    await expect(page.getByRole('option').first()).toBeVisible();
+  });
+
+  test('clicking autocomplete suggestion loads graph', async ({ page }) => {
+    await page.goto('/');
+    const searchInput = page.getByRole('combobox');
+    await searchInput.fill('art');
+    await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5000 });
+
+    // Click the first suggestion
+    await page.getByRole('option').first().click();
+
+    // Graph should load - look for SVG with nodes
+    await expect(page.locator('svg circle').first()).toBeVisible({ timeout: 15000 });
+  });
+
   test('submitting search via Enter loads graph', async ({ page }) => {
     await page.goto('/');
     const searchInput = page.getByRole('combobox');
