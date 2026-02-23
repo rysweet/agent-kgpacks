@@ -5,6 +5,7 @@ Tests the /api/v1/chat endpoint with mocked KnowledgeGraphAgent.
 """
 
 import os
+import shutil
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,9 +13,18 @@ from fastapi.testclient import TestClient
 
 
 @pytest.fixture
-def chat_client():
-    """Create test client with mocked agent."""
-    os.environ["WIKIGR_DATABASE_PATH"] = "/tmp/test.db"
+def chat_client(tmp_path):
+    """Create test client with a temporary empty database."""
+    # Create a minimal Kuzu database so the app can start
+    import kuzu
+
+    db_path = str(tmp_path / "chat_test.db")
+    db = kuzu.Database(db_path)
+    conn = kuzu.Connection(db)
+    conn.execute("CREATE NODE TABLE Article(title STRING, PRIMARY KEY(title))")
+    del conn, db
+
+    os.environ["WIKIGR_DATABASE_PATH"] = db_path
     os.environ["WIKIGR_RATE_LIMIT_ENABLED"] = "false"
 
     from backend.db.connection import ConnectionManager
@@ -23,7 +33,12 @@ def chat_client():
 
     from backend.main import app
 
-    return TestClient(app)
+    yield TestClient(app)
+
+    # Cleanup
+    ConnectionManager._instance = None
+    if os.path.exists(db_path):
+        shutil.rmtree(db_path, ignore_errors=True)
 
 
 class TestChatEndpoint:
@@ -50,7 +65,7 @@ class TestChatEndpoint:
 
         with (
             patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}),
-            patch("backend.api.v1.chat.KnowledgeGraphAgent") as mock_cls,
+            patch("wikigr.agent.kg_agent.KnowledgeGraphAgent") as mock_cls,
         ):
             mock_agent = MagicMock()
             mock_agent.query.return_value = mock_result
