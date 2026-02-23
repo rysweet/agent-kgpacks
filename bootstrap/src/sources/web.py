@@ -5,13 +5,15 @@ enabling knowledge graph construction from any documentation site
 (e.g., Microsoft Learn, MDN, ReadTheDocs).
 """
 
+import ipaddress
 import logging
 import re
+import socket
 from urllib.parse import urljoin, urlparse
 
 import requests
 
-from .base import Article, ArticleNotFoundError, ContentSource
+from .base import Article, ArticleNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +111,37 @@ def _infer_categories(url: str) -> list[str]:
     return categories
 
 
+def _validate_url(url: str) -> None:
+    """Validate URL to prevent SSRF attacks.
+
+    Rejects:
+    - Non-HTTP(S) schemes (file://, ftp://, etc.)
+    - Private/reserved IP ranges (127.x, 10.x, 172.16-31.x, 192.168.x, 169.254.x)
+    - IPv6 loopback (::1)
+    - Cloud metadata endpoints (169.254.169.254)
+
+    Raises:
+        ValueError: If the URL is unsafe.
+    """
+    parsed = urlparse(url)
+
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"Only HTTP(S) URLs are allowed, got scheme: {parsed.scheme!r}")
+
+    if not parsed.hostname:
+        raise ValueError(f"URL has no hostname: {url}")
+
+    # Resolve hostname to IP and check against private ranges
+    try:
+        resolved_ips = socket.getaddrinfo(parsed.hostname, None)
+        for _family, _type, _proto, _canonname, sockaddr in resolved_ips:
+            ip = ipaddress.ip_address(sockaddr[0])
+            if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_link_local:
+                raise ValueError(f"URL resolves to private/reserved IP {ip}: {url}")
+    except socket.gaierror as e:
+        raise ValueError(f"Cannot resolve hostname in URL {url}: {e}") from e
+
+
 class WebContentSource:
     """ContentSource implementation for generic web pages.
 
@@ -143,13 +176,16 @@ class WebContentSource:
         """
         import time
 
+        # Validate URL to prevent SSRF attacks
+        _validate_url(title_or_url)
+
         # Rate limiting
         elapsed = time.time() - self._last_request_time
         if elapsed < self._rate_limit_delay:
             time.sleep(self._rate_limit_delay - elapsed)
 
         try:
-            response = self._session.get(title_or_url, timeout=self._timeout)
+            response = self._session.get(title_or_url, timeout=self._timeout, allow_redirects=False)
             self._last_request_time = time.time()
 
             if response.status_code == 404:
@@ -226,7 +262,3 @@ class WebContentSource:
         for match in re.finditer(r"https?://[^\s<>\"')\]]+", content):
             links.append(match.group(0))
         return list(dict.fromkeys(links))
-
-
-# Verify protocol compliance
-assert isinstance(WebContentSource(), ContentSource)

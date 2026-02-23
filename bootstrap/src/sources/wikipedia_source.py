@@ -8,7 +8,7 @@ import logging
 from ..wikipedia import ArticleNotFoundError as WikiNotFoundError
 from ..wikipedia import WikipediaAPIClient, WikipediaArticle
 from ..wikipedia.parser import parse_sections
-from .base import Article, ArticleNotFoundError, ContentSource
+from .base import Article, ArticleNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,3 @@ class WikipediaContentSource:
             if not link.startswith(("File:", "Image:", "Category:", "Wikipedia:", "Help:")):
                 links.append(link)
         return links
-
-
-# Verify protocol compliance
-assert isinstance(WikipediaContentSource(), ContentSource)

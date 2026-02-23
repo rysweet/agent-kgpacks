@@ -54,9 +54,11 @@ def create_schema(db_path: str, drop_existing: bool = False):
     if not drop_existing:
         try:
             print("\nDropping existing tables (if any)...")
+            conn.execute("DROP TABLE IF EXISTS HAS_CHUNK")
             conn.execute("DROP TABLE IF EXISTS HAS_SECTION")
             conn.execute("DROP TABLE IF EXISTS LINKS_TO")
             conn.execute("DROP TABLE IF EXISTS IN_CATEGORY")
+            conn.execute("DROP TABLE IF EXISTS Chunk")
             conn.execute("DROP TABLE IF EXISTS Section")
             conn.execute("DROP TABLE IF EXISTS Article")
             conn.execute("DROP TABLE IF EXISTS Category")

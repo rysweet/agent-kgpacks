@@ -52,6 +52,24 @@ class KnowledgeGraphAgent:
 
         logger.info(f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only})")
 
+    @classmethod
+    def from_connection(
+        cls, conn: kuzu.Connection, claude_client: Anthropic
+    ) -> "KnowledgeGraphAgent":
+        """Create an agent from an existing connection (no DB lifecycle management).
+
+        Use this when the connection is managed externally (e.g., FastAPI dependency
+        injection). All attributes are properly initialized, avoiding the fragile
+        __new__() pattern.
+        """
+        agent = cls.__new__(cls)
+        agent.db = None
+        agent.conn = conn
+        agent.claude = claude_client
+        agent._embedding_generator = None
+        agent._plan_cache = {}
+        return agent
+
     def _check_open(self) -> None:
         """Raise RuntimeError if the agent has been closed."""
         if self.conn is None:

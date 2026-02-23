@@ -78,11 +78,7 @@ def chat(
         from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
         # Create agent with injected connection (no DB open overhead)
-        agent = KnowledgeGraphAgent.__new__(KnowledgeGraphAgent)
-        agent.db = None  # Not managing DB lifecycle
-        agent.conn = conn
-        agent.claude = _get_anthropic_client()
-        agent._embedding_generator = None
+        agent = KnowledgeGraphAgent.from_connection(conn, _get_anthropic_client())
 
         result = agent.query(
             question=request_body.question,
@@ -138,12 +134,7 @@ def chat_stream(
         try:
             from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
-            agent = KnowledgeGraphAgent.__new__(KnowledgeGraphAgent)
-            agent.db = None
-            agent.conn = conn
-            agent.claude = _get_anthropic_client()
-            agent._embedding_generator = None
-            agent._plan_cache = {}
+            agent = KnowledgeGraphAgent.from_connection(conn, _get_anthropic_client())
 
             # Step 1: Plan query (fast)
             query_plan = agent._plan_query(question)
