@@ -696,12 +696,46 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 "error": f"Both primary and fallback queries failed: {primary_error}",
             }
 
+    def _fetch_source_text(self, source_titles: list[str], max_articles: int = 5) -> str:
+        """Fetch original section text for source articles.
+
+        Retrieves the lead section (index 0) content for each source article,
+        providing Claude with the original Wikipedia text for grounded synthesis.
+        """
+        texts: list[str] = []
+        for title in source_titles[:max_articles]:
+            try:
+                result = self.conn.execute(
+                    "MATCH (a:Article {title: $title})-[:HAS_SECTION {section_index: 0}]->(s:Section) "
+                    "RETURN s.content AS content",
+                    {"title": title},
+                )
+                df = result.get_as_df()
+                if not df.empty:
+                    content = df.iloc[0]["content"]
+                    if content:
+                        # Truncate to 500 chars per article to fit context budget
+                        truncated = content[:500] + ("..." if len(content) > 500 else "")
+                        texts.append(f"## {title}\n{truncated}")
+            except Exception as e:
+                logger.debug(f"Failed to fetch section text for '{title}': {e}")
+        return "\n\n".join(texts)
+
     def _build_synthesis_context(self, question: str, kg_results: dict, query_plan: dict) -> str:
-        """Build the synthesis prompt for Claude (used by both blocking and streaming)."""
+        """Build the synthesis prompt for Claude (used by both blocking and streaming).
+
+        Includes both structured KG results (entities, facts, triples) AND
+        the original article section text for grounded, accurate synthesis.
+        """
+        sources = kg_results.get("sources", [])[:5]
+
+        # Fetch original article text for grounded synthesis
+        source_text = self._fetch_source_text(sources)
+
         context = f"""Query Type: {query_plan["type"]}
 Cypher: {query_plan["cypher"]}
 
-Sources: {", ".join(kg_results.get("sources", [])[:5])}
+Sources: {", ".join(sources)}
 
 Entities found: {json.dumps(kg_results.get("entities", [])[:10], indent=2)}
 
@@ -711,14 +745,21 @@ Facts:
 Raw results: {json.dumps(kg_results.get("raw", [])[:5], indent=2, default=str)}
 """
 
-        return f"""Using the knowledge graph query results below, answer this question concisely.
+        # Add original text if available
+        if source_text:
+            context += f"""
+Original Article Text (for grounding):
+{source_text}
+"""
+
+        return f"""Using the knowledge graph results AND original article text below, answer this question concisely and accurately.
 
 Question: {question}
 
 Knowledge Graph Results:
 {context}
 
-Provide a clear, factual answer citing the sources. If the KG has no relevant data, say so."""
+Provide a clear, factual answer grounded in the source text. Cite specific articles. If the KG has no relevant data, say so."""
 
     def _synthesize_answer(self, question: str, kg_results: dict, query_plan: dict) -> str:
         """Use Claude to synthesize natural language answer from KG results."""
