@@ -1,14 +1,5 @@
 import { test, expect } from '@playwright/test';
-
-async function loadGraph(page: import('@playwright/test').Page) {
-  await page.goto('/');
-  const searchInput = page.getByRole('combobox');
-  await searchInput.fill('Artificial intelligence');
-  await searchInput.press('Enter');
-  await expect(page.locator('svg circle').first()).toBeVisible({ timeout: 15000 });
-  // Wait for simulation to settle
-  await page.waitForTimeout(2000);
-}
+import { loadGraph } from './helpers';
 
 test.describe('Graph keyboard zoom/pan', () => {
   test('SVG has aria-label with keyboard instructions', async ({ page }) => {

@@ -18,55 +18,78 @@ from .base import Article, ArticleNotFoundError
 logger = logging.getLogger(__name__)
 
 
-def _html_to_markdown(html: str) -> str:
-    """Convert HTML to markdown-like plain text.
+def _html_to_markdown(html_content: str) -> str:
+    """Convert HTML to markdown-like plain text using stdlib html.parser.
 
-    Simple converter that handles common HTML elements without
-    requiring heavy dependencies like html2text or markdownify.
+    Uses the standard library HTMLParser for robust handling of nested tags,
+    malformed HTML, and encoding issues — avoiding regex-based parsing pitfalls.
     """
     import html as html_mod
+    from html.parser import HTMLParser
 
-    text = html
+    class _MarkdownConverter(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.output: list[str] = []
+            self._skip = False  # Inside script/style/nav/footer
+            self._skip_tags = {"script", "style", "nav", "footer", "header"}
+            self._skip_depth = 0
 
-    # Remove script and style blocks
-    text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.DOTALL)
-    text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL)
-    text = re.sub(r"<nav[^>]*>.*?</nav>", "", text, flags=re.DOTALL)
-    text = re.sub(r"<footer[^>]*>.*?</footer>", "", text, flags=re.DOTALL)
-    text = re.sub(r"<header[^>]*>.*?</header>", "", text, flags=re.DOTALL)
+        def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]):  # noqa: ARG002
+            if tag in self._skip_tags:
+                self._skip = True
+                self._skip_depth += 1
+                return
+            if self._skip:
+                return
+            if tag in ("h1", "h2", "h3", "h4", "h5", "h6"):
+                level = int(tag[1])
+                self.output.append(f"\n{'#' * level} ")
+            elif tag == "p":
+                self.output.append("\n\n")
+            elif tag == "li":
+                self.output.append("\n- ")
+            elif tag == "pre":
+                self.output.append("\n```\n")
+            elif tag == "code":
+                self.output.append("`")
+            elif tag == "br":
+                self.output.append("\n")
 
-    # Convert headings to markdown
-    for level in range(1, 7):
-        text = re.sub(
-            rf"<h{level}[^>]*>(.*?)</h{level}>",
-            lambda m, lv=level: f"\n{'#' * lv} {m.group(1).strip()}\n",
-            text,
-            flags=re.DOTALL,
-        )
+        def handle_endtag(self, tag: str):
+            if tag in self._skip_tags and self._skip_depth > 0:
+                self._skip_depth -= 1
+                if self._skip_depth == 0:
+                    self._skip = False
+                return
+            if self._skip:
+                return
+            if tag in ("h1", "h2", "h3", "h4", "h5", "h6") or tag == "p":
+                self.output.append("\n")
+            elif tag == "pre":
+                self.output.append("\n```\n")
+            elif tag == "code":
+                self.output.append("`")
 
-    # Convert paragraphs to double newlines
-    text = re.sub(r"<p[^>]*>(.*?)</p>", r"\1\n\n", text, flags=re.DOTALL)
+        def handle_data(self, data: str):
+            if not self._skip:
+                self.output.append(data)
 
-    # Convert list items
-    text = re.sub(r"<li[^>]*>(.*?)</li>", r"- \1\n", text, flags=re.DOTALL)
+        def handle_entityref(self, name: str):
+            if not self._skip:
+                self.output.append(html_mod.unescape(f"&{name};"))
 
-    # Convert links: <a href="url">text</a> -> text
-    text = re.sub(r"<a[^>]*>(.*?)</a>", r"\1", text, flags=re.DOTALL)
+        def handle_charref(self, name: str):
+            if not self._skip:
+                self.output.append(html_mod.unescape(f"&#{name};"))
 
-    # Convert code blocks
-    text = re.sub(r"<pre[^>]*>(.*?)</pre>", r"```\n\1\n```\n", text, flags=re.DOTALL)
-    text = re.sub(r"<code[^>]*>(.*?)</code>", r"`\1`", text, flags=re.DOTALL)
-
-    # Strip remaining HTML tags
-    text = re.sub(r"<[^>]+>", "", text)
-
-    # Decode HTML entities
-    text = html_mod.unescape(text)
+    converter = _MarkdownConverter()
+    converter.feed(html_content)
+    text = "".join(converter.output)
 
     # Clean up whitespace
     text = re.sub(r"\n{3,}", "\n\n", text)
     text = re.sub(r"[ \t]+", " ", text)
-
     return text.strip()
 
 
@@ -84,11 +107,13 @@ def _extract_links(html: str, base_url: str) -> list[str]:
     return list(dict.fromkeys(links))  # Dedupe preserving order
 
 
-def _extract_title(html: str, url: str) -> str:
+def _extract_title(html_content: str, url: str) -> str:
     """Extract page title from HTML or fall back to URL path."""
-    match = re.search(r"<title[^>]*>(.*?)</title>", html, re.DOTALL)
+    import html as html_mod
+
+    match = re.search(r"<title[^>]*>(.*?)</title>", html_content, re.DOTALL)
     if match:
-        title = match.group(1).strip()
+        title = html_mod.unescape(match.group(1).strip())
         # Clean common suffixes like " | Microsoft Learn"
         title = re.split(r"\s*[|–—]\s*", title)[0].strip()
         if title:
@@ -194,6 +219,9 @@ class WebContentSource:
         except requests.RequestException as e:
             raise ArticleNotFoundError(f"Failed to fetch {title_or_url}: {e}") from e
 
+        # Use apparent encoding for non-UTF-8 pages (chardet-based detection)
+        if response.encoding and response.encoding.lower() == "iso-8859-1":
+            response.encoding = response.apparent_encoding
         html = response.text
         title = _extract_title(html, title_or_url)
         markdown = _html_to_markdown(html)

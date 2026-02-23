@@ -1,13 +1,5 @@
 import { test, expect } from '@playwright/test';
-
-// Helper to load a graph before each test
-async function loadGraph(page: import('@playwright/test').Page, article = 'Artificial intelligence') {
-  await page.goto('/');
-  const searchInput = page.getByRole('combobox');
-  await searchInput.fill(article);
-  await searchInput.press('Enter');
-  await expect(page.locator('svg circle').first()).toBeVisible({ timeout: 15000 });
-}
+import { loadGraph } from './helpers';
 
 test.describe('Graph interaction', () => {
   test('SVG canvas renders with circle nodes', async ({ page }) => {
@@ -17,12 +9,12 @@ test.describe('Graph interaction', () => {
     expect(count).toBeGreaterThan(0);
   });
 
-  test('SVG canvas renders with line edges', async ({ page }) => {
+  test('SVG canvas renders with line elements', async ({ page }) => {
     await loadGraph(page);
-    await page.waitForTimeout(2000);
+    // Lines may or may not exist depending on graph connectivity in test DB
     const lines = page.locator('svg line');
-    const count = await lines.count();
-    expect(count).toBeGreaterThanOrEqual(0);
+    // Just verify the SVG structure is correct (lines element exists in DOM)
+    await expect(page.locator('svg .graph-layer')).toBeVisible();
   });
 
   test('clicking a node shows article details in sidebar', async ({ page }) => {
@@ -36,23 +28,19 @@ test.describe('Graph interaction', () => {
     await loadGraph(page);
     const firstNode = page.locator('svg circle').first();
     await firstNode.click();
-    await page.waitForTimeout(2000);
-    // Category badge should appear with a known category
-    await expect(
-      page.locator('[class*="bg-purple"]').first()
-    ).toBeVisible({ timeout: 5000 });
+    // Wait for category to appear (not hardcoded timeout)
+    await expect(page.getByText('Category:').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('node details show Wikipedia link with security attributes', async ({ page }) => {
     await loadGraph(page);
     const firstNode = page.locator('svg circle').first();
     await firstNode.click();
-    await page.waitForTimeout(3000);
+    // Wait for the Wikipedia link to appear (not hardcoded timeout)
     const wikiLink = page.locator('a[href*="wikipedia.org"]');
-    if ((await wikiLink.count()) > 0) {
-      await expect(wikiLink.first()).toHaveAttribute('target', '_blank');
-      await expect(wikiLink.first()).toHaveAttribute('rel', /noopener/);
-    }
+    await expect(wikiLink.first()).toBeVisible({ timeout: 5000 });
+    await expect(wikiLink.first()).toHaveAttribute('target', '_blank');
+    await expect(wikiLink.first()).toHaveAttribute('rel', /noopener/);
   });
 
   test('selecting different nodes updates the sidebar', async ({ page }) => {

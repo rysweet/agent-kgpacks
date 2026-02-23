@@ -1,12 +1,5 @@
 import { test, expect } from '@playwright/test';
-
-async function loadGraph(page: import('@playwright/test').Page) {
-  await page.goto('/');
-  const searchInput = page.getByRole('combobox');
-  await searchInput.fill('Artificial intelligence');
-  await searchInput.press('Enter');
-  await expect(page.locator('svg circle').first()).toBeVisible({ timeout: 15000 });
-}
+import { loadGraph } from './helpers';
 
 test.describe('Filter panel', () => {
   test('filter panel is visible after graph loads', async ({ page }) => {

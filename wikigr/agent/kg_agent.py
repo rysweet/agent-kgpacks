@@ -132,9 +132,12 @@ class KnowledgeGraphAgent:
             query_plan["cypher"], max_results, query_plan.get("cypher_params")
         )
 
-        # Augment with hybrid retrieval (vector + graph + keyword)
+        # Augment with hybrid retrieval for query types that benefit from broader context.
+        # Skip for entity_search and entity_relationships which already have precise Cypher.
+        query_type = query_plan.get("type", "")
+        skip_hybrid = query_type in ("entity_search", "entity_relationships")
         try:
-            hybrid_results = self._hybrid_retrieve(question, max_results)
+            hybrid_results = {} if skip_hybrid else self._hybrid_retrieve(question, max_results)
             # Merge hybrid sources into KG results (deduplicated)
             existing_sources = set(kg_results.get("sources", []))
             for src in hybrid_results.get("sources", []):
@@ -481,14 +484,18 @@ class KnowledgeGraphAgent:
         """
         cache_key = question.strip().lower()
         if cache_key in self._plan_cache:
+            # Move to end for LRU ordering
+            self._plan_cache[cache_key] = self._plan_cache.pop(cache_key)
             logger.info(f"Query plan cache hit for: {cache_key[:60]}")
             return self._plan_cache[cache_key]
 
         plan = self._plan_query_uncached(question)
 
-        # Only cache successful plans (not fallbacks from errors)
-        if len(self._plan_cache) < 128:
-            self._plan_cache[cache_key] = plan
+        # LRU eviction: remove oldest entry when cache is full
+        if len(self._plan_cache) >= 128:
+            oldest = next(iter(self._plan_cache))
+            del self._plan_cache[oldest]
+        self._plan_cache[cache_key] = plan
 
         return plan
 
@@ -564,7 +571,19 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             content = content.split("```")[1].split("```")[0].strip()
 
         try:
-            return json.loads(content)
+            parsed = json.loads(content)
+            # Validate required keys; fall back if missing
+            if not isinstance(parsed, dict) or "cypher" not in parsed or "type" not in parsed:
+                logger.warning(
+                    f"Claude response missing required keys: {list(parsed.keys()) if isinstance(parsed, dict) else type(parsed)}"
+                )
+                return {
+                    "type": "entity_search",
+                    "cypher": "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($q) RETURN a.title AS title LIMIT 10",
+                    "cypher_params": {"q": question},
+                    "explanation": "Fallback: Claude response missing 'type' or 'cypher' key",
+                }
+            return parsed
         except json.JSONDecodeError as e:
             logger.warning(f"JSON parse failed: {e}. Response: {content[:200]}")
             # Fallback: simple entity search using parameterized query
@@ -762,7 +781,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 if title:
                     scored[title] = scored.get(title, 0) + vector_weight * r.get("similarity", 0.5)
         except Exception as e:
-            logger.debug(f"Vector search failed in hybrid retrieve: {e}")
+            logger.warning(f"Vector search failed in hybrid retrieve: {e}")
 
         # Signal 2: Graph traversal (follow LINKS_TO from vector hits)
         seed_titles = list(scored.keys())[:3]
@@ -824,29 +843,34 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         }
 
     def _fetch_source_text(self, source_titles: list[str], max_articles: int = 5) -> str:
-        """Fetch original section text for source articles.
+        """Fetch original section text for source articles (batched, single query).
 
         Retrieves the lead section (index 0) content for each source article,
         providing Claude with the original Wikipedia text for grounded synthesis.
         """
-        texts: list[str] = []
-        for title in source_titles[:max_articles]:
-            try:
-                result = self.conn.execute(
-                    "MATCH (a:Article {title: $title})-[:HAS_SECTION {section_index: 0}]->(s:Section) "
-                    "RETURN s.content AS content",
-                    {"title": title},
-                )
-                df = result.get_as_df()
-                if not df.empty:
-                    content = df.iloc[0]["content"]
-                    if content:
-                        # Truncate to 500 chars per article to fit context budget
-                        truncated = content[:500] + ("..." if len(content) > 500 else "")
-                        texts.append(f"## {title}\n{truncated}")
-            except Exception as e:
-                logger.debug(f"Failed to fetch section text for '{title}': {e}")
-        return "\n\n".join(texts)
+        self._check_open()
+        titles = source_titles[:max_articles]
+        if not titles:
+            return ""
+        try:
+            result = self.conn.execute(
+                "MATCH (a:Article)-[:HAS_SECTION {section_index: 0}]->(s:Section) "
+                "WHERE a.title IN $titles "
+                "RETURN a.title AS title, s.content AS content",
+                {"titles": titles},
+            )
+            df = result.get_as_df()
+            texts: list[str] = []
+            for _, row in df.iterrows():
+                content = row.get("content")
+                title = row.get("title", "")
+                if content:
+                    truncated = content[:500] + ("..." if len(content) > 500 else "")
+                    texts.append(f"## {title}\n{truncated}")
+            return "\n\n".join(texts)
+        except Exception as e:
+            logger.warning(f"Failed to fetch source text: {e}")
+            return ""
 
     def _build_synthesis_context(self, question: str, kg_results: dict, query_plan: dict) -> str:
         """Build the synthesis prompt for Claude (used by both blocking and streaming).

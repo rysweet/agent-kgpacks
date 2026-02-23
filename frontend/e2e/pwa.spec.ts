@@ -19,14 +19,12 @@ test.describe('PWA basics', () => {
     await expect(html).toHaveAttribute('lang', /en/);
   });
 
-  test('manifest link is present', async ({ page }) => {
+  test('manifest link is present with valid href', async ({ page }) => {
     await page.goto('/');
-    // PWA manifest should be linked in the HTML
     const manifest = page.locator('link[rel="manifest"]');
-    if ((await manifest.count()) > 0) {
-      const href = await manifest.getAttribute('href');
-      expect(href).toBeTruthy();
-    }
+    await expect(manifest).toHaveCount(1);
+    const href = await manifest.getAttribute('href');
+    expect(href).toBeTruthy();
   });
 
   test('app loads without JavaScript errors', async ({ page }) => {
@@ -35,7 +33,7 @@ test.describe('PWA basics', () => {
       jsErrors.push(error.message);
     });
     await page.goto('/');
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState('networkidle');
     expect(jsErrors).toHaveLength(0);
   });
 });

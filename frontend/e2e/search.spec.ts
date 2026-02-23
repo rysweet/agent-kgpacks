@@ -100,9 +100,10 @@ test.describe('Search workflows', () => {
     const searchInput = page.getByRole('combobox');
     await searchInput.fill('xyznonexistent12345');
     await searchInput.press('Enter');
-    await page.waitForTimeout(3000);
-    // Page should not crash
-    await expect(searchInput).toBeVisible();
+    // Should show error or empty state — no graph nodes rendered
+    await expect(searchInput).toBeVisible({ timeout: 5000 });
+    const nodeCount = await page.locator('svg circle').count();
+    expect(nodeCount).toBe(0);
   });
 
   test('search results show nodes in graph', async ({ page }) => {

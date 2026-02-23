@@ -4,6 +4,7 @@ Wraps the existing WikipediaAPIClient to implement the ContentSource protocol.
 """
 
 import logging
+import re
 
 from ..wikipedia import ArticleNotFoundError as WikiNotFoundError
 from ..wikipedia import WikipediaAPIClient, WikipediaArticle
@@ -59,8 +60,6 @@ class WikipediaContentSource:
         Note: Links are already extracted during fetch_article() and stored
         in Article.links. This method provides an alternative for re-parsing.
         """
-        import re
-
         links = []
         for match in re.finditer(r"\[\[([^|\]]+)(?:\|[^\]]+)?\]\]", content):
             link = match.group(1).strip()
