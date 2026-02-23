@@ -98,6 +98,100 @@ STANDARD_RELATIONS: frozenset[str] = frozenset(
 )
 
 
+_DOMAIN_KEYWORDS: dict[str, list[str]] = {
+    "history": [
+        "history",
+        "war",
+        "battle",
+        "revolution",
+        "empire",
+        "dynasty",
+        "political",
+        "government",
+        "military",
+        "colonial",
+        "medieval",
+    ],
+    "science": [
+        "physics",
+        "chemistry",
+        "biology",
+        "mathematics",
+        "computer",
+        "engineering",
+        "technology",
+        "algorithm",
+        "quantum",
+        "molecular",
+    ],
+    "biography": [
+        "people",
+        "person",
+        "biography",
+        "leader",
+        "president",
+        "scientist",
+        "artist",
+        "writer",
+        "philosopher",
+        "musician",
+    ],
+    "geography": [
+        "country",
+        "city",
+        "region",
+        "continent",
+        "geography",
+        "river",
+        "mountain",
+        "island",
+        "ocean",
+        "state",
+    ],
+}
+
+_DOMAIN_PROMPTS: dict[str, str] = {
+    "history": (
+        "\n\nFocus especially on: causal relationships (what led to what), "
+        "chronological sequences (before/after/during), key figures and their roles, "
+        "alliances and conflicts between groups, and turning points."
+    ),
+    "science": (
+        "\n\nFocus especially on: taxonomic/hierarchical relationships (X is a type of Y), "
+        "inventions and discoveries (who invented/discovered what, when), "
+        "dependencies (X requires/uses Y), and experimental findings."
+    ),
+    "biography": (
+        "\n\nFocus especially on: life events (born, died, educated at), "
+        "achievements and contributions, institutional affiliations, "
+        "influences (who influenced whom), and notable works or creations."
+    ),
+    "geography": (
+        "\n\nFocus especially on: spatial relationships (located in, borders, contains), "
+        "demographic facts (population, language, government type), "
+        "natural features, and economic/cultural significance."
+    ),
+}
+
+
+def detect_domain(categories: list[str]) -> str | None:
+    """Classify article domain from its categories.
+
+    Returns one of: 'history', 'science', 'biography', 'geography', or None.
+    """
+    if not categories:
+        return None
+    combined = " ".join(c.lower() for c in categories)
+    best_domain = None
+    best_score = 0
+    for domain, keywords in _DOMAIN_KEYWORDS.items():
+        score = sum(1 for kw in keywords if kw in combined)
+        if score > best_score:
+            best_score = score
+            best_domain = domain
+    return best_domain if best_score > 0 else None
+
+
 def normalize_relation(relation: str) -> str:
     """Normalize a relation string to a standard canonical form.
 
@@ -152,15 +246,22 @@ class LLMExtractor:
         logger.info(f"LLM Extractor initialized with model: {model}")
 
     def extract_from_article(
-        self, title: str, sections: list[dict], max_sections: int = 5
+        self,
+        title: str,
+        sections: list[dict],
+        max_sections: int = 5,
+        domain: str | None = None,
     ) -> ExtractionResult:
         """
-        Extract entities and relationships from Wikipedia article.
+        Extract entities and relationships from an article.
 
         Args:
             title: Article title
-            sections: Parsed sections from Wikipedia (from parser.py)
+            sections: Parsed sections (from parser.py)
             max_sections: Limit sections to process (cost control)
+            domain: Optional domain hint ('history', 'science', 'biography',
+                'geography') for domain-tuned extraction. Use detect_domain()
+                to auto-detect from article categories.
 
         Returns:
             ExtractionResult with entities, relationships, and facts
@@ -208,6 +309,11 @@ Return JSON in this format:
 }}
 
 Focus on the most important entities and relationships. Be concise."""
+
+        # Append domain-specific prompt if available
+        domain_suffix = _DOMAIN_PROMPTS.get(domain, "") if domain else ""
+        if domain_suffix:
+            prompt += domain_suffix
 
         try:
             response = self.client.messages.create(
