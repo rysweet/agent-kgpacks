@@ -160,6 +160,40 @@ def create_schema(db_path: str, drop_existing: bool = False):
         print(f"   ❌ Failed to create IN_CATEGORY relationship: {e}")
         sys.exit(1)
 
+    # Create Chunk node table (for fine-grained text retrieval)
+    print("\n6b. Creating Chunk node table...")
+    try:
+        conn.execute("""
+            CREATE NODE TABLE Chunk(
+                chunk_id STRING,
+                content STRING,
+                embedding DOUBLE[384],
+                article_title STRING,
+                section_index INT32,
+                chunk_index INT32,
+                PRIMARY KEY(chunk_id)
+            )
+        """)
+        print("   ✅ Chunk table created")
+    except Exception as e:
+        print(f"   ❌ Failed to create Chunk table: {e}")
+        sys.exit(1)
+
+    # Create HAS_CHUNK relationship
+    print("\n6c. Creating HAS_CHUNK relationship...")
+    try:
+        conn.execute("""
+            CREATE REL TABLE HAS_CHUNK(
+                FROM Article TO Chunk,
+                section_index INT32,
+                chunk_index INT32
+            )
+        """)
+        print("   ✅ HAS_CHUNK relationship created")
+    except Exception as e:
+        print(f"   ❌ Failed to create HAS_CHUNK relationship: {e}")
+        sys.exit(1)
+
     # Create vector index
     print("\n7. Creating HNSW vector index on Section.embedding...")
     try:
@@ -176,6 +210,22 @@ def create_schema(db_path: str, drop_existing: bool = False):
         print(f"   ❌ Failed to create vector index: {e}")
         sys.exit(1)
 
+    # Create chunk vector index
+    print("\n7b. Creating HNSW vector index on Chunk.embedding...")
+    try:
+        conn.execute("""
+            CALL CREATE_VECTOR_INDEX(
+                'Chunk',
+                'chunk_embedding_idx',
+                'embedding',
+                metric := 'cosine'
+            )
+        """)
+        print("   ✅ Chunk vector index created (HNSW, cosine metric)")
+    except Exception as e:
+        print(f"   ❌ Failed to create chunk vector index: {e}")
+        sys.exit(1)
+
     # Verify schema
     print("\n8. Verifying schema...")
     try:
@@ -189,9 +239,11 @@ def create_schema(db_path: str, drop_existing: bool = False):
             "Article",
             "Section",
             "Category",
+            "Chunk",
             "HAS_SECTION",
             "LINKS_TO",
             "IN_CATEGORY",
+            "HAS_CHUNK",
         }
         actual_tables = set(tables["name"].tolist())
 
@@ -276,9 +328,9 @@ def create_schema(db_path: str, drop_existing: bool = False):
     print("SCHEMA CREATION COMPLETE ✅")
     print("=" * 60)
     print("\nCreated:")
-    print("  ✅ 3 node tables (Article, Section, Category)")
-    print("  ✅ 3 relationship tables (HAS_SECTION, LINKS_TO, IN_CATEGORY)")
-    print("  ✅ 1 vector index (Section.embedding, HNSW, cosine)")
+    print("  ✅ 4 node tables (Article, Section, Category, Chunk)")
+    print("  ✅ 4 relationship tables (HAS_SECTION, LINKS_TO, IN_CATEGORY, HAS_CHUNK)")
+    print("  ✅ 2 vector indices (Section.embedding, Chunk.embedding)")
     print("\nDatabase ready for data loading!")
     print(f"Location: {db_path}")
 
