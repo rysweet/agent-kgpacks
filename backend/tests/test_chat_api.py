@@ -54,7 +54,7 @@ class TestChatEndpoint:
         ):
             mock_agent = MagicMock()
             mock_agent.query.return_value = mock_result
-            mock_cls.__new__ = MagicMock(return_value=mock_agent)
+            mock_cls.from_connection = MagicMock(return_value=mock_agent)
 
             response = chat_client.post(
                 "/api/v1/chat",

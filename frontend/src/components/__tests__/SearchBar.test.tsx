@@ -37,11 +37,12 @@ describe('SearchBar', () => {
     expect(modeButton).toBeInTheDocument();
   });
 
-  it('fires search after debounce delay', async () => {
+  it('fires autocomplete after debounce delay', async () => {
     vi.useFakeTimers();
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const mockAutocomplete = vi.fn();
 
-    render(<SearchBar onSearch={mockOnSearch} debounceMs={300} />);
+    render(<SearchBar onSearch={mockOnSearch} onAutocomplete={mockAutocomplete} debounceMs={300} />);
 
     const input = screen.getByPlaceholderText(/search/i);
 
@@ -51,15 +52,17 @@ describe('SearchBar', () => {
     // Fast-forward time past debounce delay
     vi.advanceTimersByTime(300);
 
-    // Should search after debounce
-    expect(mockOnSearch).toHaveBeenCalledWith('Machine Learning');
+    // Debounced typing should call onAutocomplete, not onSearch
+    expect(mockAutocomplete).toHaveBeenCalledWith('Machine Learning');
+    expect(mockOnSearch).not.toHaveBeenCalled();
   });
 
-  it('cancels pending search on new input', async () => {
+  it('cancels pending autocomplete on new input', async () => {
     vi.useFakeTimers();
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const mockAutocomplete = vi.fn();
 
-    render(<SearchBar onSearch={mockOnSearch} debounceMs={300} />);
+    render(<SearchBar onSearch={mockOnSearch} onAutocomplete={mockAutocomplete} debounceMs={300} />);
 
     const input = screen.getByPlaceholderText(/search/i);
 
@@ -73,8 +76,8 @@ describe('SearchBar', () => {
     // Fast-forward past debounce
     vi.advanceTimersByTime(300);
 
-    // Should only search with final query
-    expect(mockOnSearch).toHaveBeenLastCalledWith('Machine Learning');
+    // Should only autocomplete with final query
+    expect(mockAutocomplete).toHaveBeenLastCalledWith('Machine Learning');
   });
 
   it('toggles between text and semantic mode', async () => {
