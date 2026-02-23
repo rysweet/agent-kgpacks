@@ -143,6 +143,7 @@ def chat_stream(
             agent.conn = conn
             agent.claude = _get_anthropic_client()
             agent._embedding_generator = None
+            agent._plan_cache = {}
 
             # Step 1: Plan query (fast)
             query_plan = agent._plan_query(question)
