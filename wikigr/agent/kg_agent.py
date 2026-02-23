@@ -108,11 +108,29 @@ class KnowledgeGraphAgent:
         query_plan = self._plan_query(question)
         t_plan = time.perf_counter() - t_plan_start
 
-        # Step 2: Execute Cypher query
+        # Step 2: Execute Cypher query + hybrid retrieval
         t_exec_start = time.perf_counter()
         kg_results = self._execute_query(
             query_plan["cypher"], max_results, query_plan.get("cypher_params")
         )
+
+        # Augment with hybrid retrieval (vector + graph + keyword)
+        try:
+            hybrid_results = self._hybrid_retrieve(question, max_results)
+            # Merge hybrid sources into KG results (deduplicated)
+            existing_sources = set(kg_results.get("sources", []))
+            for src in hybrid_results.get("sources", []):
+                if src not in existing_sources:
+                    kg_results.setdefault("sources", []).append(src)
+                    existing_sources.add(src)
+            # Add hybrid facts
+            existing_facts = set(kg_results.get("facts", []))
+            for fact in hybrid_results.get("facts", []):
+                if fact not in existing_facts:
+                    kg_results.setdefault("facts", []).append(fact)
+        except Exception as e:
+            logger.debug(f"Hybrid retrieval augmentation failed: {e}")
+
         t_exec = time.perf_counter() - t_exec_start
 
         # Step 3: Synthesize answer with Claude
@@ -695,6 +713,97 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 "raw": [],
                 "error": f"Both primary and fallback queries failed: {primary_error}",
             }
+
+    def _hybrid_retrieve(
+        self,
+        question: str,
+        max_results: int = 10,
+        vector_weight: float = 0.5,
+        graph_weight: float = 0.3,
+        keyword_weight: float = 0.2,
+    ) -> dict:
+        """Combine vector, graph, and keyword retrieval for richer results.
+
+        Args:
+            question: Natural language question.
+            max_results: Maximum articles to return.
+            vector_weight: Weight for vector similarity signal (0-1).
+            graph_weight: Weight for graph proximity signal (0-1).
+            keyword_weight: Weight for keyword match signal (0-1).
+
+        Returns:
+            KG results dict with sources, entities, facts, raw.
+        """
+        scored: dict[str, float] = {}
+
+        # Signal 1: Vector search (semantic similarity via existing semantic_search)
+        try:
+            vector_results = self.semantic_search(question, top_k=max_results)
+            for r in vector_results:
+                title = r.get("article", r.get("title", ""))
+                if title:
+                    scored[title] = scored.get(title, 0) + vector_weight * r.get("similarity", 0.5)
+        except Exception as e:
+            logger.debug(f"Vector search failed in hybrid retrieve: {e}")
+
+        # Signal 2: Graph traversal (follow LINKS_TO from vector hits)
+        seed_titles = list(scored.keys())[:3]
+        for seed in seed_titles:
+            try:
+                result = self.conn.execute(
+                    "MATCH (seed:Article {title: $title})-[:LINKS_TO]->(neighbor:Article) "
+                    "RETURN neighbor.title AS title LIMIT $limit",
+                    {"title": seed, "limit": max_results},
+                )
+                df = result.get_as_df()
+                for _, row in df.iterrows():
+                    title = row["title"]
+                    if title:
+                        scored[title] = scored.get(title, 0) + graph_weight * 0.5
+            except Exception as e:
+                logger.debug(f"Graph traversal failed for '{seed}': {e}")
+
+        # Signal 3: Keyword match (title contains)
+        keywords = [w for w in question.split() if len(w) > 3]
+        for kw in keywords[:3]:
+            try:
+                result = self.conn.execute(
+                    "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($kw) "
+                    "RETURN a.title AS title LIMIT $limit",
+                    {"kw": kw, "limit": max_results},
+                )
+                df = result.get_as_df()
+                for _, row in df.iterrows():
+                    title = row["title"]
+                    if title:
+                        scored[title] = scored.get(title, 0) + keyword_weight * 0.7
+            except Exception as e:
+                logger.debug(f"Keyword search failed for '{kw}': {e}")
+
+        # Rank by combined score
+        ranked = sorted(scored.items(), key=lambda x: x[1], reverse=True)[:max_results]
+        source_titles = [title for title, _score in ranked]
+
+        # Fetch facts for top sources
+        facts: list[str] = []
+        for title in source_titles[:5]:
+            try:
+                result = self.conn.execute(
+                    "MATCH (a:Article {title: $title})-[:HAS_FACT]->(f:Fact) "
+                    "RETURN f.content AS content LIMIT 3",
+                    {"title": title},
+                )
+                df = result.get_as_df()
+                facts.extend(df["content"].dropna().tolist())
+            except Exception:
+                pass
+
+        return {
+            "sources": source_titles,
+            "entities": [],
+            "facts": facts,
+            "raw": [{"title": t, "score": s} for t, s in ranked[:10]],
+        }
 
     def _fetch_source_text(self, source_titles: list[str], max_articles: int = 5) -> str:
         """Fetch original section text for source articles.
