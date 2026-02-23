@@ -12,6 +12,7 @@ This transforms raw Wikipedia text into structured knowledge graph entries.
 import json
 import logging
 import os
+import re
 from dataclasses import dataclass
 
 import anthropic
@@ -177,6 +178,10 @@ _DOMAIN_PROMPTS: dict[str, str] = {
 def detect_domain(categories: list[str]) -> str | None:
     """Classify article domain from its categories.
 
+    Uses word-boundary matching to avoid false positives (e.g., "war"
+    matching "software"). Requires at least 2 keyword matches to avoid
+    single-keyword misclassification.
+
     Returns one of: 'history', 'science', 'biography', 'geography', or None.
     """
     if not categories:
@@ -185,11 +190,11 @@ def detect_domain(categories: list[str]) -> str | None:
     best_domain = None
     best_score = 0
     for domain, keywords in _DOMAIN_KEYWORDS.items():
-        score = sum(1 for kw in keywords if kw in combined)
+        score = sum(1 for kw in keywords if re.search(rf"\b{re.escape(kw)}\b", combined))
         if score > best_score:
             best_score = score
             best_domain = domain
-    return best_domain if best_score > 0 else None
+    return best_domain if best_score >= 2 else None
 
 
 def normalize_relation(relation: str) -> str:

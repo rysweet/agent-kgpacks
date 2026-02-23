@@ -4,7 +4,7 @@
  * Root component that integrates all UI elements.
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { GraphCanvas } from './components/Graph/GraphCanvas';
 import { SearchBar } from './components/Search/SearchBar';
 import { NodeInfo } from './components/Sidebar/NodeInfo';
@@ -59,17 +59,26 @@ function App() {
     ? filteredNodes.find((n) => n.id === selectedNode) || null
     : null;
 
+  // Track autocomplete request freshness to avoid stale responses
+  const autocompleteCounterRef = useRef(0);
+
   // Handle autocomplete - lightweight fetch while typing
   const handleAutocomplete = useCallback(async (query: string) => {
     if (!query.trim() || query.length < 2) {
       setSuggestions([]);
       return;
     }
+    const requestId = ++autocompleteCounterRef.current;
     try {
       const results = await autocomplete(query, 8);
-      setSuggestions(results);
+      // Only update if this is still the latest request
+      if (requestId === autocompleteCounterRef.current) {
+        setSuggestions(results);
+      }
     } catch {
-      setSuggestions([]);
+      if (requestId === autocompleteCounterRef.current) {
+        setSuggestions([]);
+      }
     }
   }, []);
 
