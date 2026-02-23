@@ -49,7 +49,7 @@ def chunk_text(
     if len(text) <= chunk_size:
         return [
             Chunk(
-                chunk_id=f"{article_title}#s{section_index}#c0",
+                chunk_id=f"{article_title}|s{section_index}|c0",
                 content=text,
                 article_title=article_title,
                 section_index=section_index,
@@ -64,18 +64,25 @@ def chunk_text(
     while start < len(text):
         end = start + chunk_size
 
-        # Try to break at a sentence boundary
+        # Try to break at a sentence boundary (. ! ? followed by space or newline)
         if end < len(text):
-            # Look for sentence end (. ! ?) near the target end
-            boundary = text.rfind(". ", start + chunk_size // 2, end + 200)
-            if boundary > start:
-                end = boundary + 1  # Include the period
+            search_end = min(end + 200, len(text))
+            search_start = start + chunk_size // 2
+            # Search for sentence-ending punctuation followed by whitespace
+            best_boundary = -1
+            for punct in (". ", "? ", "! ", ".\n", "?\n", "!\n"):
+                b = text.rfind(punct, search_start, search_end)
+                if b > best_boundary:
+                    best_boundary = b
+            if best_boundary > start:
+                end = best_boundary + 1  # Include the punctuation
 
         chunk_content = text[start:end].strip()
         if chunk_content:
+            # Use | as separator (forbidden in Wikipedia titles, safe for IDs)
             chunks.append(
                 Chunk(
-                    chunk_id=f"{article_title}#s{section_index}#c{chunk_idx}",
+                    chunk_id=f"{article_title}|s{section_index}|c{chunk_idx}",
                     content=chunk_content,
                     article_title=article_title,
                     section_index=section_index,

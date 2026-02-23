@@ -58,11 +58,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           onAutocomplete(value);
         }, debounceMs);
       }
-
-      // Show suggestions when typing
-      setShowSuggestions(value.length >= 2 && suggestions.length > 0);
     },
-    [onAutocomplete, debounceMs, suggestions.length]
+    [onAutocomplete, debounceMs]
   );
 
   // Clear input
@@ -130,10 +127,20 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     }
   }, [mode, onModeChange]);
 
-  // Show suggestions when suggestions prop changes
+  // Show suggestions when suggestions prop changes; reset keyboard selection
   useEffect(() => {
     setShowSuggestions(suggestions.length > 0);
+    setSelectedIndex(-1);
   }, [suggestions]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="relative w-full">
