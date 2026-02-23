@@ -187,6 +187,55 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
 
     svg.call(zoom);
 
+    // Keyboard shortcuts for zoom/pan
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!svgRef.current) return;
+      // Don't intercept when typing in an input
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return;
+
+      const svgEl = svgRef.current;
+      const step = 50;
+      const zoomFactor = 1.2;
+
+      switch (e.key) {
+        case '+':
+        case '=':
+          svg.transition().duration(200).call(zoom.scaleBy, zoomFactor);
+          e.preventDefault();
+          break;
+        case '-':
+        case '_':
+          svg.transition().duration(200).call(zoom.scaleBy, 1 / zoomFactor);
+          e.preventDefault();
+          break;
+        case 'ArrowUp':
+          svg.transition().duration(100).call(zoom.translateBy, 0, step);
+          e.preventDefault();
+          break;
+        case 'ArrowDown':
+          svg.transition().duration(100).call(zoom.translateBy, 0, -step);
+          e.preventDefault();
+          break;
+        case 'ArrowLeft':
+          svg.transition().duration(100).call(zoom.translateBy, step, 0);
+          e.preventDefault();
+          break;
+        case 'ArrowRight':
+          svg.transition().duration(100).call(zoom.translateBy, -step, 0);
+          e.preventDefault();
+          break;
+        case '0':
+          svg.transition().duration(300).call(
+            zoom.transform,
+            d3.zoomIdentity.translate(svgEl.clientWidth / 2, svgEl.clientHeight / 2).scale(1).translate(-svgEl.clientWidth / 2, -svgEl.clientHeight / 2)
+          );
+          e.preventDefault();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
     // Handle window resize
     const handleResize = () => {
       const newWidth = svgRef.current?.clientWidth || width;
@@ -200,6 +249,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     return () => {
       simulation.stop();
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [nodes, edges, makeDrag]);
 
@@ -225,6 +275,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       ref={svgRef}
       className="w-full h-full"
       style={{ background: '#f9fafb' }}
+      tabIndex={0}
+      aria-label="Knowledge graph visualization. Use +/- to zoom, arrow keys to pan, 0 to reset."
     />
   );
 };
