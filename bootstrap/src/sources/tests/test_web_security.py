@@ -123,7 +123,8 @@ class TestErrorHandling:
 
     def test_error_includes_ip_address(self):
         """Error messages should include the resolved IP for debugging."""
-        with pytest.raises(ValueError, match=r"127\.0\.0\.1"):
+        # Accept either IPv4 (127.0.0.1) or IPv6 (::1) localhost
+        with pytest.raises(ValueError, match=r"(127\.0\.0\.1|::1)"):
             _validate_url("http://localhost")
 
     def test_error_includes_original_url(self):
