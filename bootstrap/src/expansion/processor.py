@@ -21,6 +21,57 @@ from ..sources.base import Article, ArticleNotFoundError, ContentSource
 logger = logging.getLogger(__name__)
 
 
+def _sanitize_error(error_msg: str) -> str:
+    """Sanitize error messages to remove API keys and sensitive tokens.
+
+    Redacts common patterns:
+    - API keys (alphanumeric strings 20-128 chars)
+    - Bearer tokens
+    - Authorization headers
+    - Secret keys
+
+    Args:
+        error_msg: Original error message
+
+    Returns:
+        Sanitized error message with sensitive data redacted
+    """
+    import re
+
+    # Redact API keys with = or : separators
+    sanitized = re.sub(
+        r"\b(api[_-]?key|token|secret[_-]?key|bearer|authorization)[=:\s]+['\"]?([a-zA-Z0-9_-]{20,128})['\"]?",
+        r"\1=***REDACTED***",
+        error_msg,
+        flags=re.IGNORECASE,
+    )
+
+    # Redact standalone API keys (sk-..., any 20+ char alphanumeric string in quotes or after 'key'/'token')
+    sanitized = re.sub(
+        r"(['\"])(sk-[a-zA-Z0-9_-]{20,128}|[a-zA-Z0-9_-]{30,128})(['\"])",
+        r"\1***REDACTED***\3",
+        sanitized,
+    )
+
+    # Redact Authorization headers
+    sanitized = re.sub(
+        r"(Authorization:\s*)(Bearer\s+)?[a-zA-Z0-9_-]+",
+        r"\1***REDACTED***",
+        sanitized,
+        flags=re.IGNORECASE,
+    )
+
+    # Redact dict-style API keys {"api_key": "value"}
+    sanitized = re.sub(
+        r'(["\']api[_-]?key["\']\s*:\s*["\'])([a-zA-Z0-9_-]{20,128})(["\'])',
+        r"\1***REDACTED***\3",
+        sanitized,
+        flags=re.IGNORECASE,
+    )
+
+    return sanitized
+
+
 class ArticleProcessor:
     """Processes articles for expansion"""
 
@@ -89,7 +140,7 @@ class ArticleProcessor:
                 logger.info(f"  Fetched: {len(article.content)} chars from {article.source_type}")
             except ArticleNotFoundError:
                 error_msg = f"Article not found: {title_or_url}"
-                logger.warning(error_msg)
+                logger.warning(_sanitize_error(error_msg))
                 return (False, [], error_msg)
 
             # Step 2: Handle Wikipedia redirects
@@ -110,7 +161,7 @@ class ArticleProcessor:
                         return (True, [], None)
                     except Exception as e:
                         error_msg = f"Redirect target fetch failed: {e}"
-                        logger.warning(f"  {error_msg}")
+                        logger.warning(f"  {_sanitize_error(error_msg)}")
                         return (False, [], error_msg)
 
             # Parse sections
@@ -143,7 +194,9 @@ class ArticleProcessor:
                     )
                 except Exception as e:
                     # LLM extraction is optional - don't fail article processing
-                    logger.warning(f"  LLM extraction failed (continuing): {e}")
+                    logger.warning(
+                        f"  LLM extraction failed (continuing): {_sanitize_error(str(e))}"
+                    )
 
             # Step 5: Load into database
             self._insert_article_with_sections(
@@ -162,7 +215,9 @@ class ArticleProcessor:
 
         except Exception as e:
             error_msg = f"Processing error: {str(e)}"
-            logger.error(f"  ✗ Failed to process {title_or_url}: {error_msg}", exc_info=True)
+            logger.error(
+                f"  ✗ Failed to process {title_or_url}: {_sanitize_error(error_msg)}", exc_info=True
+            )
             return (False, [], error_msg)
 
     def _detect_domain(self, categories: list[str]) -> str | None:
@@ -486,4 +541,4 @@ class ArticleProcessor:
 
             except Exception as e:
                 # LLM extraction is optional — don't fail article processing
-                logger.warning(f"  Failed to insert LLM extracted data: {e}")
+                logger.warning(f"  Failed to insert LLM extracted data: {_sanitize_error(str(e))}")
