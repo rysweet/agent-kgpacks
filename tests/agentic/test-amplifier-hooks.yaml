@@ -1,0 +1,93 @@
+scenario:
+  name: "Amplifier Launch - Hook Verification"
+  description: "Verify hooks work after amplifier launch command"
+  type: cli
+  tags: [critical, hooks, amplifier]
+
+  prerequisites:
+    - "amplihack is installed with PR fix"
+    - "Python 3.10+ is available"
+
+  steps:
+    # Phase 1: Launch amplifier (this should configure hooks)
+    - action: launch
+      target: "bash"
+      args: ["-c", "amplihack amplifier --help"]
+      timeout: 30s
+      description: "Run amplifier command to trigger hook setup"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 2: Verify CLAUDE.md exists after amplifier command
+    - action: launch
+      target: "ls"
+      args: ["-la", "$HOME/.amplihack/CLAUDE.md"]
+      description: "Verify CLAUDE.md exists"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 3: Test all hooks work
+    - action: launch
+      target: "bash"
+      args:
+        [
+          "-c",
+          'echo ''{"toolUse": {"name": "Bash", "input": {"command": "echo test"}}}'' | python3 $HOME/.amplihack/.claude/tools/xpia/hooks/pre_tool_use.py',
+        ]
+      description: "Test PreToolUse hook after amplifier"
+
+    - action: verify_output
+      contains: "{}"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 4: Verify no ImportError in any hook
+    - action: launch
+      target: "python3"
+      args: ["$HOME/.amplihack/.claude/tools/amplihack/hooks/session_start.py"]
+      timeout: 15s
+      description: "Test SessionStart hook"
+
+    - action: verify_output
+      matches: ".*"
+      description: "Hook should execute without ImportError"
+
+    - action: verify_exit_code
+      expected: 0
+
+    - action: launch
+      target: "python3"
+      args: ["$HOME/.amplihack/.claude/tools/amplihack/hooks/stop.py"]
+      timeout: 30s
+      description: "Test Stop hook"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 5: Verify settings.json configuration
+    - action: launch
+      target: "bash"
+      args: ["-c", "cat $HOME/.claude/settings.json | grep -q PreToolUse"]
+      description: "Verify PreToolUse hook in settings"
+
+    - action: verify_exit_code
+      expected: 0
+
+    - action: launch
+      target: "bash"
+      args: ["-c", "cat $HOME/.claude/settings.json | grep -q SessionStart"]
+      description: "Verify SessionStart hook in settings"
+
+    - action: verify_exit_code
+      expected: 0
+
+    - action: launch
+      target: "bash"
+      args: ["-c", "cat $HOME/.claude/settings.json | grep -q PostToolUse"]
+      description: "Verify PostToolUse hook in settings"
+
+    - action: verify_exit_code
+      expected: 0
