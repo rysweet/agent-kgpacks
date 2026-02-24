@@ -1,10 +1,13 @@
-# Knowledge Packs - Phase 1: Pack Format & Manifest
+# Knowledge Packs - Phases 1 & 2: Pack Format & Skills Integration
 
-This module implements the foundational pack format and manifest system for WikiGR Knowledge Packs.
+This module implements the pack format, manifest system, and Claude Code skills integration for WikiGR Knowledge Packs.
 
 ## Overview
 
-Knowledge Packs are reusable, distributable domain-specific knowledge graphs that can be installed and used as Claude Code skills. This Phase 1 implementation provides the core infrastructure for pack metadata and validation.
+Knowledge Packs are reusable, distributable domain-specific knowledge graphs that can be installed and used as Claude Code skills. This implementation provides:
+
+- **Phase 1**: Pack format, manifest, and validation
+- **Phase 2**: Pack discovery, skill generation, and registry system
 
 ## Components
 
@@ -74,6 +77,106 @@ if errors:
         print(f"  - {error}")
 else:
     print("Pack structure is valid!")
+```
+
+### 3. Pack Discovery (`discovery.py`)
+
+**Functions:**
+- `is_valid_pack(pack_dir)`: Check if directory contains a valid pack
+- `discover_packs(packs_dir)`: Discover all installed packs in directory
+
+**Example:**
+```python
+from wikigr.packs import discover_packs, is_valid_pack
+from pathlib import Path
+
+# Check single pack
+if is_valid_pack(Path("./physics-expert")):
+    print("Valid pack!")
+
+# Discover all packs
+packs = discover_packs(Path.home() / ".wikigr/packs")
+for pack in packs:
+    print(f"{pack.name} v{pack.version}")
+```
+
+### 4. Pack Models (`models.py`)
+
+**Data Model:**
+- `PackInfo`: Complete information about an installed pack
+  - Includes name, version, path, manifest, and skill path
+  - All paths are absolute for reliable access
+
+**Example:**
+```python
+from wikigr.packs import discover_packs
+
+packs = discover_packs()
+for pack_info in packs:
+    print(f"Name: {pack_info.name}")
+    print(f"Version: {pack_info.version}")
+    print(f"Path: {pack_info.path}")
+    print(f"Skill: {pack_info.skill_path}")
+```
+
+### 5. Skill Template Generator (`skill_template.py`)
+
+**Function:**
+- `generate_skill_md(manifest, kg_config_path)`: Generate skill.md from manifest
+
+Generates Claude Code skill files with:
+- YAML frontmatter (name, version, description, triggers)
+- Knowledge graph statistics
+- Usage examples
+- Quality metrics
+- Technical details
+
+**Example:**
+```python
+from wikigr.packs import generate_skill_md, load_manifest
+from pathlib import Path
+
+manifest = load_manifest(Path("./physics-expert"))
+kg_config = Path("./physics-expert/kg_config.json")
+skill_content = generate_skill_md(manifest, kg_config)
+
+# Write to skill.md
+with open("./physics-expert/skill.md", "w") as f:
+    f.write(skill_content)
+```
+
+### 6. Pack Registry (`registry.py`)
+
+**Class:**
+- `PackRegistry`: Centralized registry for managing installed packs
+
+**Methods:**
+- `refresh()`: Rescan packs directory
+- `get_pack(name)`: Get pack by name
+- `list_packs()`: List all packs (sorted)
+- `has_pack(name)`: Check if pack exists
+- `count()`: Number of registered packs
+
+**Example:**
+```python
+from wikigr.packs import PackRegistry
+from pathlib import Path
+
+# Initialize registry
+registry = PackRegistry(Path.home() / ".wikigr/packs")
+
+# Check for pack
+if registry.has_pack("physics-expert"):
+    pack = registry.get_pack("physics-expert")
+    print(f"Found: {pack.name} v{pack.version}")
+
+# List all packs
+print(f"Total packs: {registry.count()}")
+for pack in registry.list_packs():
+    print(f"  - {pack.name}")
+
+# Refresh after changes
+registry.refresh()
 ```
 
 ## Pack Directory Structure
@@ -154,10 +257,11 @@ The `manifest.json` file follows this schema:
 
 ## Testing
 
-Comprehensive test suite with 32 tests covering:
+Comprehensive test suite with 75 tests covering:
 
-1. **Data Model Tests** (`test_manifest.py`):
+1. **Data Model Tests** (`test_manifest.py`, `test_models.py`):
    - GraphStats, EvalScores, PackManifest creation
+   - PackInfo dataclass validation
    - Serialization (to_dict, from_dict)
    - Loading and saving manifests
    - Validation logic
@@ -168,7 +272,25 @@ Comprehensive test suite with 32 tests covering:
    - Invalid file format detection
    - Optional file handling
 
-3. **Integration Tests** (`test_pack_structure.py`):
+3. **Discovery Tests** (`test_discovery.py`):
+   - Pack validation (`is_valid_pack`)
+   - Pack discovery across directories
+   - Filtering invalid packs
+   - Absolute path handling
+
+4. **Skill Template Tests** (`test_skill_template.py`):
+   - skill.md generation from manifest
+   - Frontmatter structure validation
+   - Domain-specific trigger generation
+   - Content section completeness
+
+5. **Registry Tests** (`test_registry.py`):
+   - Registry initialization and refresh
+   - Pack lookup and listing
+   - Dynamic pack addition/removal
+   - Invalid pack filtering
+
+6. **Integration Tests** (`test_pack_structure.py`):
    - Complete pack creation workflows
    - Multiple pack scenarios
    - Design spec compliance verification
@@ -183,23 +305,48 @@ pytest tests/packs/ -v
 This implementation follows the design specification in:
 `docs/design/knowledge-packs.md`
 
-Phase 1 deliverables (this implementation):
+**Phase 1 deliverables** (✅ Complete):
 - ✅ Pack manifest schema and validation
 - ✅ Pack directory structure
 - ✅ Manifest parser (load, save, validate)
 - ✅ Pack validator (structure and content)
 - ✅ Comprehensive test suite
 
+**Phase 2 deliverables** (✅ Complete):
+- ✅ Pack discovery system (`is_valid_pack`, `discover_packs`)
+- ✅ Pack information models (`PackInfo`)
+- ✅ Skill template generator (`generate_skill_md`)
+- ✅ Pack registry (`PackRegistry` class)
+- ✅ Complete integration example
+- ✅ 43 additional tests (75 total)
+
 ## Future Phases
 
-This Phase 1 implementation provides the foundation for:
+Phases 1 & 2 provide the foundation for:
 
-- **Phase 2**: Skills Integration - Claude Code auto-discovery
 - **Phase 3**: Evaluation Framework - Three-baseline comparison
 - **Phase 4**: Distribution & Registry - Pack sharing and updates
-- **Phase 5**: Advanced Features - Custom sources, multi-pack queries
+- **Phase 5**: CLI Commands - `wikigr pack` command suite
 
-## Usage in CLI
+## Usage Examples
+
+### Complete Pack Creation with Skills Integration
+
+See `wikigr/packs/examples/create_physics_pack_with_skill.py` for a complete example:
+
+```bash
+python -m wikigr.packs.examples.create_physics_pack_with_skill
+```
+
+This example demonstrates:
+1. Creating pack directory structure
+2. Generating manifest with metadata
+3. Creating placeholder Kuzu database
+4. Generating kg_config.json
+5. Auto-generating skill.md from manifest
+6. Discovering pack and registering it
+
+### Future CLI Commands
 
 Future `wikigr pack` commands will use these modules:
 
@@ -207,21 +354,29 @@ Future `wikigr pack` commands will use these modules:
 # Validate pack structure
 wikigr pack validate ./physics-expert
 
-# Install pack (future)
+# Install pack (Phase 4)
 wikigr pack install ./physics-expert
 
-# Create pack (future)
+# Create pack (Phase 5)
 wikigr pack create physics-expert --source wikipedia
+
+# List installed packs (Phase 5)
+wikigr pack list
+
+# Update pack (Phase 4)
+wikigr pack update physics-expert
 ```
 
 ## API Stability
 
-Phase 1 APIs are stable and follow these principles:
+Phase 1 & 2 APIs are stable and follow these principles:
 
 - **Dataclasses**: Type-safe, immutable-by-default data models
 - **Simple validation**: Clear error messages, no exceptions on validation
 - **Path-based**: All functions accept Path objects for directory references
+- **Absolute paths**: All returned paths are absolute for reliability
 - **No external dependencies**: Pure Python with only standard library (json, pathlib, re, datetime)
+- **Fail-safe discovery**: Invalid packs are silently skipped during discovery
 
 ## Contributing
 
