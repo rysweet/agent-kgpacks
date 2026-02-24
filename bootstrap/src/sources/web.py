@@ -143,6 +143,7 @@ def _validate_url(url: str) -> None:
     - Non-HTTP(S) schemes (file://, ftp://, etc.)
     - Private/reserved IP ranges (127.x, 10.x, 172.16-31.x, 192.168.x, 169.254.x)
     - IPv6 loopback (::1)
+    - IPv6 deprecated site-local addresses (fec0::/10)
     - Cloud metadata endpoints (169.254.169.254)
 
     Raises:
@@ -156,15 +157,26 @@ def _validate_url(url: str) -> None:
     if not parsed.hostname:
         raise ValueError(f"URL has no hostname: {url}")
 
+    # IDNA normalization to prevent homoglyph attacks
+    normalized_hostname = parsed.hostname.encode("idna").decode("ascii")
+
     # Resolve hostname to IP and check against private ranges
     try:
-        resolved_ips = socket.getaddrinfo(parsed.hostname, None)
+        resolved_ips = socket.getaddrinfo(normalized_hostname, None)
         for _family, _type, _proto, _canonname, sockaddr in resolved_ips:
             ip = ipaddress.ip_address(sockaddr[0])
+
+            # Check for private, loopback, reserved, and link-local
             if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_link_local:
                 raise ValueError(f"URL resolves to private/reserved IP {ip}: {url}")
+
+            # Explicit check for IPv6 deprecated site-local addresses (fec0::/10)
+            if ip.version == 6 and ip.is_site_local:
+                raise ValueError(f"URL resolves to deprecated IPv6 site-local address {ip}: {url}")
     except socket.gaierror as e:
         raise ValueError(f"Cannot resolve hostname in URL {url}: {e}") from e
+    except UnicodeError as e:
+        raise ValueError(f"Invalid hostname encoding in URL {url}: {e}") from e
 
 
 class WebContentSource:
@@ -201,7 +213,7 @@ class WebContentSource:
         """
         import time
 
-        # Validate URL to prevent SSRF attacks
+        # Validate URL to prevent SSRF attacks (initial check)
         _validate_url(title_or_url)
 
         # Rate limiting
@@ -210,6 +222,10 @@ class WebContentSource:
             time.sleep(self._rate_limit_delay - elapsed)
 
         try:
+            # Re-validate URL immediately before request to prevent DNS rebinding attacks
+            # (DNS may have changed since initial validation)
+            _validate_url(title_or_url)
+
             response = self._session.get(title_or_url, timeout=self._timeout, allow_redirects=False)
             self._last_request_time = time.time()
 

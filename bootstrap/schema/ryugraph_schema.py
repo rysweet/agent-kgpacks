@@ -54,11 +54,18 @@ def create_schema(db_path: str, drop_existing: bool = False):
     if not drop_existing:
         try:
             print("\nDropping existing tables (if any)...")
+            # Drop relationship tables first (they reference node tables)
             conn.execute("DROP TABLE IF EXISTS HAS_CHUNK")
+            conn.execute("DROP TABLE IF EXISTS ENTITY_RELATION")
+            conn.execute("DROP TABLE IF EXISTS HAS_FACT")
+            conn.execute("DROP TABLE IF EXISTS HAS_ENTITY")
             conn.execute("DROP TABLE IF EXISTS HAS_SECTION")
             conn.execute("DROP TABLE IF EXISTS LINKS_TO")
             conn.execute("DROP TABLE IF EXISTS IN_CATEGORY")
+            # Then drop node tables
             conn.execute("DROP TABLE IF EXISTS Chunk")
+            conn.execute("DROP TABLE IF EXISTS Fact")
+            conn.execute("DROP TABLE IF EXISTS Entity")
             conn.execute("DROP TABLE IF EXISTS Section")
             conn.execute("DROP TABLE IF EXISTS Article")
             conn.execute("DROP TABLE IF EXISTS Category")
@@ -162,8 +169,40 @@ def create_schema(db_path: str, drop_existing: bool = False):
         print(f"   ❌ Failed to create IN_CATEGORY relationship: {e}")
         sys.exit(1)
 
+    # Create Entity node table (for LLM extraction)
+    print("\n6b. Creating Entity node table...")
+    try:
+        conn.execute("""
+            CREATE NODE TABLE Entity(
+                entity_id STRING,
+                name STRING,
+                type STRING,
+                description STRING,
+                PRIMARY KEY(entity_id)
+            )
+        """)
+        print("   ✅ Entity table created")
+    except Exception as e:
+        print(f"   ❌ Failed to create Entity table: {e}")
+        sys.exit(1)
+
+    # Create Fact node table (for LLM extraction)
+    print("\n6c. Creating Fact node table...")
+    try:
+        conn.execute("""
+            CREATE NODE TABLE Fact(
+                fact_id STRING,
+                content STRING,
+                PRIMARY KEY(fact_id)
+            )
+        """)
+        print("   ✅ Fact table created")
+    except Exception as e:
+        print(f"   ❌ Failed to create Fact table: {e}")
+        sys.exit(1)
+
     # Create Chunk node table (for fine-grained text retrieval)
-    print("\n6b. Creating Chunk node table...")
+    print("\n6d. Creating Chunk node table...")
     try:
         conn.execute("""
             CREATE NODE TABLE Chunk(
@@ -181,8 +220,49 @@ def create_schema(db_path: str, drop_existing: bool = False):
         print(f"   ❌ Failed to create Chunk table: {e}")
         sys.exit(1)
 
+    # Create HAS_ENTITY relationship
+    print("\n6e. Creating HAS_ENTITY relationship...")
+    try:
+        conn.execute("""
+            CREATE REL TABLE HAS_ENTITY(
+                FROM Article TO Entity
+            )
+        """)
+        print("   ✅ HAS_ENTITY relationship created")
+    except Exception as e:
+        print(f"   ❌ Failed to create HAS_ENTITY relationship: {e}")
+        sys.exit(1)
+
+    # Create HAS_FACT relationship
+    print("\n6f. Creating HAS_FACT relationship...")
+    try:
+        conn.execute("""
+            CREATE REL TABLE HAS_FACT(
+                FROM Article TO Fact
+            )
+        """)
+        print("   ✅ HAS_FACT relationship created")
+    except Exception as e:
+        print(f"   ❌ Failed to create HAS_FACT relationship: {e}")
+        sys.exit(1)
+
+    # Create ENTITY_RELATION relationship
+    print("\n6g. Creating ENTITY_RELATION relationship...")
+    try:
+        conn.execute("""
+            CREATE REL TABLE ENTITY_RELATION(
+                FROM Entity TO Entity,
+                relation STRING,
+                context STRING
+            )
+        """)
+        print("   ✅ ENTITY_RELATION relationship created")
+    except Exception as e:
+        print(f"   ❌ Failed to create ENTITY_RELATION relationship: {e}")
+        sys.exit(1)
+
     # Create HAS_CHUNK relationship
-    print("\n6c. Creating HAS_CHUNK relationship...")
+    print("\n6h. Creating HAS_CHUNK relationship...")
     try:
         conn.execute("""
             CREATE REL TABLE HAS_CHUNK(
@@ -241,10 +321,15 @@ def create_schema(db_path: str, drop_existing: bool = False):
             "Article",
             "Section",
             "Category",
+            "Entity",
+            "Fact",
             "Chunk",
             "HAS_SECTION",
             "LINKS_TO",
             "IN_CATEGORY",
+            "HAS_ENTITY",
+            "HAS_FACT",
+            "ENTITY_RELATION",
             "HAS_CHUNK",
         }
         actual_tables = set(tables["name"].tolist())
@@ -330,8 +415,10 @@ def create_schema(db_path: str, drop_existing: bool = False):
     print("SCHEMA CREATION COMPLETE ✅")
     print("=" * 60)
     print("\nCreated:")
-    print("  ✅ 4 node tables (Article, Section, Category, Chunk)")
-    print("  ✅ 4 relationship tables (HAS_SECTION, LINKS_TO, IN_CATEGORY, HAS_CHUNK)")
+    print("  ✅ 6 node tables (Article, Section, Category, Entity, Fact, Chunk)")
+    print(
+        "  ✅ 7 relationship tables (HAS_SECTION, LINKS_TO, IN_CATEGORY, HAS_ENTITY, HAS_FACT, ENTITY_RELATION, HAS_CHUNK)"
+    )
     print("  ✅ 2 vector indices (Section.embedding, Chunk.embedding)")
     print("\nDatabase ready for data loading!")
     print(f"Location: {db_path}")
