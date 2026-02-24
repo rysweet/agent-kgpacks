@@ -53,33 +53,49 @@ class PackManifest:
         version: Semantic version (e.g., "1.2.0")
         description: Human-readable description
         graph_stats: Knowledge graph statistics
-        eval_scores: Evaluation scores
-        source_urls: List of source URLs used to create the pack
-        created: ISO 8601 timestamp when pack was created
+        eval_scores: Evaluation scores (optional)
+        source_urls: List of source URLs used to create the pack (optional)
+        created: ISO 8601 timestamp when pack was created (optional, for backwards compat)
+        created_at: ISO 8601 timestamp when pack was created
         license: License identifier (e.g., "CC-BY-SA-4.0")
+        author: Pack author (optional)
+        topics: List of topics covered by the pack (optional)
     """
 
     name: str
     version: str
     description: str
     graph_stats: GraphStats
-    eval_scores: EvalScores
-    source_urls: list[str]
-    created: str
     license: str
+    created_at: str  # Primary timestamp field
+    eval_scores: EvalScores | None = None
+    source_urls: list[str] | None = None
+    created: str | None = None  # Deprecated, use created_at
+    author: str | None = None
+    topics: list[str] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert manifest to dictionary."""
-        return {
+        result = {
             "name": self.name,
             "version": self.version,
             "description": self.description,
             "graph_stats": asdict(self.graph_stats),
-            "eval_scores": asdict(self.eval_scores),
-            "source_urls": self.source_urls,
-            "created": self.created,
             "license": self.license,
+            "created_at": self.created_at,
         }
+        if self.eval_scores is not None:
+            result["eval_scores"] = asdict(self.eval_scores)
+        if self.source_urls is not None:
+            result["source_urls"] = self.source_urls
+        if self.author is not None:
+            result["author"] = self.author
+        if self.topics is not None:
+            result["topics"] = self.topics
+        # Backwards compat
+        if self.created is not None:
+            result["created"] = self.created
+        return result
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "PackManifest":
@@ -91,15 +107,21 @@ class PackManifest:
         Returns:
             PackManifest instance
         """
+        # Support both created_at (new) and created (old)
+        created_at = data.get("created_at") or data.get("created", "")
+
         return cls(
             name=data["name"],
             version=data["version"],
             description=data["description"],
             graph_stats=GraphStats(**data["graph_stats"]),
-            eval_scores=EvalScores(**data["eval_scores"]),
-            source_urls=data["source_urls"],
-            created=data["created"],
             license=data["license"],
+            created_at=created_at,
+            eval_scores=EvalScores(**data["eval_scores"]) if "eval_scores" in data else None,
+            source_urls=data.get("source_urls"),
+            created=data.get("created"),
+            author=data.get("author"),
+            topics=data.get("topics"),
         )
 
 
@@ -175,23 +197,23 @@ def validate_manifest(manifest: PackManifest) -> list[str]:
     if manifest.graph_stats.size_mb < 0:
         errors.append("Graph stats size_mb cannot be negative")
 
-    # Validate eval scores (0.0 to 1.0 range)
-    if not (0.0 <= manifest.eval_scores.accuracy <= 1.0):
-        errors.append("Eval score accuracy must be between 0 and 1")
-    if not (0.0 <= manifest.eval_scores.hallucination_rate <= 1.0):
-        errors.append("Eval score hallucination_rate must be between 0 and 1")
-    if not (0.0 <= manifest.eval_scores.citation_quality <= 1.0):
-        errors.append("Eval score citation_quality must be between 0 and 1")
+    # Validate eval scores (0.0 to 1.0 range) - optional
+    if manifest.eval_scores is not None:
+        if not (0.0 <= manifest.eval_scores.accuracy <= 1.0):
+            errors.append("Eval score accuracy must be between 0 and 1")
+        if not (0.0 <= manifest.eval_scores.hallucination_rate <= 1.0):
+            errors.append("Eval score hallucination_rate must be between 0 and 1")
+        if not (0.0 <= manifest.eval_scores.citation_quality <= 1.0):
+            errors.append("Eval score citation_quality must be between 0 and 1")
 
-    # Validate source_urls
-    if not manifest.source_urls:
-        errors.append("Pack source_urls cannot be empty")
+    # Validate source_urls - optional
+    # (no validation if None)
 
-    # Validate created timestamp (ISO 8601)
+    # Validate created_at timestamp (ISO 8601)
     try:
-        datetime.fromisoformat(manifest.created.replace("Z", "+00:00"))
+        datetime.fromisoformat(manifest.created_at.replace("Z", "+00:00"))
     except (ValueError, AttributeError):
-        errors.append(f"Invalid ISO 8601 timestamp for created: {manifest.created}")
+        errors.append(f"Invalid ISO 8601 timestamp for created_at: {manifest.created_at}")
 
     # Validate license
     if not manifest.license or not manifest.license.strip():

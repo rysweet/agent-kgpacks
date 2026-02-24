@@ -662,6 +662,383 @@ def cmd_status(args: argparse.Namespace) -> None:
     print(f"  Edges (total):          {stats['edges']:>8}")
 
 
+def cmd_pack_create(args: argparse.Namespace) -> None:
+    """Execute 'pack create' subcommand."""
+    from datetime import datetime, timezone
+
+    from wikigr.agent.seed_agent import SeedAgent
+    from wikigr.packs.manifest import GraphStats, PackManifest, save_manifest
+    from wikigr.packs.skill_template import generate_skill_md
+
+    # Parse topics
+    if not os.path.isfile(args.topics):
+        print(f"Error: topics file not found: {args.topics}", file=sys.stderr)
+        sys.exit(1)
+
+    topics = parse_topics_file(args.topics)
+    if not topics:
+        print(f"Error: no topics found in {args.topics}", file=sys.stderr)
+        sys.exit(1)
+
+    # Create output directory
+    output_dir = Path(args.output) / args.name
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print(f"Creating knowledge pack: {args.name}")
+    print(f"  Topics: {topics}")
+    print(f"  Target: {args.target} articles")
+    print(f"  Output: {output_dir}")
+
+    # Generate seeds
+    print("\nGenerating seeds...")
+    agent = SeedAgent(seeds_per_topic=10)
+    seeds_by_topic = agent.generate_seeds_by_topic(topics)
+
+    # Combine all seeds
+    all_seeds = []
+    for topic_seeds in seeds_by_topic.values():
+        all_seeds.extend(topic_seeds["seeds"])
+
+    # Create database
+    db_path = output_dir / "pack.db"
+    print(f"\nCreating database at {db_path}...")
+
+    # Create temporary seeds file
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+        seed_data = {"seeds": all_seeds, "metadata": {"total_seeds": len(all_seeds)}}
+        json.dump(seed_data, f, indent=2)
+        temp_seeds_path = f.name
+
+    try:
+        # Use existing expansion logic
+        args_copy = argparse.Namespace(
+            db=str(db_path),
+            target=args.target,
+            max_depth=2,
+            batch_size=10,
+            workers=1,
+            verbose=False,
+        )
+        _expand_seeds(seed_data, str(db_path), args_copy)
+    finally:
+        os.unlink(temp_seeds_path)
+
+    # Get database stats
+    stats = _get_db_stats(str(db_path))
+
+    # Create manifest
+    manifest = PackManifest(
+        name=args.name,
+        version="1.0.0",
+        description=f"Knowledge pack for {', '.join(topics)}",
+        author=os.environ.get("USER", "unknown"),
+        license="MIT",
+        created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        topics=topics,
+        graph_stats=GraphStats(
+            articles=stats["loaded_with_content"],
+            entities=stats["loaded_with_content"] * 2,  # Estimate
+            relationships=stats["edges"],
+            size_mb=int(
+                sum(f.stat().st_size for f in db_path.rglob("*") if f.is_file()) / 1024 / 1024
+            ),
+        ),
+        eval_scores=None,
+    )
+
+    manifest_path = output_dir / "manifest.json"
+    save_manifest(manifest, manifest_path)
+    print(f"Manifest created: {manifest_path}")
+
+    # Generate skill.md
+    skill_md_content = generate_skill_md(manifest)
+    skill_path = output_dir / "skill.md"
+    skill_path.write_text(skill_md_content)
+    print(f"Skill created: {skill_path}")
+
+    # Create kg_config.json
+    kg_config = {
+        "db_path": str(db_path),
+        "topics": topics,
+    }
+    kg_config_path = output_dir / "kg_config.json"
+    kg_config_path.write_text(json.dumps(kg_config, indent=2))
+    print(f"KG config created: {kg_config_path}")
+
+    # Create eval questions if provided
+    if args.eval_questions and os.path.isfile(args.eval_questions):
+        import shutil
+
+        dest_eval = output_dir / "eval_questions.jsonl"
+        shutil.copy(args.eval_questions, dest_eval)
+        print(f"Eval questions copied: {dest_eval}")
+
+    print(f"\nKnowledge pack created successfully at {output_dir}")
+
+
+def cmd_pack_install(args: argparse.Namespace) -> None:
+    """Execute 'pack install' subcommand."""
+    from wikigr.packs.installer import PackInstaller
+
+    installer = PackInstaller()
+
+    source = args.source
+    print(f"Installing pack from {source}...")
+
+    try:
+        if source.startswith("http://") or source.startswith("https://"):
+            pack_info = installer.install_from_url(source)
+        else:
+            pack_info = installer.install_from_file(Path(source))
+
+        print(f"Successfully installed: {pack_info.name} v{pack_info.version}")
+        print(f"Location: {pack_info.path}")
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error during installation: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def cmd_pack_list(args: argparse.Namespace) -> None:
+    """Execute 'pack list' subcommand."""
+    from wikigr.packs.discovery import discover_packs
+
+    # Use explicit path from environment
+    packs_dir = Path(os.environ.get("HOME", Path.home().as_posix())) / ".wikigr/packs"
+    packs = discover_packs(packs_dir)
+
+    if not packs:
+        if args.format == "json":
+            print("[]")
+        else:
+            print("No packs installed.")
+        return
+
+    if args.format == "json":
+        import json
+
+        data = [
+            {
+                "name": pack.name,
+                "version": pack.version,
+                "description": pack.manifest.description,
+                "topics": pack.manifest.topics or [],
+                "path": str(pack.path),
+            }
+            for pack in packs
+        ]
+        print(json.dumps(data, indent=2))
+    else:
+        print(f"Installed knowledge packs ({len(packs)}):\n")
+        for pack in packs:
+            print(f"  {pack.name:<30} v{pack.version:<10} {pack.manifest.description}")
+
+
+def cmd_pack_info(args: argparse.Namespace) -> None:
+    """Execute 'pack info' subcommand."""
+    from wikigr.packs.discovery import discover_packs
+
+    # Use explicit path from environment
+    packs_dir = Path(os.environ.get("HOME", Path.home().as_posix())) / ".wikigr/packs"
+    packs = discover_packs(packs_dir)
+    pack = next((p for p in packs if p.name == args.name), None)
+
+    if not pack:
+        print(f"Error: pack '{args.name}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Pack: {pack.name}")
+    print(f"Version: {pack.version}")
+    print(f"Description: {pack.manifest.description}")
+    print(f"Author: {pack.manifest.author or 'N/A'}")
+    print(f"License: {pack.manifest.license}")
+    print(f"Created: {pack.manifest.created_at}")
+    print(f"Topics: {', '.join(pack.manifest.topics or [])}")
+    print(f"Path: {pack.path}")
+    print("\nGraph Statistics:")
+    print(f"  Articles: {pack.manifest.graph_stats.articles}")
+    print(f"  Entities: {pack.manifest.graph_stats.entities}")
+    print(f"  Relationships: {pack.manifest.graph_stats.relationships}")
+    print(f"  Size: {pack.manifest.graph_stats.size_mb} MB")
+
+    if args.show_eval_scores:
+        eval_results_path = pack.path / "eval_results.json"
+        if eval_results_path.exists():
+            with open(eval_results_path) as f:
+                results = json.load(f)
+
+            print("\nEvaluation Scores:")
+            kp_metrics = results.get("knowledge_pack", {})
+            print(f"  Accuracy: {kp_metrics.get('accuracy', 0):.2f}")
+            print(f"  Hallucination Rate: {kp_metrics.get('hallucination_rate', 0):.2f}")
+            print(f"  Citation Quality: {kp_metrics.get('citation_quality', 0):.2f}")
+            print(f"\n  Surpasses Training: {results.get('surpasses_training', False)}")
+            print(f"  Surpasses Web: {results.get('surpasses_web', False)}")
+        else:
+            print("\nNo evaluation results available.")
+
+
+def cmd_pack_eval(args: argparse.Namespace) -> None:
+    """Execute 'pack eval' subcommand."""
+    from wikigr.packs.discovery import discover_packs
+    from wikigr.packs.eval import EvalRunner, load_questions_jsonl
+
+    # Use explicit path from environment
+    packs_dir = Path(os.environ.get("HOME", Path.home().as_posix())) / ".wikigr/packs"
+    packs = discover_packs(packs_dir)
+    pack = next((p for p in packs if p.name == args.name), None)
+
+    if not pack:
+        print(f"Error: pack '{args.name}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    # Load questions
+    questions_path = Path(args.questions) if args.questions else pack.path / "eval_questions.jsonl"
+
+    if not questions_path.exists():
+        print(f"Error: questions file not found: {questions_path}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Loading evaluation questions from {questions_path}...")
+    questions = load_questions_jsonl(questions_path)
+    print(f"Loaded {len(questions)} questions")
+
+    # Run evaluation
+    print("\nRunning three-baseline evaluation...")
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        print("Error: ANTHROPIC_API_KEY environment variable not set", file=sys.stderr)
+        sys.exit(1)
+
+    runner = EvalRunner(pack.path, api_key=api_key)
+    result = runner.run_evaluation(questions)
+
+    # Display results
+    print("\n" + "=" * 60)
+    print("EVALUATION RESULTS")
+    print("=" * 60)
+    print(f"\nKnowledge Pack: {result.pack_name}")
+    print(f"Questions Tested: {result.questions_tested}")
+    print(f"Timestamp: {result.timestamp}")
+
+    print("\n--- Knowledge Pack Metrics ---")
+    print(f"  Accuracy: {result.knowledge_pack.accuracy:.2f}")
+    print(f"  Hallucination Rate: {result.knowledge_pack.hallucination_rate:.2f}")
+    print(f"  Citation Quality: {result.knowledge_pack.citation_quality:.2f}")
+
+    print("\n--- Training Baseline Metrics ---")
+    print(f"  Accuracy: {result.training_baseline.accuracy:.2f}")
+    print(f"  Hallucination Rate: {result.training_baseline.hallucination_rate:.2f}")
+    print(f"  Citation Quality: {result.training_baseline.citation_quality:.2f}")
+
+    print("\n--- Web Search Baseline Metrics ---")
+    print(f"  Accuracy: {result.web_search_baseline.accuracy:.2f}")
+    print(f"  Hallucination Rate: {result.web_search_baseline.hallucination_rate:.2f}")
+    print(f"  Citation Quality: {result.web_search_baseline.citation_quality:.2f}")
+
+    print("\n--- Comparison ---")
+    print(f"  Surpasses Training: {'YES' if result.surpasses_training else 'NO'}")
+    print(f"  Surpasses Web: {'YES' if result.surpasses_web else 'NO'}")
+
+    # Save results if requested
+    if args.save_results:
+        from dataclasses import asdict
+
+        results_path = pack.path / "eval_results.json"
+        with open(results_path, "w") as f:
+            json.dump(asdict(result), f, indent=2)
+        print(f"\nResults saved to {results_path}")
+
+
+def cmd_pack_update(args: argparse.Namespace) -> None:
+    """Execute 'pack update' subcommand."""
+    from wikigr.packs.discovery import discover_packs
+    from wikigr.packs.installer import PackInstaller
+
+    # Use explicit path from environment
+    packs_dir = Path(os.environ.get("HOME", Path.home().as_posix())) / ".wikigr/packs"
+    packs = discover_packs(packs_dir)
+    pack = next((p for p in packs if p.name == args.name), None)
+
+    if not pack:
+        print(f"Error: pack '{args.name}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Updating pack: {args.name}")
+    print(f"Current version: {pack.version}")
+
+    installer = PackInstaller()
+
+    try:
+        new_pack = installer.update(args.name, Path(args.from_archive))
+        print(f"Successfully updated to version {new_pack.version}")
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error during update: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def cmd_pack_remove(args: argparse.Namespace) -> None:
+    """Execute 'pack remove' subcommand."""
+    from wikigr.packs.discovery import discover_packs
+    from wikigr.packs.installer import PackInstaller
+
+    # Use explicit path from environment
+    packs_dir = Path(os.environ.get("HOME", Path.home().as_posix())) / ".wikigr/packs"
+    packs = discover_packs(packs_dir)
+    pack = next((p for p in packs if p.name == args.name), None)
+
+    if not pack:
+        print(f"Error: pack '{args.name}' not found", file=sys.stderr)
+        sys.exit(1)
+
+    # Confirm unless --force
+    if not args.force:
+        response = input(f"Remove pack '{args.name}'? (y/N): ")
+        if response.lower() != "y":
+            print("Cancelled.")
+            return
+
+    installer = PackInstaller()
+
+    try:
+        installer.uninstall(args.name)
+        print(f"Successfully removed pack: {args.name}")
+    except Exception as e:
+        print(f"Error during removal: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def cmd_pack_validate(args: argparse.Namespace) -> None:
+    """Execute 'pack validate' subcommand."""
+    from wikigr.packs.validator import validate_pack_structure
+
+    pack_path = Path(args.pack_dir)
+
+    if not pack_path.exists():
+        print(f"Error: directory not found: {pack_path}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Validating pack at {pack_path}...")
+
+    errors = validate_pack_structure(pack_path, strict=args.strict)
+
+    if not errors:
+        print("Pack is valid.")
+        sys.exit(0)
+    else:
+        print(f"Pack validation failed with {len(errors)} error(s):\n")
+        for error in errors:
+            print(f"  - {error}")
+        sys.exit(1)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="wikigr",
@@ -776,6 +1153,81 @@ def main() -> None:
     )
     status_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
     status_parser.set_defaults(func=cmd_status)
+
+    # 'pack' subcommand group
+    pack_parser = subparsers.add_parser("pack", help="Manage knowledge packs")
+    pack_subparsers = pack_parser.add_subparsers(dest="pack_command", required=True)
+
+    # pack create
+    pack_create_parser = pack_subparsers.add_parser("create", help="Create a new knowledge pack")
+    pack_create_parser.add_argument("--name", type=str, required=True, help="Pack name")
+    pack_create_parser.add_argument(
+        "--source",
+        type=str,
+        choices=["wikipedia", "web"],
+        default="wikipedia",
+        help="Content source",
+    )
+    pack_create_parser.add_argument("--topics", type=str, required=True, help="Path to topics file")
+    pack_create_parser.add_argument("--target", type=int, default=1000, help="Target article count")
+    pack_create_parser.add_argument(
+        "--eval-questions", type=str, help="Path to eval questions JSONL file"
+    )
+    pack_create_parser.add_argument("--output", type=str, required=True, help="Output directory")
+    pack_create_parser.set_defaults(func=cmd_pack_create)
+
+    # pack install
+    pack_install_parser = pack_subparsers.add_parser("install", help="Install a knowledge pack")
+    pack_install_parser.add_argument("source", type=str, help="Path to .tar.gz file or URL")
+    pack_install_parser.set_defaults(func=cmd_pack_install)
+
+    # pack list
+    pack_list_parser = pack_subparsers.add_parser("list", help="List installed packs")
+    pack_list_parser.add_argument(
+        "--format", type=str, choices=["text", "json"], default="text", help="Output format"
+    )
+    pack_list_parser.set_defaults(func=cmd_pack_list)
+
+    # pack info
+    pack_info_parser = pack_subparsers.add_parser("info", help="Show detailed pack information")
+    pack_info_parser.add_argument("name", type=str, help="Pack name")
+    pack_info_parser.add_argument(
+        "--show-eval-scores", action="store_true", help="Show evaluation scores"
+    )
+    pack_info_parser.set_defaults(func=cmd_pack_info)
+
+    # pack eval
+    pack_eval_parser = pack_subparsers.add_parser("eval", help="Evaluate pack quality")
+    pack_eval_parser.add_argument("name", type=str, help="Pack name")
+    pack_eval_parser.add_argument(
+        "--questions", type=str, help="Path to custom questions JSONL file"
+    )
+    pack_eval_parser.add_argument(
+        "--save-results", action="store_true", help="Save evaluation results"
+    )
+    pack_eval_parser.set_defaults(func=cmd_pack_eval)
+
+    # pack update
+    pack_update_parser = pack_subparsers.add_parser("update", help="Update a pack")
+    pack_update_parser.add_argument("name", type=str, help="Pack name")
+    pack_update_parser.add_argument(
+        "--from", dest="from_archive", type=str, required=True, help="Path to new version archive"
+    )
+    pack_update_parser.set_defaults(func=cmd_pack_update)
+
+    # pack remove
+    pack_remove_parser = pack_subparsers.add_parser("remove", help="Remove a pack")
+    pack_remove_parser.add_argument("name", type=str, help="Pack name")
+    pack_remove_parser.add_argument("--force", action="store_true", help="Skip confirmation")
+    pack_remove_parser.set_defaults(func=cmd_pack_remove)
+
+    # pack validate
+    pack_validate_parser = pack_subparsers.add_parser("validate", help="Validate pack structure")
+    pack_validate_parser.add_argument("pack_dir", type=str, help="Path to pack directory")
+    pack_validate_parser.add_argument(
+        "--strict", action="store_true", help="Enable strict validation"
+    )
+    pack_validate_parser.set_defaults(func=cmd_pack_validate)
 
     args = parser.parse_args()
 

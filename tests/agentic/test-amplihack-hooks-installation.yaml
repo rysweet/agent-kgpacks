@@ -1,0 +1,182 @@
+scenario:
+  name: "Amplihack Hooks Installation - Fresh Checkout"
+  description: "Verify all hooks work after fresh checkout and installation of PR branch"
+  type: cli
+  tags: [critical, hooks, installation]
+
+  prerequisites:
+    - "azlin command is available"
+    - "Git is installed"
+    - "Python 3.10+ is available"
+
+  variables:
+    test_dir: "/tmp/amplihack-hook-test-$$"
+    pr_branch: "fix/claude-md-installation"
+    repo_url: "https://github.com/rysweet/amplihack.git"
+
+  steps:
+    # Phase 1: Create fresh test directory
+    - action: launch
+      target: "mkdir"
+      args: ["-p", "${test_dir}"]
+      description: "Create clean test directory"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 2: Clone PR branch
+    - action: launch
+      target: "git"
+      args: ["clone", "-b", "${pr_branch}", "${repo_url}", "${test_dir}/amplihack"]
+      timeout: 60s
+      description: "Clone amplihack PR branch"
+
+    - action: verify_output
+      contains: "Cloning into"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 3: Verify CLAUDE.md exists in checkout
+    - action: launch
+      target: "ls"
+      args: ["-la", "${test_dir}/amplihack/CLAUDE.md"]
+      description: "Verify CLAUDE.md exists in repo"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 4: Install amplihack using amplihack launch
+    - action: launch
+      target: "bash"
+      args: ["-c", "cd ${test_dir}/amplihack && python3 -m amplihack launch"]
+      timeout: 120s
+      description: "Install amplihack via 'amplihack launch'"
+
+    - action: verify_output
+      contains: "amplihack"
+      timeout: 60s
+
+    # Phase 5: Verify CLAUDE.md was copied to ~/.amplihack/
+    - action: launch
+      target: "ls"
+      args: ["-la", "$HOME/.amplihack/CLAUDE.md"]
+      description: "Verify CLAUDE.md exists at ~/.amplihack/"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 6: Verify .claude directory exists
+    - action: launch
+      target: "ls"
+      args: ["-d", "$HOME/.amplihack/.claude"]
+      description: "Verify .claude directory exists"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 7: Test PreToolUse hook
+    - action: launch
+      target: "bash"
+      args:
+        [
+          "-c",
+          'echo ''{"toolUse": {"name": "Bash", "input": {"command": "echo test"}}}'' | python3 $HOME/.amplihack/.claude/tools/xpia/hooks/pre_tool_use.py',
+        ]
+      description: "Test PreToolUse hook works"
+
+    - action: verify_output
+      contains: "{}"
+      description: "Hook should return empty JSON (allow)"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 8: Test SessionStart hook
+    - action: launch
+      target: "python3"
+      args: ["$HOME/.amplihack/.claude/tools/amplihack/hooks/session_start.py"]
+      timeout: 15s
+      description: "Test SessionStart hook works"
+
+    - action: verify_output
+      contains: "hookSpecificOutput"
+      description: "Hook should return JSON with hookSpecificOutput"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 9: Test Stop hook
+    - action: launch
+      target: "python3"
+      args: ["$HOME/.amplihack/.claude/tools/amplihack/hooks/stop.py"]
+      timeout: 30s
+      description: "Test Stop hook works"
+
+    - action: verify_output
+      contains: "decision"
+      description: "Hook should return JSON with decision"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 10: Test PostToolUse hook
+    - action: launch
+      target: "bash"
+      args:
+        [
+          "-c",
+          'echo ''{"toolUse": {"name": "Bash", "input": {}}, "output": "test"}'' | python3 $HOME/.amplihack/.claude/tools/amplihack/hooks/post_tool_use.py',
+        ]
+      description: "Test PostToolUse hook works"
+
+    - action: verify_output
+      contains: "{}"
+      description: "Hook should return empty JSON"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 11: Test PreCompact hook
+    - action: launch
+      target: "python3"
+      args: ["$HOME/.amplihack/.claude/tools/amplihack/hooks/pre_compact.py"]
+      timeout: 35s
+      description: "Test PreCompact hook works"
+
+    - action: verify_exit_code
+      expected: 0
+
+    # Phase 12: Verify settings.json has all hooks configured
+    - action: launch
+      target: "bash"
+      args:
+        [
+          "-c",
+          "cat $HOME/.claude/settings.json | python3 -m json.tool | grep -c 'PreToolUse\\|SessionStart\\|Stop\\|PostToolUse\\|PreCompact'",
+        ]
+      description: "Verify all 5 hooks are in settings.json"
+
+    - action: verify_output
+      contains: "5"
+      description: "Should find all 5 hook types"
+
+    # Phase 13: Test that hooks don't have ImportError
+    - action: launch
+      target: "bash"
+      args:
+        [
+          "-c",
+          'echo ''{"toolUse": {"name": "Bash", "input": {"command": "ls"}}}'' | python3 $HOME/.amplihack/.claude/tools/xpia/hooks/pre_tool_use.py 2>&1 | grep -i importerror && exit 1 || exit 0',
+        ]
+      description: "Verify no ImportError in hook execution"
+
+    - action: verify_exit_code
+      expected: 0
+
+  cleanup:
+    - action: launch
+      target: "rm"
+      args: ["-rf", "${test_dir}"]
+      description: "Clean up test directory"
+      continue_on_failure: true

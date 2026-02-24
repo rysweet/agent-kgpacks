@@ -10,7 +10,7 @@ from pathlib import Path
 from wikigr.packs.manifest import load_manifest, validate_manifest
 
 
-def validate_pack_structure(pack_dir: Path) -> list[str]:
+def validate_pack_structure(pack_dir: Path, strict: bool = False) -> list[str]:
     """Validate complete pack structure.
 
     Checks:
@@ -19,9 +19,11 @@ def validate_pack_structure(pack_dir: Path) -> list[str]:
     - skill.md exists
     - kg_config.json exists and is valid JSON
     - Optional: eval/ directory and README.md
+    - Strict mode: requires README.md and eval_questions.jsonl
 
     Args:
         pack_dir: Path to pack directory
+        strict: If True, enforce optional requirements
 
     Returns:
         List of validation error messages (empty if valid)
@@ -67,8 +69,14 @@ def validate_pack_structure(pack_dir: Path) -> list[str]:
         except json.JSONDecodeError as e:
             errors.append(f"Invalid JSON in kg_config.json: {e}")
 
-    # Optional files/directories (no error if missing)
-    # - README.md
-    # - eval/
+    # Optional files/directories (error in strict mode if missing)
+    if strict:
+        readme_path = pack_dir / "README.md"
+        if not readme_path.exists():
+            errors.append("Strict mode: README.md is required but missing")
+
+        eval_questions_path = pack_dir / "eval_questions.jsonl"
+        if not eval_questions_path.exists():
+            errors.append("Strict mode: eval_questions.jsonl is required but missing")
 
     return errors
