@@ -7,7 +7,7 @@ saving, and validating pack manifests.
 import json
 import re
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -53,11 +53,11 @@ class PackManifest:
         version: Semantic version (e.g., "1.2.0")
         description: Human-readable description
         graph_stats: Knowledge graph statistics
+        license: License identifier (e.g., "CC-BY-SA-4.0")
         eval_scores: Evaluation scores (optional)
         source_urls: List of source URLs used to create the pack (optional)
-        created: ISO 8601 timestamp when pack was created (optional, for backwards compat)
-        created_at: ISO 8601 timestamp when pack was created
-        license: License identifier (e.g., "CC-BY-SA-4.0")
+        created: ISO 8601 timestamp when pack was created (deprecated, use created_at)
+        created_at: ISO 8601 timestamp when pack was created (primary field)
         author: Pack author (optional)
         topics: List of topics covered by the pack (optional)
     """
@@ -67,12 +67,22 @@ class PackManifest:
     description: str
     graph_stats: GraphStats
     license: str
-    created_at: str  # Primary timestamp field
     eval_scores: EvalScores | None = None
     source_urls: list[str] | None = None
-    created: str | None = None  # Deprecated, use created_at
+    created: str | None = None  # Deprecated, use created_at (backward compat)
+    created_at: str | None = None  # Primary timestamp field (optional for backward compat)
     author: str | None = None
     topics: list[str] | None = None
+
+    def __post_init__(self):
+        """Handle backward compatibility for created → created_at migration."""
+        # If created_at is not provided, try to use created
+        if self.created_at is None:
+            if self.created is not None:
+                self.created_at = self.created
+            else:
+                # Default to current timestamp if neither is provided
+                self.created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
     def to_dict(self) -> dict[str, Any]:
         """Convert manifest to dictionary."""
@@ -206,8 +216,9 @@ def validate_manifest(manifest: PackManifest) -> list[str]:
         if not (0.0 <= manifest.eval_scores.citation_quality <= 1.0):
             errors.append("Eval score citation_quality must be between 0 and 1")
 
-    # Validate source_urls - optional
-    # (no validation if None)
+    # Validate source_urls - optional but cannot be empty list
+    if manifest.source_urls is not None and len(manifest.source_urls) == 0:
+        errors.append("source_urls list cannot be empty (use None if not applicable)")
 
     # Validate created_at timestamp (ISO 8601)
     try:
