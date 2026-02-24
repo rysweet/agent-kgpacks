@@ -61,33 +61,11 @@ def parse_topics_file(path: str) -> list[str]:
 def create_schema(db_path: str) -> None:
     """Create Kuzu schema for a fresh WikiGR database.
 
-    Uses FLOAT[384] for embeddings to match sentence-transformers float32 output.
+    Uses the shared schema definition from bootstrap.schema.ryugraph_schema.
     """
-    import kuzu
+    from bootstrap.schema.ryugraph_schema import create_schema as _create_schema
 
-    db = kuzu.Database(db_path)
-    conn = kuzu.Connection(db)
-
-    conn.execute(
-        "CREATE NODE TABLE Article(title STRING, category STRING, word_count INT32,"
-        " expansion_state STRING, expansion_depth INT32, claimed_at TIMESTAMP,"
-        " processed_at TIMESTAMP, retry_count INT32, PRIMARY KEY(title))"
-    )
-    conn.execute(
-        "CREATE NODE TABLE Section(section_id STRING, title STRING, content STRING,"
-        " word_count INT32, level INT32, embedding FLOAT[384], PRIMARY KEY(section_id))"
-    )
-    conn.execute("CREATE NODE TABLE Category(name STRING, article_count INT32, PRIMARY KEY(name))")
-    conn.execute("CREATE REL TABLE HAS_SECTION(FROM Article TO Section, section_index INT32)")
-    conn.execute("CREATE REL TABLE LINKS_TO(FROM Article TO Article, link_type STRING)")
-    conn.execute("CREATE REL TABLE IN_CATEGORY(FROM Article TO Category)")
-    conn.execute(
-        "CALL CREATE_VECTOR_INDEX('Section', 'embedding_idx', 'embedding', metric := 'cosine')"
-    )
-
-    del conn
-    del db
-
+    _create_schema(db_path, drop_existing=False)
     logger.info(f"Schema created at {db_path}")
 
 
@@ -161,7 +139,7 @@ def _expand_seeds(seed_data: dict, db_path: str, args: argparse.Namespace) -> No
 
 
 def _create_from_urls(args: argparse.Namespace) -> None:
-    """Build a knowledge graph from a list of URLs using WebContentSource."""
+    """Build a knowledge graph from a list of URLs using WebContentSource with BFS expansion."""
     if not args.urls:
         print("Error: --urls is required when --source=web", file=sys.stderr)
         sys.exit(1)
@@ -177,9 +155,16 @@ def _create_from_urls(args: argparse.Namespace) -> None:
         print(f"Error: no URLs found in {args.urls}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Building knowledge graph from {len(urls)} URLs...")
+    print(f"Building knowledge graph from {len(urls)} seed URLs...")
 
+    import kuzu
+
+    from bootstrap.src.expansion.processor import ArticleProcessor
     from bootstrap.src.sources.web import WebContentSource
+
+    # Get BFS parameters
+    max_depth = getattr(args, "max_depth", 0)
+    max_links = getattr(args, "max_links", len(urls))
 
     source = WebContentSource()
     db_path = args.db if args.db.endswith(".db") else os.path.join(args.db, "web-kg.db")
@@ -188,83 +173,76 @@ def _create_from_urls(args: argparse.Namespace) -> None:
     # Create fresh database
     create_schema(db_path)
 
-    import kuzu
-
-    from bootstrap.src.embeddings import EmbeddingGenerator
-
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
-    embedder = EmbeddingGenerator()
 
-    success = 0
-    for url in urls:
+    # Initialize LLM extractor if ANTHROPIC_API_KEY is set
+    llm_extractor = None
+    if os.getenv("ANTHROPIC_API_KEY"):
         try:
-            article = source.fetch_article(url)
-            sections = source.parse_sections(article.content)
-            if not sections:
-                print(f"  Skipping (no sections): {url}")
-                continue
+            from bootstrap.src.extraction.llm_extractor import LLMExtractor
 
-            # Generate embeddings
-            texts = [s["content"] for s in sections]
-            embeddings = embedder.generate(texts, show_progress=False)
+            llm_extractor = LLMExtractor()
+            print("  LLM extraction enabled (ANTHROPIC_API_KEY found)")
+        except Exception as e:
+            logger.warning(f"Failed to initialize LLM extractor: {e}")
 
-            # Insert article
-            conn.execute(
-                "CREATE (a:Article {title: $title, category: $category, word_count: $wc,"
-                " expansion_state: 'loaded', expansion_depth: 0, claimed_at: NULL,"
-                " processed_at: NULL, retry_count: 0})",
-                {
-                    "title": article.title,
-                    "category": article.categories[0] if article.categories else "Web",
-                    "wc": len(article.content.split()),
-                },
+    # Initialize ArticleProcessor
+    processor = ArticleProcessor(
+        conn=conn,
+        content_source=source,
+        llm_extractor=llm_extractor,
+    )
+
+    # BFS expansion
+    visited = set()
+    queue = [(url, 0) for url in urls]  # (url, depth)
+    success = 0
+    failed = 0
+
+    print(f"Starting BFS expansion (max_depth={max_depth}, max_links={max_links})...")
+
+    while queue and len(visited) < max_links:
+        url, depth = queue.pop(0)
+
+        if url in visited:
+            continue
+
+        visited.add(url)
+
+        try:
+            # Process article using ArticleProcessor
+            success_flag, links, error = processor.process_article(
+                title_or_url=url,
+                category="Web",
+                expansion_depth=depth,
             )
 
-            # Insert sections
-            for i, (section, embedding) in enumerate(zip(sections, embeddings)):
-                section_id = f"{article.title}#{i}"
-                conn.execute(
-                    "MATCH (a:Article {title: $at}) CREATE (a)-[:HAS_SECTION {section_index: $idx}]->"
-                    "(s:Section {section_id: $sid, title: $t, content: $c, embedding: $e, level: $l, word_count: $wc})",
-                    {
-                        "at": article.title,
-                        "idx": i,
-                        "sid": section_id,
-                        "t": section["title"],
-                        "c": section["content"],
-                        "e": embedding.tolist(),
-                        "l": section["level"],
-                        "wc": len(section["content"].split()),
-                    },
+            if success_flag:
+                success += 1
+                print(
+                    f"  [{success}/{max_links}] Loaded: {url} (depth={depth}, {len(links)} links)"
                 )
 
-            # Create link edges
-            for link_url in article.links[:20]:
-                try:
-                    link_article = source.fetch_article(link_url)
-                    # Check if target already exists
-                    r = conn.execute(
-                        "MATCH (a:Article {title: $t}) RETURN COUNT(a) AS c",
-                        {"t": link_article.title},
-                    )
-                    if r.get_as_df().iloc[0]["c"] == 0:
-                        conn.execute(
-                            "CREATE (a:Article {title: $t, category: 'Web', word_count: 0,"
-                            " expansion_state: 'discovered', expansion_depth: 1, claimed_at: NULL,"
-                            " processed_at: NULL, retry_count: 0})",
-                            {"t": link_article.title},
-                        )
-                except Exception:
-                    pass  # Link targets are best-effort
+                # Add links to queue if within depth limit
+                if depth < max_depth and len(visited) < max_links:
+                    for link_url in links:
+                        if link_url not in visited:
+                            queue.append((link_url, depth + 1))
+            else:
+                failed += 1
+                print(f"  Failed: {url} -- {error}")
 
-            success += 1
-            print(f"  Loaded: {article.title} ({len(sections)} sections)")
         except Exception as e:
+            failed += 1
             print(f"  Failed: {url} -- {e}")
+            logger.debug(f"Exception details for {url}: {e}", exc_info=True)
 
     del conn, db
-    print(f"\nLoaded {success}/{len(urls)} URLs into {db_path}")
+
+    print(f"\nCompleted: {success} loaded, {failed} failed")
+    print(f"Total URLs processed: {len(visited)}")
+    print(f"Database: {db_path}")
 
 
 def cmd_create(args: argparse.Namespace) -> None:
@@ -335,6 +313,141 @@ def cmd_create(args: argparse.Namespace) -> None:
 
         _expand_seeds(seed_data, args.db, args)
         print(f"\nKnowledge graph ready at: {args.db}")
+
+
+def _update_from_urls(args: argparse.Namespace) -> None:
+    """Update existing database with new URLs from web source."""
+    if not args.urls:
+        print("Error: --urls is required when --source=web", file=sys.stderr)
+        sys.exit(1)
+    if not os.path.isfile(args.urls):
+        print(f"Error: URL file not found: {args.urls}", file=sys.stderr)
+        sys.exit(1)
+
+    # Read URLs from file
+    with open(args.urls) as f:
+        urls = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    if not urls:
+        print(f"Error: no URLs found in {args.urls}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Updating database with {len(urls)} seed URLs...")
+
+    import kuzu
+
+    from bootstrap.src.expansion.processor import ArticleProcessor
+    from bootstrap.src.sources.web import WebContentSource
+
+    # Get BFS parameters
+    max_depth = getattr(args, "max_depth", 0)
+    max_links = getattr(args, "max_links", len(urls))
+
+    source = WebContentSource()
+    db_path = args.db
+
+    db = kuzu.Database(db_path)
+    conn = kuzu.Connection(db)
+
+    # Initialize LLM extractor if ANTHROPIC_API_KEY is set
+    llm_extractor = None
+    if os.getenv("ANTHROPIC_API_KEY"):
+        try:
+            from bootstrap.src.extraction.llm_extractor import LLMExtractor
+
+            llm_extractor = LLMExtractor()
+            print("  LLM extraction enabled (ANTHROPIC_API_KEY found)")
+        except Exception as e:
+            logger.warning(f"Failed to initialize LLM extractor: {e}")
+
+    # Initialize ArticleProcessor
+    processor = ArticleProcessor(
+        conn=conn,
+        content_source=source,
+        llm_extractor=llm_extractor,
+    )
+
+    # Check which URLs already exist
+    existing_titles = set()
+    for url in urls:
+        try:
+            article = source.fetch_article(url)
+            result = conn.execute(
+                "MATCH (a:Article {title: $title}) RETURN COUNT(a) AS count",
+                {"title": article.title},
+            )
+            if result.get_as_df().iloc[0]["count"] > 0:
+                existing_titles.add(article.title)
+                logger.info(f"Skipping existing article: {article.title}")
+        except Exception as e:
+            logger.debug(f"Failed to check URL {url}: {e}")
+
+    print(
+        f"  Found {len(existing_titles)} existing articles, processing {len(urls) - len(existing_titles)} new URLs"
+    )
+
+    # BFS expansion with duplicate detection
+    visited = set()
+    queue = [(url, 0) for url in urls]  # (url, depth)
+    success = 0
+    skipped = 0
+    failed = 0
+
+    print(f"Starting BFS expansion (max_depth={max_depth}, max_links={max_links})...")
+
+    while queue and len(visited) < max_links:
+        url, depth = queue.pop(0)
+
+        if url in visited:
+            continue
+
+        visited.add(url)
+
+        try:
+            # Check if article already exists (by title)
+            article = source.fetch_article(url)
+            result = conn.execute(
+                "MATCH (a:Article {title: $title}) RETURN COUNT(a) AS count",
+                {"title": article.title},
+            )
+
+            if result.get_as_df().iloc[0]["count"] > 0:
+                skipped += 1
+                print(f"  Skipping existing: {article.title}")
+                continue
+
+            # Process new article using ArticleProcessor
+            success_flag, links, error = processor.process_article(
+                title_or_url=url,
+                category="Web",
+                expansion_depth=depth,
+            )
+
+            if success_flag:
+                success += 1
+                print(
+                    f"  [{success}/{max_links}] Added: {article.title} (depth={depth}, {len(links)} links)"
+                )
+
+                # Add links to queue if within depth limit
+                if depth < max_depth and len(visited) < max_links:
+                    for link_url in links:
+                        if link_url not in visited:
+                            queue.append((link_url, depth + 1))
+            else:
+                failed += 1
+                print(f"  Failed: {url} -- {error}")
+
+        except Exception as e:
+            failed += 1
+            print(f"  Failed: {url} -- {e}")
+            logger.debug(f"Exception details for {url}: {e}", exc_info=True)
+
+    del conn, db
+
+    print(f"\nCompleted: {success} added, {skipped} skipped, {failed} failed")
+    print(f"Total URLs processed: {len(visited)}")
+    print(f"Database: {db_path}")
 
 
 def _get_db_stats(db_path: str) -> dict:
@@ -418,13 +531,25 @@ def cmd_update(args: argparse.Namespace) -> None:
         print(f"Error: database not found: {db_path}", file=sys.stderr)
         sys.exit(1)
 
-    # Check current state
+    # Web source mode
+    if getattr(args, "source", "wikipedia") == "web":
+        _update_from_urls(args)
+        return
+
+    # Wikipedia source mode (original logic)
     import kuzu
 
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
     result = conn.execute("MATCH (a:Article) WHERE a.word_count > 0 RETURN COUNT(a) AS count")
     current = int(result.get_as_df().iloc[0]["count"])
+
+    # Validate target is provided for Wikipedia source
+    if not args.target:
+        print("Error: --target is required for Wikipedia source updates", file=sys.stderr)
+        del conn, db
+        sys.exit(1)
+
     print(f"Current articles: {current}, target: {args.target}")
 
     # Inject additional seeds if requested
@@ -593,6 +718,12 @@ def main() -> None:
         type=str,
         help="Path to file containing URLs (one per line). Required when --source=web",
     )
+    create_parser.add_argument(
+        "--max-links",
+        type=int,
+        default=100,
+        help="Maximum total pages to process (web source only, default: 100)",
+    )
     create_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
 
     create_parser.set_defaults(func=cmd_create)
@@ -602,7 +733,7 @@ def main() -> None:
     update_parser.add_argument(
         "--db", type=str, required=True, help="Path to existing Kuzu database"
     )
-    update_parser.add_argument("--target", type=int, required=True, help="Target article count")
+    update_parser.add_argument("--target", type=int, help="Target article count (Wikipedia source)")
     update_parser.add_argument("--max-depth", type=int, default=3, help="Max expansion depth")
     update_parser.add_argument("--batch-size", type=int, default=10, help="Expansion batch size")
     update_parser.add_argument(
@@ -616,6 +747,24 @@ def main() -> None:
         type=int,
         default=1,
         help="Number of parallel expansion workers (default: 1)",
+    )
+    update_parser.add_argument(
+        "--source",
+        type=str,
+        choices=["wikipedia", "web"],
+        default="wikipedia",
+        help="Content source: 'wikipedia' (default) or 'web' for generic URLs",
+    )
+    update_parser.add_argument(
+        "--urls",
+        type=str,
+        help="Path to file containing URLs (one per line). Required when --source=web",
+    )
+    update_parser.add_argument(
+        "--max-links",
+        type=int,
+        default=100,
+        help="Maximum total pages to process (web source only, default: 100)",
     )
     update_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
     update_parser.set_defaults(func=cmd_update)
