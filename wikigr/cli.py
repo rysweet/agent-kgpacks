@@ -160,12 +160,124 @@ def _expand_seeds(seed_data: dict, db_path: str, args: argparse.Namespace) -> No
         orch.close()
 
 
+def _create_from_urls(args: argparse.Namespace) -> None:
+    """Build a knowledge graph from a list of URLs using WebContentSource."""
+    if not args.urls:
+        print("Error: --urls is required when --source=web", file=sys.stderr)
+        sys.exit(1)
+    if not os.path.isfile(args.urls):
+        print(f"Error: URL file not found: {args.urls}", file=sys.stderr)
+        sys.exit(1)
+
+    # Read URLs from file
+    with open(args.urls) as f:
+        urls = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    if not urls:
+        print(f"Error: no URLs found in {args.urls}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Building knowledge graph from {len(urls)} URLs...")
+
+    from bootstrap.src.sources.web import WebContentSource
+
+    source = WebContentSource()
+    db_path = args.db if args.db.endswith(".db") else os.path.join(args.db, "web-kg.db")
+    os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
+
+    # Create fresh database
+    create_schema(db_path)
+
+    import kuzu
+
+    from bootstrap.src.embeddings import EmbeddingGenerator
+
+    db = kuzu.Database(db_path)
+    conn = kuzu.Connection(db)
+    embedder = EmbeddingGenerator()
+
+    success = 0
+    for url in urls:
+        try:
+            article = source.fetch_article(url)
+            sections = source.parse_sections(article.content)
+            if not sections:
+                print(f"  Skipping (no sections): {url}")
+                continue
+
+            # Generate embeddings
+            texts = [s["content"] for s in sections]
+            embeddings = embedder.generate(texts, show_progress=False)
+
+            # Insert article
+            conn.execute(
+                "CREATE (a:Article {title: $title, category: $category, word_count: $wc,"
+                " expansion_state: 'loaded', expansion_depth: 0, claimed_at: NULL,"
+                " processed_at: NULL, retry_count: 0})",
+                {
+                    "title": article.title,
+                    "category": article.categories[0] if article.categories else "Web",
+                    "wc": len(article.content.split()),
+                },
+            )
+
+            # Insert sections
+            for i, (section, embedding) in enumerate(zip(sections, embeddings)):
+                section_id = f"{article.title}#{i}"
+                conn.execute(
+                    "MATCH (a:Article {title: $at}) CREATE (a)-[:HAS_SECTION {section_index: $idx}]->"
+                    "(s:Section {section_id: $sid, title: $t, content: $c, embedding: $e, level: $l, word_count: $wc})",
+                    {
+                        "at": article.title,
+                        "idx": i,
+                        "sid": section_id,
+                        "t": section["title"],
+                        "c": section["content"],
+                        "e": embedding.tolist(),
+                        "l": section["level"],
+                        "wc": len(section["content"].split()),
+                    },
+                )
+
+            # Create link edges
+            for link_url in article.links[:20]:
+                try:
+                    link_article = source.fetch_article(link_url)
+                    # Check if target already exists
+                    r = conn.execute(
+                        "MATCH (a:Article {title: $t}) RETURN COUNT(a) AS c",
+                        {"t": link_article.title},
+                    )
+                    if r.get_as_df().iloc[0]["c"] == 0:
+                        conn.execute(
+                            "CREATE (a:Article {title: $t, category: 'Web', word_count: 0,"
+                            " expansion_state: 'discovered', expansion_depth: 1, claimed_at: NULL,"
+                            " processed_at: NULL, retry_count: 0})",
+                            {"t": link_article.title},
+                        )
+                except Exception:
+                    pass  # Link targets are best-effort
+
+            success += 1
+            print(f"  Loaded: {article.title} ({len(sections)} sections)")
+        except Exception as e:
+            print(f"  Failed: {url} -- {e}")
+
+    del conn, db
+    print(f"\nLoaded {success}/{len(urls)} URLs into {db_path}")
+
+
 def cmd_create(args: argparse.Namespace) -> None:
     """Execute the 'create' subcommand."""
     # Prevent sentence-transformers semaphore leak in long runs
     os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
     os.environ.setdefault("JOBLIB_START_METHOD", "fork")
     os.environ.setdefault("LOKY_MAX_CPU_COUNT", "1")
+
+    # Web source mode
+    if getattr(args, "source", "wikipedia") == "web":
+        _create_from_urls(args)
+        return
 
     if args.topics:
         if not os.path.isfile(args.topics):
@@ -468,6 +580,18 @@ def main() -> None:
         type=int,
         default=1,
         help="Number of parallel expansion workers (1 = sequential, max 10)",
+    )
+    create_parser.add_argument(
+        "--source",
+        type=str,
+        choices=["wikipedia", "web"],
+        default="wikipedia",
+        help="Content source: 'wikipedia' (default) or 'web' for generic URLs",
+    )
+    create_parser.add_argument(
+        "--urls",
+        type=str,
+        help="Path to file containing URLs (one per line). Required when --source=web",
     )
     create_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
 

@@ -114,10 +114,13 @@ def chat_stream(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     question: str = Query(..., max_length=500),
     max_results: int = Query(10, ge=1, le=50),
-    conn: kuzu.Connection = Depends(get_db),
 ):
     """
     Stream a chat response via Server-Sent Events.
+
+    Note: This endpoint manages its own database connection inside the
+    generator to ensure the connection stays alive for the full duration
+    of the SSE stream (not closed early by FastAPI's dependency lifecycle).
 
     Events:
     - type=token: incremental answer text
@@ -131,6 +134,10 @@ def chat_stream(
 
     def generate():
         start = time.perf_counter()
+        # Manage connection inside generator so it stays alive for the full stream
+        from backend.db.connection import _manager
+
+        conn = _manager.get_connection()
         try:
             from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
@@ -174,5 +181,10 @@ def chat_stream(
         except Exception as e:
             logger.error(f"Streaming chat error: {e}", exc_info=True)
             yield {"event": "error", "data": str(type(e).__name__)}
+        finally:
+            import contextlib
+
+            with contextlib.suppress(Exception):
+                conn.close()
 
     return EventSourceResponse(generate())

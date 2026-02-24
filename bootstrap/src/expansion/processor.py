@@ -255,6 +255,52 @@ class ArticleProcessor:
                 },
             )
 
+        # Create text chunks for fine-grained retrieval
+        try:
+            from ..embeddings.chunker import chunk_sections
+
+            chunks = chunk_sections(sections, article.title)
+            if chunks:
+                # Delete existing chunks for this article
+                self.conn.execute(
+                    "MATCH (a:Article {title: $title})-[r:HAS_CHUNK]->(c:Chunk) DELETE r, c",
+                    {"title": article.title},
+                )
+
+                # Generate chunk embeddings
+                chunk_texts = [c.content for c in chunks]
+                chunk_embeddings = self.embedding_generator.generate(
+                    chunk_texts, show_progress=False
+                )
+
+                # Insert chunks with relationships
+                for chunk, chunk_emb in zip(chunks, chunk_embeddings):
+                    self.conn.execute(
+                        """
+                        MATCH (a:Article {title: $article_title})
+                        CREATE (a)-[:HAS_CHUNK {section_index: $section_index, chunk_index: $chunk_index}]->(c:Chunk {
+                            chunk_id: $chunk_id,
+                            content: $content,
+                            embedding: $embedding,
+                            article_title: $article_title,
+                            section_index: $section_index,
+                            chunk_index: $chunk_index
+                        })
+                    """,
+                        {
+                            "article_title": article.title,
+                            "chunk_id": chunk.chunk_id,
+                            "content": chunk.content,
+                            "embedding": chunk_emb.tolist(),
+                            "section_index": chunk.section_index,
+                            "chunk_index": chunk.chunk_index,
+                        },
+                    )
+                logger.info(f"  Created {len(chunks)} chunks for {article.title}")
+        except Exception as e:
+            # Chunk creation is optional — don't fail article processing
+            logger.debug(f"  Chunk creation skipped: {e}")
+
         # Clean up existing IN_CATEGORY relationships before re-creating
         # (prevents duplicate edges on retry/reprocess)
         self.conn.execute(
