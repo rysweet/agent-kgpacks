@@ -1,12 +1,17 @@
 # WikiGR Documentation
 
-Complete documentation for building knowledge graphs from Wikipedia and web content.
+Complete documentation for building knowledge graphs from Wikipedia and web content, plus reusable knowledge packs for domain expertise.
 
 ## Getting Started
 
 New to WikiGR? Start here:
 
 - [Getting Started with Web Content Sources](./tutorials/web-sources-getting-started.md) - Learn how to build knowledge graphs from web URLs with LLM extraction and link crawling
+
+## Design Documents
+
+- [Knowledge Packs Design](./design/knowledge-packs.md) - Reusable graph-enhanced agent skills for domain expertise
+- [CLI Pack Commands](./CLI_PACK_COMMANDS.md) - Complete reference for pack management commands
 
 ## How-To Guides
 
@@ -39,6 +44,15 @@ Build knowledge graphs from web URLs with full feature parity to Wikipedia sourc
 - **Link Expansion**: BFS crawling with configurable depth and breadth
 - **Incremental Updates**: Add new content without rebuilding entire graph
 - **Flexible Filtering**: Control link following with domain and pattern filters
+
+### Knowledge Packs
+
+Reusable graph-enhanced agent skills that surpass training data and web search:
+
+- **Bundled Distribution**: Graph DB + Skill + Retrieval + Evaluation
+- **3-Baseline Evaluation**: Prove packs beat training and web search
+- **Skills Integration**: Auto-discovered as Claude Code skills
+- **CLI Management**: 8 commands for pack lifecycle (create, install, eval, etc.)
 
 ### Supported Content Sources
 
@@ -75,47 +89,18 @@ wikigr create \
   --db-path=azure_aks.db
 ```
 
-### Update Existing Graph
+### Create and Use Knowledge Packs
 
 ```bash
-wikigr update \
-  --source=web \
-  --url="https://example.com/new-article" \
-  --db-path=existing.db
+# Create pack
+wikigr pack create --name physics-expert \
+  --source wikipedia --topics physics.txt \
+  --target 5000
+
+# Install and use
+wikigr pack install physics-expert.tar.gz
+wikigr pack eval physics-expert  # Proves it surpasses training data
 ```
-
-### Configure LLM Extraction
-
-```bash
-export OPENAI_API_KEY=sk-...
-export OPENAI_MODEL=gpt-4-turbo-preview
-export LLM_TEMPERATURE=0.0
-
-wikigr create --source=web --url="..." --db-path=output.db
-```
-
-## Architecture Overview
-
-```
-┌─────────────────┐
-│ Content Sources │
-│ (Web, Wikipedia)│
-└────────┬────────┘
-         │ Article objects
-         │
-┌────────▼─────────────┐
-│ ArticleProcessor     │
-│ (LLM extraction)     │
-└────────┬─────────────┘
-         │ Entities, Relationships
-         │
-┌────────▼─────────────┐
-│ Kuzu Database        │
-│ (Knowledge Graph)    │
-└──────────────────────┘
-```
-
-See [ContentSource Architecture](./concepts/content-source-design.md) for detailed design explanation.
 
 ## Documentation Organization
 
@@ -126,21 +111,8 @@ This documentation follows the [Diataxis framework](https://diataxis.fr/):
 - **Reference**: Information-oriented, technical specifications
 - **Concepts**: Understanding-oriented, explain design and rationale
 
-## Contributing to Documentation
-
-When adding documentation:
-
-1. Place files in appropriate subdirectory (`tutorials/`, `howto/`, `reference/`, `concepts/`)
-2. Link from this index or parent document
-3. Use real, runnable examples (not "foo/bar" placeholders)
-4. Follow one Diataxis type per document
-5. Include descriptive headings for scanning
-
-See `.claude/skills/documentation-writing/` for complete guidelines.
-
 ## Related Resources
 
 - [Project README](../README.md) - Project overview and setup
-- [WikiGR GitHub Repository](https://github.com/your-org/wikigr) *(update with real URL)*
+- [WikiGR GitHub Repository](https://github.com/rysweet/wikigr)
 - [Kuzu Database Documentation](https://kuzudb.com/docs/)
-- [OpenAI API Documentation](https://platform.openai.com/docs/)
