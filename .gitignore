@@ -97,3 +97,6 @@ bootstrap/data/*.db
 # Amplihack runtime directories (auto-generated)
 .claude/logs/
 .claude/runtime/
+backups/
+STATUS_REPORT.md
+data/packs/*/eval/results.json

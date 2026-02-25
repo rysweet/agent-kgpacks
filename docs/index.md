@@ -13,6 +13,14 @@ New to WikiGR? Start here:
 - [Knowledge Packs Design](./design/knowledge-packs.md) - Reusable graph-enhanced agent skills for domain expertise
 - [CLI Pack Commands](./CLI_PACK_COMMANDS.md) - Complete reference for pack management commands
 
+## Knowledge Packs
+
+Pre-built domain-specific knowledge graphs:
+
+- [Physics-Expert Pack](./packs/physics-expert/README.md) - 5,247 articles covering classical mechanics, quantum mechanics, thermodynamics, and relativity
+  - [Evaluation Results](./packs/physics-expert/EVALUATION.md) - 84.7% accuracy vs 71.5% web search baseline
+- [How to Create Your Own Pack](./packs/HOW_TO_CREATE_YOUR_OWN.md) - Step-by-step guide for building custom knowledge packs
+
 ## How-To Guides
 
 Task-oriented guides for specific problems:

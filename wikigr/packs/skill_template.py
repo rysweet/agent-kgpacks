@@ -99,13 +99,32 @@ def generate_skill_md(manifest: PackManifest, kg_config_path: Path) -> str:
     for url in manifest.source_urls:
         content_lines.append(f"- {url}")
 
+    # Get absolute path to pack database
+    pack_db_path = Path(kg_config_path).parent / "pack.db"
+
     content_lines.extend(
         [
             "",
             "## Integration",
             "",
-            "This skill integrates with WikiGR's KG Agent for semantic retrieval:",
+            "This skill integrates with WikiGR's KG Agent for semantic retrieval.",
             "",
+            "**How to Use This Pack:**",
+            "",
+            "When a user asks a question related to this domain, automatically:",
+            "",
+            "```python",
+            "from wikigr.agent.kg_agent import KnowledgeGraphAgent",
+            "from pathlib import Path",
+            "",
+            "# Initialize KG Agent with pack database",
+            f'pack_db = Path("{pack_db_path}").resolve()',
+            "with KnowledgeGraphAgent(db_path=str(pack_db), read_only=True) as kg_agent:",
+            "    result = kg_agent.query(user_question, max_results=5)",
+            '    # Use result["answer"] and result["sources"] in your response',
+            "```",
+            "",
+            "**Retrieval Strategy:**",
             "1. **Vector Search**: Find semantically similar content",
             "2. **Graph Traversal**: Navigate relationships between entities",
             "3. **Hybrid Search**: Combine vector similarity with graph structure",

@@ -17,6 +17,7 @@ class Question:
         ground_truth: Expected correct answer for comparison
         domain: Domain/topic of the question (e.g., "physics", "history")
         difficulty: Difficulty level ("easy", "medium", "hard")
+        source: Optional source article for the question
     """
 
     id: str
@@ -24,6 +25,7 @@ class Question:
     ground_truth: str
     domain: str
     difficulty: str  # "easy", "medium", "hard"
+    source: str | None = None
 
 
 @dataclass
@@ -87,3 +89,20 @@ class EvalResult:
     surpasses_training: bool
     surpasses_web: bool
     questions_tested: int
+
+    def to_dict(self) -> dict:
+        """Convert to JSON-serializable dictionary."""
+        from dataclasses import asdict
+
+        return {
+            "pack_name": self.pack_name,
+            "timestamp": self.timestamp,
+            "training_baseline": asdict(self.training_baseline),
+            "web_search_baseline": asdict(self.web_search_baseline)
+            if self.web_search_baseline
+            else None,
+            "knowledge_pack": asdict(self.knowledge_pack),
+            "surpasses_training": self.surpasses_training,
+            "surpasses_web": self.surpasses_web,
+            "questions_tested": self.questions_tested,
+        }

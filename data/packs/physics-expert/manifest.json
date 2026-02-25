@@ -1,56 +1,21 @@
 {
-  "pack_id": "physics-expert",
+  "name": "physics-expert",
   "version": "1.0.0",
-  "name": "Physics Expert Knowledge Pack",
-  "description": "Comprehensive physics knowledge covering classical mechanics, quantum mechanics, thermodynamics, and relativity. Built from 537 curated Wikipedia topics expanded to 5,000+ articles with entity extraction.",
-  "created_at": "2026-02-24T00:00:00Z",
-  "updated_at": "2026-02-24T00:00:00Z",
-  "author": "WikiGR Team",
-  "license": "CC BY-SA 3.0",
-  "domains": [
-    "classical_mechanics",
-    "quantum_mechanics",
-    "thermodynamics",
-    "relativity"
+  "description": "Expert-level physics knowledge covering classical mechanics, quantum mechanics, relativity, thermodynamics, electromagnetism, and modern physics",
+  "graph_stats": {
+    "articles": 451,
+    "entities": 4607,
+    "relationships": 2714,
+    "size_mb": 2.08
+  },
+  "eval_scores": {
+    "accuracy": 0.0,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.0
+  },
+  "source_urls": [
+    "https://en.wikipedia.org"
   ],
-  "statistics": {
-    "seed_topics": 537,
-    "total_articles": 5247,
-    "total_entities": 14382,
-    "total_relationships": 23198,
-    "database_size_mb": 1200,
-    "compressed_size_mb": 340
-  },
-  "requirements": {
-    "python": ">=3.10",
-    "kuzu": ">=0.3.0",
-    "disk_space_mb": 1500
-  },
-  "evaluation": {
-    "question_count": 75,
-    "difficulty_distribution": {
-      "easy": 24,
-      "medium": 37,
-      "hard": 14
-    },
-    "baseline_comparison": {
-      "training_baseline": {
-        "accuracy": 0.623,
-        "avg_confidence": 0.68
-      },
-      "knowledge_pack": {
-        "accuracy": 0.847,
-        "avg_confidence": 0.89
-      }
-    }
-  },
-  "tags": [
-    "physics",
-    "science",
-    "education",
-    "classical-mechanics",
-    "quantum-mechanics",
-    "thermodynamics",
-    "relativity"
-  ]
+  "created": "2026-02-25T04:29:47.007452Z",
+  "license": "CC-BY-SA-4.0"
 }
