@@ -240,7 +240,7 @@ class ExtractionResult:
 class LLMExtractor:
     """Extract structured knowledge from text using Claude."""
 
-    def __init__(self, model: str = "claude-3-5-haiku-20241022"):
+    def __init__(self, model: str = "claude-haiku-4-5-20251001"):
         """Initialize with Anthropic API key from environment."""
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
@@ -323,7 +323,7 @@ Focus on the most important entities and relationships. Be concise."""
         try:
             response = self.client.messages.create(
                 model=self.model,
-                max_tokens=2048,
+                max_tokens=4096,  # Increased to avoid truncation
                 messages=[{"role": "user", "content": prompt}],
             )
 
@@ -335,7 +335,25 @@ Focus on the most important entities and relationships. Be concise."""
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
 
-            data = json.loads(content)
+            # Find JSON object boundaries if not in code block
+            if not content.strip().startswith("{"):
+                # Try to find the first { and last }
+                start = content.find("{")
+                end = content.rfind("}")
+                if start != -1 and end != -1 and end > start:
+                    content = content[start : end + 1]
+
+            # Clean up common JSON issues
+            content = content.strip()
+
+            # Try to parse JSON
+            try:
+                data = json.loads(content)
+            except json.JSONDecodeError as je:
+                # Log the problematic content for debugging
+                logger.error(f"  JSON parse error at position {je.pos}: {je.msg}")
+                logger.debug(f"  Content snippet: {content[max(0, je.pos-50):je.pos+50]}")
+                raise
 
             entities = [
                 Entity(

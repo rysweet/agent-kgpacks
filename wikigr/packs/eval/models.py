@@ -17,6 +17,7 @@ class Question:
         ground_truth: Expected correct answer for comparison
         domain: Domain/topic of the question (e.g., "physics", "history")
         difficulty: Difficulty level ("easy", "medium", "hard")
+        source: Optional source article for the question
     """
 
     id: str
@@ -24,6 +25,7 @@ class Question:
     ground_truth: str
     domain: str
     difficulty: str  # "easy", "medium", "hard"
+    source: str | None = None
 
 
 @dataclass

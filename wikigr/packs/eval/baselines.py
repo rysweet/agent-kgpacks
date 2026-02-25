@@ -28,7 +28,7 @@ class TrainingBaselineEvaluator:
             api_key: Anthropic API key (uses ANTHROPIC_API_KEY env var if not provided)
         """
         self.client = Anthropic(api_key=api_key)
-        self.model = "claude-3-5-sonnet-20241022"
+        self.model = "claude-sonnet-4-5-20250929"
 
     def evaluate(self, questions: list[Question]) -> list[Answer]:
         """Evaluate questions using only training data.
@@ -89,7 +89,7 @@ class KnowledgePackEvaluator:
         """
         self.pack_path = pack_path
         self.client = Anthropic(api_key=api_key)
-        self.model = "claude-3-5-sonnet-20241022"
+        self.model = "claude-sonnet-4-5-20250929"
 
     def _retrieve_context(self, question: str) -> str:
         """Retrieve relevant context from knowledge pack.

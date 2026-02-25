@@ -32,7 +32,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import kuzu  # noqa: E402
 
-from bootstrap.src.database.loader import DatabaseLoader  # noqa: E402
+from bootstrap.schema.ryugraph_schema import create_schema  # noqa: E402
 from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
 from bootstrap.src.wikipedia.api_client import WikipediaAPIClient  # noqa: E402
@@ -65,7 +65,7 @@ def load_topics(topics_file: Path, limit: int | None = None) -> list[str]:
         List of topic titles
     """
     with open(topics_file) as f:
-        topics = [line.strip() for line in f if line.strip()]
+        topics = [line.strip() for line in f if line.strip() and not line.strip().startswith("#")]
 
     if limit:
         topics = topics[:limit]
@@ -105,79 +105,86 @@ def process_article(
             return True
 
         # Fetch article from Wikipedia
-        article_data = wiki_client.get_article(title)
-        if not article_data or not article_data.get("extract"):
+        article = wiki_client.fetch_article(title)
+        if not article or not article.wikitext:
             logger.warning(f"No content for {title}")
             return False
 
         # Parse sections
-        sections = parse_sections(article_data.get("extract", ""), title)
+        sections = parse_sections(article.wikitext)
         if not sections:
             logger.warning(f"No sections for {title}")
             return False
 
         # Extract knowledge with LLM
-        lead_section = sections[0] if sections else None
-        if not lead_section:
-            logger.warning(f"No lead section for {title}")
-            return False
-
-        knowledge = extractor.extract_knowledge(lead_section["content"], title)
+        extraction = extractor.extract_from_article(
+            title=title,
+            sections=sections,
+            max_sections=5,
+            domain="science",  # physics is under science domain
+        )
 
         # Create article node
+        word_count = sum(len(s["content"].split()) for s in sections)
         conn.execute(
             "CREATE (a:Article {title: $title, category: $category, word_count: $wc})",
             {
                 "title": title,
                 "category": "Physics",
-                "wc": len(lead_section["content"].split()),
+                "wc": word_count,
             },
         )
 
         # Add entities
-        for entity in knowledge.get("entities", []):
-            entity_name = entity["name"]
-            entity_type = entity["type"]
-            props_json = json.dumps(entity.get("properties", {}))
+        for entity in extraction.entities:
+            entity_name = entity.name
+            entity_type = entity.type
 
-            # Create entity if not exists
+            # Create entity if not exists (use name as entity_id)
             conn.execute(
-                "MERGE (e:Entity {name: $name}) "
-                "ON CREATE SET e.type = $type, e.properties = $props",
-                {"name": entity_name, "type": entity_type, "props": props_json},
+                "MERGE (e:Entity {entity_id: $entity_id}) "
+                "ON CREATE SET e.name = $name, e.type = $type",
+                {"entity_id": entity_name, "name": entity_name, "type": entity_type},
             )
 
             # Link article to entity
             conn.execute(
-                "MATCH (a:Article {title: $title}), (e:Entity {name: $name}) "
+                "MATCH (a:Article {title: $title}), (e:Entity {entity_id: $entity_id}) "
                 "MERGE (a)-[:HAS_ENTITY]->(e)",
-                {"title": title, "name": entity_name},
+                {"title": title, "entity_id": entity_name},
             )
 
         # Add relationships
-        for rel in knowledge.get("relationships", []):
-            source = rel["source"]
-            target = rel["target"]
-            relation = rel["relation"]
-            context = rel.get("context", "")
+        for rel in extraction.relationships:
+            source = rel.source
+            target = rel.target
+            relation = rel.relation
+            context = rel.context
 
             # Ensure both entities exist
-            conn.execute("MERGE (e:Entity {name: $name})", {"name": source})
-            conn.execute("MERGE (e:Entity {name: $name})", {"name": target})
+            conn.execute(
+                "MERGE (e:Entity {entity_id: $entity_id}) ON CREATE SET e.name = $name, e.type = 'concept'",
+                {"entity_id": source, "name": source},
+            )
+            conn.execute(
+                "MERGE (e:Entity {entity_id: $entity_id}) ON CREATE SET e.name = $name, e.type = 'concept'",
+                {"entity_id": target, "name": target},
+            )
 
             # Create relationship
             conn.execute(
-                "MATCH (s:Entity {name: $source}), (t:Entity {name: $target}) "
+                "MATCH (s:Entity {entity_id: $source}), (t:Entity {entity_id: $target}) "
                 "MERGE (s)-[:ENTITY_RELATION {relation: $rel, context: $ctx}]->(t)",
                 {"source": source, "target": target, "rel": relation, "ctx": context},
             )
 
         # Add facts
-        for fact in knowledge.get("facts", []):
+        for idx, fact in enumerate(extraction.key_facts):
+            fact_id = f"{title}:fact:{idx}"
             conn.execute(
                 "MATCH (a:Article {title: $title}) "
-                "CREATE (a)-[:HAS_FACT]->(f:Fact {content: $content, source_article: $title})",
-                {"title": title, "content": fact},
+                "CREATE (a)-[:HAS_FACT]->(f:Fact {fact_id: $fact_id, content: $content})",
+                {"title": title, "fact_id": fact_id, "content": fact},
             )
 
         # Add sections with embeddings
@@ -232,9 +239,9 @@ def create_manifest(
         "version": "1.0.0",
         "description": "Expert-level physics knowledge covering classical mechanics, quantum mechanics, relativity, thermodynamics, electromagnetism, and modern physics",
         "graph_stats": {
-            "articles": articles_count,
-            "entities": entities_count,
-            "relationships": relationships_count,
+            "articles": int(articles_count),
+            "entities": int(entities_count),
+            "relationships": int(relationships_count),
             "size_mb": round(size_mb, 2),
         },
         "eval_scores": {
@@ -267,22 +274,27 @@ def build_pack(test_mode: bool = False) -> None:
     if test_mode:
         logger.info("TEST MODE: Building 10-article pack")
 
-    # Initialize database
+    # Initialize database - auto-delete in test mode
     if DB_PATH.exists():
-        logger.warning(f"Database already exists: {DB_PATH}")
-        response = input("Delete and rebuild? (y/N): ")
-        if response.lower() != "y":
-            logger.info("Aborted")
-            return
-        DB_PATH.unlink()
+        if test_mode:
+            logger.info(f"Auto-deleting existing database (test mode): {DB_PATH}")
+            import shutil
+
+            shutil.rmtree(DB_PATH) if DB_PATH.is_dir() else DB_PATH.unlink()
+        else:
+            logger.warning(f"Database already exists: {DB_PATH}")
+            response = input("Delete and rebuild? (y/N): ")
+            if response.lower() != "y":
+                logger.info("Aborted")
+                return
+            import shutil
+
+            shutil.rmtree(DB_PATH) if DB_PATH.is_dir() else DB_PATH.unlink()
 
     logger.info(f"Creating database: {DB_PATH}")
+    create_schema(str(DB_PATH), drop_existing=True)
     db = kuzu.Database(str(DB_PATH))
     conn = kuzu.Connection(db)
-
-    # Create schema
-    loader = DatabaseLoader(db)
-    loader.create_schema()
 
     # Initialize components
     wiki_client = WikipediaAPIClient()

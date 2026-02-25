@@ -725,8 +725,107 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
     finally:
         os.unlink(temp_seeds_path)
 
-    # Get database stats
-    stats = _get_db_stats(str(db_path))
+    # Run LLM extraction if API key is available
+    if os.getenv("ANTHROPIC_API_KEY"):
+        print("\nRunning LLM knowledge extraction...")
+        import kuzu
+
+        from bootstrap.src.extraction.llm_extractor import get_extractor
+        from bootstrap.src.wikipedia.api_client import WikipediaAPIClient
+        from bootstrap.src.wikipedia.parser import parse_sections
+
+        extractor = get_extractor()
+        wiki_client = WikipediaAPIClient()
+        db = kuzu.Database(str(db_path))
+        conn = kuzu.Connection(db)
+
+        # Get all articles without entities
+        result = conn.execute("MATCH (a:Article) RETURN a.title AS title")
+        articles = [row["title"] for _, row in result.get_as_df().iterrows()]
+
+        print(f"Extracting knowledge from {len(articles)} articles...")
+        for i, title in enumerate(articles, 1):
+            if i % 50 == 0:
+                print(f"  Progress: {i}/{len(articles)} articles processed")
+
+            try:
+                # Fetch and parse article
+                article = wiki_client.fetch_article(title)
+                if not article or not article.wikitext:
+                    continue
+
+                sections = parse_sections(article.wikitext)
+                if not sections:
+                    continue
+
+                # Extract knowledge
+                extraction = extractor.extract_from_article(
+                    title, sections, max_sections=5, domain="science"
+                )
+
+                # Insert entities, relationships, facts (same logic as build_physics_pack.py)
+                for entity in extraction.entities:
+                    conn.execute(
+                        "MERGE (e:Entity {entity_id: $eid}) ON CREATE SET e.name = $name, e.type = $type",
+                        {"eid": entity.name, "name": entity.name, "type": entity.type},
+                    )
+                    conn.execute(
+                        "MATCH (a:Article {title: $title}), (e:Entity {entity_id: $eid}) MERGE (a)-[:HAS_ENTITY]->(e)",
+                        {"title": title, "eid": entity.name},
+                    )
+
+                for rel in extraction.relationships:
+                    conn.execute(
+                        "MERGE (s:Entity {entity_id: $src}) ON CREATE SET s.name = $src, s.type = 'concept'",
+                        {"src": rel.source},
+                    )
+                    conn.execute(
+                        "MERGE (t:Entity {entity_id: $tgt}) ON CREATE SET t.name = $tgt, t.type = 'concept'",
+                        {"tgt": rel.target},
+                    )
+                    conn.execute(
+                        "MATCH (s:Entity {entity_id: $src}), (t:Entity {entity_id: $tgt}) MERGE (s)-[:ENTITY_RELATION {relation: $rel, context: $ctx}]->(t)",
+                        {
+                            "src": rel.source,
+                            "tgt": rel.target,
+                            "rel": rel.relation,
+                            "ctx": rel.context,
+                        },
+                    )
+
+                for idx, fact in enumerate(extraction.key_facts):
+                    conn.execute(
+                        "MATCH (a:Article {title: $title}) CREATE (a)-[:HAS_FACT]->(f:Fact {fact_id: $fid, content: $content})",
+                        {"title": title, "fid": f"{title}:fact:{idx}", "content": fact},
+                    )
+
+            except Exception as e:
+                logger.debug(f"Failed to extract knowledge from {title}: {e}")
+                continue
+
+        print("✓ Knowledge extraction complete")
+    else:
+        print("\nSkipping LLM extraction (ANTHROPIC_API_KEY not set)")
+
+    # Get database stats (now accurate with entities/relationships)
+    import kuzu
+
+    db_for_stats = kuzu.Database(str(db_path))
+    conn_stats = kuzu.Connection(db_for_stats)
+
+    article_count = (
+        conn_stats.execute("MATCH (a:Article) RETURN count(a) AS count")
+        .get_as_df()
+        .iloc[0]["count"]
+    )
+    entity_count = (
+        conn_stats.execute("MATCH (e:Entity) RETURN count(e) AS count").get_as_df().iloc[0]["count"]
+    )
+    rel_count = (
+        conn_stats.execute("MATCH ()-[r:ENTITY_RELATION]->() RETURN count(r) AS count")
+        .get_as_df()
+        .iloc[0]["count"]
+    )
 
     # Create manifest
     manifest = PackManifest(
@@ -738,9 +837,9 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
         created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         topics=topics,
         graph_stats=GraphStats(
-            articles=stats["loaded_with_content"],
-            entities=stats["loaded_with_content"] * 2,  # Estimate
-            relationships=stats["edges"],
+            articles=int(article_count),
+            entities=int(entity_count),
+            relationships=int(rel_count),
             size_mb=int(
                 sum(f.stat().st_size for f in db_path.rglob("*") if f.is_file()) / 1024 / 1024
             ),
