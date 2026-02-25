@@ -1,0 +1,301 @@
+{
+  "metadata": {
+    "total_seeds": 57,
+    "categories": 4,
+    "topics": [
+      "Operating Systems",
+      "Computer Science",
+      "Distributed Systems",
+      "Kubernetes"
+    ],
+    "purpose": "Generated from 4 topics",
+    "created_date": "2026-02-20"
+  },
+  "seeds": [
+    {
+      "title": "Operating system",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Unix",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Linux",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Microsoft Windows",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "MacOS",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Android (operating system)",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "IOS",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Kernel (operating system)",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "File system",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Process (computing)",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Virtual memory",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Linus Torvalds",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Dennis Ritchie",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Computer multitasking",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Booting",
+      "category": "Computer Science & Software Engineering",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Computer science",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Algorithm",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Data structure",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Computational complexity theory",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Theory of computation",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Programming language",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Software engineering",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Artificial intelligence",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Machine learning",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Database",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Computer network",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Alan Turing",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Grace Hopper",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Donald Knuth",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Turing Award",
+      "category": "Foundational Concepts and Key Developments",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Distributed computing",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Client\u2013server model",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Peer-to-peer",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Consensus (computer science)",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Fault tolerance",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Byzantine fault",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Load balancing (computing)",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Distributed database",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Apache Kafka",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "MapReduce",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Leslie Lamport",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "CAP theorem",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Message passing",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Replication (computing)",
+      "category": "Computer Science & Distributed Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Kubernetes",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Containerization (computing)",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Docker (software)",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Cloud computing",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Microservices",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Google Cloud Platform",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Open-source software",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "DevOps",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Linux Foundation",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Cloud-native computing",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Scalability",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "API",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    },
+    {
+      "title": "Software deployment",
+      "category": "Container Orchestration and Cloud Computing",
+      "expansion_depth": 0
+    }
+  ]
+}

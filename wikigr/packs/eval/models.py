@@ -83,9 +83,7 @@ class EvalResult:
 
     pack_name: str
     timestamp: str
-    training_baseline: EvalMetrics
-    web_search_baseline: EvalMetrics | None
+    webfetch_baseline: EvalMetrics
     knowledge_pack: EvalMetrics
-    surpasses_training: bool
-    surpasses_web: bool
+    surpasses_webfetch: bool
     questions_tested: int

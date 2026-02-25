@@ -1,0 +1,80 @@
+{
+  "$schema": "https://wikigr.org/schemas/kg-config-v1.json",
+  "description": "KG Agent retrieval configuration for physics-expert pack",
+
+  "retrieval": {
+    "vector_search": {
+      "enabled": true,
+      "top_k": 5,
+      "embedding_model": "paraphrase-MiniLM-L3-v2",
+      "embedding_dimension": 384,
+      "similarity_threshold": 0.7,
+      "description": "Semantic search using sentence embeddings"
+    },
+
+    "graph_traversal": {
+      "enabled": true,
+      "max_depth": 2,
+      "relationship_types": [
+        "RELATES_TO",
+        "PART_OF",
+        "HAS_PROPERTY",
+        "DERIVED_FROM",
+        "MEASURED_BY",
+        "DISCOVERED_BY"
+      ],
+      "max_nodes_per_hop": 10,
+      "description": "Graph expansion from vector search results"
+    },
+
+    "keyword_search": {
+      "enabled": true,
+      "use_fuzzy": true,
+      "fuzzy_threshold": 0.8,
+      "max_results": 10,
+      "description": "Fallback keyword matching for entity names"
+    },
+
+    "hybrid_fusion": {
+      "strategy": "weighted_sum",
+      "vector_weight": 0.6,
+      "graph_weight": 0.4,
+      "keyword_weight": 0.0,
+      "description": "Weighted combination of retrieval methods"
+    }
+  },
+
+  "context_assembly": {
+    "max_entities": 10,
+    "max_sections": 5,
+    "max_context_tokens": 4000,
+    "include_relationships": true,
+    "include_citations": true,
+    "citation_format": "wikipedia",
+    "description": "Controls how retrieved knowledge is formatted for LLM consumption"
+  },
+
+  "caching": {
+    "enabled": true,
+    "cache_embeddings": true,
+    "cache_queries": true,
+    "cache_ttl_seconds": 3600,
+    "max_cache_size_mb": 100,
+    "description": "Performance optimization through caching"
+  },
+
+  "quality_control": {
+    "min_entity_score": 0.3,
+    "filter_disambiguation": true,
+    "require_citations": true,
+    "max_citation_distance": 3,
+    "description": "Filters to ensure high-quality retrieval results"
+  },
+
+  "performance": {
+    "timeout_seconds": 5,
+    "parallel_queries": true,
+    "max_workers": 4,
+    "description": "Performance tuning parameters"
+  }
+}

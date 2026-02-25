@@ -14,7 +14,7 @@ Key metrics:
 
 from wikigr.packs.eval.baselines import (
     KnowledgePackEvaluator,
-    TrainingBaselineEvaluator,
+    WebFetchBaselineEvaluator,
 )
 from wikigr.packs.eval.metrics import (
     aggregate_metrics,
@@ -33,7 +33,7 @@ __all__ = [
     "EvalMetrics",
     "EvalResult",
     # Baselines
-    "TrainingBaselineEvaluator",
+    "WebFetchBaselineEvaluator",
     "KnowledgePackEvaluator",
     # Metrics
     "calculate_accuracy",
