@@ -92,8 +92,8 @@ def create_tarball(pack_dir: Path, output_dir: Path) -> Path:
     """
     # Load manifest to get version
     manifest = load_manifest(pack_dir)
-    version = manifest.get("version", "1.0.0")
-    pack_name = manifest.get("name", "unknown")
+    version = manifest.version
+    pack_name = manifest.name
 
     # Validate pack name to prevent command injection
     validate_pack_name(pack_name)
@@ -172,10 +172,9 @@ def verify_tarball(tarball_path: Path) -> bool:
         contents = result.stdout.strip().split("\n")
         logger.info(f"Tarball contains {len(contents)} files/directories")
 
-        # Check for required files
+        # Check for required files (pack.db can be file or directory)
         required_files = [
             "manifest.json",
-            "pack.db/",
             "skill.md",
             "kg_config.json",
         ]
@@ -186,6 +185,11 @@ def verify_tarball(tarball_path: Path) -> bool:
             found = any(required in line for line in contents)
             if not found:
                 missing.append(required)
+
+        # Special check for pack.db (can be file or directory)
+        pack_db_found = any("pack.db" in line for line in contents)
+        if not pack_db_found:
+            missing.append("pack.db")
 
         if missing:
             logger.error("Required files missing from tarball:")
