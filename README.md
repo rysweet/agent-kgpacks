@@ -28,12 +28,43 @@ A knowledge graph adds value over just asking Claude or searching Wikipedia dire
 - **Freshness** — The graph is a frozen snapshot
 - **Simple questions** — "What is quantum entanglement?" gets a better answer from Claude directly than from synthesizing extracted fragments
 
+## Knowledge Packs - Reusable Domain-Specific Skills
+
+**Knowledge Packs** are distributable, graph-enhanced agent skills that package domain expertise into self-contained archives:
+
+```bash
+# Create a pack from topics
+wikigr pack create --name physics-expert --topics physics_topics.txt --target 500
+
+# Install from archive
+wikigr pack install physics-expert-v1.0.0.tar.gz
+
+# Use in Claude Code
+# The pack skill auto-loads when you ask physics questions!
+```
+
+**What's in a Pack:**
+- **Knowledge Graph**: Kuzu database with articles, entities, relationships, facts
+- **Vector Search**: Semantic retrieval via HNSW index
+- **Eval Framework**: Benchmark questions proving pack surpasses training data
+- **Claude Code Skill**: Auto-discovered skill that enriches responses with graph context
+
+**Benefits:**
+- **Provable Improvement**: Evaluation shows pack beats vanilla Claude on domain questions
+- **Offline Expertise**: Works without internet once installed
+- **No Hallucination**: Answers constrained to curated article set
+- **Distributable**: Share packs as tarballs or via package registry
+
+See `docs/design/knowledge-packs.md` for complete design specification.
+
+---
+
 ## Architecture
 
 - **Database**: Kuzu 0.11.3 (embedded graph database, zero external dependencies)
 - **Embeddings**: paraphrase-MiniLM-L3-v2 (384 dimensions)
 - **Vector Index**: HNSW with cosine similarity
-- **Data Source**: Wikipedia Action API
+- **Data Source**: Wikipedia Action API or web content
 - **LLM**: Claude (seed generation, entity extraction, query planning, answer synthesis)
 
 ## Quick Start
