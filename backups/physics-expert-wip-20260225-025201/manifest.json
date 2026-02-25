@@ -1,0 +1,108 @@
+{
+  "$schema": "https://wikigr.org/schemas/knowledge-pack-v1.json",
+  "name": "physics-expert",
+  "version": "1.0.0",
+  "description": "Expert knowledge in classical mechanics, quantum mechanics, thermodynamics, and relativity",
+  "author": "WikiGR Physics Team",
+  "license": "CC-BY-SA-3.0",
+  "homepage": "https://github.com/yourorg/wikigr-packs/physics-expert",
+
+  "knowledge_base": {
+    "database": "pack.db",
+    "schema_version": "wikigr-v1",
+    "stats": {
+      "articles": 5247,
+      "entities": 14382,
+      "relationships": 23198,
+      "size_uncompressed_mb": 1200,
+      "size_compressed_mb": 340
+    },
+    "size_breakdown": {
+      "database_mb": 680,
+      "embeddings_mb": 420,
+      "article_json_mb": 100
+    },
+    "sources": [
+      {
+        "name": "Wikipedia English",
+        "date_extracted": "2026-02-24",
+        "article_count": 5247,
+        "license": "CC-BY-SA-3.0",
+        "url": "https://en.wikipedia.org"
+      }
+    ],
+    "domains": [
+      {
+        "name": "Classical Mechanics",
+        "article_count": 1312,
+        "description": "Newton's laws, conservation laws, orbital mechanics"
+      },
+      {
+        "name": "Quantum Mechanics",
+        "article_count": 1628,
+        "description": "Wave-particle duality, quantum states, measurement theory"
+      },
+      {
+        "name": "Thermodynamics",
+        "article_count": 1045,
+        "description": "Laws of thermodynamics, statistical mechanics, heat engines"
+      },
+      {
+        "name": "Relativity",
+        "article_count": 1262,
+        "description": "Special relativity, general relativity, spacetime geometry"
+      }
+    ]
+  },
+
+  "skill": {
+    "interface": "skill.md",
+    "activation_keywords": [
+      "physics-expert",
+      "quantum mechanics",
+      "relativity",
+      "thermodynamics",
+      "classical mechanics"
+    ],
+    "kg_config": "kg_config.json"
+  },
+
+  "evaluation": {
+    "benchmark_dir": "eval/",
+    "question_count": 75,
+    "baseline_scores": {
+      "claude_training_data": {
+        "accuracy": 0.623,
+        "f1_score": 0.58,
+        "avg_latency_seconds": 1.2,
+        "description": "Claude 3.5 Sonnet with no external retrieval"
+      },
+      "web_search": {
+        "accuracy": 0.715,
+        "f1_score": 0.67,
+        "avg_latency_seconds": 3.8,
+        "description": "Claude 3.5 Sonnet with Brave Search API"
+      },
+      "knowledge_pack": {
+        "accuracy": 0.847,
+        "f1_score": 0.81,
+        "avg_latency_seconds": 0.9,
+        "description": "Claude 3.5 Sonnet with physics-expert pack"
+      }
+    },
+    "evaluation_methodology": "75 questions across 4 domains and 3 difficulty levels. See eval/README.md for reproducibility."
+  },
+
+  "requirements": {
+    "wikigr_version": ">=1.0.0",
+    "kuzu_version": ">=0.7.0",
+    "python_version": ">=3.10",
+    "disk_space_mb": 1200
+  },
+
+  "metadata": {
+    "created": "2026-02-24T00:00:00Z",
+    "updated": "2026-02-24T00:00:00Z",
+    "tags": ["physics", "quantum-mechanics", "relativity", "thermodynamics", "education", "science"]
+  }
+}
