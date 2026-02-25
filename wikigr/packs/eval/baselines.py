@@ -1,9 +1,8 @@
-"""Baseline evaluators for three-way comparison.
+"""Baseline evaluators for two-way comparison.
 
 This module provides evaluators for:
 1. Training baseline: Claude without any tools (training data only)
-2. Web search baseline: Claude with web search tool
-3. Knowledge pack baseline: Claude with knowledge pack retrieval
+2. Knowledge pack baseline: Claude with knowledge pack retrieval
 """
 
 import json
@@ -74,76 +73,6 @@ class TrainingBaselineEvaluator:
         return answers
 
 
-class WebSearchBaselineEvaluator:
-    """Evaluate using Claude with web search tool.
-
-    This represents the current state-of-the-art for general knowledge queries,
-    where Claude can search the web for up-to-date information.
-    """
-
-    def __init__(self, api_key: str | None = None):
-        """Initialize web search baseline evaluator.
-
-        Args:
-            api_key: Anthropic API key (uses ANTHROPIC_API_KEY env var if not provided)
-        """
-        self.client = Anthropic(api_key=api_key)
-        self.model = "claude-3-5-sonnet-20241022"
-
-    def evaluate(self, questions: list[Question]) -> list[Answer]:
-        """Evaluate questions using web search.
-
-        Note: This is a placeholder. Actual implementation would integrate
-        with a web search API (e.g., Brave Search, Perplexity).
-
-        Args:
-            questions: List of questions to answer
-
-        Returns:
-            List of answers with timing and cost information
-        """
-        answers = []
-
-        for question in questions:
-            start_time = time.time()
-
-            # For MVP, simulate web search by giving Claude extended context
-            # In production, this would use actual web search tool
-            prompt = f"""You have access to web search. Answer this question using
-current information from the web. Include citations.
-
-Question: {question.question}
-
-Provide a comprehensive answer with references."""
-
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=1024,
-                messages=[{"role": "user", "content": prompt}],
-            )
-
-            latency_ms = (time.time() - start_time) * 1000
-
-            answer_text = response.content[0].text if response.content else ""
-
-            # Estimate cost (includes web search overhead)
-            input_tokens = response.usage.input_tokens
-            output_tokens = response.usage.output_tokens
-            cost_usd = (input_tokens * 3 + output_tokens * 15) / 1_000_000
-
-            answers.append(
-                Answer(
-                    question_id=question.id,
-                    answer=answer_text,
-                    source="web_search",
-                    latency_ms=latency_ms,
-                    cost_usd=cost_usd,
-                )
-            )
-
-        return answers
-
-
 class KnowledgePackEvaluator:
     """Evaluate using Claude with knowledge pack retrieval.
 
@@ -162,7 +91,7 @@ class KnowledgePackEvaluator:
         self.client = Anthropic(api_key=api_key)
         self.model = "claude-3-5-sonnet-20241022"
 
-    def _retrieve_context(self, question: str) -> str:  # noqa: ARG002
+    def _retrieve_context(self, question: str) -> str:
         """Retrieve relevant context from knowledge pack.
 
         Args:
@@ -171,15 +100,37 @@ class KnowledgePackEvaluator:
         Returns:
             Retrieved context text
         """
-        # For MVP, load manifest for basic pack info
-        # In production, this would query the knowledge graph
-        manifest_path = self.pack_path / "manifest.json"
-        if manifest_path.exists():
-            with open(manifest_path) as f:
-                manifest = json.load(f)
-                return f"Knowledge pack: {manifest.get('description', 'No description')}"
+        # Try real KG retrieval first
+        try:
+            from wikigr.packs.eval.kg_adapter import retrieve_from_pack
 
-        return "No context available"
+            return retrieve_from_pack(question, self.pack_path)
+        except FileNotFoundError as e:
+            # Fallback if pack.db doesn't exist (for tests without real DB)
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(f"KG retrieval failed: {e}")
+            manifest_path = self.pack_path / "manifest.json"
+            if manifest_path.exists():
+                with open(manifest_path) as f:
+                    manifest = json.load(f)
+                    return f"Knowledge pack: {manifest.get('description', 'No description')}"
+            return "Knowledge graph unavailable. Please check configuration."
+        except ValueError as e:
+            # Question validation error
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(f"Question validation failed: {e}")
+            return "Invalid question provided."
+        except Exception as e:
+            # Log error with full details, return generic message
+            import logging
+
+            logger = logging.getLogger(__name__)
+            logger.error(f"KG retrieval failed: {e}", exc_info=True)
+            return "An error occurred while retrieving context. Please try again later."
 
     def evaluate(self, questions: list[Question]) -> list[Answer]:
         """Evaluate questions using knowledge pack retrieval.
