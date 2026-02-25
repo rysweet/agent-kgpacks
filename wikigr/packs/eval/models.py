@@ -89,3 +89,20 @@ class EvalResult:
     surpasses_training: bool
     surpasses_web: bool
     questions_tested: int
+
+    def to_dict(self) -> dict:
+        """Convert to JSON-serializable dictionary."""
+        from dataclasses import asdict
+
+        return {
+            "pack_name": self.pack_name,
+            "timestamp": self.timestamp,
+            "training_baseline": asdict(self.training_baseline),
+            "web_search_baseline": asdict(self.web_search_baseline)
+            if self.web_search_baseline
+            else None,
+            "knowledge_pack": asdict(self.knowledge_pack),
+            "surpasses_training": self.surpasses_training,
+            "surpasses_web": self.surpasses_web,
+            "questions_tested": self.questions_tested,
+        }
