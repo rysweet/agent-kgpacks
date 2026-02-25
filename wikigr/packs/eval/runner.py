@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 from wikigr.packs.eval.baselines import (
     KnowledgePackEvaluator,
-    TrainingBaselineEvaluator,
+    WebFetchBaselineEvaluator,
 )
 from wikigr.packs.eval.metrics import aggregate_metrics
 from wikigr.packs.eval.models import Answer, EvalResult, Question
@@ -40,11 +40,11 @@ class EvalRunner:
         self.dry_run = dry_run
 
         if not dry_run:
-            self.training_eval = TrainingBaselineEvaluator(api_key=api_key)
+            self.webfetch_eval = WebFetchBaselineEvaluator(api_key=api_key)
             self.pack_eval = KnowledgePackEvaluator(pack_path, api_key=api_key)
         else:
             logger.info("DRY RUN MODE: API calls will be skipped")
-            self.training_eval = None
+            self.webfetch_eval = None
             self.pack_eval = None
 
     def _generate_mock_answers(self, questions: list[Question], source: str) -> list[Answer]:
@@ -80,17 +80,17 @@ class EvalRunner:
         """
         if self.dry_run:
             logger.info("DRY RUN: Using mock answers")
-            training_answers = self._generate_mock_answers(questions, "training")
+            webfetch_answers = self._generate_mock_answers(questions, "training")
             pack_answers = self._generate_mock_answers(questions, "knowledge_pack")
         else:
             # Run both baselines with progress tracking
             total_steps = len(questions) * 2
             with tqdm(total=total_steps, desc="Evaluating", disable=not show_progress) as pbar:
-                logger.info("Running training baseline...")
-                training_answers = []
+                logger.info("Running WebFetch baseline (Claude + web search)...")
+                webfetch_answers = []
                 for q in questions:
-                    answers = self.training_eval.evaluate([q])
-                    training_answers.extend(answers)
+                    answers = self.webfetch_eval.evaluate([q])
+                    webfetch_answers.extend(answers)
                     pbar.update(1)
 
                 logger.info("Running knowledge pack baseline...")
@@ -101,7 +101,7 @@ class EvalRunner:
                     pbar.update(1)
 
         # Calculate metrics
-        training_metrics = aggregate_metrics(training_answers, questions)
+        webfetch_metrics = aggregate_metrics(webfetch_answers, questions)
         pack_metrics = aggregate_metrics(pack_answers, questions)
 
         # Determine if pack surpasses training baseline
@@ -109,10 +109,10 @@ class EvalRunner:
         # - Higher accuracy
         # - Lower hallucination rate
         # - Higher citation quality
-        surpasses_training = (
-            pack_metrics.accuracy > training_metrics.accuracy
-            and pack_metrics.hallucination_rate < training_metrics.hallucination_rate
-            and pack_metrics.citation_quality > training_metrics.citation_quality
+        surpasses_webfetch = (
+            pack_metrics.accuracy > webfetch_metrics.accuracy
+            and pack_metrics.hallucination_rate < webfetch_metrics.hallucination_rate
+            and pack_metrics.citation_quality > webfetch_metrics.citation_quality
         )
 
         # Get pack name from manifest
@@ -123,15 +123,13 @@ class EvalRunner:
                 manifest = json.load(f)
                 pack_name = manifest.get("name", "unknown")
 
-        # Create result (web_search_baseline set to None for backwards compatibility)
+        # Create result
         result = EvalResult(
             pack_name=pack_name,
             timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-            training_baseline=training_metrics,
-            web_search_baseline=None,
+            webfetch_baseline=webfetch_metrics,
             knowledge_pack=pack_metrics,
-            surpasses_training=surpasses_training,
-            surpasses_web=False,
+            surpasses_webfetch=surpasses_webfetch,
             questions_tested=len(questions),
         )
 
@@ -150,12 +148,12 @@ class EvalRunner:
         result_dict = {
             "pack_name": result.pack_name,
             "timestamp": result.timestamp,
-            "training_baseline": asdict(result.training_baseline),
+            "webfetch_baseline": asdict(result.webfetch_baseline),
             "web_search_baseline": asdict(result.web_search_baseline)
             if result.web_search_baseline
             else None,
             "knowledge_pack": asdict(result.knowledge_pack),
-            "surpasses_training": result.surpasses_training,
+            "surpasses_webfetch": result.surpasses_webfetch,
             "surpasses_web": result.surpasses_web,
             "questions_tested": result.questions_tested,
         }

@@ -140,18 +140,20 @@ class TestValidatePackStructure:
         errors = validate_pack_structure(pack_dir)
         assert any("kg_config.json" in e and "json" in e.lower() for e in errors)
 
-    def test_pack_db_is_file_not_directory(self, tmp_path: Path):
-        """Test validation catches pack.db as file instead of directory."""
+    def test_pack_db_accepts_file_or_directory(self, tmp_path: Path):
+        """Test validation accepts pack.db as either file or directory."""
         pack_dir = tmp_path / "test-pack"
         pack_dir.mkdir()
 
         self.create_minimal_pack(pack_dir)
-        (pack_dir / "pack.db").write_text("not a directory")  # File, not directory
+        # Pack.db as file is now valid (small databases)
+        (pack_dir / "pack.db").write_text("valid kuzu database")
         (pack_dir / "skill.md").write_text("# Test Skill")
         (pack_dir / "kg_config.json").write_text(json.dumps({"pack_name": "test-pack"}))
 
         errors = validate_pack_structure(pack_dir)
-        assert any("pack.db" in e and "directory" in e.lower() for e in errors)
+        # Should pass - files are valid for pack.db
+        assert not any("pack.db" in e and "directory" in e.lower() for e in errors)
 
     def test_optional_eval_directory(self, tmp_path: Path):
         """Test that eval directory is optional."""

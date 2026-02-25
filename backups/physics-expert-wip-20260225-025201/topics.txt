@@ -1,0 +1,500 @@
+Newton's laws of motion
+Isaac Newton
+Classical mechanics
+Momentum
+Angular momentum
+Torque
+Rotational motion
+Centripetal force
+Centrifugal force
+Conservation of energy
+Conservation of momentum
+Kinetic energy
+Potential energy
+Mechanical energy
+Work (physics)
+Power (physics)
+Force
+Mass
+Inertia
+Friction
+Gravity
+Gravitational field
+Gravitational potential
+Escape velocity
+Orbital mechanics
+Kepler's laws of planetary motion
+Johannes Kepler
+Projectile motion
+Simple harmonic motion
+Damped oscillation
+Resonance
+Pendulum
+Oscillation
+Wave motion
+Hooke's law
+Elastic collision
+Inelastic collision
+Impulse (physics)
+Center of mass
+Rigid body dynamics
+Moment of inertia
+Parallel axis theorem
+Coriolis force
+Lagrangian mechanics
+Hamiltonian mechanics
+Action (physics)
+Noether's theorem
+Quantum mechanics
+Wave-particle duality
+Heisenberg uncertainty principle
+Werner Heisenberg
+Schrödinger equation
+Erwin Schrödinger
+Wave function
+Quantum superposition
+Quantum entanglement
+Quantum decoherence
+Copenhagen interpretation
+Many-worlds interpretation
+Double-slit experiment
+Photoelectric effect
+Compton scattering
+Bohr model
+Niels Bohr
+Atomic orbital
+Electron configuration
+Pauli exclusion principle
+Wolfgang Pauli
+Spin (physics)
+Quantum number
+Planck constant
+Max Planck
+De Broglie wavelength
+Louis de Broglie
+Quantum tunneling
+Scanning tunneling microscope
+Quantum harmonic oscillator
+Particle in a box
+Hydrogen atom
+Fine structure
+Hyperfine structure
+Zeeman effect
+Stark effect
+Quantum field theory
+Quantum electrodynamics
+Richard Feynman
+Feynman diagram
+Paul Dirac
+Dirac equation
+Antimatter
+Positron
+Quantum chromodynamics
+Quark
+Gluon
+Hadron
+Baryon
+Meson
+Standard Model
+Higgs boson
+Higgs mechanism
+Peter Higgs
+CERN
+Large Hadron Collider
+Particle accelerator
+Elementary particle
+Fermion
+Boson
+Lepton
+Neutrino
+Photon
+W and Z bosons
+Weak interaction
+Strong interaction
+Electromagnetic force
+Fundamental interaction
+Renormalization
+Vacuum state
+Zero-point energy
+Casimir effect
+Lamb shift
+Quantum computing
+Qubit
+Quantum algorithm
+Quantum cryptography
+Bell's theorem
+EPR paradox
+Born rule
+Max Born
+Measurement problem
+Observer effect (physics)
+Thermodynamics
+Laws of thermodynamics
+First law of thermodynamics
+Second law of thermodynamics
+Third law of thermodynamics
+Zeroth law of thermodynamics
+Entropy
+Temperature
+Heat
+Thermal equilibrium
+Heat transfer
+Conduction (heat)
+Convection
+Thermal radiation
+Blackbody radiation
+Stefan-Boltzmann law
+Wien's displacement law
+Ideal gas law
+Kinetic theory of gases
+Boltzmann distribution
+Ludwig Boltzmann
+Maxwell-Boltzmann distribution
+James Clerk Maxwell
+Pressure
+Volume
+Internal energy
+Enthalpy
+Gibbs free energy
+Josiah Willard Gibbs
+Helmholtz free energy
+Hermann von Helmholtz
+Chemical potential
+Phase diagram
+Triple point
+Critical point (thermodynamics)
+Latent heat
+Specific heat capacity
+Heat capacity
+Carnot cycle
+Sadi Carnot
+Heat engine
+Carnot heat engine
+Efficiency (thermodynamics)
+Refrigerator
+Heat pump
+Clausius theorem
+Rudolf Clausius
+Adiabatic process
+Isothermal process
+Isobaric process
+Isochoric process
+Reversible process (thermodynamics)
+Irreversible process
+Statistical mechanics
+Ensemble (mathematical physics)
+Microstate (statistical mechanics)
+Macrostate (statistical mechanics)
+Partition function (statistical mechanics)
+Thermodynamic equilibrium
+Equipartition theorem
+Fluctuation theorem
+Brownian motion
+Diffusion
+Osmosis
+Boltzmann constant
+Avogadro constant
+Gas constant
+Absolute zero
+Kelvin
+Celsius
+Fahrenheit
+Special relativity
+General relativity
+Albert Einstein
+Theory of relativity
+Speed of light
+Spacetime
+Minkowski space
+Hermann Minkowski
+Lorentz transformation
+Hendrik Lorentz
+Time dilation
+Length contraction
+Relativity of simultaneity
+Mass-energy equivalence
+Rest mass
+Relativistic mass
+Relativistic momentum
+Four-vector
+Proper time
+Inertial frame of reference
+Principle of relativity
+Equivalence principle
+Geodesic
+Curvature
+Riemannian geometry
+Tensor
+Metric tensor
+Christoffel symbols
+Einstein field equations
+Schwarzschild metric
+Karl Schwarzschild
+Black hole
+Event horizon
+Singularity (general relativity)
+Schwarzschild radius
+Kerr metric
+Rotating black hole
+Ergosphere
+Penrose process
+Roger Penrose
+Hawking radiation
+Stephen Hawking
+Information paradox
+Gravitational wave
+LIGO
+Gravitational redshift
+Gravitational lensing
+Gravitational time dilation
+Shapiro time delay
+Perihelion precession
+Mercury (planet)
+Frame-dragging
+Lense-Thirring effect
+Mach's principle
+Cosmological constant
+Dark energy
+Friedmann equations
+Alexander Friedmann
+Big Bang
+Cosmic microwave background
+Hubble's law
+Edwin Hubble
+Expansion of the universe
+Redshift
+Cosmological redshift
+Doppler effect
+Dark matter
+Galaxy rotation curve
+Cosmology
+Observable universe
+Inflation (cosmology)
+Alan Guth
+Cosmic inflation
+Flatness problem
+Horizon problem
+Multiverse
+Anthropic principle
+Olbers' paradox
+Cosmic distance ladder
+Parsec
+Light-year
+Hubble constant
+Age of the universe
+Ultimate fate of the universe
+Heat death of the universe
+Big Crunch
+Big Rip
+False vacuum
+Vacuum energy
+Quintessence (physics)
+Electromagnetism
+Maxwell's equations
+Coulomb's law
+Charles-Augustin de Coulomb
+Electric field
+Electric charge
+Electric potential
+Magnetic field
+Magnetic flux
+Lorentz force
+Ampère's circuital law
+André-Marie Ampère
+Faraday's law of induction
+Michael Faraday
+Gauss's law
+Carl Friedrich Gauss
+Displacement current
+Electromagnetic radiation
+Optics
+Nuclear physics
+Particle physics
+Electroweak interaction
+Grand Unified Theory
+Theory of everything
+String theory
+Supersymmetry
+Loop quantum gravity
+M-theory
+Extra dimensions
+Kaluza-Klein theory
+Graviton
+Tachyon
+Magnetic monopole
+Proton decay
+CP violation
+Matter-antimatter asymmetry
+Baryogenesis
+Fluid mechanics
+Fluid dynamics
+Bernoulli's principle
+Daniel Bernoulli
+Archimedes' principle
+Archimedes
+Buoyancy
+Surface tension
+Capillary action
+Hydrostatics
+Hydrodynamics
+Aerodynamics
+Lift (force)
+Drag (physics)
+Condensed matter physics
+Acoustics
+Sound
+Speed of sound
+Decibel
+Frequency
+Wavelength
+Amplitude
+Sonic boom
+Ultrasound
+Infrasound
+Doppler shift
+Beat (acoustics)
+Quantum state
+Quantum gate
+Quantum circuit
+Quantum annealing
+Quantum simulation
+Quantum optics
+Squeezed coherent state
+Fock state
+Coherent state
+Quantum error correction
+Quantum decoherence time
+Dephasing
+Quantum phase transition
+Topological quantum computing
+Topological insulator
+Quantum Hall effect
+Fractional quantum Hall effect
+Anyons
+Quantum dots
+Quantum well
+Bose-Hubbard model
+Hubbard model
+Anderson localization
+Mott insulator
+Quantum magnetism
+Stefan-Boltzmann constant
+Planck's law
+Rayleigh-Jeans law
+Ultraviolet catastrophe
+Thermodynamic potential
+Legendre transformation
+Maxwell relations
+Thermodynamic identity
+Chemical equilibrium
+Le Chatelier's principle
+Phase rule
+Gibbs-Duhem equation
+Fugacity
+Activity coefficient
+Non-equilibrium thermodynamics
+Onsager reciprocal relations
+Fick's laws of diffusion
+Fourier's law
+Heat equation
+Thermal conductivity
+Thermal diffusivity
+Prandtl number
+Nusselt number
+Reynolds analogy
+Schwarzschild solution
+Kerr-Newman metric
+Reissner-Nordström metric
+Gravitational collapse
+Chandrasekhar limit
+Subrahmanyan Chandrasekhar
+White dwarf
+Neutron star
+Pulsar
+Quasar
+Active galactic nucleus
+Accretion disk
+Eddington luminosity
+Gravitational slingshot
+Geodetic effect
+Shapiro delay
+Pound-Rebka experiment
+Hafele-Keating experiment
+GPS and relativity
+Gravitational potential energy in GR
+Kruskal-Szekeres coordinates
+Penrose diagram
+Causal structure
+Closed timelike curve
+Wormhole
+Alcubierre drive
+Tipler cylinder
+Gödel metric
+Robertson-Walker metric
+Scale factor
+Hubble parameter
+Deceleration parameter
+Critical density
+Omega parameter
+Baryon acoustic oscillations
+Power spectrum
+Structure formation
+Jeans instability
+Virial theorem
+Newton's law of universal gravitation
+Wave function collapse
+Thermodynamic equilibrium conditions
+Thermodynamic temperature
+Thermodynamic cycle
+Thermal energy
+Thermal expansion
+Quantum field
+Quantum interference
+Quantum state tomography
+Quantum process tomography
+Relativistic energy
+Relativistic kinetic energy
+Four-momentum
+Energy-momentum relation
+Thermal physics
+Heat transfer coefficient
+Minkowski diagram
+Light cone
+World line
+Spacetime interval
+Invariant mass
+Relativistic Doppler effect
+Aberration of light
+Relativistic beaming
+Relativistic velocity addition
+Rapidity
+Einstein synchronization
+Michelson-Morley experiment
+Luminiferous aether
+Tests of special relativity
+Tests of general relativity
+Gravitational radiation
+Proper time dilation
+Gravitational field equations
+Ricci tensor
+Ricci scalar
+Weyl tensor
+Bianchi identities
+Einstein tensor
+Einstein-Hilbert action
+Lorentz invariance
+Lorentz boost
+Minkowski spacetime
+Spacetime diagram
+Time dilation formula
+Length contraction formula
+Schwarzschild black hole
+Gravitational time delay
+Gravitational lens effect
+Gravitational binding energy
+Gravitational collapse rate
+Thermodynamic system
+Thermodynamic law application
+Gravitational red shift
+Gravitational frequency shift
+Lorentz covariance
