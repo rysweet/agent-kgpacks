@@ -66,6 +66,7 @@ def temp_questions(tmp_path: Path) -> Path:
     return questions_file
 
 
+@pytest.mark.integration
 def test_end_to_end_evaluation_workflow(temp_pack: Path, temp_questions: Path, tmp_path: Path):
     """Test complete evaluation workflow from questions to results."""
     # 1. Load questions
@@ -115,6 +116,7 @@ def test_end_to_end_evaluation_workflow(temp_pack: Path, temp_questions: Path, t
         assert isinstance(saved_data["surpasses_web"], bool)
 
 
+@pytest.mark.integration
 def test_evaluation_with_invalid_questions(temp_pack: Path, tmp_path: Path):
     """Test that evaluation fails gracefully with invalid questions."""
     # Create invalid questions file
@@ -127,6 +129,7 @@ def test_evaluation_with_invalid_questions(temp_pack: Path, tmp_path: Path):
         load_questions_jsonl(invalid_file)
 
 
+@pytest.mark.integration
 def test_question_validation_catches_errors(temp_pack: Path):
     """Test that validation catches various error conditions."""
     # Duplicate IDs

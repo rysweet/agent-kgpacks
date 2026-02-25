@@ -86,9 +86,9 @@ jobs:
       - run: uv pip install -e ".[dev,test]"
       - name: Run integration tests
         run: |
-          uv run pytest bootstrap/tests/test_integration.py \
+          uv run pytest tests/packs/eval/test_integration.py \
             -v -m integration --timeout=120 \
-            --cov=bootstrap/src --cov-report=xml:integration-coverage.xml
+            --cov=wikigr/packs --cov-report=xml:integration-coverage.xml
 
   documentation:
     name: Check Documentation
