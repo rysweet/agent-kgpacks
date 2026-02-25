@@ -53,21 +53,20 @@ def test_eval_metrics_creation():
 def test_eval_result_creation():
     """Test EvalResult dataclass creation."""
     training = EvalMetrics(0.7, 0.2, 0.5, 300.0, 0.05)
-    web = EvalMetrics(0.8, 0.15, 0.7, 400.0, 0.08)
     pack = EvalMetrics(0.9, 0.05, 0.95, 250.0, 0.03)
 
     result = EvalResult(
         pack_name="physics-expert",
         timestamp="2024-01-01T00:00:00Z",
         training_baseline=training,
-        web_search_baseline=web,
+        web_search_baseline=None,
         knowledge_pack=pack,
         surpasses_training=True,
-        surpasses_web=True,
+        surpasses_web=False,
         questions_tested=10,
     )
 
     assert result.pack_name == "physics-expert"
     assert result.surpasses_training is True
-    assert result.surpasses_web is True
+    assert result.surpasses_web is False
     assert result.questions_tested == 10

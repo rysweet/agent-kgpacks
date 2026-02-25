@@ -1,0 +1,42 @@
+{
+  "retrieval": {
+    "vector_search": {
+      "enabled": true,
+      "top_k": 5,
+      "embedding_model": "paraphrase-MiniLM-L3-v2",
+      "index_name": "Section_embedding_idx"
+    },
+    "graph_traversal": {
+      "enabled": true,
+      "max_depth": 2,
+      "relationship_types": [
+        "HAS_SECTION",
+        "HAS_ENTITY",
+        "HAS_FACT",
+        "ENTITY_RELATION",
+        "LINKS_TO"
+      ],
+      "max_results_per_type": 10
+    },
+    "hybrid_fusion": {
+      "vector_weight": 0.6,
+      "graph_weight": 0.4,
+      "normalization": "min_max"
+    },
+    "caching": {
+      "enabled": true,
+      "ttl_seconds": 3600,
+      "max_cache_size_mb": 100
+    },
+    "quality_control": {
+      "min_relevance_score": 0.3,
+      "max_context_length": 4000,
+      "deduplication": true
+    }
+  },
+  "performance": {
+    "timeout_seconds": 10,
+    "max_concurrent_queries": 5,
+    "batch_size": 10
+  }
+}

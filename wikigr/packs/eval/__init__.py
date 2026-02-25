@@ -1,11 +1,10 @@
 """Knowledge pack evaluation framework.
 
-This module provides a three-baseline evaluation system for assessing
-whether knowledge packs surpass training data and web search:
+This module provides a two-baseline evaluation system for assessing
+whether knowledge packs surpass training data:
 
 1. Training baseline: Claude without any tools
-2. Web search baseline: Claude with web search
-3. Knowledge pack baseline: Claude with pack retrieval
+2. Knowledge pack baseline: Claude with pack retrieval
 
 Key metrics:
 - Accuracy: semantic similarity to ground truth
@@ -16,7 +15,6 @@ Key metrics:
 from wikigr.packs.eval.baselines import (
     KnowledgePackEvaluator,
     TrainingBaselineEvaluator,
-    WebSearchBaselineEvaluator,
 )
 from wikigr.packs.eval.metrics import (
     aggregate_metrics,
@@ -36,7 +34,6 @@ __all__ = [
     "EvalResult",
     # Baselines
     "TrainingBaselineEvaluator",
-    "WebSearchBaselineEvaluator",
     "KnowledgePackEvaluator",
     # Metrics
     "calculate_accuracy",

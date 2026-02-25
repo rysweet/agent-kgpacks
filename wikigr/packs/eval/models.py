@@ -1,7 +1,7 @@
 """Evaluation data models for knowledge pack assessment.
 
 This module provides dataclasses for representing evaluation questions,
-answers, metrics, and results used in the three-baseline comparison system.
+answers, metrics, and results used in the two-baseline comparison system.
 """
 
 from dataclasses import dataclass
@@ -40,7 +40,7 @@ class Answer:
 
     question_id: str
     answer: str
-    source: str  # "training", "web_search", "knowledge_pack"
+    source: str  # "training", "knowledge_pack"
     latency_ms: float
     cost_usd: float
 
@@ -66,23 +66,23 @@ class EvalMetrics:
 
 @dataclass
 class EvalResult:
-    """Complete evaluation result comparing all three baselines.
+    """Complete evaluation result comparing baselines.
 
     Attributes:
         pack_name: Name of the knowledge pack being evaluated
         timestamp: ISO 8601 timestamp when evaluation was performed
         training_baseline: Metrics for training-only baseline
-        web_search_baseline: Metrics for web search baseline
+        web_search_baseline: Metrics for web search baseline (deprecated, kept for backwards compatibility)
         knowledge_pack: Metrics for knowledge pack baseline
         surpasses_training: Whether pack beats training-only baseline
-        surpasses_web: Whether pack beats web search baseline
+        surpasses_web: Whether pack beats web search baseline (deprecated, kept for backwards compatibility)
         questions_tested: Number of questions used in evaluation
     """
 
     pack_name: str
     timestamp: str
     training_baseline: EvalMetrics
-    web_search_baseline: EvalMetrics
+    web_search_baseline: EvalMetrics | None
     knowledge_pack: EvalMetrics
     surpasses_training: bool
     surpasses_web: bool

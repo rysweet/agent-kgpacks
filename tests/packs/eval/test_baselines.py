@@ -8,7 +8,6 @@ import pytest
 from wikigr.packs.eval.baselines import (
     KnowledgePackEvaluator,
     TrainingBaselineEvaluator,
-    WebSearchBaselineEvaluator,
 )
 from wikigr.packs.eval.models import Question
 
@@ -58,36 +57,6 @@ def test_training_baseline_evaluate(
     assert answers[0].question_id == "q1"
     assert answers[0].answer == "Sample answer text"
     assert answers[0].source == "training"
-    assert answers[0].latency_ms > 0
-    assert answers[0].cost_usd > 0
-
-
-def test_web_search_baseline_evaluator_init():
-    """Test WebSearchBaselineEvaluator initialization."""
-    evaluator = WebSearchBaselineEvaluator(api_key="test_key")
-    assert evaluator.model == "claude-3-5-sonnet-20241022"
-
-
-@patch("wikigr.packs.eval.baselines.Anthropic")
-def test_web_search_baseline_evaluate(
-    mock_anthropic_class: Mock,
-    sample_questions: list[Question],
-    mock_anthropic_response: Mock,
-):
-    """Test WebSearchBaselineEvaluator.evaluate()."""
-    # Setup mock
-    mock_client = MagicMock()
-    mock_client.messages.create.return_value = mock_anthropic_response
-    mock_anthropic_class.return_value = mock_client
-
-    # Test
-    evaluator = WebSearchBaselineEvaluator(api_key="test_key")
-    answers = evaluator.evaluate(sample_questions)
-
-    assert len(answers) == 1
-    assert answers[0].question_id == "q1"
-    assert answers[0].answer == "Sample answer text"
-    assert answers[0].source == "web_search"
     assert answers[0].latency_ms > 0
     assert answers[0].cost_usd > 0
 
@@ -147,7 +116,7 @@ def test_knowledge_pack_retrieve_context_no_manifest(tmp_path: Path):
     evaluator = KnowledgePackEvaluator(pack_path, api_key="test_key")
     context = evaluator._retrieve_context("Test question")
 
-    assert "No context available" in context
+    assert "Knowledge graph unavailable" in context
 
 
 def test_knowledge_pack_retrieve_context_with_manifest(tmp_path: Path):
