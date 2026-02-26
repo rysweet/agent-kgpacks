@@ -16,5 +16,10 @@
     "https://learn.microsoft.com/en-us/azure/lighthouse/how-to/onboard-customer"
   ],
   "created": "2026-02-26T00:45:57.846209Z",
-  "license": "CC-BY-SA-4.0"
+  "license": "CC-BY-SA-4.0",
+  "eval_scores": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.2
+  }
 }

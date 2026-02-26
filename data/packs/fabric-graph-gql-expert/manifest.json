@@ -16,5 +16,10 @@
     "https://learn.microsoft.com/en-us/fabric/data-engineering/api-graphql-introspection-schema-export"
   ],
   "created": "2026-02-26T00:49:15.608177Z",
-  "license": "CC-BY-SA-4.0"
+  "license": "CC-BY-SA-4.0",
+  "eval_scores": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.2
+  }
 }
