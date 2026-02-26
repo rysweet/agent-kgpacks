@@ -662,6 +662,68 @@ def cmd_status(args: argparse.Namespace) -> None:
     print(f"  Edges (total):          {stats['edges']:>8}")
 
 
+def cmd_research_sources(args: argparse.Namespace) -> None:
+    """Execute 'research-sources' subcommand: discover authoritative sources for a domain."""
+    from datetime import datetime, timezone
+
+    from wikigr.packs.seed_researcher import LLMSeedResearcher
+
+    if not os.getenv("ANTHROPIC_API_KEY"):
+        print("Error: ANTHROPIC_API_KEY environment variable not set", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Researching authoritative sources for: {args.domain}")
+    print(f"Max sources: {args.max_sources}")
+
+    researcher = LLMSeedResearcher()
+
+    try:
+        sources = researcher.discover_sources(args.domain, max_sources=args.max_sources)
+
+        if not sources:
+            print("No sources discovered.")
+            return
+
+        # Display results
+        print(f"\n{'=' * 70}")
+        print(f"Discovered {len(sources)} authoritative sources for '{args.domain}'")
+        print(f"{'=' * 70}\n")
+
+        for i, source in enumerate(sources, 1):
+            print(f"{i}. {source.url}")
+            print(f"   Authority: {source.authority_score:.2f}")
+            print(f"   Type: {source.content_type}")
+            print(f"   Estimated articles: {source.estimated_articles}")
+            print(f"   Description: {source.description}")
+            print()
+
+        # Save to output file if requested
+        if args.output:
+            output_data = {
+                "domain": args.domain,
+                "discovered_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "sources": [
+                    {
+                        "url": s.url,
+                        "authority_score": s.authority_score,
+                        "content_type": s.content_type,
+                        "estimated_articles": s.estimated_articles,
+                        "description": s.description,
+                    }
+                    for s in sources
+                ],
+            }
+
+            with open(args.output, "w") as f:
+                json.dump(output_data, f, indent=2)
+
+            print(f"Results saved to: {args.output}")
+
+    except Exception as e:
+        print(f"Error during source discovery: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
 def cmd_pack_create(args: argparse.Namespace) -> None:
     """Execute 'pack create' subcommand."""
     from datetime import datetime, timezone
@@ -670,15 +732,75 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
     from wikigr.packs.manifest import GraphStats, PackManifest, save_manifest
     from wikigr.packs.skill_template import generate_skill_md
 
-    # Parse topics
-    if not os.path.isfile(args.topics):
-        print(f"Error: topics file not found: {args.topics}", file=sys.stderr)
-        sys.exit(1)
+    # Auto-discovery mode
+    if args.auto_discover:
+        if not os.getenv("ANTHROPIC_API_KEY"):
+            print("Error: ANTHROPIC_API_KEY required for --auto-discover", file=sys.stderr)
+            sys.exit(1)
 
-    topics = parse_topics_file(args.topics)
-    if not topics:
-        print(f"Error: no topics found in {args.topics}", file=sys.stderr)
-        sys.exit(1)
+        print(f"Auto-discovering sources for domain: {args.auto_discover}")
+
+        from wikigr.packs.seed_researcher import LLMSeedResearcher
+
+        researcher = LLMSeedResearcher()
+
+        # Discover sources
+        try:
+            sources = researcher.discover_sources(args.auto_discover, max_sources=10)
+            print(f"Discovered {len(sources)} authoritative sources")
+
+            # Extract URLs from top sources
+            all_urls = []
+            for source in sources[:3]:  # Use top 3 sources
+                print(f"  Extracting URLs from {source.url}...")
+                try:
+                    urls = researcher.extract_article_urls(source.url, max_urls=50)
+                    all_urls.extend(urls)
+                    print(f"    Found {len(urls)} URLs")
+                except Exception as e:
+                    print(f"    Failed: {e}")
+                    continue
+
+            if not all_urls:
+                print("Error: No URLs extracted from discovered sources", file=sys.stderr)
+                sys.exit(1)
+
+            print(f"\nTotal URLs extracted: {len(all_urls)}")
+
+            # Create temporary URLs file
+            import tempfile
+
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+                for url in all_urls:
+                    f.write(url + "\n")
+                temp_urls_path = f.name
+
+            # Set up args for web source creation
+            args.source = "web"
+            args.urls = temp_urls_path
+            args.topics = None  # Clear topics arg
+
+            print(f"Creating pack from {len(all_urls)} discovered URLs...")
+
+            # Continue with normal pack creation flow using web source
+            # (handled below after topics parsing)
+
+        except Exception as e:
+            print(f"Error during auto-discovery: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    # Parse topics (skip if auto-discover mode)
+    if not args.auto_discover:
+        if not os.path.isfile(args.topics):
+            print(f"Error: topics file not found: {args.topics}", file=sys.stderr)
+            sys.exit(1)
+
+        topics = parse_topics_file(args.topics)
+        if not topics:
+            print(f"Error: no topics found in {args.topics}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        topics = [args.auto_discover]  # Use domain as topic
 
     # Create output directory
     output_dir = Path(args.output) / args.name
@@ -1253,6 +1375,24 @@ def main() -> None:
     status_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
     status_parser.set_defaults(func=cmd_status)
 
+    # 'research-sources' subcommand
+    research_parser = subparsers.add_parser(
+        "research-sources",
+        help="Discover authoritative sources for a domain using LLM",
+    )
+    research_parser.add_argument("domain", type=str, help="Domain or topic to research")
+    research_parser.add_argument(
+        "--max-sources",
+        type=int,
+        default=10,
+        help="Maximum number of sources to discover (default: 10)",
+    )
+    research_parser.add_argument(
+        "--output", type=str, help="Path to save discovered sources as JSON"
+    )
+    research_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
+    research_parser.set_defaults(func=cmd_research_sources)
+
     # 'pack' subcommand group
     pack_parser = subparsers.add_parser("pack", help="Manage knowledge packs")
     pack_subparsers = pack_parser.add_subparsers(dest="pack_command", required=True)
@@ -1267,7 +1407,15 @@ def main() -> None:
         default="wikipedia",
         help="Content source",
     )
-    pack_create_parser.add_argument("--topics", type=str, required=True, help="Path to topics file")
+    # Make topics optional when using --auto-discover
+    topics_group = pack_create_parser.add_mutually_exclusive_group(required=True)
+    topics_group.add_argument("--topics", type=str, help="Path to topics file")
+    topics_group.add_argument(
+        "--auto-discover",
+        type=str,
+        metavar="DOMAIN",
+        help="Auto-discover sources using LLM for given domain (e.g., '.NET programming')",
+    )
     pack_create_parser.add_argument("--target", type=int, default=1000, help="Target article count")
     pack_create_parser.add_argument(
         "--eval-questions", type=str, help="Path to eval questions JSONL file"
