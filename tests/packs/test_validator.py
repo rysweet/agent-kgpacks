@@ -3,8 +3,8 @@
 import json
 from pathlib import Path
 
-from wikigr.agent.manifest import EvalScores, GraphStats, PackManifest, save_manifest
-from wikigr.agent.validator import validate_pack_structure
+from wikigr.packs.manifest import EvalScores, GraphStats, PackManifest, save_manifest
+from wikigr.packs.validator import validate_pack_structure
 
 
 class TestValidatePackStructure:

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from wikigr.agent.manifest import (
+from wikigr.packs.manifest import (
     EvalScores,
     GraphStats,
     PackManifest,

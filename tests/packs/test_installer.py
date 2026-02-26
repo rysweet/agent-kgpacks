@@ -6,10 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from wikigr.agent.distribution import package_pack
-from wikigr.agent.installer import PackInstaller
-from wikigr.agent.manifest import EvalScores, GraphStats, PackManifest, save_manifest
-from wikigr.agent.models import PackInfo
+from wikigr.packs.distribution import package_pack
+from wikigr.packs.installer import PackInstaller
+from wikigr.packs.manifest import EvalScores, GraphStats, PackManifest, save_manifest
+from wikigr.packs.models import PackInfo
 
 
 class TestPackInstaller:

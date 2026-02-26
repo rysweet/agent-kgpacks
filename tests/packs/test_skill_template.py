@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from wikigr.agent.manifest import EvalScores, GraphStats, PackManifest
-from wikigr.agent.skill_template import generate_skill_md
+from wikigr.packs.manifest import EvalScores, GraphStats, PackManifest
+from wikigr.packs.skill_template import generate_skill_md
 
 
 class TestGenerateSkillMd:

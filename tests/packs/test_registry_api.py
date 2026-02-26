@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from wikigr.agent.registry_api import PackListing, PackRegistryClient
+from wikigr.packs.registry_api import PackListing, PackRegistryClient
 
 
 class TestPackListing:
