@@ -9,6 +9,7 @@ import ipaddress
 import logging
 import re
 import socket
+import time
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -214,8 +215,6 @@ class WebContentSource:
             ArticleNotFoundError: If the URL returns 404, fails to fetch,
                 or has fewer words than min_content_words (thin content).
         """
-        import time
-
         # Validate URL to prevent SSRF attacks (initial check)
         _validate_url(title_or_url)
 
