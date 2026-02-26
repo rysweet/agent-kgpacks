@@ -662,6 +662,128 @@ def cmd_status(args: argparse.Namespace) -> None:
     print(f"  Edges (total):          {stats['edges']:>8}")
 
 
+def cmd_research_sources(args: argparse.Namespace) -> int:
+    """Execute 'research-sources' subcommand for discovering authoritative sources.
+
+    Args:
+        args: Parsed command-line arguments
+
+    Returns:
+        0 on success, 1 on error
+    """
+    from wikigr.packs.seed_researcher import ConfigurationError, LLMSeedResearcher
+
+    try:
+        # Initialize researcher
+        researcher = LLMSeedResearcher()
+
+        print(f"Researching sources for domain: {args.domain}")
+        print(f"  Max sources: {args.max_sources}")
+        print(f"  Max URLs per source: {args.max_urls}")
+
+        # Discover sources
+        print("\nDiscovering authoritative sources...")
+        sources = researcher.discover_sources(args.domain, max_sources=args.max_sources)
+
+        print(f"\nFound {len(sources)} authoritative sources:")
+        for i, source in enumerate(sources, 1):
+            print(f"\n{i}. {source.domain} (authority: {source.authority_score:.2f})")
+            print(f"   URL: {source.url}")
+            print(f"   Rationale: {source.rationale}")
+            print(f"   Extraction methods: {', '.join(source.extraction_methods)}")
+
+        # Extract URLs from sources
+        all_urls = []
+        print("\nExtracting article URLs...")
+
+        for source in sources:
+            print(f"\nProcessing {source.domain}...")
+            try:
+                urls = researcher.extract_article_urls(source, max_urls=args.max_urls)
+                print(f"  Extracted {len(urls)} URLs")
+                all_urls.extend(urls)
+            except Exception as e:
+                print(f"  Warning: Extraction failed: {e}")
+                continue
+
+        # Validate URLs if requested
+        if args.validate:
+            print("\nValidating URLs...")
+            validated_urls = []
+            for url in all_urls:
+                if researcher.validate_url(url.url):
+                    validated_urls.append(url)
+            print(f"  {len(validated_urls)}/{len(all_urls)} URLs validated")
+            all_urls = validated_urls
+
+        # Rank URLs
+        print("\nRanking URLs by quality...")
+        ranked_urls = researcher.rank_urls(all_urls)
+
+        print("\nTop 10 URLs:")
+        for i, url in enumerate(ranked_urls[:10], 1):
+            print(f"{i}. {url.url} (score: {url.rank_score:.3f})")
+            if url.title:
+                print(f"   Title: {url.title}")
+
+        # Save results if output file specified
+        if args.output:
+            output_data = {
+                "domain": args.domain,
+                "sources": [
+                    {
+                        "domain": s.domain,
+                        "url": s.url,
+                        "authority_score": s.authority_score,
+                        "rationale": s.rationale,
+                        "article_count": s.article_count,
+                        "extraction_methods": s.extraction_methods,
+                    }
+                    for s in sources
+                ],
+                "urls": [
+                    {
+                        "url": u.url,
+                        "title": u.title,
+                        "published_date": u.published_date,
+                        "extraction_method": u.extraction_method,
+                        "authority_score": u.authority_score,
+                        "content_score": u.content_score,
+                        "rank_score": u.rank_score,
+                    }
+                    for u in ranked_urls
+                ],
+                "summary": {
+                    "total_sources": len(sources),
+                    "total_urls": len(all_urls),
+                    "validated_urls": len(ranked_urls) if args.validate else len(all_urls),
+                    "avg_authority": sum(s.authority_score for s in sources) / len(sources)
+                    if sources
+                    else 0,
+                },
+            }
+
+            with open(args.output, "w") as f:
+                json.dump(output_data, f, indent=2)
+
+            print(f"\nResults saved to: {args.output}")
+
+        print(f"\n✓ Research complete: {len(sources)} sources, {len(ranked_urls)} URLs")
+        return 0
+
+    except ConfigurationError as e:
+        print(f"Configuration error: {e}", file=sys.stderr)
+        print("\nPlease set ANTHROPIC_API_KEY environment variable:", file=sys.stderr)
+        print("  export ANTHROPIC_API_KEY='sk-ant-...'", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error during research: {e}", file=sys.stderr)
+        import traceback
+
+        traceback.print_exc()
+        return 1
+
+
 def cmd_pack_create(args: argparse.Namespace) -> None:
     """Execute 'pack create' subcommand."""
     from datetime import datetime, timezone
@@ -1253,6 +1375,29 @@ def main() -> None:
     status_parser.add_argument("-v", "--verbose", action="store_true", help="Verbose logging")
     status_parser.set_defaults(func=cmd_status)
 
+    # 'research-sources' subcommand
+    research_parser = subparsers.add_parser(
+        "research-sources", help="Research authoritative sources for a domain using LLM"
+    )
+    research_parser.add_argument("domain", type=str, help="Topic or domain to research")
+    research_parser.add_argument(
+        "--max-sources",
+        type=int,
+        default=10,
+        help="Maximum number of sources to discover (default: 10)",
+    )
+    research_parser.add_argument(
+        "--max-urls",
+        type=int,
+        default=100,
+        help="Maximum URLs to extract per source (default: 100)",
+    )
+    research_parser.add_argument("--output", type=str, help="Save results to JSON file")
+    research_parser.add_argument(
+        "--validate", action="store_true", help="Validate all URLs (slower but more accurate)"
+    )
+    research_parser.set_defaults(func=cmd_research_sources)
+
     # 'pack' subcommand group
     pack_parser = subparsers.add_parser("pack", help="Manage knowledge packs")
     pack_subparsers = pack_parser.add_subparsers(dest="pack_command", required=True)
@@ -1337,7 +1482,10 @@ def main() -> None:
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
-    args.func(args)
+    result = args.func(args)
+    # Exit with proper code if command returns int
+    if isinstance(result, int):
+        sys.exit(result)
 
 
 if __name__ == "__main__":
