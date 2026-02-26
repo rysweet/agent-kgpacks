@@ -124,10 +124,10 @@ https://doc.rust-lang.org/book/ch18-03-pattern-syntax.html
 # Advanced Features (Critical - 10% unsafe)
 https://doc.rust-lang.org/book/ch19-00-advanced-features.html
 https://doc.rust-lang.org/book/ch19-01-unsafe-rust.html
-https://doc.rust-lang.org/book/ch19-02-advanced-traits.html
-https://doc.rust-lang.org/book/ch19-03-advanced-types.html
-https://doc.rust-lang.org/book/ch19-04-advanced-functions-and-closures.html
-https://doc.rust-lang.org/book/ch19-05-macros.html
+# REMOVED (404): https://doc.rust-lang.org/book/ch19-02-advanced-traits.html
+# REMOVED (404): https://doc.rust-lang.org/book/ch19-03-advanced-types.html
+# REMOVED (404): https://doc.rust-lang.org/book/ch19-04-advanced-functions-and-closures.html
+# REMOVED (404): https://doc.rust-lang.org/book/ch19-05-macros.html
 
 # Final Project - Web Server
 https://doc.rust-lang.org/book/ch20-00-final-project-a-web-server.html
@@ -262,9 +262,9 @@ https://doc.rust-lang.org/rust-by-example/scope/lifetime/fn.html
 https://doc.rust-lang.org/rust-by-example/scope/lifetime/methods.html
 https://doc.rust-lang.org/rust-by-example/scope/lifetime/struct.html
 https://doc.rust-lang.org/rust-by-example/scope/lifetime/trait.html
-https://doc.rust-lang.org/rust-by-example/scope/lifetime/bounds.html
-https://doc.rust-lang.org/rust-by-example/scope/lifetime/coercion.html
-https://doc.rust-lang.org/rust-by-example/scope/lifetime/static.html
+# REMOVED (404): https://doc.rust-lang.org/rust-by-example/scope/lifetime/bounds.html
+# REMOVED (404): https://doc.rust-lang.org/rust-by-example/scope/lifetime/coercion.html
+# REMOVED (404): https://doc.rust-lang.org/rust-by-example/scope/lifetime/static.html
 https://doc.rust-lang.org/rust-by-example/scope/lifetime/elision.html
 
 # Traits (20% traits coverage)
@@ -347,10 +347,10 @@ https://doc.rust-lang.org/reference/types/inferred.html
 
 # Type Layout
 https://doc.rust-lang.org/reference/type-layout.html
-https://doc.rust-lang.org/reference/type-layout/size-and-alignment.html
-https://doc.rust-lang.org/reference/type-layout/repr-rust.html
-https://doc.rust-lang.org/reference/type-layout/repr-transparent.html
-https://doc.rust-lang.org/reference/type-layout/repr-c.html
+# REMOVED (404): https://doc.rust-lang.org/reference/type-layout/size-and-alignment.html
+# REMOVED (404): https://doc.rust-lang.org/reference/type-layout/repr-rust.html
+# REMOVED (404): https://doc.rust-lang.org/reference/type-layout/repr-transparent.html
+# REMOVED (404): https://doc.rust-lang.org/reference/type-layout/repr-c.html
 
 # Items and Attributes
 https://doc.rust-lang.org/reference/items.html
