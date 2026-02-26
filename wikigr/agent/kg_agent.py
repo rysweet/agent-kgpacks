@@ -35,7 +35,6 @@ class KnowledgeGraphAgent:
         db_path: str,
         anthropic_api_key: str | None = None,
         read_only: bool = True,
-        few_shot_examples_path: str | None = None,
     ):
         """
         Initialize agent with database connection and Claude API.
@@ -44,27 +43,12 @@ class KnowledgeGraphAgent:
             db_path: Path to WikiGR Kuzu database
             anthropic_api_key: Anthropic API key (or from ANTHROPIC_API_KEY env var)
             read_only: Open database in read-only mode (allows concurrent access during expansion)
-            few_shot_examples_path: Optional path to few-shot examples JSON file
         """
         self.db = kuzu.Database(db_path, read_only=read_only)
         self.conn = kuzu.Connection(self.db)
         self.claude = Anthropic(api_key=anthropic_api_key)
         self._embedding_generator = None
         self._plan_cache: dict[str, dict] = {}
-
-        # Phase 1 Pack Enhancements
-        from wikigr.agent.reranker import GraphReranker
-        from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
-        from wikigr.agent.few_shot import FewShotManager
-
-        self.reranker = GraphReranker(self.conn)
-        self.synthesizer = MultiDocSynthesizer(self.conn)
-        self.few_shot = None
-        if few_shot_examples_path:
-            try:
-                self.few_shot = FewShotManager(few_shot_examples_path)
-            except Exception as e:
-                logger.warning(f"Failed to load few-shot examples: {e}")
 
         logger.info(f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only})")
 
@@ -78,21 +62,12 @@ class KnowledgeGraphAgent:
         injection). All attributes are properly initialized, avoiding the fragile
         __new__() pattern.
         """
-        from wikigr.agent.reranker import GraphReranker
-        from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
-
         agent = cls.__new__(cls)
         agent.db = None
         agent.conn = conn
         agent.claude = claude_client
         agent._embedding_generator = None
         agent._plan_cache = {}
-
-        # Initialize enhancement modules
-        agent.reranker = GraphReranker(conn)
-        agent.synthesizer = MultiDocSynthesizer(conn)
-        agent.few_shot = None
-
         return agent
 
     def _check_open(self) -> None:
@@ -117,7 +92,6 @@ class KnowledgeGraphAgent:
         question: str,
         max_results: int = 10,
         use_graph_rag: bool = False,
-        use_enhancements: bool = False,
     ) -> dict[str, Any]:
         """
         Answer a question using the knowledge graph.
@@ -127,8 +101,6 @@ class KnowledgeGraphAgent:
             max_results: Maximum number of results to retrieve from graph (1-1000)
             use_graph_rag: If True, delegate to graph_query() for multi-hop
                 retrieval that follows LINKS_TO edges before synthesizing.
-            use_enhancements: If True, use Phase 1 enhancements (reranking,
-                multi-doc synthesis, few-shot examples) for improved accuracy.
 
         Returns:
             {
@@ -142,10 +114,6 @@ class KnowledgeGraphAgent:
         self._check_open()
         if use_graph_rag:
             return self.graph_query(question)
-
-        # Enhanced query path with Phase 1 improvements
-        if use_enhancements:
-            return self._query_enhanced(question, max_results)
         if not isinstance(max_results, int) or not (1 <= max_results <= 1000):
             raise ValueError(
                 f"max_results must be an integer between 1 and 1000, got {max_results!r}"
@@ -1157,182 +1125,6 @@ Provide a clear, factual answer grounded in the source text. Cite specific artic
         # Sort by similarity
         results = sorted(articles.values(), key=lambda x: x["similarity"], reverse=True)
         return results[:top_k]
-
-    def _query_enhanced(
-        self,
-        question: str,
-        max_results: int = 10,
-    ) -> dict[str, Any]:
-        """
-        Enhanced query with Phase 1 improvements: reranking, multi-doc synthesis, few-shot.
-
-        Applies the following enhancements:
-        1. GraphReranker: Rerank results using 60% vector + 40% graph centrality
-        2. MultiDocSynthesizer: Expand to related articles and synthesize context
-        3. FewShotManager: Include relevant few-shot examples in prompt
-
-        Args:
-            question: Natural language question
-            max_results: Maximum number of results to retrieve
-
-        Returns:
-            Enhanced query results with improved answer quality
-        """
-        t_start = time.perf_counter()
-
-        # Step 1: Standard query planning
-        t_plan_start = time.perf_counter()
-        query_plan = self._plan_query(question)
-        t_plan = time.perf_counter() - t_plan_start
-
-        # Step 2: Execute query
-        t_exec_start = time.perf_counter()
-        kg_results = self._execute_query(
-            query_plan["cypher"], max_results, query_plan.get("cypher_params")
-        )
-
-        # Enhancement 1: Apply graph reranking to hybrid search results
-        try:
-            hybrid_results = self._hybrid_retrieve(question, max_results)
-            # Rerank using graph centrality
-            reranked_results = self.reranker.rerank(
-                hybrid_results.get("raw", []), max_results=max_results
-            )
-
-            # Merge reranked sources into KG results
-            existing_sources = set(kg_results.get("sources", []))
-            for result in reranked_results:
-                title = result.get("title", "")
-                if title and title not in existing_sources:
-                    kg_results.setdefault("sources", []).append(title)
-                    existing_sources.add(title)
-        except Exception as e:
-            logger.debug(f"Reranking failed: {e}")
-
-        t_exec = time.perf_counter() - t_exec_start
-
-        # Enhancement 2: Multi-doc synthesis - expand to related articles
-        t_synth_start = time.perf_counter()
-        try:
-            seed_articles = kg_results.get("sources", [])[:3]
-            if seed_articles:
-                expanded_articles = self.synthesizer.expand_to_related_articles(
-                    seed_articles, max_related=3
-                )
-                # Add expanded articles to sources
-                for article in expanded_articles:
-                    if article not in kg_results.get("sources", []):
-                        kg_results.setdefault("sources", []).append(article)
-
-                # Synthesize multi-doc context with citations
-                multi_doc_context = self.synthesizer.synthesize_context(
-                    expanded_articles[:5], max_content_length=800
-                )
-            else:
-                multi_doc_context = ""
-        except Exception as e:
-            logger.debug(f"Multi-doc synthesis failed: {e}")
-            multi_doc_context = ""
-
-        # Enhancement 3: Few-shot examples
-        few_shot_context = ""
-        if self.few_shot:
-            try:
-                examples = self.few_shot.find_similar_examples(question, top_k=2)
-                if examples:
-                    few_shot_parts = ["## Relevant Examples:\n"]
-                    for i, ex in enumerate(examples, 1):
-                        few_shot_parts.append(
-                            f"**Example {i}:**\nQ: {ex['question']}\nA: {ex['answer']}\n"
-                        )
-                    few_shot_context = "\n".join(few_shot_parts)
-            except Exception as e:
-                logger.debug(f"Few-shot retrieval failed: {e}")
-
-        # Synthesize answer with enhancements
-        answer = self._synthesize_answer_enhanced(
-            question, kg_results, query_plan, multi_doc_context, few_shot_context
-        )
-        t_synth = time.perf_counter() - t_synth_start
-
-        t_total = time.perf_counter() - t_start
-
-        logger.info(
-            "enhanced_query_monitor: type=%s total=%.2fs plan=%.2fs exec=%.2fs synth=%.2fs "
-            "sources=%d entities=%d facts=%d question=%r",
-            query_plan.get("type", "unknown"),
-            t_total,
-            t_plan,
-            t_exec,
-            t_synth,
-            len(kg_results.get("sources", [])),
-            len(kg_results.get("entities", [])),
-            len(kg_results.get("facts", [])),
-            question[:80],
-        )
-
-        return {
-            "answer": answer,
-            "sources": kg_results.get("sources", []),
-            "entities": kg_results.get("entities", []),
-            "facts": kg_results.get("facts", []),
-            "cypher_query": query_plan["cypher"],
-            "query_type": query_plan["type"],
-            "enhanced": True,
-        }
-
-    def _synthesize_answer_enhanced(
-        self,
-        question: str,
-        kg_results: dict,
-        query_plan: dict,
-        multi_doc_context: str,
-        few_shot_context: str,
-    ) -> str:
-        """Synthesize answer with enhanced context (multi-doc + few-shot)."""
-        if "error" in kg_results:
-            return f"Query execution failed: {kg_results['error']}"
-
-        # Build enhanced prompt with all context
-        base_context = self._build_synthesis_context(question, kg_results, query_plan)
-
-        enhanced_prompt = f"""Using the knowledge graph results, multi-document context, and example answers below, provide a comprehensive and accurate answer.
-
-{base_context}
-"""
-
-        if multi_doc_context:
-            enhanced_prompt += f"""
-
-## Multi-Document Context (with citations):
-{multi_doc_context}
-"""
-
-        if few_shot_context:
-            enhanced_prompt += f"""
-
-{few_shot_context}
-"""
-
-        enhanced_prompt += """
-
-Provide a clear, factual answer that synthesizes information from all sources. Use proper citations when referencing specific articles."""
-
-        try:
-            response = self.claude.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=768,
-                messages=[{"role": "user", "content": enhanced_prompt}],
-            )
-        except Exception as e:
-            logger.warning(f"Claude API error in _synthesize_answer_enhanced: {e}")
-            sources = ", ".join(kg_results.get("sources", [])[:5])
-            return f"Found relevant sources: {sources}" if sources else "No results found."
-
-        if not response.content:
-            return "Unable to synthesize answer: empty response from Claude."
-
-        return response.content[0].text
 
     def __enter__(self):
         return self
