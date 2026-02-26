@@ -1,5 +1,7 @@
 # .NET Expert Knowledge Pack - Source URLs
-# Total: 250 URLs across 5 sources
+# Total: ~234 active URLs across 5 sources (15 invalid URLs removed, 5 replaced)
+# Last validated: 2026-02-26 (validate_pack_urls.py --fix)
+# Changes: Removed 15 hallucinated/dead URLs; added valid MS Learn replacements for 4
 
 # ====================
 # Source 1: Microsoft Learn - C# Documentation (60 URLs - 30% of questions)
@@ -48,7 +50,8 @@ https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/tutorials/hello-w
 https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/tutorials/branches-and-loops
 https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/tutorials/list-collection
 https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/tutorials/numbers-in-csharp
-https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/tutorials/interpolated-strings
+# REMOVED (404): https://learn.microsoft.com/en-us/dotnet/csharp/tour-of-csharp/tutorials/interpolated-strings
+https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/tokens/interpolated
 
 # C# Programming Concepts
 https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/
@@ -67,7 +70,8 @@ https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/
 # Delegates and Events
 https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/
 https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/events/
-https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/delegate
+# REMOVED (404): https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/delegate
+https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/delegates/delegates-overview
 
 # Memory Management
 https://learn.microsoft.com/en-us/dotnet/standard/automatic-memory-management
@@ -77,7 +81,8 @@ https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/fundamental
 # Design Patterns in C#
 https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/
 https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/naming-guidelines
-https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/type-design-guidelines
+# REMOVED (404): https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/type-design-guidelines
+https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/type
 
 # Threading and Parallelism
 https://learn.microsoft.com/en-us/dotnet/standard/threading/managed-threading-basics
@@ -213,7 +218,8 @@ https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-9.0/whatsnew
 https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-8.0/whatsnew
 https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-strings
 https://learn.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency
-https://learn.microsoft.com/en-us/ef/core/miscellaneous/logging-events-diagnostics
+# REMOVED (404): https://learn.microsoft.com/en-us/ef/core/miscellaneous/logging-events-diagnostics
+https://learn.microsoft.com/en-us/ef/core/logging-events-diagnostics
 https://learn.microsoft.com/en-us/ef/core/miscellaneous/testing/
 
 # Change Tracking
@@ -291,24 +297,24 @@ https://learn.microsoft.com/en-us/dotnet/aspire/search/elasticsearch-component
 https://www.milanjovanovic.tech/blog/clean-architecture-folder-structure
 https://www.milanjovanovic.tech/blog/vertical-slice-architecture
 https://www.milanjovanovic.tech/blog/cqrs-pattern-with-mediatr
-https://www.milanjovanovic.tech/blog/domain-driven-design-in-dotnet
+# REMOVED (404): https://www.milanjovanovic.tech/blog/domain-driven-design-in-dotnet
 https://www.milanjovanovic.tech/blog/what-is-a-modular-monolith
-https://www.milanjovanovic.tech/blog/repository-pattern-done-right
-https://www.milanjovanovic.tech/blog/specification-pattern
+# REMOVED (404): https://www.milanjovanovic.tech/blog/repository-pattern-done-right
+# REMOVED (404): https://www.milanjovanovic.tech/blog/specification-pattern
 https://www.milanjovanovic.tech/blog/decorator-pattern-in-asp-net-core
 
 # Milan Jovanović - Best Practices
 https://www.milanjovanovic.tech/blog/functional-error-handling-in-dotnet-with-the-result-pattern
 https://www.milanjovanovic.tech/blog/balancing-cross-cutting-concerns-in-clean-architecture
-https://www.milanjovanovic.tech/blog/value-objects-in-domain-driven-design
-https://www.milanjovanovic.tech/blog/how-to-use-the-options-pattern-in-asp-net-core
+# REMOVED (404): https://www.milanjovanovic.tech/blog/value-objects-in-domain-driven-design
+# REMOVED (404): https://www.milanjovanovic.tech/blog/how-to-use-the-options-pattern-in-asp-net-core
 https://www.milanjovanovic.tech/blog/using-multiple-ef-core-dbcontext-in-single-application
-https://www.milanjovanovic.tech/blog/ef-core-query-splitting
+# REMOVED (404): https://www.milanjovanovic.tech/blog/ef-core-query-splitting
 
 # Milan Jovanović - Testing
 https://www.milanjovanovic.tech/blog/improving-aspnetcore-dependency-injection-with-scrutor
-https://www.milanjovanovic.tech/blog/integration-testing-with-web-application-factory
-https://www.milanjovanovic.tech/blog/unit-testing-best-practices
+# REMOVED (404): https://www.milanjovanovic.tech/blog/integration-testing-with-web-application-factory
+# REMOVED (404): https://www.milanjovanovic.tech/blog/unit-testing-best-practices
 
 # .NET Architecture Guides
 https://learn.microsoft.com/en-us/dotnet/architecture/
@@ -375,20 +381,21 @@ https://learn.microsoft.com/en-us/azure/architecture/patterns/compensating-trans
 https://devblogs.microsoft.com/dotnet/
 https://devblogs.microsoft.com/dotnet/category/aspnet/
 https://devblogs.microsoft.com/dotnet/introducing-dotnet-aspire-simplifying-cloud-native-development-with-dotnet-8/
-https://andrewlock.net/series/
+# REMOVED (404): https://andrewlock.net/series/
 https://khalidabuhakmeh.com/
 https://ardalis.com/
 
 # Design Patterns Resources
 https://refactoring.guru/design-patterns/csharp
-https://www.dofactory.com/net/design-patterns
+# REMOVED (404): https://www.dofactory.com/net/design-patterns
 
 # Performance Blogs
 https://michaelscodingspot.com/
 https://www.meziantou.net/
 
 # Community Resources
-https://dotnet.microsoft.com/platform/community
+# REMOVED (403): https://dotnet.microsoft.com/platform/community
+https://learn.microsoft.com/en-us/dotnet/core/introduction
 https://github.com/dotnet/aspnetcore
 https://github.com/dotnet/efcore
 https://github.com/dotnet/aspire

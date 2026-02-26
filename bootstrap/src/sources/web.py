@@ -192,12 +192,14 @@ class WebContentSource:
         user_agent: str = "WikiGR/1.0 (Knowledge Graph Builder)",
         timeout: int = 30,
         rate_limit_delay: float = 0.5,
+        min_content_words: int = 200,
     ):
         self._session = requests.Session()
         self._session.headers["User-Agent"] = user_agent
         self._timeout = timeout
         self._rate_limit_delay = rate_limit_delay
         self._last_request_time = 0.0
+        self._min_content_words = min_content_words
 
     def fetch_article(self, title_or_url: str) -> Article:
         """Fetch a web page by URL.
@@ -209,7 +211,8 @@ class WebContentSource:
             Article with markdown content, links, and inferred categories.
 
         Raises:
-            ArticleNotFoundError: If the URL returns 404 or fails.
+            ArticleNotFoundError: If the URL returns 404, fails to fetch,
+                or has fewer words than min_content_words (thin content).
         """
         import time
 
@@ -243,6 +246,15 @@ class WebContentSource:
         markdown = _html_to_markdown(html)
         links = _extract_links(html, title_or_url)
         categories = _infer_categories(title_or_url)
+
+        word_count = len(markdown.split())
+        if self._min_content_words > 0 and word_count < self._min_content_words:
+            logger.warning(
+                f"Skipping thin content: {title_or_url} ({word_count} words < {self._min_content_words} minimum)"
+            )
+            raise ArticleNotFoundError(
+                f"Thin content: {title_or_url} has {word_count} words (minimum: {self._min_content_words})"
+            )
 
         logger.info(f"Fetched web page: {title} ({len(markdown)} chars, {len(links)} links)")
 

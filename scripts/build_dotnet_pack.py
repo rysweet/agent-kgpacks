@@ -39,6 +39,7 @@ import kuzu  # noqa: E402
 from bootstrap.schema.ryugraph_schema import create_schema  # noqa: E402
 from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
+from bootstrap.src.sources.base import ArticleNotFoundError  # noqa: E402
 from bootstrap.src.sources.web import WebContentSource  # noqa: E402
 
 PACK_DIR = Path("data/packs/dotnet-expert")
@@ -238,6 +239,10 @@ def process_url(
         logger.info(f"Processed {url} -> {title}")
         return True
 
+    except ArticleNotFoundError as e:
+        # Thin content or 404 — not a pipeline failure, just a skip
+        logger.info(f"Skipped {url}: {e}")
+        return False
     except Exception as e:
         logger.error(f"Failed to process {url}: {e}")
         return False
@@ -264,7 +269,7 @@ def create_manifest(
     manifest = {
         "name": "dotnet-expert",
         "version": "1.0.0",
-        "description": "Expert DotNet programming knowledge covering ownership, traits, async programming, unsafe code, and common patterns from official DotNet documentation",
+        "description": "Expert .NET programming knowledge covering C#, ASP.NET Core, Entity Framework, Blazor, async/await, dependency injection, and common .NET patterns from official Microsoft documentation",
         "graph_stats": {
             "articles": int(articles_count),
             "entities": int(entities_count),
@@ -277,11 +282,11 @@ def create_manifest(
             "citation_quality": 0.0,
         },
         "source_urls": [
-            "https://doc.rust-lang.org/book/",
-            "https://doc.rust-lang.org/rust-by-example/",
-            "https://doc.rust-lang.org/reference/",
-            "https://doc.rust-lang.org/nomicon/",
-            "https://doc.rust-lang.org/std/",
+            "https://learn.microsoft.com/en-us/dotnet/csharp/",
+            "https://learn.microsoft.com/en-us/aspnet/core/",
+            "https://learn.microsoft.com/en-us/ef/core/",
+            "https://learn.microsoft.com/en-us/dotnet/core/",
+            "https://learn.microsoft.com/en-us/dotnet/architecture/",
         ],
         "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "license": "MIT",
