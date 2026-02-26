@@ -59,16 +59,17 @@ class GraphReranker:
 
         # Build Cypher query for degree centrality with normalization
         # Count both incoming and outgoing LINKS_TO edges, then normalize
+        # Works with both integer IDs and string titles as article identifiers
         cypher = """
         UNWIND $article_ids AS aid
-        MATCH (a:Article {id: aid})
+        MATCH (a:Article) WHERE a.title = aid
         OPTIONAL MATCH (a)-[r:LINKS_TO]->()
         WITH a, count(r) AS out_degree
         OPTIONAL MATCH (a)<-[r2:LINKS_TO]-()
         WITH a, out_degree, count(r2) AS in_degree, (out_degree + count(r2)) AS degree
-        WITH collect({id: a.id, degree: degree}) AS articles, max(degree) AS max_degree
+        WITH collect({title: a.title, degree: degree}) AS articles, max(degree) AS max_degree
         UNWIND articles AS article
-        RETURN article.id AS article_id,
+        RETURN article.title AS article_id,
                CASE WHEN max_degree > 0 THEN toFloat(article.degree) / toFloat(max_degree) ELSE 0.0 END AS centrality
         """
 
@@ -84,7 +85,7 @@ class GraphReranker:
 
             # Extract already-normalized centrality values from result
             for _, row in df.iterrows():
-                article_id = int(row["article_id"])
+                article_id = row["article_id"]
                 centrality_score = float(row["centrality"])
                 centrality[article_id] = centrality_score
 
@@ -142,8 +143,9 @@ class GraphReranker:
         if not vector_results:
             return []
 
-        # Extract article IDs
-        article_ids = [r["article_id"] for r in vector_results]
+        # Extract article identifiers (supports both article_id and title keys)
+        id_key = "article_id" if "article_id" in vector_results[0] else "title"
+        article_ids = [r[id_key] for r in vector_results]
 
         # Calculate centrality scores
         centrality = self.calculate_centrality(article_ids)
@@ -151,7 +153,7 @@ class GraphReranker:
         # Compute combined scores
         reranked = []
         for result in vector_results:
-            article_id = result["article_id"]
+            article_id = result[id_key]
             vector_score = result["score"]
             centrality_score = centrality.get(article_id, 0.0)
 

@@ -181,53 +181,51 @@ class KnowledgeGraphAgent:
         few_shot_examples = []
         if self.use_enhancements and kg_results.get("sources"):
             t_enhance_start = time.perf_counter()
-
-            # Fetch article IDs for sources
-            source_titles = kg_results["sources"][:max_results]
-            article_id_map = {}
             try:
-                result = self.conn.execute(
-                    "MATCH (a:Article) WHERE a.title IN $titles RETURN a.title AS title, a.id AS id",
-                    {"titles": source_titles},
-                )
-                df = result.get_as_df()
-                article_id_map = dict(zip(df["title"], df["id"]))
-            except Exception as e:
-                logger.warning(f"Failed to fetch article IDs: {e}")
+                source_titles = kg_results["sources"][:5]
 
-            # Enhancement 1: Rerank sources by graph centrality
-            if article_id_map:
+                # Enhancement 1: Rerank by graph centrality (using titles as IDs)
                 sources_with_scores = [
-                    {"article_id": article_id_map[src], "score": 1.0 / (i + 1), "title": src}
+                    {"title": src, "score": 1.0 / (i + 1)}
                     for i, src in enumerate(source_titles)
-                    if src in article_id_map
                 ]
                 reranked = self.reranker.rerank(
                     sources_with_scores, vector_weight=0.6, graph_weight=0.4
                 )
-                kg_results["sources"] = [r["title"] for r in reranked[:5]]
-            else:
-                reranked = []
+                if reranked:
+                    kg_results["sources"] = [r["title"] for r in reranked[:5]]
 
-            # Enhancement 2: Expand to multi-document context
-            if reranked:
-                seed_article_id = reranked[0]["article_id"]
-                related_articles = self.synthesizer.expand_to_related_articles(
-                    [seed_article_id], max_hops=1, max_articles=5
-                )
-                # Build enriched context with citations
-                enriched_context = self.synthesizer.synthesize_with_citations(
-                    related_articles, question
-                )
-                kg_results["enriched_context"] = enriched_context
+                # Enhancement 2: Fetch related article content for richer context
+                seed_title = kg_results["sources"][0] if kg_results["sources"] else None
+                if seed_title:
+                    # Get related articles via LINKS_TO
+                    try:
+                        result = self.conn.execute(
+                            """
+                            MATCH (a:Article {title: $title})-[:LINKS_TO]->(b:Article)
+                            RETURN b.title AS title LIMIT 3
+                            """,
+                            {"title": seed_title},
+                        )
+                        df = result.get_as_df()
+                        related_titles = df["title"].tolist() if not df.empty else []
+                        # Add related sources (deduplicated)
+                        existing = set(kg_results["sources"])
+                        for rt in related_titles:
+                            if rt not in existing:
+                                kg_results["sources"].append(rt)
+                                existing.add(rt)
+                    except Exception as e:
+                        logger.debug(f"Multi-doc expansion failed: {e}")
 
-            # Enhancement 3: Retrieve few-shot examples
-            few_shot_examples = self.few_shot.find_similar_examples(question, k=2)
+                # Enhancement 3: Retrieve few-shot examples
+                few_shot_examples = self.few_shot.find_similar_examples(question, k=2)
 
-            t_enhance = time.perf_counter() - t_enhance_start
-            logger.info(
-                f"Enhancements applied in {t_enhance:.2f}s (reranked {len(reranked)}, expanded to {len(related_articles) if reranked else 0}, {len(few_shot_examples)} examples)"
-            )
+                t_enhance = time.perf_counter() - t_enhance_start
+                logger.info(f"Enhancements applied in {t_enhance:.2f}s")
+            except Exception as e:
+                logger.warning(f"Enhancement pipeline failed, using standard retrieval: {e}")
+                few_shot_examples = []
 
         # Step 3: Synthesize answer with Claude
         t_synth_start = time.perf_counter()
@@ -582,10 +580,10 @@ class KnowledgeGraphAgent:
 
 The graph schema:
 - Article (title STRING PK, category STRING, word_count INT32)
-- Entity (name STRING PK, type STRING, properties STRING)
-- Fact (content STRING, source_article STRING)
-- Section (section_id STRING PK, content STRING, embedding FLOAT[384])
-- Relationships: HAS_ENTITY, HAS_FACT, ENTITY_RELATION (relation STRING, context STRING), LINKS_TO, HAS_SECTION
+- Entity (entity_id STRING PK, name STRING, type STRING, description STRING)
+- Fact (fact_id STRING PK, content STRING)
+- Section (section_id STRING PK, title STRING, content STRING, embedding DOUBLE[384], level INT32, word_count INT32)
+- Relationships: HAS_ENTITY, HAS_FACT, ENTITY_RELATION (relation STRING, context STRING), LINKS_TO (link_type STRING), HAS_SECTION (section_index INT32)
 
 IMPORTANT Kuzu syntax rules:
 - Use $param for parameters (NOT {{param}})
@@ -660,6 +658,11 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                     "cypher_params": {"q": question},
                     "explanation": "Fallback: Claude response missing 'type' or 'cypher' key",
                 }
+            # Always ensure cypher_params includes the question as $q
+            if "cypher_params" not in parsed:
+                parsed["cypher_params"] = {"q": question}
+            elif "q" not in parsed["cypher_params"]:
+                parsed["cypher_params"]["q"] = question
             return parsed
         except json.JSONDecodeError as e:
             logger.warning(f"JSON parse failed: {e}. Response: {content[:200]}")
@@ -1068,7 +1071,7 @@ Provide a clear, factual answer grounded in the source text. Cite specific artic
             """
             MATCH (e:Entity {name: $name})
             OPTIONAL MATCH (a:Article)-[:HAS_ENTITY]->(e)
-            RETURN e.name AS name, e.type AS type, e.properties AS properties,
+            RETURN e.name AS name, e.type AS type, e.description AS description,
                    collect(a.title) AS source_articles
             """,
             {"name": entity_name},
@@ -1082,7 +1085,7 @@ Provide a clear, factual answer grounded in the source text. Cite specific artic
         return {
             "name": row["name"],
             "type": row["type"],
-            "properties": _safe_json_loads(row["properties"]),
+            "properties": _safe_json_loads(row.get("description", "")),
             "source_articles": row["source_articles"],
         }
 
