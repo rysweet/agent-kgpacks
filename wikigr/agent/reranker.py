@@ -37,6 +37,35 @@ class GraphReranker:
             kuzu_conn: Active Kuzu connection for centrality queries
         """
         self.conn = kuzu_conn
+        self._sparse_graph: bool | None = None  # Cached density check (None = not yet checked)
+
+    def _check_graph_density(self) -> float:
+        """Check average LINKS_TO edges per Article node.
+
+        Returns:
+            Average links per article (float). Returns 0.0 on error.
+        """
+        try:
+            result = self.conn.execute(
+                "MATCH ()-[:LINKS_TO]->() RETURN count(*) AS total_links"
+            )
+            links_df = result.get_as_df()
+            total_links = int(links_df.iloc[0]["total_links"]) if not links_df.empty else 0
+
+            result = self.conn.execute(
+                "MATCH (a:Article) RETURN count(a) AS total_articles"
+            )
+            articles_df = result.get_as_df()
+            total_articles = (
+                int(articles_df.iloc[0]["total_articles"]) if not articles_df.empty else 0
+            )
+
+            if total_articles == 0:
+                return 0.0
+            return total_links / total_articles
+        except Exception as e:
+            logger.warning(f"Graph density check failed: {e}")
+            return 0.0
 
     def calculate_centrality(self, article_ids: list[int]) -> dict[int, float]:
         """Calculate normalized centrality scores for articles.
@@ -147,8 +176,21 @@ class GraphReranker:
         id_key = "article_id" if "article_id" in vector_results[0] else "title"
         article_ids = [r[id_key] for r in vector_results]
 
-        # Calculate centrality scores
-        centrality = self.calculate_centrality(article_ids)
+        # Check graph density once per session; disable centrality for sparse graphs
+        if self._sparse_graph is None:
+            avg_links = self._check_graph_density()
+            self._sparse_graph = avg_links < 2.0
+            if self._sparse_graph:
+                logger.warning(
+                    f"Sparse graph detected (avg {avg_links:.1f} links/article), "
+                    "disabling centrality component"
+                )
+
+        # Calculate centrality scores (skip for sparse graphs to avoid degradation)
+        if self._sparse_graph:
+            centrality = {aid: 0.0 for aid in article_ids}
+        else:
+            centrality = self.calculate_centrality(article_ids)
 
         # Compute combined scores
         reranked = []

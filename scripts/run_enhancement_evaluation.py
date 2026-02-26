@@ -10,6 +10,7 @@ Usage:
     python scripts/run_enhancement_evaluation.py
 """
 
+import argparse
 import json
 import logging
 import time
@@ -96,7 +97,7 @@ def evaluate_pack_baseline(questions: list[dict]) -> list[dict]:
     return results
 
 
-def evaluate_enhanced(questions: list[dict]) -> list[dict]:
+def evaluate_enhanced(questions: list[dict], args: argparse.Namespace) -> list[dict]:
     """Enhanced: KG Agent WITH Phase 1 enhancements."""
     from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
@@ -105,6 +106,9 @@ def evaluate_enhanced(questions: list[dict]) -> list[dict]:
         db_path,
         use_enhancements=True,
         few_shot_path="data/few_shot/physics_examples.json",
+        enable_reranker=not args.disable_reranker,
+        enable_multidoc=not args.disable_multidoc,
+        enable_fewshot=not args.disable_fewshot,
     )
 
     results = []
@@ -167,11 +171,26 @@ Respond with ONLY a JSON object: {{"score": N, "reason": "brief explanation"}}""
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Evaluate Phase 1 enhancements")
+    parser.add_argument("--disable-reranker", action="store_true", help="Disable graph reranker")
+    parser.add_argument("--disable-multidoc", action="store_true", help="Disable multi-doc")
+    parser.add_argument("--disable-fewshot", action="store_true", help="Disable few-shot examples")
+    args = parser.parse_args()
+
     print("=" * 70)
     print("PHASE 1 ENHANCEMENT EVALUATION")
     print(f"Pack: {PACK_DIR}")
     print(f"Questions: {SAMPLE_SIZE} (sample)")
     print(f"Model: {MODEL}")
+    disabled = [
+        c for c, v in [
+            ("reranker", args.disable_reranker),
+            ("multidoc", args.disable_multidoc),
+            ("fewshot", args.disable_fewshot),
+        ] if v
+    ]
+    if disabled:
+        print(f"Disabled components: {', '.join(disabled)}")
     print("=" * 70)
 
     client = Anthropic()
@@ -186,7 +205,7 @@ def main():
     pack_results = evaluate_pack_baseline(questions)
 
     print("\n--- Baseline 3: Enhanced (Phase 1 Enhancements) ---")
-    enhanced_results = evaluate_enhanced(questions)
+    enhanced_results = evaluate_enhanced(questions, args)
 
     # Judge all answers
     print("\n--- Judging Answers ---")
