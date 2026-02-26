@@ -35,12 +35,14 @@ def find_all_packs() -> list[dict]:
         db_path = pack_dir / "pack.db"
         questions_path = pack_dir / "eval" / "questions.jsonl"
         if db_path.exists() and questions_path.exists():
-            packs.append({
-                "name": pack_dir.name,
-                "dir": pack_dir,
-                "db": db_path,
-                "questions": questions_path,
-            })
+            packs.append(
+                {
+                    "name": pack_dir.name,
+                    "dir": pack_dir,
+                    "db": db_path,
+                    "questions": questions_path,
+                }
+            )
     return packs
 
 
@@ -62,15 +64,21 @@ def evaluate_training(client: Anthropic, questions: list[dict]) -> list[dict]:
     for q in questions:
         start = time.time()
         response = client.messages.create(
-            model=MODEL, max_tokens=512,
+            model=MODEL,
+            max_tokens=512,
             messages=[{"role": "user", "content": q["question"]}],
         )
         answer = response.content[0].text if response.content else ""
-        results.append({
-            "id": q["id"], "question": q["question"],
-            "ground_truth": q["ground_truth"], "answer": answer,
-            "source": "training", "latency_s": round(time.time() - start, 2),
-        })
+        results.append(
+            {
+                "id": q["id"],
+                "question": q["question"],
+                "ground_truth": q["ground_truth"],
+                "answer": answer,
+                "source": "training",
+                "latency_s": round(time.time() - start, 2),
+            }
+        )
     return results
 
 
@@ -79,7 +87,8 @@ def evaluate_pack(questions: list[dict], db_path: str, use_enhancements: bool) -
     from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
     agent = KnowledgeGraphAgent(
-        str(db_path), use_enhancements=use_enhancements,
+        str(db_path),
+        use_enhancements=use_enhancements,
         few_shot_path="data/few_shot/physics_examples.json" if use_enhancements else None,
     )
     results = []
@@ -90,12 +99,16 @@ def evaluate_pack(questions: list[dict], db_path: str, use_enhancements: bool) -
             answer = response.get("answer", "")
         except Exception as e:
             answer = f"Error: {e}"
-        results.append({
-            "id": q["id"], "question": q["question"],
-            "ground_truth": q["ground_truth"], "answer": answer,
-            "source": "enhanced" if use_enhancements else "pack",
-            "latency_s": round(time.time() - start, 2),
-        })
+        results.append(
+            {
+                "id": q["id"],
+                "question": q["question"],
+                "ground_truth": q["ground_truth"],
+                "answer": answer,
+                "source": "enhanced" if use_enhancements else "pack",
+                "latency_s": round(time.time() - start, 2),
+            }
+        )
     agent.close()
     return results
 
@@ -111,7 +124,8 @@ Answer: {answer}
 Return ONLY JSON: {{"score": N, "reason": "brief"}}"""
 
     response = client.messages.create(
-        model=JUDGE_MODEL, max_tokens=150,
+        model=JUDGE_MODEL,
+        max_tokens=150,
         messages=[{"role": "user", "content": prompt}],
     )
     text = response.content[0].text if response.content else '{"score": 0}'
@@ -150,26 +164,30 @@ def main():
 
         questions = load_questions(pack["questions"], args.sample)
         if not questions:
-            print(f"  No questions found, skipping")
+            print("  No questions found, skipping")
             continue
 
         print(f"  Loaded {len(questions)} questions")
 
         # Run baselines
-        print(f"  Running training baseline...")
+        print("  Running training baseline...")
         training = evaluate_training(client, questions)
 
-        print(f"  Running pack baseline...")
+        print("  Running pack baseline...")
         pack_results = evaluate_pack(questions, pack["db"], use_enhancements=False)
 
-        print(f"  Running enhanced...")
+        print("  Running enhanced...")
         enhanced = evaluate_pack(questions, pack["db"], use_enhancements=True)
 
         # Judge all
-        print(f"  Judging answers...")
+        print("  Judging answers...")
         scores = {"training": [], "pack": [], "enhanced": []}
         for i, q in enumerate(questions):
-            for results, key in [(training, "training"), (pack_results, "pack"), (enhanced, "enhanced")]:
+            for results, key in [
+                (training, "training"),
+                (pack_results, "pack"),
+                (enhanced, "enhanced"),
+            ]:
                 j = judge_answer(client, q["question"], q["ground_truth"], results[i]["answer"])
                 scores[key].append(j["score"])
                 results[i]["score"] = j["score"]
@@ -177,12 +195,16 @@ def main():
         # Pack summary
         for key in ["training", "pack", "enhanced"]:
             avg = sum(scores[key]) / len(scores[key]) if scores[key] else 0
-            acc = sum(1 for s in scores[key] if s >= 7) / len(scores[key]) * 100 if scores[key] else 0
+            acc = (
+                sum(1 for s in scores[key] if s >= 7) / len(scores[key]) * 100 if scores[key] else 0
+            )
             print(f"  {key:12s}: avg={avg:.1f}/10, accuracy(≥7)={acc:.0f}%, scores={scores[key]}")
             grand_scores[key].extend(scores[key])
 
         all_results[pack["name"]] = {
-            "training": training, "pack": pack_results, "enhanced": enhanced,
+            "training": training,
+            "pack": pack_results,
+            "enhanced": enhanced,
             "scores": scores,
         }
 
@@ -197,7 +219,11 @@ def main():
         print(f"  {key:12s}: avg={avg:.1f}/10, accuracy(≥7)={acc:.0f}% (n={len(s)})")
 
     pack_avg = sum(grand_scores["pack"]) / len(grand_scores["pack"]) if grand_scores["pack"] else 0
-    enh_avg = sum(grand_scores["enhanced"]) / len(grand_scores["enhanced"]) if grand_scores["enhanced"] else 0
+    enh_avg = (
+        sum(grand_scores["enhanced"]) / len(grand_scores["enhanced"])
+        if grand_scores["enhanced"]
+        else 0
+    )
     print(f"\n  IMPROVEMENT: Enhanced - Pack = {enh_avg - pack_avg:+.1f} points")
 
     # Save
@@ -206,15 +232,16 @@ def main():
         "packs_evaluated": len(packs),
         "sample_per_pack": args.sample,
         "grand_summary": {
-            k: {"avg": sum(grand_scores[k]) / len(grand_scores[k]) if grand_scores[k] else 0,
-                "accuracy": sum(1 for x in grand_scores[k] if x >= 7) / len(grand_scores[k]) * 100 if grand_scores[k] else 0,
-                "n": len(grand_scores[k])}
+            k: {
+                "avg": sum(grand_scores[k]) / len(grand_scores[k]) if grand_scores[k] else 0,
+                "accuracy": sum(1 for x in grand_scores[k] if x >= 7) / len(grand_scores[k]) * 100
+                if grand_scores[k]
+                else 0,
+                "n": len(grand_scores[k]),
+            }
             for k in ["training", "pack", "enhanced"]
         },
-        "per_pack": {
-            name: {"scores": data["scores"]}
-            for name, data in all_results.items()
-        },
+        "per_pack": {name: {"scores": data["scores"]} for name, data in all_results.items()},
     }
     output_path = Path("data/packs/all_packs_evaluation.json")
     with open(output_path, "w") as f:
