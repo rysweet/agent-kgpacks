@@ -45,12 +45,12 @@ def validate_pack_structure(pack_dir: Path, strict: bool = False) -> list[str]:
         except Exception as e:
             errors.append(f"Error loading manifest.json: {e}")
 
-    # Check pack.db (can be file or directory depending on size)
+    # Check pack.db (must be a directory - Kuzu databases are directories)
     pack_db_path = pack_dir / "pack.db"
     if not pack_db_path.exists():
         errors.append("Required database missing: pack.db")
-    elif not (pack_db_path.is_file() or pack_db_path.is_dir()):
-        errors.append("pack.db must be a valid Kuzu database (file or directory)")
+    elif not pack_db_path.is_dir():
+        errors.append("pack.db must be a directory (Kuzu database)")
 
     # Check skill.md
     skill_path = pack_dir / "skill.md"

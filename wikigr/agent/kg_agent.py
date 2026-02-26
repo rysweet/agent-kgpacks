@@ -35,6 +35,8 @@ class KnowledgeGraphAgent:
         db_path: str,
         anthropic_api_key: str | None = None,
         read_only: bool = True,
+        use_enhancements: bool = False,
+        few_shot_path: str | None = None,
     ):
         """
         Initialize agent with database connection and Claude API.
@@ -43,14 +45,35 @@ class KnowledgeGraphAgent:
             db_path: Path to WikiGR Kuzu database
             anthropic_api_key: Anthropic API key (or from ANTHROPIC_API_KEY env var)
             read_only: Open database in read-only mode (allows concurrent access during expansion)
+            use_enhancements: Enable Phase 1 enhancements (reranking, multi-doc, few-shot)
+            few_shot_path: Path to few-shot examples JSON (default: data/few_shot/physics_examples.json)
         """
         self.db = kuzu.Database(db_path, read_only=read_only)
         self.conn = kuzu.Connection(self.db)
         self.claude = Anthropic(api_key=anthropic_api_key)
         self._embedding_generator = None
         self._plan_cache: dict[str, dict] = {}
+        self.use_enhancements = use_enhancements
 
-        logger.info(f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only})")
+        # Initialize enhancement modules if enabled
+        if use_enhancements:
+            from wikigr.agent.few_shot import FewShotManager
+            from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
+            from wikigr.agent.reranker import GraphReranker
+
+            self.reranker = GraphReranker(self.conn)
+            self.synthesizer = MultiDocSynthesizer(self.conn)
+            few_shot_examples = few_shot_path or "data/few_shot/physics_examples.json"
+            self.few_shot = FewShotManager(few_shot_examples)
+            logger.info("Phase 1 enhancements enabled (reranker, multi-doc, few-shot)")
+        else:
+            self.reranker = None
+            self.synthesizer = None
+            self.few_shot = None
+
+        logger.info(
+            f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only}, use_enhancements={use_enhancements})"
+        )
 
     @classmethod
     def from_connection(
@@ -154,9 +177,63 @@ class KnowledgeGraphAgent:
 
         t_exec = time.perf_counter() - t_exec_start
 
+        # Step 2.5: Apply Phase 1 enhancements if enabled
+        few_shot_examples = []
+        if self.use_enhancements and kg_results.get("sources"):
+            t_enhance_start = time.perf_counter()
+
+            # Fetch article IDs for sources
+            source_titles = kg_results["sources"][:max_results]
+            article_id_map = {}
+            try:
+                result = self.conn.execute(
+                    "MATCH (a:Article) WHERE a.title IN $titles RETURN a.title AS title, a.id AS id",
+                    {"titles": source_titles},
+                )
+                df = result.get_as_df()
+                article_id_map = dict(zip(df["title"], df["id"]))
+            except Exception as e:
+                logger.warning(f"Failed to fetch article IDs: {e}")
+
+            # Enhancement 1: Rerank sources by graph centrality
+            if article_id_map:
+                sources_with_scores = [
+                    {"article_id": article_id_map[src], "score": 1.0 / (i + 1), "title": src}
+                    for i, src in enumerate(source_titles)
+                    if src in article_id_map
+                ]
+                reranked = self.reranker.rerank(
+                    sources_with_scores, vector_weight=0.6, graph_weight=0.4
+                )
+                kg_results["sources"] = [r["title"] for r in reranked[:5]]
+            else:
+                reranked = []
+
+            # Enhancement 2: Expand to multi-document context
+            if reranked:
+                seed_article_id = reranked[0]["article_id"]
+                related_articles = self.synthesizer.expand_to_related_articles(
+                    [seed_article_id], max_hops=1, max_articles=5
+                )
+                # Build enriched context with citations
+                enriched_context = self.synthesizer.synthesize_with_citations(
+                    related_articles, question
+                )
+                kg_results["enriched_context"] = enriched_context
+
+            # Enhancement 3: Retrieve few-shot examples
+            few_shot_examples = self.few_shot.find_similar_examples(question, k=2)
+
+            t_enhance = time.perf_counter() - t_enhance_start
+            logger.info(
+                f"Enhancements applied in {t_enhance:.2f}s (reranked {len(reranked)}, expanded to {len(related_articles) if reranked else 0}, {len(few_shot_examples)} examples)"
+            )
+
         # Step 3: Synthesize answer with Claude
         t_synth_start = time.perf_counter()
-        answer = self._synthesize_answer(question, kg_results, query_plan)
+        answer = self._synthesize_answer(
+            question, kg_results, query_plan, few_shot_examples=few_shot_examples
+        )
         t_synth = time.perf_counter() - t_synth_start
 
         t_total = time.perf_counter() - t_start
@@ -872,18 +949,46 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             logger.warning(f"Failed to fetch source text: {e}")
             return ""
 
-    def _build_synthesis_context(self, question: str, kg_results: dict, query_plan: dict) -> str:
+    def _build_synthesis_context(
+        self,
+        question: str,
+        kg_results: dict,
+        query_plan: dict,
+        few_shot_examples: list[dict] | None = None,
+    ) -> str:
         """Build the synthesis prompt for Claude (used by both blocking and streaming).
 
         Includes both structured KG results (entities, facts, triples) AND
         the original article section text for grounded, accurate synthesis.
+        Optionally includes few-shot examples when Phase 1 enhancements are enabled.
         """
         sources = kg_results.get("sources", [])[:5]
 
         # Fetch original article text for grounded synthesis
         source_text = self._fetch_source_text(sources)
 
-        context = f"""Query Type: {query_plan["type"]}
+        # Build few-shot examples section if provided
+        few_shot_section = ""
+        if few_shot_examples:
+            few_shot_section = "\nHere are similar questions and their answers:\n\n"
+            for i, example in enumerate(few_shot_examples[:3], 1):
+                few_shot_section += f"Example {i}:\n"
+                few_shot_section += f"Q: {example['question']}\n"
+                few_shot_section += f"A: {example['answer']}\n\n"
+
+        # Use enriched multi-doc context if available, otherwise standard context
+        if "enriched_context" in kg_results:
+            context = f"""Query Type: {query_plan["type"]}
+
+{kg_results["enriched_context"]}
+
+Entities found: {json.dumps(kg_results.get("entities", [])[:10], indent=2)}
+
+Facts:
+{chr(10).join(f"- {fact}" for fact in kg_results.get("facts", [])[:10])}
+"""
+        else:
+            context = f"""Query Type: {query_plan["type"]}
 Cypher: {query_plan["cypher"]}
 
 Sources: {", ".join(sources)}
@@ -903,7 +1008,7 @@ Original Article Text (for grounding):
 {source_text}
 """
 
-        return f"""Using the knowledge graph results AND original article text below, answer this question concisely and accurately.
+        return f"""{few_shot_section}Using the knowledge graph results AND original article text below, answer this question concisely and accurately.
 
 Question: {question}
 
@@ -912,13 +1017,21 @@ Knowledge Graph Results:
 
 Provide a clear, factual answer grounded in the source text. Cite specific articles. If the KG has no relevant data, say so."""
 
-    def _synthesize_answer(self, question: str, kg_results: dict, query_plan: dict) -> str:
+    def _synthesize_answer(
+        self,
+        question: str,
+        kg_results: dict,
+        query_plan: dict,
+        few_shot_examples: list[dict] | None = None,
+    ) -> str:
         """Use Claude to synthesize natural language answer from KG results."""
         # Handle error case
         if "error" in kg_results:
             return f"Query execution failed: {kg_results['error']}"
 
-        prompt = self._build_synthesis_context(question, kg_results, query_plan)
+        prompt = self._build_synthesis_context(
+            question, kg_results, query_plan, few_shot_examples=few_shot_examples or []
+        )
 
         try:
             response = self.claude.messages.create(
