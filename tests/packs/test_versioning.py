@@ -2,7 +2,7 @@
 
 import pytest
 
-from wikigr.packs.versioning import compare_versions, is_compatible
+from wikigr.agent.versioning import compare_versions, is_compatible
 
 
 class TestCompareVersions:

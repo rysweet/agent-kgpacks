@@ -1,0 +1,77 @@
+[
+  {
+    "query": "What is Newton's second law of motion?",
+    "answer": "Newton's second law states that the acceleration of an object is directly proportional to the net force acting on it and inversely proportional to its mass (F = ma). [1]",
+    "citations": ["Newton's laws of motion"]
+  },
+  {
+    "query": "Explain quantum entanglement.",
+    "answer": "Quantum entanglement is a physical phenomenon where pairs or groups of particles interact in such a way that the quantum state of each particle cannot be described independently, even when separated by large distances. [1][2]",
+    "citations": ["Quantum entanglement", "Quantum mechanics"]
+  },
+  {
+    "query": "What is the speed of light in a vacuum?",
+    "answer": "The speed of light in a vacuum is approximately 299,792,458 meters per second, denoted by c. [1]",
+    "citations": ["Speed of light"]
+  },
+  {
+    "query": "Describe the photoelectric effect.",
+    "answer": "The photoelectric effect is the emission of electrons from a material when light shines on it. Einstein explained that light behaves as particles (photons), and electrons are emitted only when photon energy exceeds the work function. [1][2]",
+    "citations": ["Photoelectric effect", "Albert Einstein"]
+  },
+  {
+    "query": "What is thermodynamic equilibrium?",
+    "answer": "Thermodynamic equilibrium is a state where a system's macroscopic properties remain constant over time, with no net flow of energy or matter. [1]",
+    "citations": ["Thermodynamic equilibrium"]
+  },
+  {
+    "query": "Explain Heisenberg's uncertainty principle.",
+    "answer": "The uncertainty principle states that it is impossible to simultaneously know both the exact position and exact momentum of a particle (Δx·Δp ≥ ℏ/2). [1][2]",
+    "citations": ["Uncertainty principle", "Werner Heisenberg"]
+  },
+  {
+    "query": "What is electromagnetic induction?",
+    "answer": "Electromagnetic induction is the production of voltage across a conductor exposed to a changing magnetic field, as described by Faraday's law. [1]",
+    "citations": ["Electromagnetic induction"]
+  },
+  {
+    "query": "Describe special relativity.",
+    "answer": "Special relativity posits that the laws of physics are the same in all inertial frames and that the speed of light is constant for all observers, leading to time dilation and length contraction. [1][2]",
+    "citations": ["Special relativity", "Albert Einstein"]
+  },
+  {
+    "query": "What is the Schrödinger equation?",
+    "answer": "The Schrödinger equation describes how the quantum state of a physical system changes over time (iℏ∂ψ/∂t = Ĥψ). [1][2]",
+    "citations": ["Schrödinger equation", "Quantum mechanics"]
+  },
+  {
+    "query": "Explain the Doppler effect.",
+    "answer": "The Doppler effect is the change in frequency of a wave relative to an observer moving relative to the wave source. [1]",
+    "citations": ["Doppler effect"]
+  },
+  {
+    "query": "What is conservation of energy?",
+    "answer": "The law of conservation of energy states that energy cannot be created or destroyed, only transformed. Total energy in an isolated system remains constant. [1][2]",
+    "citations": ["Conservation of energy", "First law of thermodynamics"]
+  },
+  {
+    "query": "Describe black body radiation.",
+    "answer": "Black body radiation is electromagnetic radiation emitted by an ideal black body. Planck's law describes its spectral distribution as a function of temperature. [1][2]",
+    "citations": ["Black body radiation", "Planck's law"]
+  },
+  {
+    "query": "What is wave-particle duality?",
+    "answer": "Wave-particle duality is the concept that matter and energy exhibit both wave-like and particle-like properties depending on the experiment. [1][2]",
+    "citations": ["Wave-particle duality", "Quantum mechanics"]
+  },
+  {
+    "query": "Explain Ohm's law.",
+    "answer": "Ohm's law states that current through a conductor is directly proportional to voltage and inversely proportional to resistance (V = IR). [1]",
+    "citations": ["Ohm's law"]
+  },
+  {
+    "query": "What is gravitational time dilation?",
+    "answer": "Gravitational time dilation occurs when time passes more slowly in stronger gravitational fields, as predicted by general relativity. [1][2]",
+    "citations": ["Gravitational time dilation", "General relativity"]
+  }
+]

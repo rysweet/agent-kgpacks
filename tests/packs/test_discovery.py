@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from wikigr.packs.discovery import discover_packs, is_valid_pack
-from wikigr.packs.manifest import EvalScores, GraphStats, PackManifest, save_manifest
+from wikigr.agent.discovery import discover_packs, is_valid_pack
+from wikigr.agent.manifest import EvalScores, GraphStats, PackManifest, save_manifest
 
 
 @pytest.fixture

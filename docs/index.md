@@ -25,6 +25,7 @@ Pre-built domain-specific knowledge graphs:
 
 Task-oriented guides for specific problems:
 
+- [Phase 1 Pack Enhancements](./howto/phase1-enhancements.md) - Use retrieval enhancements to improve pack accuracy from 50% to 70-75%
 - [How to Configure LLM Extraction](./howto/configure-llm-extraction.md) - Control entity and relationship extraction parameters
 - [How to Filter Link Crawling](./howto/filter-link-crawling.md) - Control which links are followed during BFS crawling
 
@@ -32,6 +33,10 @@ Task-oriented guides for specific problems:
 
 Complete technical reference for classes and commands:
 
+- [Phase 1 Enhancements API](./reference/phase1-enhancements.md) - GraphReranker, MultiDocSynthesizer, FewShotManager complete reference
+  - [GraphReranker Module](./reference/module-docs/graph-reranker.md) - Graph-based reranking with PageRank
+  - [MultiDocSynthesizer Module](./reference/module-docs/multidoc-synthesizer.md) - Multi-document retrieval and synthesis
+  - [FewShotManager Module](./reference/module-docs/few-shot-manager.md) - Few-shot example injection
 - [Web Content Source API](./reference/web-content-source.md) - `WebContentSource` class and CLI commands
 - [ArticleProcessor API](./reference/article-processor.md) - Shared extraction pipeline for all content sources
 
@@ -39,6 +44,7 @@ Complete technical reference for classes and commands:
 
 Understanding how WikiGR works internally:
 
+- [Phase 1 Enhancements Design](./concepts/phase1-enhancements-design.md) - Design rationale and architecture for retrieval enhancements
 - [ContentSource Architecture](./concepts/content-source-design.md) - Protocol-based design for source-agnostic knowledge graph construction
 - [BFS Link Expansion Algorithm](./concepts/bfs-link-expansion.md) - How WikiGR crawls web content using breadth-first search
 

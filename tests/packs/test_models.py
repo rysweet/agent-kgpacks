@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
-from wikigr.packs.manifest import EvalScores, GraphStats, PackManifest
-from wikigr.packs.models import PackInfo
+from wikigr.agent.manifest import EvalScores, GraphStats, PackManifest
+from wikigr.agent.models import PackInfo
 
 
 class TestPackInfo:

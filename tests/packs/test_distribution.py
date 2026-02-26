@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from wikigr.packs.distribution import package_pack, unpackage_pack
-from wikigr.packs.manifest import EvalScores, GraphStats, PackManifest, save_manifest
+from wikigr.agent.distribution import package_pack, unpackage_pack
+from wikigr.agent.manifest import EvalScores, GraphStats, PackManifest, save_manifest
 
 
 class TestPackagePack:

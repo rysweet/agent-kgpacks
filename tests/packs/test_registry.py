@@ -2,8 +2,8 @@
 
 import pytest
 
-from wikigr.packs.manifest import EvalScores, GraphStats, PackManifest, save_manifest
-from wikigr.packs.registry import PackRegistry
+from wikigr.agent.manifest import EvalScores, GraphStats, PackManifest, save_manifest
+from wikigr.agent.registry import PackRegistry
 
 
 @pytest.fixture
