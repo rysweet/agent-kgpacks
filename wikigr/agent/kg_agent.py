@@ -189,52 +189,74 @@ class KnowledgeGraphAgent:
 
         t_exec = time.perf_counter() - t_exec_start
 
-        # Step 2.5: Apply Phase 1 enhancements if enabled
+        # Step 2.5: Apply Phase 1 enhancements (ADAPTIVE approach)
+        # Key insight: enhancements should AUGMENT good retrieval, not replace it.
+        # We preserve original sources and only ADD enhanced results via fusion.
         few_shot_examples = []
-        if self.use_enhancements and kg_results.get("sources"):
+        if self.use_enhancements:
             t_enhance_start = time.perf_counter()
             try:
-                source_titles = kg_results["sources"][:5]
+                original_sources = list(kg_results.get("sources", []))
 
-                # Enhancement 1: Rerank by graph centrality (using titles as IDs)
-                sources_with_scores = [
-                    {"title": src, "score": 1.0 / (i + 1)}
-                    for i, src in enumerate(source_titles)
-                ]
-                reranked = self.reranker.rerank(
-                    sources_with_scores, vector_weight=0.6, graph_weight=0.4
-                )
-                if reranked:
-                    kg_results["sources"] = [r["title"] for r in reranked[:5]]
+                # Enhancement 1: Reciprocal Rank Fusion (RRF) instead of replacement
+                # Combine original vector ranking with graph centrality ranking
+                # RRF formula: score = sum(1 / (k + rank_i)) across all rankings
+                if original_sources:
+                    rrf_k = 60  # Standard RRF constant
+                    rrf_scores: dict[str, float] = {}
 
-                # Enhancement 2: Fetch related article content for richer context
-                seed_title = kg_results["sources"][0] if kg_results["sources"] else None
-                if seed_title:
-                    # Get related articles via LINKS_TO
+                    # Original vector ranking contribution
+                    for rank, src in enumerate(original_sources[:10]):
+                        rrf_scores[src] = rrf_scores.get(src, 0) + 1.0 / (rrf_k + rank)
+
+                    # Graph centrality ranking contribution (lower weight)
+                    try:
+                        centrality = self.reranker.calculate_centrality(original_sources[:10])
+                        sorted_by_centrality = sorted(
+                            centrality.items(), key=lambda x: x[1], reverse=True
+                        )
+                        for rank, (src, _score) in enumerate(sorted_by_centrality):
+                            rrf_scores[src] = rrf_scores.get(src, 0) + 0.5 / (rrf_k + rank)
+                    except Exception as e:
+                        logger.debug(f"Centrality calculation failed: {e}")
+
+                    # Sort by fused score, but PRESERVE original top result
+                    fused = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+                    fused_sources = [src for src, _ in fused[:5]]
+
+                    # Adaptive: only use fused ranking if top result changed AND
+                    # original top result is still in top 3 (don't lose good matches)
+                    if original_sources and original_sources[0] in fused_sources[:3]:
+                        kg_results["sources"] = fused_sources
+                    else:
+                        # Original top result would be demoted too far - keep original
+                        logger.debug("RRF would demote top result, keeping original ranking")
+
+                # Enhancement 2: Conditional multi-doc expansion
+                # Only expand if we have a HIGH-CONFIDENCE top result (appears in both rankings)
+                if len(kg_results.get("sources", [])) >= 1:
+                    seed_title = kg_results["sources"][0]
                     try:
                         result = self.conn.execute(
-                            """
-                            MATCH (a:Article {title: $title})-[:LINKS_TO]->(b:Article)
-                            RETURN b.title AS title LIMIT 3
-                            """,
+                            "MATCH (a:Article {title: $title})-[:LINKS_TO]->(b:Article) "
+                            "RETURN b.title AS title LIMIT 2",
                             {"title": seed_title},
                         )
                         df = result.get_as_df()
-                        related_titles = df["title"].tolist() if not df.empty else []
-                        # Add related sources (deduplicated)
-                        existing = set(kg_results["sources"])
-                        for rt in related_titles:
-                            if rt not in existing:
-                                kg_results["sources"].append(rt)
-                                existing.add(rt)
+                        if not df.empty:
+                            existing = set(kg_results["sources"])
+                            for rt in df["title"].tolist():
+                                if rt not in existing and len(kg_results["sources"]) < 7:
+                                    kg_results["sources"].append(rt)
+                                    existing.add(rt)
                     except Exception as e:
                         logger.debug(f"Multi-doc expansion failed: {e}")
 
-                # Enhancement 3: Retrieve few-shot examples
+                # Enhancement 3: Few-shot examples (always safe - they guide format, not content)
                 few_shot_examples = self.few_shot.find_similar_examples(question, k=2)
 
                 t_enhance = time.perf_counter() - t_enhance_start
-                logger.info(f"Enhancements applied in {t_enhance:.2f}s")
+                logger.info(f"Adaptive enhancements applied in {t_enhance:.2f}s")
             except Exception as e:
                 logger.warning(f"Enhancement pipeline failed, using standard retrieval: {e}")
                 few_shot_examples = []
