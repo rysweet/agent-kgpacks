@@ -1,0 +1,26 @@
+{
+  "model": "claude-opus-4-6",
+  "max_entities": 50,
+  "max_relationships": 100,
+  "embedding_model": "text-embedding-3-small",
+  "vector_search_k": 10,
+  "graph_depth": 2,
+  "enable_cache": true,
+  "domains": [
+    "csharp",
+    "aspnet",
+    "entity_framework",
+    "aspire",
+    "patterns"
+  ],
+  "entity_types": [
+    "Language Feature",
+    "API",
+    "Framework",
+    "Pattern",
+    "Concept",
+    "Tool",
+    "Library",
+    "Service"
+  ]
+}
