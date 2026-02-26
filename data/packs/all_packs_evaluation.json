@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-02-26T19:35:07Z",
+  "packs_evaluated": 3,
+  "sample_per_pack": 5,
+  "grand_summary": {
+    "training": {
+      "avg": 9.4,
+      "accuracy": 100.0,
+      "n": 15
+    },
+    "pack": {
+      "avg": 5.466666666666667,
+      "accuracy": 60.0,
+      "n": 15
+    },
+    "enhanced": {
+      "avg": 6.333333333333333,
+      "accuracy": 66.66666666666666,
+      "n": 15
+    }
+  },
+  "per_pack": {
+    "dotnet-expert": {
+      "scores": {
+        "training": [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "pack": [
+          8,
+          9,
+          2,
+          2,
+          8
+        ],
+        "enhanced": [
+          8,
+          9,
+          2,
+          6,
+          7
+        ]
+      }
+    },
+    "physics-expert": {
+      "scores": {
+        "training": [
+          10,
+          10,
+          9,
+          10,
+          10
+        ],
+        "pack": [
+          1,
+          8,
+          1,
+          9,
+          9
+        ],
+        "enhanced": [
+          9,
+          9,
+          8,
+          9,
+          9
+        ]
+      }
+    },
+    "rust-expert": {
+      "scores": {
+        "training": [
+          10,
+          9,
+          9,
+          10,
+          9
+        ],
+        "pack": [
+          10,
+          0,
+          8,
+          7,
+          0
+        ],
+        "enhanced": [
+          10,
+          0,
+          1,
+          8,
+          0
+        ]
+      }
+    }
+  }
+}
