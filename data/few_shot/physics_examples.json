@@ -1,0 +1,142 @@
+[
+  {
+    "question": "What is quantum entanglement?",
+    "answer": "Quantum entanglement is a physical phenomenon where pairs or groups of particles are generated, interact, or share spatial proximity in such a way that the quantum state of each particle cannot be described independently. When particles are entangled, measurements on one particle instantaneously affect the other, regardless of distance.",
+    "domain": "physics",
+    "difficulty": "easy",
+    "sources": ["Quantum Mechanics", "Quantum Entanglement"]
+  },
+  {
+    "question": "Explain the Heisenberg uncertainty principle.",
+    "answer": "The Heisenberg uncertainty principle states that certain pairs of physical properties, like position and momentum, cannot both be known to arbitrary precision simultaneously. The more precisely one property is measured, the less precisely the other can be known. This is expressed mathematically as Δx·Δp ≥ ℏ/2.",
+    "domain": "physics",
+    "difficulty": "medium",
+    "sources": ["Quantum Mechanics", "Werner Heisenberg", "Uncertainty Principle"]
+  },
+  {
+    "question": "What is wave-particle duality?",
+    "answer": "Wave-particle duality is the concept in quantum mechanics that every particle or quantum entity exhibits both wave and particle properties. Light, for example, can behave as both a wave (showing interference patterns) and as particles (photons). This duality is fundamental to understanding quantum phenomena.",
+    "domain": "physics",
+    "difficulty": "easy",
+    "sources": ["Quantum Mechanics", "Wave-Particle Duality", "Double-Slit Experiment"]
+  },
+  {
+    "question": "How does the Schrödinger equation work?",
+    "answer": "The Schrödinger equation is a fundamental equation in quantum mechanics that describes how the quantum state of a physical system changes over time. It's a wave equation that relates the wave function of a system to its energy. The time-independent form is: Ĥψ = Eψ, where Ĥ is the Hamiltonian operator, ψ is the wave function, and E is energy.",
+    "domain": "physics",
+    "difficulty": "hard",
+    "sources": ["Quantum Mechanics", "Schrödinger Equation", "Wave Function"]
+  },
+  {
+    "question": "What is special relativity?",
+    "answer": "Special relativity is Einstein's theory that describes the physics of motion at speeds approaching the speed of light. Its key principles are: (1) the laws of physics are the same in all inertial reference frames, and (2) the speed of light in vacuum is constant for all observers. This leads to time dilation, length contraction, and mass-energy equivalence (E=mc²).",
+    "domain": "physics",
+    "difficulty": "medium",
+    "sources": ["Special Relativity", "Albert Einstein", "Speed of Light"]
+  },
+  {
+    "question": "Explain the photoelectric effect.",
+    "answer": "The photoelectric effect is the emission of electrons from a material when light shines on it. Einstein explained this by proposing that light consists of discrete packets of energy called photons. When a photon with sufficient energy strikes the material, it can eject an electron. The kinetic energy of the ejected electron equals the photon energy minus the work function of the material.",
+    "domain": "physics",
+    "difficulty": "medium",
+    "sources": ["Photoelectric Effect", "Albert Einstein", "Photon", "Quantum Mechanics"]
+  },
+  {
+    "question": "What are black holes?",
+    "answer": "Black holes are regions of spacetime where gravity is so strong that nothing, not even light, can escape from inside. They form when massive stars collapse at the end of their life cycle. The boundary of a black hole is called the event horizon. Black holes are characterized by their mass, charge, and angular momentum (spin).",
+    "domain": "physics",
+    "difficulty": "easy",
+    "sources": ["Black Hole", "General Relativity", "Event Horizon"]
+  },
+  {
+    "question": "What is the Standard Model of particle physics?",
+    "answer": "The Standard Model is the theory describing three of the four known fundamental forces (electromagnetic, weak, and strong nuclear forces) and classifying all known elementary particles. It includes quarks, leptons, gauge bosons, and the Higgs boson. Despite its success, it doesn't include gravity or explain dark matter and dark energy.",
+    "domain": "physics",
+    "difficulty": "hard",
+    "sources": ["Standard Model", "Particle Physics", "Elementary Particle", "Higgs Boson"]
+  },
+  {
+    "question": "How do superconductors work?",
+    "answer": "Superconductors are materials that conduct electricity with zero resistance below a critical temperature. This occurs because electrons form Cooper pairs that move through the lattice without scattering. Superconductors also exhibit the Meissner effect, expelling magnetic fields from their interior. They're described by BCS theory.",
+    "domain": "physics",
+    "difficulty": "hard",
+    "sources": ["Superconductivity", "Cooper Pair", "BCS Theory", "Meissner Effect"]
+  },
+  {
+    "question": "What is nuclear fusion?",
+    "answer": "Nuclear fusion is a reaction where two or more atomic nuclei combine to form one or more different nuclei and release tremendous amounts of energy. This process powers stars, including our Sun, where hydrogen nuclei fuse to form helium. Fusion requires extremely high temperatures and pressures to overcome electrostatic repulsion between nuclei.",
+    "domain": "physics",
+    "difficulty": "medium",
+    "sources": ["Nuclear Fusion", "Sun", "Thermonuclear Reaction", "Plasma Physics"]
+  },
+  {
+    "question": "Explain the Doppler effect.",
+    "answer": "The Doppler effect is the change in frequency or wavelength of a wave in relation to an observer moving relative to the wave source. When a source moves toward an observer, waves are compressed (higher frequency/blue shift). When moving away, waves are stretched (lower frequency/red shift). This applies to sound, light, and other waves.",
+    "domain": "physics",
+    "difficulty": "easy",
+    "sources": ["Doppler Effect", "Wave", "Frequency", "Redshift"]
+  },
+  {
+    "question": "What is dark matter?",
+    "answer": "Dark matter is a hypothetical form of matter that doesn't emit, absorb, or reflect light, making it invisible to electromagnetic observation. Its existence is inferred from gravitational effects on visible matter, galaxy rotation curves, and gravitational lensing. Dark matter is thought to constitute about 27% of the universe's mass-energy content.",
+    "domain": "physics",
+    "difficulty": "medium",
+    "sources": ["Dark Matter", "Galaxy", "Gravitational Lensing", "Cosmology"]
+  },
+  {
+    "question": "How does quantum tunneling work?",
+    "answer": "Quantum tunneling is a quantum mechanical phenomenon where particles can pass through potential energy barriers that they classically shouldn't be able to surmount. This occurs because quantum particles have wave-like properties and their wave functions can extend beyond the barrier. Tunneling is essential in nuclear fusion, radioactive decay, and modern electronics.",
+    "domain": "physics",
+    "difficulty": "hard",
+    "sources": ["Quantum Tunneling", "Quantum Mechanics", "Wave Function", "Potential Barrier"]
+  },
+  {
+    "question": "What is the cosmological constant?",
+    "answer": "The cosmological constant (Λ) is a term in Einstein's field equations of general relativity that represents a constant energy density filling space homogeneously. Originally introduced by Einstein and later retracted, it's now associated with dark energy, which causes the accelerating expansion of the universe. It represents vacuum energy.",
+    "domain": "physics",
+    "difficulty": "hard",
+    "sources": ["Cosmological Constant", "Dark Energy", "General Relativity", "Universe Expansion"]
+  },
+  {
+    "question": "Explain electromagnetic induction.",
+    "answer": "Electromagnetic induction is the production of an electromotive force (voltage) across an electrical conductor in a changing magnetic field. Discovered by Faraday, it's described by Faraday's law: the induced voltage is proportional to the rate of change of magnetic flux. This principle underlies generators, transformers, and many other technologies.",
+    "domain": "physics",
+    "difficulty": "medium",
+    "sources": ["Electromagnetic Induction", "Michael Faraday", "Magnetic Field", "Electric Generator"]
+  },
+  {
+    "question": "What is the strong nuclear force?",
+    "answer": "The strong nuclear force (strong interaction) is one of the four fundamental forces of nature. It's responsible for binding quarks together to form hadrons (protons and neutrons) and binding protons and neutrons together in atomic nuclei. Mediated by gluons, it's the strongest force but acts only over very short distances (about 1 femtometer).",
+    "domain": "physics",
+    "difficulty": "medium",
+    "sources": ["Strong Interaction", "Quark", "Gluon", "Atomic Nucleus", "Quantum Chromodynamics"]
+  },
+  {
+    "question": "How do lasers work?",
+    "answer": "Lasers (Light Amplification by Stimulated Emission of Radiation) produce coherent, monochromatic light through stimulated emission. Atoms in an active medium are excited to higher energy states, and when they drop back down, they emit photons. These photons stimulate other atoms to emit identical photons, creating an amplified, coherent beam.",
+    "domain": "physics",
+    "difficulty": "medium",
+    "sources": ["Laser", "Stimulated Emission", "Coherence", "Photon"]
+  },
+  {
+    "question": "What is entropy in thermodynamics?",
+    "answer": "Entropy is a measure of disorder or randomness in a system. The second law of thermodynamics states that the total entropy of an isolated system always increases over time. Entropy is related to the number of microscopic configurations (microstates) corresponding to a thermodynamic system's macroscopic state. It's expressed as S = k ln(W).",
+    "domain": "physics",
+    "difficulty": "medium",
+    "sources": ["Entropy", "Second Law of Thermodynamics", "Statistical Mechanics", "Thermodynamics"]
+  },
+  {
+    "question": "Explain the Pauli exclusion principle.",
+    "answer": "The Pauli exclusion principle states that no two identical fermions (particles with half-integer spin) can occupy the same quantum state simultaneously within a quantum system. This principle explains the structure of the periodic table, the stability of matter, and why electrons in atoms occupy distinct energy levels rather than all falling to the lowest state.",
+    "domain": "physics",
+    "difficulty": "hard",
+    "sources": ["Pauli Exclusion Principle", "Fermion", "Quantum State", "Atomic Orbital"]
+  },
+  {
+    "question": "What is the weak nuclear force?",
+    "answer": "The weak nuclear force (weak interaction) is one of the four fundamental forces, responsible for radioactive decay and nuclear fission. It's mediated by W and Z bosons and acts over very short ranges. The weak force is unique in that it's the only force that can change one type of quark into another, allowing for flavor changes in particle interactions.",
+    "domain": "physics",
+    "difficulty": "hard",
+    "sources": ["Weak Interaction", "Radioactive Decay", "W and Z Bosons", "Beta Decay", "Electroweak Theory"]
+  }
+]
