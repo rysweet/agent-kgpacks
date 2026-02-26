@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Build Rust Expert Knowledge Pack from URLs.
+Build DotNet Expert Knowledge Pack from URLs.
 
-This script reads Rust documentation URLs from urls.txt and builds a
+This script reads DotNet documentation URLs from urls.txt and builds a
 complete knowledge graph with LLM-based extraction using the web content pipeline.
 
 Expected runtime: 15-20 hours (300+ URLs with LLM extraction)
 Estimated cost: ~$40-60 (Haiku at ~$0.25/1M input tokens)
 
 Usage:
-    python scripts/build_rust_pack.py [--test-mode]
+    python scripts/build_dotnet_pack.py [--test-mode]
 
 Options:
     --test-mode     Build a small 10-URL pack for testing (5-10 minutes)
@@ -41,7 +41,7 @@ from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
 from bootstrap.src.sources.web import WebContentSource  # noqa: E402
 
-PACK_DIR = Path("data/packs/rust-expert")
+PACK_DIR = Path("data/packs/dotnet-expert")
 URLS_FILE = PACK_DIR / "urls.txt"
 DB_PATH = PACK_DIR / "pack.db"
 MANIFEST_PATH = PACK_DIR / "manifest.json"
@@ -51,7 +51,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("logs/build_rust_pack.log"),
+        logging.FileHandler("logs/build_dotnet_pack.log"),
     ],
 )
 logger = logging.getLogger(__name__)
@@ -148,7 +148,7 @@ def process_url(
             title=title,
             sections=sections,
             max_sections=5,
-            domain="programming",  # Rust documentation is programming domain
+            domain="programming",  # DotNet documentation is programming domain
         )
 
         # Create article node
@@ -157,7 +157,7 @@ def process_url(
             "CREATE (a:Article {title: $title, category: $category, word_count: $wc})",
             {
                 "title": title,
-                "category": "Rust Programming",
+                "category": "DotNet Programming",
                 "wc": word_count,
             },
         )
@@ -262,9 +262,9 @@ def create_manifest(
     size_mb = db_path.stat().st_size / (1024 * 1024) if db_path.exists() else 0
 
     manifest = {
-        "name": "rust-expert",
+        "name": "dotnet-expert",
         "version": "1.0.0",
-        "description": "Expert Rust programming knowledge covering ownership, traits, async programming, unsafe code, and common patterns from official Rust documentation",
+        "description": "Expert DotNet programming knowledge covering ownership, traits, async programming, unsafe code, and common patterns from official DotNet documentation",
         "graph_stats": {
             "articles": int(articles_count),
             "entities": int(entities_count),
@@ -295,7 +295,7 @@ def create_manifest(
 
 
 def build_pack(test_mode: bool = False) -> None:
-    """Build the Rust expert knowledge pack.
+    """Build the DotNet expert knowledge pack.
 
     Args:
         test_mode: If True, build a small 10-URL pack for testing
@@ -363,12 +363,12 @@ def build_pack(test_mode: bool = False) -> None:
     # Create manifest
     create_manifest(DB_PATH, MANIFEST_PATH, articles_count, entities_count, relationships_count)
 
-    logger.info("Rust Expert Pack build complete!")
+    logger.info("DotNet Expert Pack build complete!")
 
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(description="Build Rust Expert Knowledge Pack")
+    parser = argparse.ArgumentParser(description="Build DotNet Expert Knowledge Pack")
     parser.add_argument(
         "--test-mode",
         action="store_true",
