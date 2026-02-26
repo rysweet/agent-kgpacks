@@ -133,9 +133,9 @@ def test_init_with_env_api_key():
 
 def test_init_missing_api_key():
     """Test initialization fails without API key."""
-    with patch.dict(os.environ, {}, clear=True):
-        with pytest.raises(ConfigurationError, match="ANTHROPIC_API_KEY"):
-            LLMSeedResearcher()
+    with patch.dict(os.environ, {}, clear=True), \
+         pytest.raises(ConfigurationError, match="ANTHROPIC_API_KEY"):
+        LLMSeedResearcher()
 
 
 # ============================================================================
