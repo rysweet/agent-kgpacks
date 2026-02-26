@@ -1,0 +1,322 @@
+{
+  "timestamp": "2026-02-26T16:06:54Z",
+  "sample_size": 10,
+  "model": "claude-sonnet-4-5-20250929",
+  "results": {
+    "training": [
+      {
+        "id": "cm_001",
+        "question": "What are Newton's three laws of motion?",
+        "ground_truth": "1st: Objects remain at rest or in uniform motion unless acted upon by force. 2nd: F=ma (force equals mass times acceleration). 3rd: For every action there is an equal and opposite reaction.",
+        "answer": "# Newton's Three Laws of Motion\n\n**1. Law of Inertia**\nAn object at rest stays at rest, and an object in motion stays in motion at constant velocity, unless acted upon by an external force.\n\n*Example: A book on a table won't move until you push it; a sliding hockey puck keeps going until friction stops it.*\n\n**2. Law of Acceleration (F = ma)**\nThe force acting on an object equals its mass times its acceleration. Or: acceleration is proportional to force and inversely proportional to mass.\n\n*Example: Pushing a shopping cart (small mass) is easier than pushing a car (large mass); a harder push produces more acceleration.*\n\n**3. Law of Action-Reaction**\nFor every action, there is an equal and opposite reaction. When one object exerts a force on another, the second object exerts an equal force in the opposite direction on the first.\n\n*Example: When you jump, your legs push down on the ground, and the ground pushes up on you with equal force, propelling you upward.*\n\nThese laws, published by Isaac Newton in 1687, form the foundation of classical mechanics.",
+        "source": "training_baseline",
+        "latency_s": 6.1,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"Excellent answer that accurately covers all three laws with cor"
+      },
+      {
+        "id": "cm_002",
+        "question": "What is the formula for kinetic energy?",
+        "ground_truth": "KE = (1/2)mv\u00b2, where m is mass and v is velocity.",
+        "answer": "The formula for kinetic energy is:\n\n**KE = \u00bdmv\u00b2**\n\nWhere:\n- **KE** = kinetic energy\n- **m** = mass of the object\n- **v** = velocity (speed) of the object\n\nThe kinetic energy is measured in joules (J) when mass is in kilograms (kg) and velocity is in meters per second (m/s).",
+        "source": "training_baseline",
+        "latency_s": 2.81,
+        "score": 10,
+        "reason": "```json\n{\n  \"score\": 10,\n  \"reason\": \"The answer provides the correct formula KE = \u00bdmv\u00b2 and includes"
+      },
+      {
+        "id": "cm_003",
+        "question": "What is conservation of momentum?",
+        "ground_truth": "In a closed system, the total momentum before and after a collision remains constant. p_initial = p_final.",
+        "answer": "# Conservation of Momentum\n\n**Conservation of momentum** is a fundamental physics principle stating that the total momentum of a closed system remains constant when no external forces act on it.\n\n## The Basic Idea\n\n**Momentum** = mass \u00d7 velocity (p = mv)\n\nIn any interaction (collision, explosion, etc.), the total momentum before equals the total momentum after:\n\n**Total momentum before = Total momentum after**\n\n## Simple Example\n\nImagine two ice skaters pushing off each other:\n- Before: Both at rest (total momentum = 0)\n- After: They move in opposite directions, but their momenta cancel out (total still = 0)\n\nIf one skater is heavier, they'll move slower; if lighter, they'll move faster\u2014the product of mass and velocity balances out.\n\n## Key Requirements\n\nThis law applies when:\n- The system is **closed** (no mass enters or leaves)\n- No **external forces** act on the system (or they cancel out)\n\n## Why It Matters\n\n- Explains collisions (cars, billiard balls, atoms)\n- Essential for rocket propulsion\n- Used in accident reconstruction\n- Fundamental to understanding particle physics\n\nThis principle is one of the most powerful in physics because it's a **universal law**\u2014it works everywhere in the universe, from subatomic particles to galaxies.",
+        "source": "training_baseline",
+        "latency_s": 7.8,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"The answer comprehensively covers conservation of momentum with"
+      },
+      {
+        "id": "cm_004",
+        "question": "What is the difference between mass and weight?",
+        "ground_truth": "Mass is the amount of matter in an object (kg), while weight is the force of gravity acting on that mass (N). Weight = mg.",
+        "answer": "# Mass vs. Weight\n\n**Mass** is the amount of matter in an object. It:\n- Remains constant regardless of location\n- Is measured in kilograms (kg) or grams (g)\n- Represents an object's resistance to acceleration (inertia)\n\n**Weight** is the force of gravity acting on an object's mass. It:\n- Changes depending on gravitational strength\n- Is measured in newtons (N) or pounds (lbs)\n- Equals mass \u00d7 gravitational acceleration (W = mg)\n\n## Key Example\n\nA person with a mass of 70 kg:\n- Has that same 70 kg mass everywhere (Earth, Moon, space)\n- Weighs about 686 N on Earth (70 \u00d7 9.8 m/s\u00b2)\n- Weighs about 114 N on the Moon (where gravity is ~1/6th of Earth's)\n- Weighs 0 N floating in deep space (weightless, but still has 70 kg of mass)\n\n**Simple way to remember**: Mass is *what you are*, weight is *how hard gravity pulls on you*.",
+        "source": "training_baseline",
+        "latency_s": 6.23,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"Excellent answer that covers all key points from ground truth: "
+      },
+      {
+        "id": "cm_005",
+        "question": "What is centripetal force?",
+        "ground_truth": "A force directed toward the center of rotation that causes circular motion. F_c = mv\u00b2/r.",
+        "answer": "# Centripetal Force\n\n**Centripetal force** is the force that keeps an object moving in a circular path, always pointing toward the center of the circle.\n\n## Key Points:\n\n- **Direction**: Always points toward the center of rotation\n- **Effect**: Changes the direction of velocity (not the speed) to keep the object curving\n- **Not a new type of force**: It's a role played by other forces like tension, gravity, or friction\n\n## Examples:\n\n1. **Planet orbiting the sun** - gravity provides the centripetal force\n2. **Car turning a corner** - friction between tires and road\n3. **Ball on a string** - tension in the string\n4. **Roller coaster loop** - combination of normal force and gravity\n\n## Formula:\n\n**F = mv\u00b2/r**\n\nWhere:\n- F = centripetal force\n- m = mass\n- v = velocity\n- r = radius of the circular path\n\n## Important Note:\n\nWithout centripetal force, an object would move in a straight line (Newton's first law). The force constantly \"pulls\" the object inward, creating circular motion.",
+        "source": "training_baseline",
+        "latency_s": 5.91,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"Excellent comprehensive answer that covers all ground truth ele"
+      },
+      {
+        "id": "cm_006",
+        "question": "What is torque?",
+        "ground_truth": "Torque is the rotational equivalent of force. \u03c4 = r \u00d7 F, where r is the distance from the pivot point.",
+        "answer": "Torque is a twisting or rotating force that causes an object to spin around an axis or pivot point. Think of it as the rotational equivalent of a straight-line push or pull.\n\n## Key points:\n\n**Everyday examples:**\n- Turning a doorknob\n- Using a wrench to tighten a bolt\n- Opening a bottle cap\n- Pushing a door open\n\n**What affects torque:**\n1. **Force applied** - how hard you push/pull\n2. **Distance from pivot** - how far from the rotation point you apply force\n\n**The formula:**\nTorque = Force \u00d7 Distance (from the pivot point)\n\nThis is why it's easier to open a door by pushing near the handle (far from hinges) than pushing near the hinges themselves\u2014same force, but greater distance creates more torque.\n\n**Units:** Typically measured in newton-meters (N\u00b7m) or pound-feet (lb-ft)\n\nTorque is fundamental in physics and engineering, especially important for anything that rotates: engines, motors, gears, and machinery.",
+        "source": "training_baseline",
+        "latency_s": 5.92,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"The answer correctly identifies torque as rotational force and "
+      },
+      {
+        "id": "cm_007",
+        "question": "Derive the equation for projectile motion range on flat ground.",
+        "ground_truth": "Range R = (v\u2080\u00b2sin(2\u03b8))/g, where v\u2080 is initial velocity, \u03b8 is launch angle, and g is gravitational acceleration.",
+        "answer": "# Derivation of Projectile Motion Range\n\nI'll derive the range equation for a projectile launched and landing on flat ground.\n\n## Given Information\n- Initial velocity: **v\u2080**\n- Launch angle: **\u03b8** (above horizontal)\n- Acceleration due to gravity: **g** (downward)\n- Initial height = final height (flat ground)\n\n## Step 1: Break velocity into components\n\n**Horizontal component:** v\u2080\u2093 = v\u2080 cos \u03b8\n\n**Vertical component:** v\u2080\u1d67 = v\u2080 sin \u03b8\n\n## Step 2: Write equations of motion\n\n**Horizontal motion** (no acceleration):\n$$x(t) = v_0 \\cos\\theta \\cdot t$$\n\n**Vertical motion** (constant acceleration -g):\n$$y(t) = v_0 \\sin\\theta \\cdot t - \\frac{1}{2}gt^2$$\n\n## Step 3: Find time of flight\n\nThe projectile returns to ground level when y(t) = 0:\n\n$$0 = v_0 \\sin\\theta \\cdot t - \\frac{1}{2}gt^2$$\n\n$$0 = t(v_0 \\sin\\theta - \\frac{1}{2}gt)$$\n\nThis gives t = 0 (launch) or:\n\n$$t = \\frac{2v_0 \\sin\\theta}{g}$$\n\n## Step 4: Calculate range\n\nSubstitute the flight time into x(t):\n\n$$R = v_0 \\cos\\theta \\cdot \\frac{2v_0 \\sin\\theta}{g}$$\n\n$$R = \\frac{2v_0^2 \\sin\\theta \\cos\\theta}{g}$$\n\n## Final Result\n\nUsing the identity **sin(2\u03b8) = 2 sin \u03b8 cos \u03b8**:\n\n$$\\boxed{R = \\frac{v_0^2 \\sin(2\\theta)}{g}}$$\n\n**Note:** Maximum range occurs when sin(2\u03b8) = 1, which means **\u03b8 = 45\u00b0**",
+        "source": "training_baseline",
+        "latency_s": 8.47,
+        "score": 10,
+        "reason": "```json\n{\n  \"score\": 10,\n  \"reason\": \"The answer provides a complete, rigorous derivation that perfe"
+      },
+      {
+        "id": "cm_008",
+        "question": "Explain the physics of a pendulum. What determines its period?",
+        "ground_truth": "A pendulum's period T = 2\u03c0\u221a(L/g) depends only on length L and gravity g, not mass or amplitude (for small angles).",
+        "answer": "# Physics of a Pendulum\n\n## Basic Motion\n\nA pendulum consists of a mass (bob) suspended from a fixed point by a string or rod. When displaced from its resting position and released, it swings back and forth due to:\n\n1. **Gravity** - pulls the bob downward\n2. **Tension** in the string - provides the centripetal force\n3. **Inertia** - keeps the bob moving past the equilibrium point\n\n## Forces and Energy\n\nAs the pendulum swings:\n- At the **highest points**: maximum potential energy, zero kinetic energy, momentarily at rest\n- At the **lowest point**: maximum kinetic energy, minimum potential energy, maximum speed\n- Energy continuously converts between potential and kinetic (ignoring friction)\n\n## What Determines the Period?\n\nThe period (time for one complete swing) depends on:\n\n### **1. Length (L)** - Primary factor\n- Longer pendulum \u2192 longer period\n- Relationship: T \u221d \u221aL\n\n### **2. Gravitational acceleration (g)**\n- Stronger gravity \u2192 shorter period\n- Relationship: T \u221d 1/\u221ag\n\n### **Formula (for small angles):**\n```\nT = 2\u03c0\u221a(L/g)\n```\n\n### **What does NOT affect period (surprisingly):**\n- **Mass of the bob** - heavier and lighter bobs have the same period\n- **Amplitude** - swing width doesn't matter (for small angles <15\u00b0)\n\n## Key Insight\nThe pendulum is nearly an ideal example of **simple harmonic motion**, making it useful for timekeeping in grandfather clocks!",
+        "source": "training_baseline",
+        "latency_s": 8.4,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"Excellent answer that accurately presents the pendulum physics "
+      },
+      {
+        "id": "cm_009",
+        "question": "What is the work-energy theorem?",
+        "ground_truth": "The net work done on an object equals its change in kinetic energy: W_net = \u0394KE = (1/2)m(v_f\u00b2 - v_i\u00b2).",
+        "answer": "# Work-Energy Theorem\n\nThe **work-energy theorem** states that the net work done on an object equals the change in its kinetic energy:\n\n$$W_{\\text{net}} = \\Delta KE = KE_f - KE_i$$\n\nOr expressed with the kinetic energy formula:\n\n$$W_{\\text{net}} = \\frac{1}{2}mv_f^2 - \\frac{1}{2}mv_i^2$$\n\n## Key Points:\n\n- **Net work** is the total work done by ALL forces acting on the object\n- If net work is **positive** \u2192 kinetic energy increases (object speeds up)\n- If net work is **negative** \u2192 kinetic energy decreases (object slows down)\n- If net work is **zero** \u2192 kinetic energy stays constant (speed unchanged)\n\n## Simple Example:\n\nIf you push a 2 kg box from rest to 3 m/s:\n- Initial KE = 0 J\n- Final KE = \u00bd(2)(3\u00b2) = 9 J\n- Net work done = **9 J**\n\nThis theorem is incredibly useful because it relates force and displacement (work) to an object's motion (kinetic energy) without needing to know acceleration or time.",
+        "source": "training_baseline",
+        "latency_s": 5.77,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"The answer correctly states the work-energy theorem with accura"
+      },
+      {
+        "id": "cm_010",
+        "question": "Explain conservation of angular momentum with an example.",
+        "ground_truth": "Angular momentum L = I\u03c9 is conserved in isolated systems. Example: ice skater spinning faster when pulling arms in (decreasing I increases \u03c9).",
+        "answer": "# Conservation of Angular Momentum\n\n## The Principle\n\n**Angular momentum is conserved in a system when no external torque acts on it.** This means the total angular momentum remains constant before and after any internal changes.\n\nMathematically: **L = I\u03c9 = constant**\n\nWhere:\n- L = angular momentum\n- I = moment of inertia (resistance to rotation)\n- \u03c9 = angular velocity\n\n## Key Insight\n\nIf the moment of inertia (I) changes, the angular velocity (\u03c9) must change inversely to keep L constant:\n- If I decreases \u2192 \u03c9 increases\n- If I increases \u2192 \u03c9 decreases\n\n## Classic Example: The Ice Skater\n\n### The Setup\nAn ice skater performs a spin with arms extended outward.\n\n### What Happens\n\n1. **Arms Extended (Initial State)**\n   - Large moment of inertia (mass is far from rotation axis)\n   - Slower spin rate\n   \n2. **Arms Pulled In (Final State)**\n   - Smaller moment of inertia (mass is close to rotation axis)\n   - **Faster spin rate**\n\n### Why It Works\n\n- No external torque acts on the skater (friction is minimal on ice)\n- Angular momentum must be conserved: L\u2081 = L\u2082\n- I\u2081\u03c9\u2081 = I\u2082\u03c9\u2082\n- When I\u2082 < I\u2081, then \u03c9\u2082 > \u03c9\u2081\n\n**Result:** The skater spins dramatically faster without applying any additional force\u2014simply by changing body position!\n\n## Other Examples\n- Diver tucking into a ball to spin faster\n- Figure skater's scratch spin\n- Planets orbiting the sun (sweeping equal areas in equal times)",
+        "source": "training_baseline",
+        "latency_s": 9.14,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"Excellent answer that covers all ground truth elements (L=I\u03c9 co"
+      }
+    ],
+    "pack": [
+      {
+        "id": "cm_001",
+        "question": "What are Newton's three laws of motion?",
+        "ground_truth": "1st: Objects remain at rest or in uniform motion unless acted upon by force. 2nd: F=ma (force equals mass times acceleration). 3rd: For every action there is an equal and opposite reaction.",
+        "answer": "# Newton's Three Laws of Motion\n\nBased on the knowledge graph results from the article \"Newton's laws of motion\":\n\n1. **First Law**: A body at rest will remain at rest, and a body in motion will remain in motion, unless acted upon by an external force.\n\n2. **Second Law**: The time derivative of a body's momentum is equal to the net force acting on the body.\n\n3. **Third Law**: For every action, there is an equal and opposite reaction.\n\nThese laws describe the fundamental principles of motion and force in classical mechanics and apply to point masses within inertial frames of reference, forming the foundation for classical mechanics.",
+        "source": "pack_baseline",
+        "latency_s": 8.19,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"The answer correctly identifies all three laws with accurate ex"
+      },
+      {
+        "id": "cm_002",
+        "question": "What is the formula for kinetic energy?",
+        "ground_truth": "KE = (1/2)mv\u00b2, where m is mass and v is velocity.",
+        "answer": "# Answer\n\nBased on the original article text provided, the formula for kinetic energy is:\n\n**E \u221d mv\u00b2**\n\nAccording to the \"Kinetic energy\" article, this principle of classical mechanics was developed by Gottfried Leibniz and Johann Bernoulli, who described kinetic energy as the \"living force\" or \"vis viva.\"\n\n**Note:** While the knowledge graph results did not return the specific kinetic energy formula (the query returned facts about Newton's laws instead), the original article text clearly states this relationship.",
+        "source": "pack_baseline",
+        "latency_s": 8.37,
+        "score": 6,
+        "reason": "```json\n{\"score\": 6, \"reason\": \"The answer identifies the correct proportional relationship (E \u221d mv\u00b2"
+      },
+      {
+        "id": "cm_003",
+        "question": "What is conservation of momentum?",
+        "ground_truth": "In a closed system, the total momentum before and after a collision remains constant. p_initial = p_final.",
+        "answer": "Query execution failed: Primary query failed: Binder exception: Cannot find property properties for e.",
+        "source": "pack_baseline",
+        "latency_s": 1.22,
+        "score": 0,
+        "reason": "```json\n{\"score\": 0, \"reason\": \"The answer is a database/system error message completely unrelated t"
+      },
+      {
+        "id": "cm_004",
+        "question": "What is the difference between mass and weight?",
+        "ground_truth": "Mass is the amount of matter in an object (kg), while weight is the force of gravity acting on that mass (N). Weight = mg.",
+        "answer": "# Difference Between Mass and Weight\n\nBased on the provided sources, the key difference is:\n\n**Mass** is an intrinsic property of matter that measures an object's resistance to acceleration (inertial mass) and its interaction with gravitational fields (gravitational mass). According to the \"Mass\" article, mass determines \"its acceleration in the presence of an applied force\" and \"the degree to which it generates and is affected by a gravitational field.\" Mass is measured in kilograms (kg).\n\n**Weight**, as discussed in the \"Weight\" article, is conceptually distinct\u2014it refers to the gravitational force exerted on an object and relates to \"heaviness\" as a quality. Historically, weight was understood as \"the natural tendency of objects to seek their kin\" (Plato) or to restore natural order (Aristotle).\n\n**The fundamental distinction**: Mass is an invariant property of an object, while weight depends on the gravitational field acting upon that mass. An object has the same mass everywhere, but its weight varies depending on the strength of the gravitational field it experiences.\n\nThe sources note that \"repeated experiments since the 17th century have demonstrated that inertial and gravitational mass are identical,\" but the articles indicate weight is a separate concept related to gravitational force rather than mass itself.",
+        "source": "pack_baseline",
+        "latency_s": 7.4,
+        "score": 6,
+        "reason": "```json\n{\n  \"score\": 6,\n  \"reason\": \"The answer correctly identifies that mass is an intrinsic prope"
+      },
+      {
+        "id": "cm_005",
+        "question": "What is centripetal force?",
+        "ground_truth": "A force directed toward the center of rotation that causes circular motion. F_c = mv\u00b2/r.",
+        "answer": "I apologize, but I cannot provide a complete answer to your question. While the knowledge graph search returned related physics concepts (Newton's laws of motion, force, acceleration, velocity, etc.), **no specific information about centripetal force was found in the knowledge graph results or facts provided**.\n\nTo properly answer what centripetal force is, I would need:\n- The original article text you referenced (which was not included in your message)\n- Or knowledge graph results that specifically contain data about centripetal force\n\nIf you can provide the original article text, I'd be happy to give you an accurate, source-based answer about centripetal force.",
+        "source": "pack_baseline",
+        "latency_s": 2.76,
+        "score": 1,
+        "reason": "```json\n{\"score\": 1, \"reason\": \"The answer refuses to provide any substantive information about cent"
+      },
+      {
+        "id": "cm_006",
+        "question": "What is torque?",
+        "ground_truth": "Torque is the rotational equivalent of force. \u03c4 = r \u00d7 F, where r is the distance from the pivot point.",
+        "answer": "Query execution failed: Primary query failed: Binder exception: Cannot find property properties for e.",
+        "source": "pack_baseline",
+        "latency_s": 1.6,
+        "score": 0,
+        "reason": "```json\n{\"score\": 0, \"reason\": \"The answer is a database/system error message completely unrelated t"
+      },
+      {
+        "id": "cm_007",
+        "question": "Derive the equation for projectile motion range on flat ground.",
+        "ground_truth": "Range R = (v\u2080\u00b2sin(2\u03b8))/g, where v\u2080 is initial velocity, \u03b8 is launch angle, and g is gravitational acceleration.",
+        "answer": "# Projectile Motion Range Equation on Flat Ground\n\nBased on the provided sources, the knowledge graph and article text do **not contain the explicit mathematical derivation** of the range equation for projectile motion on flat ground.\n\n## What the Sources Do Provide:\n\nThe **Projectile motion** article establishes the foundational principles needed for such a derivation:\n\n1. **Independence of motion**: \"The horizontal motion and the vertical motion are independent of each other; that is, neither motion affects the other.\"\n\n2. **Parabolic trajectory**: \"A ballistic trajectory is a parabola with homogeneous acceleration.\"\n\n3. **Constant horizontal velocity** and **linearly changing vertical velocity** (from the Knowledge Graph facts).\n\n## What Would Be Required:\n\nTo derive the range equation R = (v\u2080\u00b2 sin(2\u03b8))/g, one would need to:\n- Apply Newton's second law (F = ma) to separate horizontal and vertical components\n- Use kinematic equations with constant horizontal velocity and constant vertical acceleration (g)\n- Solve for the time when the projectile returns to ground level\n- Calculate the horizontal distance traveled in that time\n\nHowever, the **complete mathematical derivation is not presented in the provided article text or knowledge graph results**. The sources provide the conceptual framework but not the step-by-step equation derivation.",
+        "source": "pack_baseline",
+        "latency_s": 5.26,
+        "score": 2,
+        "reason": "```json\n{\n  \"score\": 2,\n  \"reason\": \"The answer explicitly states that it does not contain the deriv"
+      },
+      {
+        "id": "cm_008",
+        "question": "Explain the physics of a pendulum. What determines its period?",
+        "ground_truth": "A pendulum's period T = 2\u03c0\u221a(L/g) depends only on length L and gravity g, not mass or amplitude (for small angles).",
+        "answer": "# Physics of a Pendulum and Its Period\n\n## Basic Physics\n\nA **simple gravity pendulum** consists of \"a weight (or bob) on the end of a massless cord suspended from a pivot, without friction\" (Pendulum article). When displaced and released, it swings back and forth. The physics governing this motion is grounded in **Newton's laws of motion**, which describe how forces (gravity, in this case) cause acceleration and motion.\n\n## What Determines the Period\n\nAccording to the knowledge graph facts:\n\n**The period of a simple gravity pendulum depends on two factors:**\n1. **Length of the pendulum** (L)\n2. **Local strength of gravity** (g)\n\nImportantly, **the period is independent of the mass of the bob** \u2014 a lighter or heavier pendulum of the same length will swing with the same period.\n\n## Key Property: Isochronism\n\nFor small swings, the period remains \"approximately the same for different size swings, a property called **isochronism**\" (Knowledge Graph). This property made pendulums valuable for timekeeping throughout history.\n\n## Real vs. Idealized Pendulums\n\nThe article notes that real pendulums differ from the idealized model: \"Real pendulums are subject to friction and air drag, so the amplitude of their swings declines\" (Pendulum article), though the theoretical period formula remains approximately valid for small oscillations.",
+        "source": "pack_baseline",
+        "latency_s": 5.37,
+        "score": 7,
+        "reason": "```json\n{\n  \"score\": 7,\n  \"reason\": \"The answer correctly identifies the two key factors determining"
+      },
+      {
+        "id": "cm_009",
+        "question": "What is the work-energy theorem?",
+        "ground_truth": "The net work done on an object equals its change in kinetic energy: W_net = \u0394KE = (1/2)m(v_f\u00b2 - v_i\u00b2).",
+        "answer": "# The Work-Energy Theorem\n\nBased on the provided knowledge graph results and article text, **there is no direct information about the work-energy theorem**. \n\nThe search returned results on related topics such as Newton's laws of motion, Classical mechanics, Lagrangian mechanics, Hamiltonian mechanics, and Mechanical energy, but none of these sources contain an explicit definition or explanation of the work-energy theorem.\n\nThe knowledge graph does provide foundational concepts related to the theorem (kinetic energy, potential energy, and mechanical energy), but does not state the work-energy theorem itself or explain how work relates to changes in kinetic energy.\n\nTo answer this question comprehensively, you would need article content that specifically discusses the work-energy theorem.",
+        "source": "pack_baseline",
+        "latency_s": 3.67,
+        "score": 1,
+        "reason": "```json\n{\n  \"score\": 1,\n  \"reason\": \"The answer does not provide any definition or explanation of th"
+      },
+      {
+        "id": "cm_010",
+        "question": "Explain conservation of angular momentum with an example.",
+        "ground_truth": "Angular momentum L = I\u03c9 is conserved in isolated systems. Example: ice skater spinning faster when pulling arms in (decreasing I increases \u03c9).",
+        "answer": "# Conservation of Angular Momentum\n\nBased on the provided sources, the knowledge graph contains facts about angular momentum and related concepts, but **does not explicitly explain the conservation of angular momentum principle or provide a direct example of it**.\n\n## What the Sources Show:\n\nThe **Angular momentum** article provides formulas for calculating angular momentum in specific cases:\n\n1. **Orbital angular momentum**: L = 2\u03c0Mfr\u00b2 (for a body in orbit, where M is mass, f is frequency, and r is radius)\n\n2. **Rotational angular momentum**: L = (4/5)\u03c0Mfr\u00b2 (for a uniform rigid sphere rotating around its axis)\n\nThe knowledge graph also notes that **\"torque-free precession occurs when no external torque is applied to a body, and the angular momentum is constant but the angular velocity vector changes orientation.\"** This implicitly relates to conservation\u2014when there is no external torque, angular momentum remains constant.\n\n## Limitation:\n\nThe provided article texts do not contain an explicit statement of the conservation of angular momentum principle or a worked example demonstrating how angular momentum is conserved in a system. To fully answer this question with a concrete example (such as a spinning ice skater pulling in their arms), additional source material would be needed.",
+        "source": "pack_baseline",
+        "latency_s": 5.4,
+        "score": 2,
+        "reason": "```json\n{\n  \"score\": 2,\n  \"reason\": \"The answer fails to explain conservation of angular momentum or"
+      }
+    ],
+    "enhanced": [
+      {
+        "id": "cm_001",
+        "question": "What are Newton's three laws of motion?",
+        "ground_truth": "1st: Objects remain at rest or in uniform motion unless acted upon by force. 2nd: F=ma (force equals mass times acceleration). 3rd: For every action there is an equal and opposite reaction.",
+        "answer": "Newton's three laws of motion are: [1]\n\n1. **Newton's First Law**: A body at rest will remain at rest, and a body in motion will remain in motion, unless acted upon by an external force. [1]\n\n2. **Newton's Second Law**: The time derivative of a body's momentum is equal to the net force acting on the body. [1]\n\n3. **Newton's Third Law**: For every action, there is an equal and opposite reaction. [1]\n\nTogether, these laws describe the fundamental principles of motion and force in classical mechanics and form the foundation for understanding how objects move and interact. [1]\n\n[1] Newton's laws of motion",
+        "source": "enhanced",
+        "latency_s": 4.39,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"Answer covers all three laws accurately. First and third laws m"
+      },
+      {
+        "id": "cm_002",
+        "question": "What is the formula for kinetic energy?",
+        "ground_truth": "KE = (1/2)mv\u00b2, where m is mass and v is velocity.",
+        "answer": "# Answer\n\nBased on the original article text provided, the formula for kinetic energy is:\n\n**E \u221d mv\u00b2**\n\nThis principle of classical mechanics states that kinetic energy is proportional to mass times the square of velocity. According to the article, this relationship was developed by Gottfried Leibniz and Johann Bernoulli, who described kinetic energy as the \"living force\" or \"vis viva.\" [Kinetic energy]\n\n**Note:** The knowledge graph results returned facts about Newton's laws rather than kinetic energy specifics, so the answer is grounded primarily in the original article text on kinetic energy provided.",
+        "source": "enhanced",
+        "latency_s": 4.28,
+        "score": 6,
+        "reason": "```json\n{\"score\": 6, \"reason\": \"The answer identifies the correct proportional relationship (mv\u00b2) an"
+      },
+      {
+        "id": "cm_003",
+        "question": "What is conservation of momentum?",
+        "ground_truth": "In a closed system, the total momentum before and after a collision remains constant. p_initial = p_final.",
+        "answer": "Query execution failed: Primary query failed: Binder exception: Cannot find property properties for e.",
+        "source": "enhanced",
+        "latency_s": 1.27,
+        "score": 0,
+        "reason": "```json\n{\"score\": 0, \"reason\": \"The answer is a system error message completely unrelated to the phy"
+      },
+      {
+        "id": "cm_004",
+        "question": "What is the difference between mass and weight?",
+        "ground_truth": "Mass is the amount of matter in an object (kg), while weight is the force of gravity acting on that mass (N). Weight = mg.",
+        "answer": "Query execution failed: Primary query failed: Binder exception: Cannot find property properties for e.",
+        "source": "enhanced",
+        "latency_s": 1.55,
+        "score": 0,
+        "reason": "```json\n{\n  \"score\": 0,\n  \"reason\": \"The answer is a technical error message unrelated to the questi"
+      },
+      {
+        "id": "cm_005",
+        "question": "What is centripetal force?",
+        "ground_truth": "A force directed toward the center of rotation that causes circular motion. F_c = mv\u00b2/r.",
+        "answer": "Query execution failed: Primary query failed: Binder exception: Cannot find property properties for e.",
+        "source": "enhanced",
+        "latency_s": 0.97,
+        "score": 0,
+        "reason": "```json\n{\n  \"score\": 0,\n  \"reason\": \"The answer is a technical error message unrelated to the questi"
+      },
+      {
+        "id": "cm_006",
+        "question": "What is torque?",
+        "ground_truth": "Torque is the rotational equivalent of force. \u03c4 = r \u00d7 F, where r is the distance from the pivot point.",
+        "answer": "Query execution failed: Primary query failed: Binder exception: Cannot find property properties for e.",
+        "source": "enhanced",
+        "latency_s": 1.52,
+        "score": 0,
+        "reason": "```json\n{\"score\": 0, \"reason\": \"The answer is a database/system error message completely unrelated t"
+      },
+      {
+        "id": "cm_007",
+        "question": "Derive the equation for projectile motion range on flat ground.",
+        "ground_truth": "Range R = (v\u2080\u00b2sin(2\u03b8))/g, where v\u2080 is initial velocity, \u03b8 is launch angle, and g is gravitational acceleration.",
+        "answer": "# Projectile Motion Range Equation on Flat Ground\n\nTo derive the range equation, we apply the principle of compound motion established by Galileo: horizontal and vertical motions are independent of each other. [1]\n\n**Setup:**\n- Initial velocity: v\u2080 at angle \u03b8 above horizontal\n- Horizontal component: v\u2080\u2093 = v\u2080 cos(\u03b8)\n- Vertical component: v\u2080\u1d67 = v\u2080 sin(\u03b8)\n- Gravitational acceleration: g (downward)\n\n**Derivation:**\n\n*Vertical motion:* Using constant acceleration kinematics, the projectile returns to ground level when vertical displacement equals zero:\n- y = v\u2080\u1d67t - \u00bdgt\u00b2 = 0\n- Solving for flight time: t = 2v\u2080 sin(\u03b8)/g\n\n*Horizontal motion:* Since horizontal velocity remains constant (no horizontal forces), the range is:\n- R = v\u2080\u2093 \u00d7 t\n- R = v\u2080 cos(\u03b8) \u00d7 [2v\u2080 sin(\u03b8)/g]\n\n**Final Equation:**\n$$R = \\frac{v_0^2 \\sin(2\\theta)}{g}$$\n\n(using the identity: 2 sin(\u03b8)cos(\u03b8) = sin(2\u03b8))\n\nThis derivation relies on Newton's laws of motion, which establish that forces (like gravity) produce accelerations, and the kinematic relationships between position, velocity, and acceleration. [1]",
+        "source": "enhanced",
+        "latency_s": 4.84,
+        "score": 10,
+        "reason": "```json\n{\n  \"score\": 10,\n  \"reason\": \"The answer provides a complete, rigorous derivation of the ran"
+      },
+      {
+        "id": "cm_008",
+        "question": "Explain the physics of a pendulum. What determines its period?",
+        "ground_truth": "A pendulum's period T = 2\u03c0\u221a(L/g) depends only on length L and gravity g, not mass or amplitude (for small angles).",
+        "answer": "# The Physics of a Pendulum\n\nA pendulum consists of a weight (bob) suspended from a pivot point by a massless cord. When displaced and released, it swings back and forth, converting between potential and kinetic energy throughout its motion. [1]\n\n## What Determines the Period?\n\nThe period of a simple pendulum\u2014the time it takes to complete one full oscillation\u2014is determined by two key factors: [1]\n\n1. **Length of the pendulum** - The period increases with the length of the cord\n2. **Local gravitational strength** - The period depends on the acceleration due to gravity\n\nNotably, the period is **independent of the mass of the bob**. [1]\n\n## Important Properties\n\nFor small swings, the pendulum exhibits **isochronism**\u2014the period remains approximately the same regardless of the amplitude of the swing. This property makes pendulums particularly useful for timekeeping devices. [1]\n\nFor compound pendulums (those with distributed mass rather than a point mass), the period can be expressed in terms of an \"equivalent length\" or \"radius of oscillation,\" which depends on the mass distribution of the pendulum. [1]\n\nReal pendulums differ from this idealized model because they experience friction and air drag, causing their swing amplitude to gradually decline over time. [1]\n\n[1] Pendulum",
+        "source": "enhanced",
+        "latency_s": 5.4,
+        "score": 7,
+        "reason": "```json\n{\n  \"score\": 7,\n  \"reason\": \"The answer correctly identifies the two main factors determinin"
+      },
+      {
+        "id": "cm_009",
+        "question": "What is the work-energy theorem?",
+        "ground_truth": "The net work done on an object equals its change in kinetic energy: W_net = \u0394KE = (1/2)m(v_f\u00b2 - v_i\u00b2).",
+        "answer": "Based on the knowledge graph results provided, there is **no direct information about the work-energy theorem**. \n\nThe entity search returned related physics concepts such as Newton's laws of motion, force, velocity, acceleration, and momentum, but did not include a specific entity or definition for \"work-energy theorem.\"\n\nTo answer your question accurately, I would need:\n1. The original article text that you referenced, or\n2. Knowledge graph results that specifically contain entities or facts related to work and energy\n\n**Note:** The work-energy theorem is a fundamental principle stating that the net work done on an object equals its change in kinetic energy, but this definition cannot be confirmed from the sources provided here.",
+        "source": "enhanced",
+        "latency_s": 3.6,
+        "score": 7,
+        "reason": "```json\n{\"score\": 7, \"reason\": \"The answer acknowledges the inability to find information in the pro"
+      },
+      {
+        "id": "cm_010",
+        "question": "Explain conservation of angular momentum with an example.",
+        "ground_truth": "Angular momentum L = I\u03c9 is conserved in isolated systems. Example: ice skater spinning faster when pulling arms in (decreasing I increases \u03c9).",
+        "answer": "# Conservation of Angular Momentum\n\nConservation of angular momentum states that the total angular momentum of a system remains constant when no external torque is applied to it. In other words, angular momentum cannot be created or destroyed in an isolated system\u2014it can only be transferred or redistributed. [1][2]\n\n## Example\n\nA practical example is **torque-free precession**: when no external torque is applied to a rotating body, the angular momentum remains constant even though the angular velocity vector may change orientation. [1] \n\nAnother everyday example is a **spinning figure skater**: when a skater pulls their arms inward, their moment of inertia decreases, causing their angular velocity to increase to conserve angular momentum. The total angular momentum stays the same, but it is redistributed as the body's configuration changes. [1]\n\n## Mathematical Basis\n\nAccording to the knowledge graph facts, torque is defined as the product of the perpendicular force component and distance from the axis of rotation. When torque equals zero (no external forces), angular momentum L remains constant over time. [2]\n\n---\n\n**Sources:** [1] Angular momentum article; [2] Newton's laws of motion and Hamiltonian mechanics articles",
+        "source": "enhanced",
+        "latency_s": 6.05,
+        "score": 9,
+        "reason": "```json\n{\n  \"score\": 9,\n  \"reason\": \"The answer correctly explains conservation of angular momentum "
+      }
+    ]
+  },
+  "summary": {
+    "training_avg": 9.2,
+    "pack_avg": 3.4,
+    "enhanced_avg": 4.8,
+    "improvement_delta": 1.4,
+    "training_accuracy": 100.0,
+    "pack_accuracy": 20.0,
+    "enhanced_accuracy": 50.0
+  }
+}
