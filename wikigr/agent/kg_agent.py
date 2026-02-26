@@ -155,6 +155,18 @@ class KnowledgeGraphAgent:
             query_plan["cypher"], max_results, query_plan.get("cypher_params")
         )
 
+        # Phase 2 Fix: Direct title matching as primary retrieval boost
+        # Extract key terms from question and look up articles directly
+        try:
+            direct_results = self._direct_title_lookup(question)
+            existing_sources = set(kg_results.get("sources", []))
+            for src in direct_results:
+                if src not in existing_sources:
+                    kg_results.setdefault("sources", []).insert(0, src)  # Prepend direct matches
+                    existing_sources.add(src)
+        except Exception as e:
+            logger.debug(f"Direct title lookup failed: {e}")
+
         # Augment with hybrid retrieval for query types that benefit from broader context.
         # Skip for entity_search and entity_relationships which already have precise Cypher.
         query_type = query_plan.get("type", "")
@@ -830,6 +842,52 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 "raw": [],
                 "error": f"Both primary and fallback queries failed: {primary_error}",
             }
+
+    def _direct_title_lookup(self, question: str) -> list[str]:
+        """Phase 2: Direct article title matching for better retrieval.
+
+        Extracts key noun phrases from the question and looks up articles
+        with matching titles. This catches cases where the LLM query planner
+        generates bad Cypher but the answer is in an obviously-named article.
+        """
+        import re
+
+        # Extract potential article titles from question
+        # Strip common question prefixes
+        cleaned = re.sub(
+            r"^(what is|what are|explain|describe|define|how does|how do|what does|"
+            r"who is|who was|when was|where is|why is|why does|tell me about)\s+",
+            "",
+            question.lower(),
+            flags=re.IGNORECASE,
+        ).rstrip("?. ")
+
+        # Try exact title match first, then partial
+        candidates = []
+        try:
+            # Exact match (case-insensitive)
+            result = self.conn.execute(
+                "MATCH (a:Article) WHERE lower(a.title) = $q RETURN a.title",
+                {"q": cleaned},
+            )
+            df = result.get_as_df()
+            if not df.empty:
+                candidates.extend(df["a.title"].tolist())
+
+            # Partial match if no exact match
+            if not candidates:
+                result = self.conn.execute(
+                    "MATCH (a:Article) WHERE lower(a.title) CONTAINS $q "
+                    "RETURN a.title ORDER BY length(a.title) ASC LIMIT 3",
+                    {"q": cleaned},
+                )
+                df = result.get_as_df()
+                if not df.empty:
+                    candidates.extend(df["a.title"].tolist())
+        except Exception as e:
+            logger.debug(f"Direct title lookup query failed: {e}")
+
+        return candidates[:3]
 
     def _hybrid_retrieve(
         self,
