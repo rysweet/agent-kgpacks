@@ -226,7 +226,7 @@ class WebContentSource:
             # (DNS may have changed since initial validation)
             _validate_url(title_or_url)
 
-            response = self._session.get(title_or_url, timeout=self._timeout, allow_redirects=False)
+            response = self._session.get(title_or_url, timeout=self._timeout, allow_redirects=True)
             self._last_request_time = time.time()
 
             if response.status_code == 404:
