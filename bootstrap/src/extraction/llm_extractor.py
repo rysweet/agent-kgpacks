@@ -352,7 +352,7 @@ Focus on the most important entities and relationships. Be concise."""
             except json.JSONDecodeError as je:
                 # Log the problematic content for debugging
                 logger.error(f"  JSON parse error at position {je.pos}: {je.msg}")
-                logger.debug(f"  Content snippet: {content[max(0, je.pos-50):je.pos+50]}")
+                logger.debug(f"  Content snippet: {content[max(0, je.pos - 50) : je.pos + 50]}")
                 raise
 
             entities = [
