@@ -1,0 +1,20 @@
+{
+  "name": "azure-lighthouse",
+  "version": "1.0.0",
+  "description": "Azure Lighthouse knowledge from Microsoft Learn",
+  "graph_stats": {
+    "articles": 13,
+    "entities": 102,
+    "relationships": 94,
+    "size_mb": 2.08
+  },
+  "source_urls": [
+    "https://learn.microsoft.com/en-us/azure/lighthouse/overview",
+    "https://learn.microsoft.com/en-us/azure/lighthouse/concepts/architecture",
+    "https://learn.microsoft.com/en-us/azure/lighthouse/concepts/enterprise",
+    "https://learn.microsoft.com/en-us/azure/lighthouse/concepts/managed-applications",
+    "https://learn.microsoft.com/en-us/azure/lighthouse/how-to/onboard-customer"
+  ],
+  "created": "2026-02-26T00:45:57.846209Z",
+  "license": "CC-BY-SA-4.0"
+}

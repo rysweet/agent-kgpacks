@@ -1,0 +1,16 @@
+# Azure Lighthouse Documentation
+https://learn.microsoft.com/en-us/azure/lighthouse/overview
+https://learn.microsoft.com/en-us/azure/lighthouse/concepts/architecture
+https://learn.microsoft.com/en-us/azure/lighthouse/concepts/enterprise
+https://learn.microsoft.com/en-us/azure/lighthouse/concepts/managed-applications
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/onboard-customer
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/view-manage-customers
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/view-manage-service-providers
+https://learn.microsoft.com/en-us/azure/lighthouse/concepts/cross-tenant-management-experience
+https://learn.microsoft.com/en-us/azure/lighthouse/concepts/cloud-solution-provider
+https://learn.microsoft.com/en-us/azure/lighthouse/concepts/security-baseline
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/monitor-at-scale
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/deploy-policy-remediate
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/manage-hybrid-infrastructure-arc
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/migration-at-scale
+https://learn.microsoft.com/en-us/azure/lighthouse/samples/

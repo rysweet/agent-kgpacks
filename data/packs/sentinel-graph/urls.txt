@@ -1,0 +1,16 @@
+# Microsoft Sentinel Graph Documentation
+https://learn.microsoft.com/en-us/azure/sentinel/datalake/sentinel-graph-overview
+https://learn.microsoft.com/en-us/azure/sentinel/whats-new
+https://learn.microsoft.com/en-us/rest/api/securityinsights/
+https://learn.microsoft.com/en-us/azure/sentinel/overview
+https://learn.microsoft.com/en-us/azure/sentinel/quickstart-onboard
+https://learn.microsoft.com/en-us/azure/sentinel/investigate-cases
+https://learn.microsoft.com/en-us/azure/sentinel/investigate-entity
+https://learn.microsoft.com/en-us/azure/sentinel/threat-intelligence-integration
+https://learn.microsoft.com/en-us/azure/sentinel/automation
+https://learn.microsoft.com/en-us/azure/sentinel/playbook-triggers-actions
+https://learn.microsoft.com/en-us/azure/sentinel/data-connectors-reference
+https://learn.microsoft.com/en-us/azure/sentinel/kusto-overview
+https://learn.microsoft.com/en-us/azure/sentinel/hunting
+https://learn.microsoft.com/en-us/azure/sentinel/notebook-get-started
+https://learn.microsoft.com/en-us/purview/purview-sentinel

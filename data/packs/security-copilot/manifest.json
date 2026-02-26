@@ -1,0 +1,20 @@
+{
+  "name": "security-copilot",
+  "version": "1.0.0",
+  "description": "Security Copilot knowledge from Microsoft Learn",
+  "graph_stats": {
+    "articles": 6,
+    "entities": 48,
+    "relationships": 45,
+    "size_mb": 2.08
+  },
+  "source_urls": [
+    "https://learn.microsoft.com/en-us/copilot/security/microsoft-security-copilot",
+    "https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot",
+    "https://learn.microsoft.com/en-us/copilot/security/security-copilot-inclusion",
+    "https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot-api",
+    "https://learn.microsoft.com/en-us/copilot/security/experiences-security-copilot"
+  ],
+  "created": "2026-02-26T00:52:25.736334Z",
+  "license": "CC-BY-SA-4.0"
+}

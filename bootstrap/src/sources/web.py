@@ -23,16 +23,48 @@ def _html_to_markdown(html_content: str) -> str:
 
     Uses the standard library HTMLParser for robust handling of nested tags,
     malformed HTML, and encoding issues — avoiding regex-based parsing pitfalls.
+
+    Extracts content from <main> or <article> tags to avoid navigation/sidebar noise.
     """
     import html as html_mod
+    import re
     from html.parser import HTMLParser
+
+    # Try to extract main content area first (Microsoft Learn, MDN, etc.)
+    # Use non-greedy matching with better patterns for nested tags
+    main_patterns = [
+        (r"<main[^>]*>", r"</main>"),
+        (r"<article[^>]*>", r"</article>"),
+        (r'<div[^>]*class="[^"]*content[^"]*"[^>]*>', r"</div>"),
+    ]
+
+    for start_pattern, end_pattern in main_patterns:
+        start_match = re.search(start_pattern, html_content, re.IGNORECASE)
+        if start_match:
+            # Find matching closing tag after start position
+            end_match = re.search(end_pattern, html_content[start_match.end() :], re.IGNORECASE)
+            if end_match:
+                # Extract content between opening and closing tags
+                html_content = html_content[
+                    start_match.end() : start_match.end() + end_match.start()
+                ]
+                break
 
     class _MarkdownConverter(HTMLParser):
         def __init__(self):
             super().__init__()
             self.output: list[str] = []
             self._skip = False  # Inside script/style/nav/footer
-            self._skip_tags = {"script", "style", "nav", "footer", "header"}
+            self._skip_tags = {
+                "script",
+                "style",
+                "nav",
+                "footer",
+                "header",
+                "aside",
+                "form",
+                "button",
+            }
             self._skip_depth = 0
 
         def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]):  # noqa: ARG002
@@ -226,7 +258,7 @@ class WebContentSource:
             # (DNS may have changed since initial validation)
             _validate_url(title_or_url)
 
-            response = self._session.get(title_or_url, timeout=self._timeout, allow_redirects=False)
+            response = self._session.get(title_or_url, timeout=self._timeout, allow_redirects=True)
             self._last_request_time = time.time()
 
             if response.status_code == 404:

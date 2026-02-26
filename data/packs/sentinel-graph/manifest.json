@@ -1,0 +1,20 @@
+{
+  "name": "sentinel-graph",
+  "version": "1.0.0",
+  "description": "Sentinel Graph knowledge from Microsoft Learn",
+  "graph_stats": {
+    "articles": 14,
+    "entities": 117,
+    "relationships": 97,
+    "size_mb": 2.08
+  },
+  "source_urls": [
+    "https://learn.microsoft.com/en-us/azure/sentinel/datalake/sentinel-graph-overview",
+    "https://learn.microsoft.com/en-us/azure/sentinel/whats-new",
+    "https://learn.microsoft.com/en-us/rest/api/securityinsights/",
+    "https://learn.microsoft.com/en-us/azure/sentinel/overview",
+    "https://learn.microsoft.com/en-us/azure/sentinel/quickstart-onboard"
+  ],
+  "created": "2026-02-26T00:51:21.968169Z",
+  "license": "CC-BY-SA-4.0"
+}

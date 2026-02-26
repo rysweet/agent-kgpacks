@@ -1,0 +1,17 @@
+# Microsoft Security Copilot Documentation
+https://learn.microsoft.com/en-us/copilot/security/microsoft-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/security-copilot-inclusion
+https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot-api
+https://learn.microsoft.com/en-us/copilot/security/experiences-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/manage-plugins
+https://learn.microsoft.com/en-us/copilot/security/create-custom-plugin
+https://learn.microsoft.com/en-us/copilot/security/plugin-microsoft-defender
+https://learn.microsoft.com/en-us/copilot/security/plugin-microsoft-sentinel
+https://learn.microsoft.com/en-us/copilot/security/plugin-microsoft-intune
+https://learn.microsoft.com/en-us/copilot/security/plugin-microsoft-entra
+https://learn.microsoft.com/en-us/copilot/security/prompts-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/prompt-tips
+https://learn.microsoft.com/en-us/copilot/security/investigate-incident-copilot-defender
+https://learn.microsoft.com/en-us/copilot/security/investigate-incidents-sentinel
+https://learn.microsoft.com/en-us/purview/copilot-in-purview-overview

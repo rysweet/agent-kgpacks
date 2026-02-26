@@ -1,0 +1,20 @@
+{
+  "name": "fabric-graph-gql-expert",
+  "version": "1.0.0",
+  "description": "Fabric Graph Gql Expert knowledge from Microsoft Learn",
+  "graph_stats": {
+    "articles": 21,
+    "entities": 152,
+    "relationships": 153,
+    "size_mb": 2.08
+  },
+  "source_urls": [
+    "https://learn.microsoft.com/en-us/fabric/data-engineering/api-graphql-overview",
+    "https://learn.microsoft.com/en-us/fabric/data-engineering/get-started-api-graphql",
+    "https://learn.microsoft.com/en-us/fabric/data-engineering/api-graphql-editor",
+    "https://learn.microsoft.com/en-us/fabric/data-engineering/connect-apps-api-graphql",
+    "https://learn.microsoft.com/en-us/fabric/data-engineering/api-graphql-introspection-schema-export"
+  ],
+  "created": "2026-02-26T00:49:15.608177Z",
+  "license": "CC-BY-SA-4.0"
+}

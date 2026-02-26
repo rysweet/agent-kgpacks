@@ -10,14 +10,14 @@ import re
 
 def parse_sections(wikitext: str) -> list[dict[str, str | int]]:
     """
-    Extract H2 and H3 sections from wikitext.
+    Extract H2 and H3 sections from wikitext or markdown.
 
-    Parses Wikipedia wikitext to identify section headings (== H2 == and === H3 ===),
-    extracts content between headings, strips wikitext formatting, and filters out
+    Parses Wikipedia wikitext (== H2 ==) or markdown (## H2) to identify section
+    headings, extracts content between headings, strips formatting, and filters out
     sections with less than 100 characters of content.
 
     Args:
-        wikitext: Wikipedia wikitext content as returned by the Action API
+        wikitext: Wikipedia wikitext or markdown content
 
     Returns:
         List of sections with structure:
@@ -48,22 +48,28 @@ def parse_sections(wikitext: str) -> list[dict[str, str | int]]:
     """
     sections = []
 
-    # Match H2: == Title == or H3: === Title ===
-    # Pattern explanation:
-    # ^                 - Start of line
-    # (={2,3})          - Capture 2 or 3 equals signs
-    # \s*               - Optional whitespace
-    # (.+?)             - Capture title (non-greedy)
-    # \s*               - Optional whitespace
-    # \1                - Same number of equals signs as opening
-    # $                 - End of line
-    heading_pattern = r"^(={2,3})\s*(.+?)\s*\1$"
+    # Try markdown format first (## Title), then wikitext format (== Title ==)
+    # Markdown: ^#{2,6}\s+(.+)$
+    # Wikitext: ^(={2,3})\s*(.+?)\s*\1$
+    markdown_pattern = r"^(#{2,6})\s+(.+)$"
+    wikitext_pattern = r"^(={2,3})\s*(.+?)\s*\1$"
 
-    # Store match start AND end positions
-    matches = list(re.finditer(heading_pattern, wikitext, re.MULTILINE))
+    # Try markdown first (more common for web content)
+    matches = list(re.finditer(markdown_pattern, wikitext, re.MULTILINE))
+    is_markdown = len(matches) > 0
+
+    if not is_markdown:
+        # Fall back to wikitext format
+        matches = list(re.finditer(wikitext_pattern, wikitext, re.MULTILINE))
+
     for i, match in enumerate(matches):
-        level = len(match.group(1))  # 2 or 3
-        title = match.group(2).strip()
+        if is_markdown:
+            level = len(match.group(1))  # Count # symbols
+            title = match.group(2).strip()
+        else:
+            level = len(match.group(1))  # Count = symbols
+            title = match.group(2).strip()
+
         start = match.end()  # Content starts after heading
         end = matches[i + 1].start() if i + 1 < len(matches) else len(wikitext)
         content = wikitext[start:end].strip()
