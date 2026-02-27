@@ -8,6 +8,7 @@ import tempfile
 import urllib.request
 from pathlib import Path
 
+from wikigr.packs._url_validation import validate_download_url
 from wikigr.packs.distribution import unpackage_pack
 from wikigr.packs.manifest import load_manifest
 from wikigr.packs.models import PackInfo
@@ -79,6 +80,9 @@ class PackInstaller:
             tmp_path = Path(tmp_file.name)
 
         try:
+            # Validate URL before download (SSRF prevention)
+            validate_download_url(url)
+
             # Download pack archive
             urllib.request.urlretrieve(url, tmp_path)
 
