@@ -19,6 +19,7 @@ Output:
 import argparse
 import json
 import logging
+import re
 import sys
 from pathlib import Path
 
@@ -59,15 +60,11 @@ DOMAIN_DESCRIPTIONS: dict[str, str] = {
         "incidents and alerts, UEBA, entity mapping, watchlists, content hub, "
         "Microsoft Graph Security API, investigation graph, and automation rules."
     ),
+    # Note: fabric-graphql-expert was generated before the pack DB was built and used
+    # the fallback domain description path. This results in 30 questions instead of 50.
+    # 30 questions is acceptable when no DB exists. To generate 50, build the pack DB
+    # first and re-run: python scripts/generate_eval_questions.py --pack fabric-graphql-expert
     "fabric-graphql-expert": (
-        "Microsoft Fabric API for GraphQL provides GraphQL access to Fabric data "
-        "sources. Key topics: GraphQL schema generation, authentication with "
-        "Microsoft Entra ID, pagination (cursor-based), filtering operators, "
-        "mutations, VS Code development, schema export/introspection, security "
-        "best practices, performance optimization, monitoring with Azure Monitor, "
-        "troubleshooting, OneLake, lakehouses, data warehouses, and SQL databases."
-    ),
-    "fabric-graph-gql-expert": (
         "Microsoft Fabric API for GraphQL provides GraphQL access to Fabric data "
         "sources. Key topics: GraphQL schema generation, authentication with "
         "Microsoft Entra ID, pagination (cursor-based), filtering operators, "
@@ -391,6 +388,11 @@ def main() -> None:
     )
     parser.add_argument("--output", help="Output directory (default: data/packs/{pack}/eval/)")
     args = parser.parse_args()
+
+    if not re.match(r"^[a-zA-Z0-9_-]+$", args.pack):
+        parser.error(
+            f"Invalid pack name: {args.pack}. Must contain only letters, digits, hyphens, and underscores."
+        )
 
     pack_name = args.pack
 
