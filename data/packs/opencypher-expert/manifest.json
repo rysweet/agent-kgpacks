@@ -1,0 +1,16 @@
+{
+  "name": "opencypher-expert",
+  "version": "1.0.0",
+  "description": "Expert knowledge pack for writing efficient OpenCypher/Kuzu graph queries, covering Cypher syntax, query clauses, pattern matching, path traversal, aggregation, data manipulation, optimization, and graph algorithms",
+  "domain": "graph-databases",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["cypher", "kuzu", "graph-database", "query-language", "opencypher"],
+  "source_urls": [
+    "https://docs.kuzudb.com/cypher/",
+    "https://opencypher.org/",
+    "https://neo4j.com/docs/cypher-manual/current/introduction/"
+  ],
+  "created": "2026-02-27T00:00:00Z",
+  "license": "MIT"
+}

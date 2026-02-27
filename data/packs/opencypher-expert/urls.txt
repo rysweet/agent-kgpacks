@@ -1,0 +1,152 @@
+# OpenCypher Expert Knowledge Pack - Source URLs
+# Expert knowledge for writing efficient OpenCypher/Kuzu graph queries
+# Total: 80+ URLs from official documentation, tutorials, and best practices
+
+# ============================================================================
+# KUZU DATABASE - OFFICIAL DOCUMENTATION (kuzudb.github.io/docs/)
+# Primary target: Kuzu-specific Cypher implementation
+# Note: docs.kuzudb.com is offline; using GitHub Pages mirror
+# ============================================================================
+
+# Kuzu Cypher Overview & Getting Started
+https://kuzudb.github.io/docs/cypher/
+https://kuzudb.github.io/docs/get-started/
+https://kuzudb.github.io/docs/get-started/cypher-intro/
+https://kuzudb.github.io/docs/get-started/prepared-statements/
+https://kuzudb.github.io/docs/cypher/syntax/
+
+# Kuzu Tutorials
+https://kuzudb.github.io/docs/tutorials/cypher/
+https://kuzudb.github.io/docs/tutorials/python/
+https://kuzudb.github.io/docs/tutorials/example-database/
+
+# Kuzu Query Clauses (Core)
+https://kuzudb.github.io/docs/cypher/query-clauses/
+https://kuzudb.github.io/docs/cypher/query-clauses/match/
+https://kuzudb.github.io/docs/cypher/query-clauses/optional-match/
+https://kuzudb.github.io/docs/cypher/query-clauses/example-database/
+https://kuzudb.github.io/docs/cypher/query-clauses/order-by/
+https://kuzudb.github.io/docs/cypher/query-clauses/skip/
+https://kuzudb.github.io/docs/cypher/query-clauses/limit/
+https://kuzudb.github.io/docs/cypher/query-clauses/union/
+https://kuzudb.github.io/docs/cypher/query-clauses/unwind/
+
+# Kuzu Data Definition (DDL)
+https://kuzudb.github.io/docs/cypher/data-definition/
+https://kuzudb.github.io/docs/cypher/data-definition/create-table/
+
+# Kuzu Data Manipulation (DML)
+https://kuzudb.github.io/docs/cypher/data-manipulation-clauses/create/
+https://kuzudb.github.io/docs/cypher/data-manipulation-clauses/merge/
+https://kuzudb.github.io/docs/cypher/data-manipulation-clauses/set/
+https://kuzudb.github.io/docs/cypher/data-manipulation-clauses/delete/
+
+# Kuzu Data Types
+https://kuzudb.github.io/docs/cypher/data-types/
+https://kuzudb.github.io/docs/cypher/data-types/list-and-array/
+
+# Kuzu Functions & Expressions
+https://kuzudb.github.io/docs/cypher/expressions/
+https://kuzudb.github.io/docs/cypher/expressions/text-functions/
+https://kuzudb.github.io/docs/cypher/expressions/pattern-matching/
+https://kuzudb.github.io/docs/cypher/expressions/list-functions/
+https://kuzudb.github.io/docs/cypher/expressions/array-functions/
+https://kuzudb.github.io/docs/cypher/expressions/utility-functions/
+https://kuzudb.github.io/docs/cypher/expressions/aggregate-functions/
+https://kuzudb.github.io/docs/cypher/expressions/node-rel-functions/
+
+# Kuzu Subqueries
+https://kuzudb.github.io/docs/cypher/subquery/
+
+# Kuzu Import/Export
+https://kuzudb.github.io/docs/import/
+https://kuzudb.github.io/docs/import/csv/
+https://kuzudb.github.io/docs/import/parquet/
+https://kuzudb.github.io/docs/import/copy-from-subquery/
+https://kuzudb.github.io/docs/export/csv/
+https://kuzudb.github.io/docs/export/parquet/
+https://kuzudb.github.io/docs/migrate/
+
+# Kuzu Extensions (Vector, FTS, Algorithms)
+https://kuzudb.github.io/docs/extensions/
+https://kuzudb.github.io/docs/extensions/vector/
+https://kuzudb.github.io/docs/extensions/full-text-search/
+https://kuzudb.github.io/docs/extensions/algo/
+https://kuzudb.github.io/docs/get-started/graph-algorithms/
+
+# Kuzu Attach External Databases
+https://kuzudb.github.io/docs/cypher/attach/
+
+# Kuzu Client APIs
+https://kuzudb.github.io/docs/client-apis/python/
+
+# Kuzu API Reference
+https://kuzudb.github.io/api-docs/python/kuzu.html
+
+# ============================================================================
+# OPENCYPHER SPECIFICATION (opencypher.org)
+# The open standard behind Cypher query language
+# ============================================================================
+
+https://opencypher.org/
+https://opencypher.org/resources/
+https://s3.amazonaws.com/artifacts.opencypher.org/openCypher9.pdf
+https://github.com/opencypher/openCypher/blob/master/docs/style-guide.adoc
+
+# ============================================================================
+# NEO4J CYPHER DOCUMENTATION (neo4j.com)
+# Comprehensive Cypher reference (compatible with OpenCypher)
+# ============================================================================
+
+# Neo4j Cypher Manual - Core Reference
+https://neo4j.com/docs/cypher-manual/current/introduction/
+https://neo4j.com/docs/cypher-manual/current/introduction/cypher-overview/
+https://neo4j.com/docs/cypher-manual/current/queries/
+https://neo4j.com/docs/cypher-manual/current/queries/basic/
+https://neo4j.com/docs/cypher-manual/current/syntax/
+
+# Neo4j Functions Reference
+https://neo4j.com/docs/cypher-manual/current/functions/
+https://neo4j.com/docs/cypher-manual/current/functions/aggregating/
+https://neo4j.com/docs/cypher-manual/current/functions/list/
+https://neo4j.com/docs/cypher-manual/current/functions/string/
+
+# Neo4j Expressions & Subqueries
+https://neo4j.com/docs/cypher-manual/current/expressions/
+https://neo4j.com/docs/cypher-manual/current/expressions/list-expressions/
+https://neo4j.com/docs/cypher-manual/current/subqueries/
+https://neo4j.com/docs/cypher-manual/current/subqueries/existential/
+https://neo4j.com/docs/cypher-manual/current/subqueries/collect/
+https://neo4j.com/docs/cypher-manual/current/clauses/foreach/
+
+# Neo4j Cheat Sheet & Getting Started
+https://neo4j.com/docs/cypher-cheat-sheet/25/all/
+https://neo4j.com/docs/getting-started/cypher/
+https://neo4j.com/docs/getting-started/cypher/subqueries/
+
+# Neo4j Query Optimization
+https://neo4j.com/docs/cypher-manual/current/planning-and-tuning/query-tuning/
+https://neo4j.com/docs/cypher-manual/current/appendix/tutorials/advanced-query-tuning/
+
+# Neo4j Data Modeling
+https://neo4j.com/docs/getting-started/data-modeling/
+https://neo4j.com/docs/getting-started/data-modeling/tutorial-data-modeling/
+https://neo4j.com/docs/getting-started/data-modeling/modeling-tips/
+
+# ============================================================================
+# TUTORIALS, BLOG POSTS & ADVANCED PATTERNS
+# Practical examples and optimization techniques
+# ============================================================================
+
+# Community Tutorials
+https://cu-dbmi.github.io/set-website/2024/05/24/Leveraging-K%C3%B9zu-and-Cypher-for-Advanced-Data-Analysis.html
+https://thedataquarry.com/blog/embedded-db-2/
+
+# Neo4j Optimization Articles
+https://moldstud.com/articles/p-how-to-write-efficient-cypher-queries-in-graph-databases-best-practices-and-tips
+
+# GraphAcademy
+https://graphacademy.neo4j.com/courses/cypher-aggregation/
+
+# Kuzu GitHub Demo Repository
+https://github.com/kuzudb/graphdb-demo
