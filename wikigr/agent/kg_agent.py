@@ -33,6 +33,14 @@ class KnowledgeGraphAgent:
     # Default synthesis model — Opus for best quality
     DEFAULT_MODEL = "claude-opus-4-6"
 
+    # --- Extracted constants (avoid magic numbers) ---
+    VECTOR_CONFIDENCE_THRESHOLD = 0.6
+    PLAN_CACHE_MAX_SIZE = 128
+    MAX_ARTICLE_CHARS = 3000
+    PLAN_MAX_TOKENS = 512
+    SYNTHESIS_MAX_TOKENS = 1024
+    SEED_EXTRACT_MAX_TOKENS = 256
+
     def __init__(
         self,
         db_path: str,
@@ -175,6 +183,7 @@ class KnowledgeGraphAgent:
         agent.enable_reranker = True
         agent.enable_multidoc = True
         agent.enable_fewshot = True
+        agent.synthesis_model = cls.DEFAULT_MODEL
         agent.reranker = None
         agent.synthesizer = None
         agent.few_shot = None
@@ -247,10 +256,12 @@ class KnowledgeGraphAgent:
 
         # Step 1: PRIMARY = Vector Search; FALLBACK = LLM-generated Cypher
         # Vector search reduces the 30% query failure rate from bad Cypher generation.
-        # Fall back to LLM Cypher only when vector confidence is low (< 0.6 cosine similarity).
+        # Fall back to LLM Cypher only when vector confidence is low.
         t_plan_start = time.perf_counter()
         vector_kg_results, max_similarity = self._vector_primary_retrieve(question, max_results)
-        use_vector_primary = vector_kg_results is not None and max_similarity >= 0.6
+        use_vector_primary = (
+            vector_kg_results is not None and max_similarity >= self.VECTOR_CONFIDENCE_THRESHOLD
+        )
 
         if use_vector_primary:
             kg_results = vector_kg_results
@@ -263,7 +274,7 @@ class KnowledgeGraphAgent:
         else:
             if vector_kg_results is not None:
                 logger.info(
-                    f"Vector search low confidence (max_similarity={max_similarity:.3f} < 0.6), "
+                    f"Vector search low confidence (max_similarity={max_similarity:.3f} < {self.VECTOR_CONFIDENCE_THRESHOLD}), "
                     "falling back to LLM Cypher"
                 )
             else:
@@ -564,7 +575,7 @@ class KnowledgeGraphAgent:
         try:
             response = self.claude.messages.create(
                 model=self.synthesis_model,
-                max_tokens=256,
+                max_tokens=self.SEED_EXTRACT_MAX_TOKENS,
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:
@@ -683,7 +694,7 @@ class KnowledgeGraphAgent:
         try:
             response = self.claude.messages.create(
                 model=self.synthesis_model,
-                max_tokens=1024,
+                max_tokens=self.SYNTHESIS_MAX_TOKENS,
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:
@@ -719,7 +730,7 @@ class KnowledgeGraphAgent:
         plan = self._plan_query_uncached(question)
 
         # LRU eviction: remove oldest entry when cache is full
-        if len(self._plan_cache) >= 128:
+        if len(self._plan_cache) >= self.PLAN_CACHE_MAX_SIZE:
             oldest = next(iter(self._plan_cache))
             del self._plan_cache[oldest]
         self._plan_cache[cache_key] = plan
@@ -770,7 +781,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         try:
             response = self.claude.messages.create(
                 model=self.synthesis_model,
-                max_tokens=1024,
+                max_tokens=self.PLAN_MAX_TOKENS,
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:
@@ -990,7 +1001,6 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         with matching titles. This catches cases where the LLM query planner
         generates bad Cypher but the answer is in an obviously-named article.
         """
-        import re
 
         # Extract potential article titles from question
         # Strip common question prefixes
@@ -1071,7 +1081,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         vector_weight: float = 0.5,
         graph_weight: float = 0.3,
         keyword_weight: float = 0.2,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Combine vector, graph, and keyword retrieval for richer results.
 
         Args:
@@ -1185,8 +1195,9 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 sections = by_article.get(title, [])
                 if sections:
                     combined = "\n\n".join(sections)
-                    # Allow up to 3000 chars per article for rich context
-                    truncated = combined[:3000] + ("..." if len(combined) > 3000 else "")
+                    truncated = combined[: self.MAX_ARTICLE_CHARS] + (
+                        "..." if len(combined) > self.MAX_ARTICLE_CHARS else ""
+                    )
                     texts.append(f"## {title}\n{truncated}")
 
         # Fallback: try article.content directly if no sections found
@@ -1200,9 +1211,11 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             if df is not None:
                 for _, row in df.iterrows():
                     title = row.get("title", "")
-                    fb_content = row.get("content", "")
-                    if title and fb_content:
-                        truncated = fb_content[:3000] + ("..." if len(fb_content) > 3000 else "")
+                    content = row.get("content", "")
+                    if title and content:
+                        truncated = content[: self.MAX_ARTICLE_CHARS] + (
+                            "..." if len(content) > self.MAX_ARTICLE_CHARS else ""
+                        )
                         texts.append(f"## {title}\n{truncated}")
 
         return "\n\n".join(texts)
@@ -1296,7 +1309,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
         try:
             response = self.claude.messages.create(
                 model=self.synthesis_model,
-                max_tokens=512,
+                max_tokens=self.SYNTHESIS_MAX_TOKENS,
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:
@@ -1504,7 +1517,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
     def __exit__(self, *args):
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         """Close database connection and release embedding model if loaded."""
         self.conn = None  # type: ignore[assignment]
         self.db = None  # type: ignore[assignment]

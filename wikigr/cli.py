@@ -510,7 +510,8 @@ def _get_db_stats(db_path: str) -> dict:
     try:
         result = conn.execute("MATCH (c:Category) RETURN COUNT(c) AS count")
         stats["categories"] = int(result.get_as_df().iloc[0]["count"])
-    except Exception:
+    except Exception as e:
+        logger.debug("Category count query failed: %s", e)
         stats["categories"] = 0
 
     del conn
