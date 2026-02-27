@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 PACK_DIR = Path("data/packs/physics-expert")
 QUESTIONS_FILE = PACK_DIR / "eval" / "questions.jsonl"
 SAMPLE_SIZE = 10  # Evaluate 10 questions per baseline
-MODEL = "claude-sonnet-4-5-20250929"
+MODEL = "claude-opus-4-6"
 
 
 def load_sample_questions(path: Path, n: int) -> list[dict]:

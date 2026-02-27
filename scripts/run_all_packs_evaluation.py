@@ -21,7 +21,7 @@ from anthropic import Anthropic
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-MODEL = "claude-sonnet-4-5-20250929"
+MODEL = "claude-opus-4-6"
 JUDGE_MODEL = "claude-haiku-4-5-20251001"
 
 
