@@ -183,8 +183,8 @@ class KnowledgeGraphAgent:
             kg_results = vector_kg_results
             query_plan = {
                 "type": "vector_search",
-                "cypher": "CALL QUERY_VECTOR_INDEX('Section', 'embedding_idx', $query, K) RETURN *",
-                "cypher_params": {"q": question},
+                "cypher": f"CALL QUERY_VECTOR_INDEX('Section', 'embedding_idx', $emb, {max_results * 3}) RETURN *",
+                "cypher_params": {"emb": "<embedding_vector>"},
             }
             logger.info(f"Vector primary retrieval succeeded (max_similarity={max_similarity:.3f})")
         else:
