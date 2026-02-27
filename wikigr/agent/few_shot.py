@@ -46,7 +46,12 @@ class FewShotManager:
             raise FileNotFoundError(f"Examples file not found: {self.examples_path}")
 
         with open(self.examples_path) as f:
-            self.examples = json.load(f)
+            # Support both JSON array and JSONL (one object per line) formats
+            content = f.read().strip()
+            if content.startswith("["):
+                self.examples = json.loads(content)
+            else:
+                self.examples = [json.loads(line) for line in content.splitlines() if line.strip()]
 
         # Security: Validate example count to prevent OOM
         if len(self.examples) > 1000:
