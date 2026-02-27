@@ -254,44 +254,33 @@ class KnowledgeGraphAgent:
 
         t_start = time.perf_counter()
 
-        # Step 1: PRIMARY = Vector Search; FALLBACK = LLM-generated Cypher
-        # Vector search reduces the 30% query failure rate from bad Cypher generation.
-        # Fall back to LLM Cypher only when vector confidence is low.
+        # Step 1: Vector search is ALWAYS the primary retrieval
+        # Experiment 2: Remove LLM Cypher entirely — vector + hybrid only.
         t_plan_start = time.perf_counter()
         vector_kg_results, max_similarity = self._vector_primary_retrieve(question, max_results)
-        use_vector_primary = (
-            vector_kg_results is not None and max_similarity >= self.VECTOR_CONFIDENCE_THRESHOLD
-        )
 
-        if use_vector_primary:
+        if vector_kg_results is not None:
             kg_results = vector_kg_results
             query_plan = {
                 "type": "vector_search",
                 "cypher": f"CALL QUERY_VECTOR_INDEX('Section', 'embedding_idx', $emb, {max_results * 3}) RETURN *",
                 "cypher_params": {"emb": "<embedding_vector>"},
             }
-            logger.info(f"Vector primary retrieval succeeded (max_similarity={max_similarity:.3f})")
+            logger.info(
+                f"Vector retrieval: {len(kg_results.get('sources', []))} sources (max_similarity={max_similarity:.3f})"
+            )
         else:
-            if vector_kg_results is not None:
-                logger.info(
-                    f"Vector search low confidence (max_similarity={max_similarity:.3f} < {self.VECTOR_CONFIDENCE_THRESHOLD}), "
-                    "falling back to LLM Cypher"
-                )
-            else:
-                logger.info("Vector search returned no results, falling back to LLM Cypher")
-            query_plan = self._plan_query(question)
+            # Vector search failed entirely — use empty results (hybrid will fill in)
+            kg_results = {"sources": [], "entities": [], "facts": [], "raw": []}
+            query_plan = {"type": "vector_fallback", "cypher": "N/A", "cypher_params": {}}
+            logger.warning("Vector search returned no results")
 
         t_plan = time.perf_counter() - t_plan_start
 
-        # Step 2: Execute Cypher query (only when LLM Cypher fallback is used)
+        # Step 2: No LLM Cypher execution — vector results are used directly
         t_exec_start = time.perf_counter()
-        if not use_vector_primary:
-            kg_results = self._execute_query(
-                query_plan["cypher"], max_results, query_plan.get("cypher_params")
-            )
 
-        # Phase 2 Fix: Direct title matching as primary retrieval boost
-        # Extract key terms from question and look up articles directly
+        # Direct title matching as primary retrieval boost
         try:
             direct_results = self._direct_title_lookup(question)
             existing_sources = set(kg_results.get("sources", []))
@@ -302,12 +291,9 @@ class KnowledgeGraphAgent:
         except Exception as e:
             logger.debug(f"Direct title lookup failed: {e}")
 
-        # Augment with hybrid retrieval for query types that benefit from broader context.
-        # Skip for entity_search and entity_relationships which already have precise Cypher.
-        query_type = query_plan.get("type", "")
-        skip_hybrid = query_type in ("entity_search", "entity_relationships")
+        # ALWAYS augment with hybrid retrieval (no skip for any query type)
         try:
-            hybrid_results = {} if skip_hybrid else self._hybrid_retrieve(question, max_results)
+            hybrid_results = self._hybrid_retrieve(question, max_results)
             # Merge hybrid sources into KG results (deduplicated)
             existing_sources = set(kg_results.get("sources", []))
             for src in hybrid_results.get("sources", []):
