@@ -310,8 +310,8 @@ class TestVectorPrimaryRetrieval:
         mock_plan.assert_not_called()
         assert result["query_type"] == "vector_search"
 
-    def test_query_uses_llm_when_low_confidence(self, agent):
-        """query() calls _plan_query when vector similarity < 0.6."""
+    def test_query_never_calls_llm_cypher(self, agent):
+        """query() never calls _plan_query — vector-only retrieval (Experiment 2)."""
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
@@ -324,28 +324,22 @@ class TestVectorPrimaryRetrieval:
                 )
             ),
         ]
-        mock_plan = {
-            "type": "entity_search",
-            "cypher": "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($q) RETURN a.title LIMIT 10",
-            "cypher_params": {"q": "test"},
-        }
         mock_response = MagicMock()
         mock_response.content = [MagicMock(text="answer")]
         agent.claude.messages.create.return_value = mock_response
 
         with (
-            patch.object(agent, "_plan_query", return_value=mock_plan) as mock_plan_fn,
-            patch.object(
-                agent,
-                "_execute_query",
-                return_value={"sources": [], "entities": [], "facts": [], "raw": []},
-            ),
+            patch.object(agent, "_plan_query") as mock_plan_fn,
+            patch.object(agent, "_execute_query") as mock_exec_fn,
             patch.object(agent, "_direct_title_lookup", return_value=[]),
             patch.object(agent, "_hybrid_retrieve", return_value={"sources": [], "facts": []}),
         ):
-            agent.query("obscure query")
+            result = agent.query("obscure query")
 
-        mock_plan_fn.assert_called_once()
+        # LLM Cypher path is completely removed
+        mock_plan_fn.assert_not_called()
+        mock_exec_fn.assert_not_called()
+        assert result["query_type"] == "vector_search"
 
 
 # --------------------------------------------------------------------------
