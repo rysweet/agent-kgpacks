@@ -62,7 +62,7 @@ class FewShotManager:
 
         # Precompute embeddings for all examples
         if self.examples:
-            queries = [ex["query"] for ex in self.examples]
+            queries = [ex.get("query", ex.get("question", "")) for ex in self.examples]
             self.embeddings = np.array(self.model.encode(queries))
         else:
             self.embeddings = np.array([])
