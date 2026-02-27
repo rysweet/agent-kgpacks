@@ -191,7 +191,9 @@ def main():
 
         print("  Running enhanced...")
         enhanced = evaluate_pack(
-            questions, pack["db"], use_enhancements=True,
+            questions,
+            pack["db"],
+            use_enhancements=True,
             enable_reranker=not args.disable_reranker,
             enable_multidoc=not args.disable_multidoc,
             enable_fewshot=not args.disable_fewshot,
