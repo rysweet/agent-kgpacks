@@ -101,7 +101,7 @@ class GraphReranker:
 
             if df.empty:
                 # No articles found in graph
-                return {aid: 0.0 for aid in article_ids}
+                return dict.fromkeys(article_ids, 0.0)
 
             # Normalize in Python to avoid Kuzu nested-aggregation errors
             max_degree = float(df["degree"].max()) if not df.empty else 0.0
@@ -121,7 +121,7 @@ class GraphReranker:
         except Exception as e:
             logger.error(f"Centrality calculation failed: {e}")
             # Fallback: all articles get zero centrality
-            return {aid: 0.0 for aid in article_ids}
+            return dict.fromkeys(article_ids, 0.0)
 
     def rerank(
         self,
@@ -181,7 +181,7 @@ class GraphReranker:
 
         # Calculate centrality scores (skip for sparse graphs to avoid degradation)
         if self._sparse_graph:
-            centrality = {aid: 0.0 for aid in article_ids}
+            centrality = dict.fromkeys(article_ids, 0.0)
         else:
             centrality = self.calculate_centrality(article_ids)
 

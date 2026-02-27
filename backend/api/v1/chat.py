@@ -160,8 +160,8 @@ def chat_stream(
             client = agent.claude
 
             with client.messages.stream(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=512,
+                model=agent.synthesis_model,
+                max_tokens=agent.SYNTHESIS_MAX_TOKENS,
                 messages=[{"role": "user", "content": context}],
             ) as stream:
                 for text in stream.text_stream:
