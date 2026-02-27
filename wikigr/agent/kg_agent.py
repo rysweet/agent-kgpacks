@@ -1296,7 +1296,9 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             for i, example in enumerate(few_shot_examples[:3], 1):
                 few_shot_section += f"Example {i}:\n"
                 few_shot_section += f"Q: {example.get('question', example.get('query', ''))}\n"
-                few_shot_section += f"A: {example['answer']}\n\n"
+                few_shot_section += (
+                    f"A: {example.get('answer', example.get('ground_truth', ''))}\n\n"
+                )
 
         # Use enriched multi-doc context if available, otherwise standard context
         if "enriched_context" in kg_results:
