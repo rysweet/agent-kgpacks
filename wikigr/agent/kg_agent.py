@@ -197,6 +197,20 @@ class KnowledgeGraphAgent:
             self._embedding_generator = EmbeddingGenerator()
         return self._embedding_generator
 
+    def _safe_query(self, cypher: str, params: dict | None = None, *, log_context: str = "") -> Any:
+        """Execute Cypher and return DataFrame, or None on failure.
+
+        Consolidates the repeated try/execute/get_as_df/except pattern.
+        Returns the DataFrame when non-empty, or None on empty/error.
+        """
+        try:
+            result = self.conn.execute(cypher, params or {})
+            df = result.get_as_df()
+            return df if not df.empty else None
+        except Exception as e:
+            logger.debug("Query failed%s: %s", f" ({log_context})" if log_context else "", e)
+            return None
+
     def query(
         self,
         question: str,
@@ -347,21 +361,18 @@ class KnowledgeGraphAgent:
                 # Only expand if we have a HIGH-CONFIDENCE top result (appears in both rankings)
                 if self.synthesizer is not None and len(kg_results.get("sources", [])) >= 1:
                     seed_title = kg_results["sources"][0]
-                    try:
-                        result = self.conn.execute(
-                            "MATCH (a:Article {title: $title})-[:LINKS_TO]->(b:Article) "
-                            "RETURN b.title AS title LIMIT 2",
-                            {"title": seed_title},
-                        )
-                        df = result.get_as_df()
-                        if not df.empty:
-                            existing = set(kg_results["sources"])
-                            for rt in df["title"].tolist():
-                                if rt not in existing and len(kg_results["sources"]) < 7:
-                                    kg_results["sources"].append(rt)
-                                    existing.add(rt)
-                    except Exception as e:
-                        logger.debug(f"Multi-doc expansion failed: {e}")
+                    df = self._safe_query(
+                        "MATCH (a:Article {title: $title})-[:LINKS_TO]->(b:Article) "
+                        "RETURN b.title AS title LIMIT 2",
+                        {"title": seed_title},
+                        log_context="multi-doc expansion",
+                    )
+                    if df is not None:
+                        existing = set(kg_results["sources"])
+                        for rt in df["title"].tolist():
+                            if rt not in existing and len(kg_results["sources"]) < 7:
+                                kg_results["sources"].append(rt)
+                                existing.add(rt)
 
                 # Enhancement 3: Few-shot examples (always safe - they guide format, not content)
                 if self.few_shot is not None:
@@ -472,16 +483,13 @@ class KnowledgeGraphAgent:
                 f"LIMIT $limit"
             )
             cypher_queries.append(traversal_cypher)
-            try:
-                result = self.conn.execute(
-                    traversal_cypher,
-                    {"title": seed_title, "limit": max_context_articles},
-                )
-                df = result.get_as_df()
-                if not df.empty:
-                    all_related_titles.extend(df["title"].tolist())
-            except Exception as e:
-                logger.warning(f"Traversal failed for seed '{seed_title}': {e}")
+            df = self._safe_query(
+                traversal_cypher,
+                {"title": seed_title, "limit": max_context_articles},
+                log_context=f"traversal for seed '{seed_title}'",
+            )
+            if df is not None:
+                all_related_titles.extend(df["title"].tolist())
 
         # Deduplicate while preserving order; include seeds themselves
         # Cap total articles to prevent excessive API costs
@@ -506,15 +514,13 @@ class KnowledgeGraphAgent:
         )
         cypher_queries.append(section_cypher)
         for title in unique_titles:
-            try:
-                result = self.conn.execute(section_cypher, {"title": title})
-                df = result.get_as_df()
-                if not df.empty:
-                    content = df.iloc[0]["content"]
-                    if content:
-                        context_parts.append(f"## {title}\n{content}")
-            except Exception as e:
-                logger.warning(f"Section fetch failed for '{title}': {e}")
+            df = self._safe_query(
+                section_cypher, {"title": title}, log_context=f"section fetch for '{title}'"
+            )
+            if df is not None:
+                sect_content = df.iloc[0]["content"]
+                if sect_content:
+                    context_parts.append(f"## {title}\n{sect_content}")
 
         # ------------------------------------------------------------------
         # Step 4: Synthesize the answer with Claude
@@ -998,28 +1004,25 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
 
         # Try exact title match first, then partial
         candidates = []
-        try:
-            # Exact match (case-insensitive)
-            result = self.conn.execute(
-                "MATCH (a:Article) WHERE lower(a.title) = $q RETURN a.title",
-                {"q": cleaned},
-            )
-            df = result.get_as_df()
-            if not df.empty:
-                candidates.extend(df["a.title"].tolist())
+        # Exact match (case-insensitive)
+        df = self._safe_query(
+            "MATCH (a:Article) WHERE lower(a.title) = $q RETURN a.title",
+            {"q": cleaned},
+            log_context="direct title exact match",
+        )
+        if df is not None:
+            candidates.extend(df["a.title"].tolist())
 
-            # Partial match if no exact match
-            if not candidates:
-                result = self.conn.execute(
-                    "MATCH (a:Article) WHERE lower(a.title) CONTAINS $q "
-                    "RETURN a.title ORDER BY length(a.title) ASC LIMIT 3",
-                    {"q": cleaned},
-                )
-                df = result.get_as_df()
-                if not df.empty:
-                    candidates.extend(df["a.title"].tolist())
-        except Exception as e:
-            logger.debug(f"Direct title lookup query failed: {e}")
+        # Partial match if no exact match
+        if not candidates:
+            df = self._safe_query(
+                "MATCH (a:Article) WHERE lower(a.title) CONTAINS $q "
+                "RETURN a.title ORDER BY length(a.title) ASC LIMIT 3",
+                {"q": cleaned},
+                log_context="direct title partial match",
+            )
+            if df is not None:
+                candidates.extend(df["a.title"].tolist())
 
         return candidates[:3]
 
@@ -1096,36 +1099,32 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         # Signal 2: Graph traversal (follow LINKS_TO from vector hits)
         seed_titles = list(scored.keys())[:3]
         for seed in seed_titles:
-            try:
-                result = self.conn.execute(
-                    "MATCH (seed:Article {title: $title})-[:LINKS_TO]->(neighbor:Article) "
-                    "RETURN neighbor.title AS title LIMIT $limit",
-                    {"title": seed, "limit": max_results},
-                )
-                df = result.get_as_df()
+            df = self._safe_query(
+                "MATCH (seed:Article {title: $title})-[:LINKS_TO]->(neighbor:Article) "
+                "RETURN neighbor.title AS title LIMIT $limit",
+                {"title": seed, "limit": max_results},
+                log_context=f"hybrid graph traversal for '{seed}'",
+            )
+            if df is not None:
                 for _, row in df.iterrows():
                     title = row["title"]
                     if title:
                         scored[title] = scored.get(title, 0) + graph_weight * 0.5
-            except Exception as e:
-                logger.debug(f"Graph traversal failed for '{seed}': {e}")
 
         # Signal 3: Keyword match (title contains)
         keywords = [w for w in question.split() if len(w) > 3]
         for kw in keywords[:3]:
-            try:
-                result = self.conn.execute(
-                    "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($kw) "
-                    "RETURN a.title AS title LIMIT $limit",
-                    {"kw": kw, "limit": max_results},
-                )
-                df = result.get_as_df()
+            df = self._safe_query(
+                "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($kw) "
+                "RETURN a.title AS title LIMIT $limit",
+                {"kw": kw, "limit": max_results},
+                log_context=f"hybrid keyword search for '{kw}'",
+            )
+            if df is not None:
                 for _, row in df.iterrows():
                     title = row["title"]
                     if title:
                         scored[title] = scored.get(title, 0) + keyword_weight * 0.7
-            except Exception as e:
-                logger.debug(f"Keyword search failed for '{kw}': {e}")
 
         # Rank by combined score
         ranked = sorted(scored.items(), key=lambda x: x[1], reverse=True)[:max_results]
@@ -1134,16 +1133,14 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         # Fetch facts for top sources
         facts: list[str] = []
         for title in source_titles[:5]:
-            try:
-                result = self.conn.execute(
-                    "MATCH (a:Article {title: $title})-[:HAS_FACT]->(f:Fact) "
-                    "RETURN f.content AS content LIMIT 3",
-                    {"title": title},
-                )
-                df = result.get_as_df()
+            df = self._safe_query(
+                "MATCH (a:Article {title: $title})-[:HAS_FACT]->(f:Fact) "
+                "RETURN f.content AS content LIMIT 3",
+                {"title": title},
+                log_context=f"hybrid facts for '{title}'",
+            )
+            if df is not None and "content" in df.columns:
                 facts.extend(df["content"].dropna().tolist())
-            except Exception as e:
-                logger.debug("Failed to fetch facts for '%s': %s", title, e)
 
         return {
             "sources": source_titles,
@@ -1167,51 +1164,46 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         texts: list[str] = []
 
         # Try to get section content (works for all pack types)
-        try:
-            result = self.conn.execute(
-                "MATCH (a:Article)-[:HAS_SECTION]->(s:Section) "
-                "WHERE a.title IN $titles "
-                "RETURN a.title AS title, s.content AS content "
-                "ORDER BY a.title",
-                {"titles": titles},
-            )
-            df = result.get_as_df()
-            if not df.empty:
-                # Group sections by article, concatenate content
-                by_article: dict[str, list[str]] = {}
-                for _, row in df.iterrows():
-                    title = row.get("title", "")
-                    content = row.get("content", "")
-                    if title and content:
-                        by_article.setdefault(title, []).append(content)
+        df = self._safe_query(
+            "MATCH (a:Article)-[:HAS_SECTION]->(s:Section) "
+            "WHERE a.title IN $titles "
+            "RETURN a.title AS title, s.content AS content "
+            "ORDER BY a.title",
+            {"titles": titles},
+            log_context="fetch source sections",
+        )
+        if df is not None:
+            # Group sections by article, concatenate content
+            by_article: dict[str, list[str]] = {}
+            for _, row in df.iterrows():
+                title = row.get("title", "")
+                sect_content = row.get("content", "")
+                if title and sect_content:
+                    by_article.setdefault(title, []).append(sect_content)
 
-                for title in titles:
-                    sections = by_article.get(title, [])
-                    if sections:
-                        combined = "\n\n".join(sections)
-                        # Allow up to 3000 chars per article for rich context
-                        truncated = combined[:3000] + ("..." if len(combined) > 3000 else "")
-                        texts.append(f"## {title}\n{truncated}")
-        except Exception as e:
-            logger.debug(f"Section fetch failed: {e}")
+            for title in titles:
+                sections = by_article.get(title, [])
+                if sections:
+                    combined = "\n\n".join(sections)
+                    # Allow up to 3000 chars per article for rich context
+                    truncated = combined[:3000] + ("..." if len(combined) > 3000 else "")
+                    texts.append(f"## {title}\n{truncated}")
 
         # Fallback: try article.content directly if no sections found
         if not texts:
-            try:
-                result = self.conn.execute(
-                    "MATCH (a:Article) WHERE a.title IN $titles "
-                    "RETURN a.title AS title, a.content AS content",
-                    {"titles": titles},
-                )
-                df = result.get_as_df()
+            df = self._safe_query(
+                "MATCH (a:Article) WHERE a.title IN $titles "
+                "RETURN a.title AS title, a.content AS content",
+                {"titles": titles},
+                log_context="fetch source article content fallback",
+            )
+            if df is not None:
                 for _, row in df.iterrows():
                     title = row.get("title", "")
-                    content = row.get("content", "")
-                    if title and content:
-                        truncated = content[:3000] + ("..." if len(content) > 3000 else "")
+                    fb_content = row.get("content", "")
+                    if title and fb_content:
+                        truncated = fb_content[:3000] + ("..." if len(fb_content) > 3000 else "")
                         texts.append(f"## {title}\n{truncated}")
-            except Exception as e:
-                logger.debug(f"Article content fallback failed: {e}")
 
         return "\n\n".join(texts)
 
@@ -1332,7 +1324,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
             Entity details with type, properties, and source articles
         """
         self._check_open()
-        result = self.conn.execute(
+        df = self._safe_query(
             """
             MATCH (e:Entity {name: $name})
             OPTIONAL MATCH (a:Article)-[:HAS_ENTITY]->(e)
@@ -1340,10 +1332,9 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
                    collect(a.title) AS source_articles
             """,
             {"name": entity_name},
+            log_context="find_entity",
         )
-
-        df = result.get_as_df()
-        if df.empty:
+        if df is None:
             return None
 
         row = df.iloc[0]
@@ -1373,7 +1364,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
             raise ValueError(f"max_hops must be an integer between 1 and 10, got {max_hops!r}")
 
         # Simplified query without path list comprehensions (Kuzu limitation)
-        result = self.conn.execute(
+        df = self._safe_query(
             f"""
             MATCH path = (src:Entity {{name: $src}})-[:ENTITY_RELATION*1..{max_hops}]->(tgt:Entity {{name: $tgt}})
             RETURN src.name AS source, tgt.name AS target, length(path) AS hops
@@ -1381,10 +1372,9 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
             LIMIT 5
             """,
             {"src": source_entity, "tgt": target_entity},
+            log_context="find_relationship_path",
         )
-
-        df = result.get_as_df()
-        if df.empty:
+        if df is None:
             return []
 
         paths = []
@@ -1412,29 +1402,27 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
         """
         self._check_open()
         # Try as article first
-        result = self.conn.execute(
+        df = self._safe_query(
             """
             MATCH (a:Article {title: $name})-[:HAS_FACT]->(f:Fact)
             RETURN f.content AS fact
             """,
             {"name": entity_or_article},
+            log_context="get_entity_facts (article)",
         )
-
-        df = result.get_as_df()
-        if not df.empty:
+        if df is not None:
             return df["fact"].tolist()
 
         # Try as entity
-        result = self.conn.execute(
+        df = self._safe_query(
             """
             MATCH (e:Entity {name: $name})<-[:HAS_ENTITY]-(a:Article)-[:HAS_FACT]->(f:Fact)
             RETURN DISTINCT f.content AS fact
             """,
             {"name": entity_or_article},
+            log_context="get_entity_facts (entity)",
         )
-
-        df = result.get_as_df()
-        return df["fact"].tolist() if not df.empty else []
+        return df["fact"].tolist() if df is not None else []
 
     def semantic_search(self, query: str, top_k: int = 10) -> list[dict]:
         """
