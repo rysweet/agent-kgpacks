@@ -354,11 +354,12 @@ class TestBuildSynthesisContext:
             )
 
         assert "What is quantum mechanics?" in context
-        assert "Quantum Mechanics" in context
+        assert "## Retrieved Article Content" in context
+        assert "## Quantum" in context  # source text within article section
         assert "Planck" in context
+        assert "## Extracted Facts" in context
         assert "Energy is quantized" in context
         assert "Photons have wave-particle duality" in context
-        assert "## Quantum" in context  # source text section
 
     def test_includes_few_shot_examples(self) -> None:
         agent = _make_agent()
@@ -391,8 +392,12 @@ class TestBuildSynthesisContext:
                 query_plan={"type": "fact_retrieval", "cypher": "MATCH (a) RETURN a"},
             )
 
-        # When enriched_context is present, it should be used instead of standard context
+        # When enriched_context is present and no source_text, it goes under article content
+        assert "## Retrieved Article Content" in context
         assert "Multi-doc enriched context block here." in context
+        # Facts should appear under their own section
+        assert "## Extracted Facts" in context
+        assert "Dark matter makes up 27%" in context
         # Standard context (Cypher line) should NOT appear
         assert "Cypher:" not in context
 
@@ -405,9 +410,9 @@ class TestBuildSynthesisContext:
                 query_plan={"type": "entity_search", "cypher": "MATCH (a) RETURN a"},
             )
 
-        # Should still produce a valid prompt string
+        # Should still produce a valid prompt with the empty-context fallback
         assert "What is nothing?" in context
-        assert "Sources:" in context
+        assert "(No relevant content retrieved)" in context
 
 
 # ===================================================================

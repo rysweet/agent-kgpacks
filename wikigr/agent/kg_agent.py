@@ -1224,13 +1224,14 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         self,
         question: str,
         kg_results: dict,
-        query_plan: dict,
+        query_plan: dict,  # noqa: ARG002  (kept for caller compatibility)
         few_shot_examples: list[dict] | None = None,
     ) -> str:
         """Build the synthesis prompt for Claude (used by both blocking and streaming).
 
-        Includes both structured KG results (entities, facts, triples) AND
-        the original article section text for grounded, accurate synthesis.
+        Uses a structured format with clear sections to help the model
+        distinguish article content, extracted facts, and entity metadata.
+        Prioritises retrieved article text over raw Cypher artefacts.
         Optionally includes few-shot examples when Phase 1 enhancements are enabled.
         """
         sources = kg_results.get("sources", [])[:5]
@@ -1241,51 +1242,44 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         # Build few-shot examples section if provided
         few_shot_section = ""
         if few_shot_examples:
-            few_shot_section = "\nHere are similar questions and their answers:\n\n"
+            few_shot_section = "\nHere are similar questions and answers from this domain:\n\n"
             for i, example in enumerate(few_shot_examples[:3], 1):
                 few_shot_section += f"Example {i}:\n"
                 few_shot_section += f"Q: {example.get('question', example.get('query', ''))}\n"
                 few_shot_section += f"A: {example['answer']}\n\n"
 
-        # Use enriched multi-doc context if available, otherwise standard context
-        if "enriched_context" in kg_results:
-            context = f"""Query Type: {query_plan["type"]}
+        # ---- Build structured context with clear sections ----
+        context_parts: list[str] = []
 
-{kg_results["enriched_context"]}
-
-Entities found: {json.dumps(kg_results.get("entities", [])[:10], indent=2)}
-
-Facts:
-{chr(10).join(f"- {fact}" for fact in kg_results.get("facts", [])[:10])}
-"""
-        else:
-            context = f"""Query Type: {query_plan["type"]}
-Cypher: {query_plan["cypher"]}
-
-Sources: {", ".join(sources)}
-
-Entities found: {json.dumps(kg_results.get("entities", [])[:10], indent=2)}
-
-Facts:
-{chr(10).join(f"- {fact}" for fact in kg_results.get("facts", [])[:10])}
-
-Raw results: {json.dumps(kg_results.get("raw", [])[:5], indent=2, default=str)}
-"""
-
-        # Add original text if available
+        # Section 1: Retrieved article content (most valuable signal)
         if source_text:
-            context += f"""
-Original Article Text (for grounding):
-{source_text}
-"""
+            context_parts.append(f"## Retrieved Article Content\n{source_text}")
+        elif "enriched_context" in kg_results:
+            context_parts.append(f"## Retrieved Article Content\n{kg_results['enriched_context']}")
 
-        return f"""{few_shot_section}You are a knowledgeable expert. Answer the question below using BOTH your own expertise AND the retrieved content from a knowledge graph.
+        # Section 2: Extracted facts
+        facts = kg_results.get("facts", [])[:15]
+        if facts:
+            fact_text = "\n".join(f"- {fact}" for fact in facts)
+            context_parts.append(f"## Extracted Facts\n{fact_text}")
 
-When the retrieved content provides specific, detailed, or up-to-date information, prefer it and cite the source articles. When the retrieved content is limited or irrelevant, draw on your own knowledge to provide the best possible answer.
+        # Section 3: Entity information
+        entities = kg_results.get("entities", [])[:10]
+        if entities:
+            context_parts.append(f"## Related Entities\n{json.dumps(entities, indent=2)}")
+
+        context = "\n\n".join(context_parts) if context_parts else "(No relevant content retrieved)"
+
+        return f"""{few_shot_section}You are a knowledgeable expert. Answer the question below using BOTH your own expertise AND the following retrieved content from a knowledge graph.
+
+IMPORTANT INSTRUCTIONS:
+- When retrieved content provides specific, detailed information, USE IT and cite the source articles
+- When retrieved content is limited or says "(No relevant content retrieved)", draw on your own knowledge
+- Always provide the most accurate, comprehensive answer possible
+- Never say "the knowledge graph has no data" — use your own knowledge as a fallback
 
 Question: {question}
 
-Retrieved Knowledge Graph Content:
 {context}
 
 Provide a clear, accurate, comprehensive answer. Cite source articles when you use retrieved content."""
