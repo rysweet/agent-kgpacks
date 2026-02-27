@@ -2,6 +2,8 @@
 
 How to generate evaluation Q&A pairs for knowledge packs and run evaluations across all packs.
 
+> **Note**: `generate_eval_questions.py` and `build_fabric_pack.py` are added in [PR #167](https://github.com/rysweet/wikigr/pull/167). The `--disable-reranker/multidoc/fewshot` flags are added in [PR #168](https://github.com/rysweet/wikigr/pull/168).
+
 ## Overview
 
 Each pack needs evaluation questions to measure accuracy. The `generate_eval_questions.py` script uses Claude Haiku to generate 50 diverse Q&A pairs per pack, sampling article content from the pack database.
@@ -110,3 +112,6 @@ Output: `data/packs/fabric-graphql-expert/pack.db`
 - [Pack Content Quality](dotnet-content-quality.md) — fixing thin content before evaluation
 - [Vector Search Retrieval](vector-search-primary-retrieval.md) — retrieval pipeline improvements
 - [Phase 1 Enhancements](phase1-enhancements.md) — enhancement components
+
+> **Reference**: For a complete list of evaluation scripts and their arguments, see
+> `scripts/run_all_packs_evaluation.py --help` and `scripts/run_enhancement_evaluation.py --help`.

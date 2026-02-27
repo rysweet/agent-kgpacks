@@ -2,6 +2,8 @@
 
 Guide to auditing and improving knowledge pack content quality, with a focus on the .NET Expert pack.
 
+> **Note**: This guide covers features from [PR #169](https://github.com/rysweet/wikigr/pull/169).
+
 ## Problem
 
 The .NET pack had only 60% accuracy vs 100% for physics. Two causes:
@@ -13,11 +15,14 @@ The .NET pack had only 60% accuracy vs 100% for physics. Two causes:
 Use the `audit_pack_content.py` script to compare packs:
 
 ```bash
-# Audit the .NET pack
-python scripts/audit_pack_content.py --pack dotnet-expert
+# Audit a specific pack by path
+python scripts/audit_pack_content.py data/packs/dotnet-expert/pack.db
 
 # Compare .NET vs physics
-python scripts/audit_pack_content.py --pack dotnet-expert --compare physics-expert
+python scripts/audit_pack_content.py data/packs/dotnet-expert/pack.db data/packs/physics-expert/pack.db
+
+# Audit all packs
+python scripts/audit_pack_content.py --all
 ```
 
 Output shows:
@@ -58,13 +63,13 @@ source = WebContentSource(
 Before building a pack, validate all URLs to remove hallucinated or broken ones:
 
 ```bash
-# Check URLs (dry run)
-python scripts/validate_pack_urls.py --pack dotnet-expert
+# Check a specific pack's URL list (dry run)
+python scripts/validate_pack_urls.py data/packs/dotnet-expert/urls.txt
 
-# Auto-fix: remove invalid URLs
-python scripts/validate_pack_urls.py --pack dotnet-expert --fix
+# Auto-fix: remove invalid URLs in place
+python scripts/validate_pack_urls.py data/packs/dotnet-expert/urls.txt --fix
 
-# Validate all packs
+# Validate all packs at once
 python scripts/validate_pack_urls.py --all --fix
 ```
 
@@ -75,11 +80,15 @@ The validator:
 
 ## Rebuild After Improvements
 
-After fixing URLs and enabling the content threshold:
+After fixing URLs, rebuild the pack (content quality threshold is applied automatically
+via `WebContentSource.min_content_words=200` default):
 
 ```bash
-# Rebuild .NET pack with quality threshold
-python scripts/build_dotnet_pack.py --min-content-words 200
+# Rebuild .NET pack
+python scripts/build_dotnet_pack.py
+
+# Test build (10 URLs only)
+python scripts/build_dotnet_pack.py --test-mode
 ```
 
 ## Expected Impact

@@ -2,6 +2,8 @@
 
 Guide to using the improved retrieval pipeline that uses semantic vector search as the primary retrieval path, with A/B testing flags for individual enhancement components.
 
+> **Note**: This guide covers features from [PR #168](https://github.com/rysweet/wikigr/pull/168).
+
 ## Overview
 
 **Before (Phase 2)**: LLM-generated Cypher was the primary retrieval. Generated bad Cypher for ~30% of questions.
@@ -60,16 +62,16 @@ agent = KnowledgeGraphAgent(
 
 ### CLI Flags for Evaluation Scripts
 
+`run_enhancement_evaluation.py` targets the physics pack by default and supports disabling
+individual components (A/B testing flags added in PR #168):
+
 ```bash
-# Baseline (no enhancements)
-python scripts/run_enhancement_evaluation.py --pack physics-expert
+# Full enhancement evaluation (all components enabled)
+python scripts/run_enhancement_evaluation.py
 
-# With all enhancements
-python scripts/run_enhancement_evaluation.py --pack physics-expert --use-enhancements
-
-# Test reranker in isolation
-python scripts/run_enhancement_evaluation.py --pack physics-expert \
-    --use-enhancements --disable-multidoc --disable-fewshot
+# Disable individual components for A/B testing
+python scripts/run_enhancement_evaluation.py --disable-multidoc --disable-fewshot
+python scripts/run_enhancement_evaluation.py --disable-reranker
 
 # Compare all packs with/without reranker
 python scripts/run_all_packs_evaluation.py --sample 10 --disable-reranker
