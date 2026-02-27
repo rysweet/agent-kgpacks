@@ -680,19 +680,6 @@ Return JSON with this exact structure:
     # Private Methods: Scoring and Validation
     # ========================================================================
 
-    def _score_content(self, _url: str) -> float:
-        """Score article content quality (0.0-1.0).
-
-        Args:
-            url: URL to score
-
-        Returns:
-            Content quality score
-        """
-        # Simplified content scoring (could be enhanced)
-        # For now, return default score
-        return 0.8
-
     def _score_recency(self, published_date: str | None) -> float:
         """Score recency based on publication date.
 
