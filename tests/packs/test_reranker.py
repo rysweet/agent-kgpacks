@@ -37,7 +37,7 @@ class TestGraphRerankerCalculateCentrality:
         mock_result.get_as_df.return_value = pd.DataFrame(
             {
                 "article_id": [1],
-                "centrality": [0.0],  # Isolated node has zero centrality
+                "degree": [0.0],  # Isolated node has zero centrality
             }
         )
         mock_kuzu_conn.execute.return_value = mock_result
@@ -54,7 +54,7 @@ class TestGraphRerankerCalculateCentrality:
         mock_result.get_as_df.return_value = pd.DataFrame(
             {
                 "article_id": [1, 2, 3, 4],
-                "centrality": [1.0, 0.333, 0.333, 0.333],  # Node 1 is hub
+                "degree": [1.0, 0.333, 0.333, 0.333],  # Node 1 is hub
             }
         )
         mock_kuzu_conn.execute.return_value = mock_result
@@ -72,7 +72,7 @@ class TestGraphRerankerCalculateCentrality:
         mock_result.get_as_df.return_value = pd.DataFrame(
             {
                 "article_id": [1, 2, 3, 4, 5],
-                "centrality": [0.2, 0.5, 0.8, 0.5, 0.2],  # Peak in middle
+                "degree": [0.2, 0.5, 0.8, 0.5, 0.2],  # Peak in middle
             }
         )
         mock_kuzu_conn.execute.return_value = mock_result
@@ -97,7 +97,7 @@ class TestGraphRerankerCalculateCentrality:
         mock_result.get_as_df.return_value = pd.DataFrame(
             {
                 "article_id": [1, 2, 3, 4, 5, 6],
-                "centrality": [0.5, 0.5, 0.0, 0.7, 0.7, 0.0],  # Two components
+                "degree": [0.5, 0.5, 0.0, 0.7, 0.7, 0.0],  # Two components
             }
         )
         mock_kuzu_conn.execute.return_value = mock_result
@@ -112,7 +112,7 @@ class TestGraphRerankerCalculateCentrality:
         """Test that centrality scores are normalized to [0, 1] range."""
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2, 3], "centrality": [0.1, 0.5, 1.0]}
+            {"article_id": [1, 2, 3], "degree": [0.1, 0.5, 1.0]}
         )
         mock_kuzu_conn.execute.return_value = mock_result
 
@@ -142,19 +142,20 @@ class TestGraphRerankerRerank:
         # Mock centrality calculation
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2, 3], "centrality": [0.3, 0.8, 0.6]}
+            {"article_id": [1, 2, 3], "degree": [0.3, 0.8, 0.6]}
         )
         mock_kuzu_conn.execute.side_effect = [dense_links, dense_articles, mock_result]
 
         reranked = reranker.rerank(vector_results)
 
-        # Expected scores: (vector * 0.6) + (graph * 0.4)
-        # Article 1: (0.9 * 0.6) + (0.3 * 0.4) = 0.54 + 0.12 = 0.66
-        # Article 2: (0.7 * 0.6) + (0.8 * 0.4) = 0.42 + 0.32 = 0.74
-        # Article 3: (0.5 * 0.6) + (0.6 * 0.4) = 0.30 + 0.24 = 0.54
+        # Degrees [0.3, 0.8, 0.6] normalized by max(0.8) → centrality [0.375, 1.0, 0.75]
+        # Expected scores: (vector * 0.6) + (centrality * 0.4)
+        # Article 1: (0.9 * 0.6) + (0.375 * 0.4) = 0.54 + 0.15 = 0.69
+        # Article 2: (0.7 * 0.6) + (1.0 * 0.4)   = 0.42 + 0.40 = 0.82
+        # Article 3: (0.5 * 0.6) + (0.75 * 0.4)  = 0.30 + 0.30 = 0.60
 
         assert reranked[0]["article_id"] == 2  # Highest combined score
-        assert reranked[0]["score"] == pytest.approx(0.74, rel=0.01)
+        assert reranked[0]["score"] == pytest.approx(0.82, rel=0.01)
         assert reranked[1]["article_id"] == 1
         assert reranked[2]["article_id"] == 3
 
@@ -171,17 +172,18 @@ class TestGraphRerankerRerank:
         dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2], "centrality": [0.3, 0.8]}
+            {"article_id": [1, 2], "degree": [0.3, 0.8]}
         )
         mock_kuzu_conn.execute.side_effect = [dense_links, dense_articles, mock_result]
 
         # Heavy graph weight: 0.2 vector, 0.8 graph
         reranked = reranker.rerank(vector_results, vector_weight=0.2, graph_weight=0.8)
 
-        # Article 1: (0.9 * 0.2) + (0.3 * 0.8) = 0.18 + 0.24 = 0.42
-        # Article 2: (0.7 * 0.2) + (0.8 * 0.8) = 0.14 + 0.64 = 0.78
+        # Degrees [0.3, 0.8] normalized by max(0.8) → centrality [0.375, 1.0]
+        # Article 1: (0.9 * 0.2) + (0.375 * 0.8) = 0.18 + 0.30 = 0.48
+        # Article 2: (0.7 * 0.2) + (1.0 * 0.8)   = 0.14 + 0.80 = 0.94
         assert reranked[0]["article_id"] == 2
-        assert reranked[0]["score"] == pytest.approx(0.78, rel=0.01)
+        assert reranked[0]["score"] == pytest.approx(0.94, rel=0.01)
 
     def test_rerank_vector_only(self, reranker, mock_kuzu_conn):
         """Test reranking with vector-only scoring (graph_weight=0)."""
@@ -192,7 +194,7 @@ class TestGraphRerankerRerank:
 
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2], "centrality": [0.3, 0.8]}
+            {"article_id": [1, 2], "degree": [0.3, 0.8]}
         )
         mock_kuzu_conn.execute.return_value = mock_result
 
@@ -215,15 +217,17 @@ class TestGraphRerankerRerank:
         dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2], "centrality": [0.3, 0.8]}
+            {"article_id": [1, 2], "degree": [0.3, 0.8]}
         )
         mock_kuzu_conn.execute.side_effect = [dense_links, dense_articles, mock_result]
 
         reranked = reranker.rerank(vector_results, vector_weight=0.0, graph_weight=1.0)
 
-        # Should reorder by graph centrality
+        # Degrees [0.3, 0.8] normalized by max(0.8) → centrality [0.375, 1.0]
+        # Article 1: (0.0 * 0.0) + (0.375 * 1.0) = 0.375
+        # Article 2: (0.0 * 0.0) + (1.0 * 1.0)   = 1.0
         assert reranked[0]["article_id"] == 2
-        assert reranked[0]["score"] == pytest.approx(0.8, rel=0.01)
+        assert reranked[0]["score"] == pytest.approx(1.0, rel=0.01)
 
     def test_rerank_empty_results(self, reranker, mock_kuzu_conn):
         """Test reranking with empty vector results."""
@@ -243,7 +247,7 @@ class TestGraphRerankerRerank:
         # Only articles 1 and 2 in graph
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2], "centrality": [0.6, 0.8]}
+            {"article_id": [1, 2], "degree": [0.6, 0.8]}
         )
         mock_kuzu_conn.execute.return_value = mock_result
 
@@ -264,7 +268,7 @@ class TestGraphRerankerRerank:
 
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2], "centrality": [0.0, 0.0]}
+            {"article_id": [1, 2], "degree": [0.0, 0.0]}
         )
         mock_kuzu_conn.execute.return_value = mock_result
 
@@ -295,7 +299,7 @@ class TestGraphRerankerRerank:
 
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2], "centrality": [0.5, 0.5]}
+            {"article_id": [1, 2], "degree": [0.5, 0.5]}
         )
         mock_kuzu_conn.execute.return_value = mock_result
 
@@ -341,7 +345,7 @@ class TestGraphRerankerIntegration:
         dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2, 3], "centrality": [0.2, 0.95, 0.5]}
+            {"article_id": [1, 2, 3], "degree": [0.2, 0.95, 0.5]}
         )
         mock_kuzu_conn.execute.side_effect = [dense_links, dense_articles, mock_result]
 
@@ -364,7 +368,7 @@ class TestGraphRerankerIntegration:
 
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2], "centrality": [0.5, 0.5]}
+            {"article_id": [1, 2], "degree": [0.5, 0.5]}
         )
         mock_kuzu_conn.execute.return_value = mock_result
 
@@ -409,7 +413,7 @@ class TestSparseGraphDetection:
         # Centrality query result
         centrality_result = Mock()
         centrality_result.get_as_df.return_value = pd.DataFrame(
-            {"article_id": [1, 2], "centrality": [0.2, 0.9]}
+            {"article_id": [1, 2], "degree": [0.2, 0.9]}
         )
         mock_kuzu_conn.execute.side_effect = [links_result, articles_result, centrality_result]
 
@@ -420,11 +424,12 @@ class TestSparseGraphDetection:
 
         reranked = reranker.rerank(vector_results)
 
+        # Degrees [0.2, 0.9] normalized by max(0.9) → centrality [0.222, 1.0]
         # Dense graph: centrality applied
-        # Article 1: (0.8 * 0.6) + (0.2 * 0.4) = 0.56
-        # Article 2: (0.6 * 0.6) + (0.9 * 0.4) = 0.72
+        # Article 1: (0.8 * 0.6) + (0.222 * 0.4) = 0.48 + 0.089 = 0.569
+        # Article 2: (0.6 * 0.6) + (1.0 * 0.4)   = 0.36 + 0.400 = 0.760
         assert reranked[0]["article_id"] == 2
-        assert reranked[0]["score"] == pytest.approx(0.72, rel=0.01)
+        assert reranked[0]["score"] == pytest.approx(0.76, rel=0.01)
 
     def test_density_cached_per_session(self, reranker, mock_kuzu_conn):
         """Graph density only queried once per session (cached)."""
