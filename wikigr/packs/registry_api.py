@@ -12,6 +12,8 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+from wikigr.packs._url_validation import validate_download_url
+
 
 @dataclass
 class PackListing:
@@ -146,6 +148,9 @@ class PackRegistryClient:
         # Create temp file for download
         temp_dir = Path(tempfile.gettempdir())
         output_path = temp_dir / f"{name}-{version}.tar.gz"
+
+        # Validate URL before download (SSRF prevention)
+        validate_download_url(pack_info.download_url)
 
         # Download pack archive
         urllib.request.urlretrieve(pack_info.download_url, output_path)
