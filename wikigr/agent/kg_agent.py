@@ -64,6 +64,19 @@ class KnowledgeGraphAgent:
         self.enable_multidoc = enable_multidoc
         self.enable_fewshot = enable_fewshot
 
+        # Warn if enable_* flags are set but use_enhancements=False (they have no effect)
+        if not use_enhancements and any(
+            [
+                enable_reranker is not True,
+                enable_multidoc is not True,
+                enable_fewshot is not True,
+            ]
+        ):
+            logger.warning(
+                "enable_reranker/enable_multidoc/enable_fewshot flags have no effect "
+                "when use_enhancements=False. Set use_enhancements=True to use them."
+            )
+
         # Initialize enhancement modules if enabled
         if use_enhancements:
             from wikigr.agent.few_shot import FewShotManager
