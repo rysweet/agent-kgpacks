@@ -84,6 +84,24 @@ DOMAIN_DESCRIPTIONS: dict[str, str] = {
         "Expert Rust programming knowledge covering ownership, borrowing, lifetimes, "
         "traits, async/await, unsafe code, macros, Cargo, and systems programming."
     ),
+    "opencypher-expert": (
+        "Expert knowledge for writing OpenCypher graph queries, specifically targeting "
+        "the Kuzu embedded graph database. Key topics: Cypher syntax and clauses "
+        "(MATCH, WHERE, RETURN, WITH, UNWIND, ORDER BY, LIMIT, SKIP, UNION), "
+        "pattern matching (node patterns, relationship patterns, variable-length paths), "
+        "shortest path algorithms (single, all, weighted), path semantics (WALK, TRAIL, "
+        "ACYCLIC), data definition (CREATE NODE TABLE, CREATE REL TABLE, ALTER, DROP), "
+        "data manipulation (CREATE, MERGE, SET, DELETE, DETACH DELETE), data types "
+        "(SERIAL, UUID, STRUCT, LIST, ARRAY, INTERVAL, BLOB), functions and expressions "
+        "(aggregation with COUNT/SUM/AVG/COLLECT, text functions, list functions, "
+        "pattern-matching with regexp, mathematical functions), subqueries (COUNT, EXISTS), "
+        "import/export (COPY FROM CSV/Parquet, LOAD FROM, EXPORT DATABASE), extensions "
+        "(vector search with HNSW index, full-text search with BM25, graph algorithms "
+        "like PageRank), prepared statements, implicit GROUP BY behavior, Kuzu Python API, "
+        "query optimization (indexes, parameterized queries, PROFILE, avoiding cartesian "
+        "products, WITH clause for breaking down complex queries), and graph data modeling "
+        "best practices for property graphs."
+    ),
 }
 
 # Difficulty distribution: ~40% easy, 40% medium, 20% hard
