@@ -41,7 +41,7 @@ class SeedAgent:
     def __init__(
         self,
         anthropic_api_key: str | None = None,
-        model: str = "claude-haiku-4-5-20251001",
+        model: str = "claude-opus-4-6",
         seeds_per_topic: int = 10,
         wikipedia_client: WikipediaAPIClient | None = None,
     ):

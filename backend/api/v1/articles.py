@@ -31,7 +31,7 @@ router = APIRouter(prefix="/api/v1", tags=["articles"])
         500: {"model": ErrorResponse},
     },
 )
-@limiter.limit("30/minute")
+@limiter.limit(settings.articles_rate_limit)
 def get_article(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
@@ -43,8 +43,7 @@ def get_article(
 
     Returns article metadata, sections, links, and backlinks.
     """
-    # Set cache headers
-    response.headers["Cache-Control"] = "public, max-age=86400"
+    response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_article}"
 
     try:
         result = ArticleService.get_article_details(conn=conn, title=title)
@@ -82,7 +81,7 @@ def get_article(
     response_model=CategoryListResponse,
     responses={500: {"model": ErrorResponse}},
 )
-@limiter.limit("30/minute")
+@limiter.limit(settings.articles_rate_limit)
 def get_categories(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
@@ -93,8 +92,7 @@ def get_categories(
 
     Returns categories sorted by article count (descending).
     """
-    # Set cache headers
-    response.headers["Cache-Control"] = "public, max-age=3600"
+    response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_default}"
 
     try:
         result = ArticleService.get_categories(conn=conn)
@@ -119,7 +117,7 @@ def get_categories(
     response_model=StatsResponse,
     responses={500: {"model": ErrorResponse}},
 )
-@limiter.limit("30/minute")
+@limiter.limit(settings.articles_rate_limit)
 def get_stats(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
@@ -130,8 +128,7 @@ def get_stats(
 
     Returns comprehensive statistics about articles, sections, links, and performance.
     """
-    # Set cache headers
-    response.headers["Cache-Control"] = "public, max-age=300"
+    response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_stats}"
 
     try:
         result = ArticleService.get_stats(conn=conn, db_path=settings.database_path)

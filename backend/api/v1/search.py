@@ -11,6 +11,7 @@ import kuzu
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
 
+from backend.config import settings
 from backend.db import get_db
 from backend.models.common import ErrorResponse
 from backend.models.search import AutocompleteResponse, SearchResponse
@@ -31,7 +32,7 @@ router = APIRouter(prefix="/api/v1", tags=["search"])
         500: {"model": ErrorResponse},
     },
 )
-@limiter.limit("10/minute")
+@limiter.limit(settings.search_rate_limit)
 def search(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
@@ -46,8 +47,7 @@ def search(
 
     Finds articles semantically similar to the query article.
     """
-    # Set cache headers
-    response.headers["Cache-Control"] = "public, max-age=3600"
+    response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_default}"
 
     try:
         result = SearchService.semantic_search(
@@ -108,7 +108,7 @@ def search(
         500: {"model": ErrorResponse},
     },
 )
-@limiter.limit("60/minute")
+@limiter.limit(settings.autocomplete_rate_limit)
 def autocomplete(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
@@ -123,8 +123,7 @@ def autocomplete(
 
     Returns articles with titles matching the query.
     """
-    # Set cache headers
-    response.headers["Cache-Control"] = "public, max-age=3600"
+    response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_default}"
 
     try:
         result = SearchService.autocomplete(

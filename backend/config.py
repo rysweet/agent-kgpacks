@@ -34,6 +34,19 @@ class Settings(BaseSettings):
     # Database Settings
     database_path: str = ""
 
+    # Rate Limits (requests per minute)
+    chat_rate_limit: str = "5/minute"
+    search_rate_limit: str = "10/minute"
+    autocomplete_rate_limit: str = "60/minute"
+    articles_rate_limit: str = "30/minute"
+    graph_rate_limit: str = "20/minute"
+    hybrid_rate_limit: str = "10/minute"
+
+    # Cache TTLs (seconds)
+    cache_ttl_default: int = 3600  # 1 hour — search, autocomplete, graph, categories, hybrid
+    cache_ttl_article: int = 86400  # 24 hours — individual article detail
+    cache_ttl_stats: int = 300  # 5 minutes — database statistics
+
     model_config = {"env_prefix": "WIKIGR_"}
 
 

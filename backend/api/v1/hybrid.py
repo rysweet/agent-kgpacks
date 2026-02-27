@@ -11,6 +11,7 @@ import kuzu
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
 
+from backend.config import settings
 from backend.db import get_db
 from backend.models.common import ErrorResponse
 from backend.models.search import SearchResponse, SearchResult
@@ -30,7 +31,7 @@ router = APIRouter(prefix="/api/v1", tags=["search"])
         500: {"model": ErrorResponse},
     },
 )
-@limiter.limit("10/minute")
+@limiter.limit(settings.hybrid_rate_limit)
 def hybrid_search(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
@@ -48,7 +49,7 @@ def hybrid_search(
     """
     import time
 
-    response.headers["Cache-Control"] = "public, max-age=3600"
+    response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_default}"
     start = time.perf_counter()
 
     try:

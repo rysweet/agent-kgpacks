@@ -8,6 +8,7 @@ Runs 10-question sample evaluation comparing:
 
 Usage:
     python scripts/run_enhancement_evaluation.py
+    python scripts/run_enhancement_evaluation.py --pack data/packs/rust-expert
 """
 
 import argparse
@@ -21,10 +22,10 @@ from anthropic import Anthropic
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-PACK_DIR = Path("data/packs/physics-expert")
-QUESTIONS_FILE = PACK_DIR / "eval" / "questions.jsonl"
+DEFAULT_PACK_DIR = Path("data/packs/physics-expert")
 SAMPLE_SIZE = 10  # Evaluate 10 questions per baseline
 MODEL = "claude-opus-4-6"
+JUDGE_MODEL = "claude-haiku-4-5-20251001"
 
 
 def load_sample_questions(path: Path, n: int) -> list[dict]:
@@ -65,11 +66,11 @@ def evaluate_training_baseline(client: Anthropic, questions: list[dict]) -> list
     return results
 
 
-def evaluate_pack_baseline(questions: list[dict]) -> list[dict]:
+def evaluate_pack_baseline(questions: list[dict], pack_dir: Path) -> list[dict]:
     """Baseline 2: KG Agent without enhancements."""
     from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
-    db_path = str(PACK_DIR / "pack.db")
+    db_path = str(pack_dir / "pack.db")
     agent = KnowledgeGraphAgent(db_path, use_enhancements=False)
 
     results = []
@@ -97,15 +98,17 @@ def evaluate_pack_baseline(questions: list[dict]) -> list[dict]:
     return results
 
 
-def evaluate_enhanced(questions: list[dict], args: argparse.Namespace) -> list[dict]:
+def evaluate_enhanced(
+    questions: list[dict], args: argparse.Namespace, pack_dir: Path
+) -> list[dict]:
     """Enhanced: KG Agent WITH Phase 1 enhancements."""
     from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
-    db_path = str(PACK_DIR / "pack.db")
+    db_path = str(pack_dir / "pack.db")
     agent = KnowledgeGraphAgent(
         db_path,
         use_enhancements=True,
-        few_shot_path=str(PACK_DIR / "eval" / "questions.jsonl"),
+        few_shot_path=str(pack_dir / "eval" / "questions.jsonl"),
         enable_reranker=not args.disable_reranker,
         enable_multidoc=not args.disable_multidoc,
         enable_fewshot=not args.disable_fewshot,
@@ -154,7 +157,7 @@ Score criteria:
 Respond with ONLY a JSON object: {{"score": N, "reason": "brief explanation"}}"""
 
     response = client.messages.create(
-        model="claude-haiku-4-5-20251001",
+        model=JUDGE_MODEL,
         max_tokens=200,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -172,14 +175,23 @@ Respond with ONLY a JSON object: {{"score": N, "reason": "brief explanation"}}""
 
 def main():
     parser = argparse.ArgumentParser(description="Evaluate Phase 1 enhancements")
+    parser.add_argument(
+        "--pack",
+        type=Path,
+        default=DEFAULT_PACK_DIR,
+        help=f"Path to knowledge pack directory (default: {DEFAULT_PACK_DIR})",
+    )
     parser.add_argument("--disable-reranker", action="store_true", help="Disable graph reranker")
     parser.add_argument("--disable-multidoc", action="store_true", help="Disable multi-doc")
     parser.add_argument("--disable-fewshot", action="store_true", help="Disable few-shot examples")
     args = parser.parse_args()
 
+    pack_dir: Path = args.pack
+    questions_file = pack_dir / "eval" / "questions.jsonl"
+
     print("=" * 70)
     print("PHASE 1 ENHANCEMENT EVALUATION")
-    print(f"Pack: {PACK_DIR}")
+    print(f"Pack: {pack_dir}")
     print(f"Questions: {SAMPLE_SIZE} (sample)")
     print(f"Model: {MODEL}")
     disabled = [
@@ -196,7 +208,7 @@ def main():
     print("=" * 70)
 
     client = Anthropic()
-    questions = load_sample_questions(QUESTIONS_FILE, SAMPLE_SIZE)
+    questions = load_sample_questions(questions_file, SAMPLE_SIZE)
     print(f"\nLoaded {len(questions)} questions\n")
 
     # Run all three baselines
@@ -204,10 +216,10 @@ def main():
     training_results = evaluate_training_baseline(client, questions)
 
     print("\n--- Baseline 2: Pack (No Enhancements) ---")
-    pack_results = evaluate_pack_baseline(questions)
+    pack_results = evaluate_pack_baseline(questions, pack_dir)
 
     print("\n--- Baseline 3: Enhanced (Phase 1 Enhancements) ---")
-    enhanced_results = evaluate_enhanced(questions, args)
+    enhanced_results = evaluate_enhanced(questions, args, pack_dir)
 
     # Judge all answers
     print("\n--- Judging Answers ---")
@@ -282,7 +294,7 @@ def main():
         },
     }
 
-    output_path = PACK_DIR / "eval" / "enhancement_comparison.json"
+    output_path = pack_dir / "eval" / "enhancement_comparison.json"
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2)
     print(f"\nResults saved to: {output_path}")
