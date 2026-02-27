@@ -11,6 +11,7 @@ import kuzu
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
 
+from backend.config import settings
 from backend.db import get_db
 from backend.models.common import ErrorResponse
 from backend.models.graph import GraphResponse
@@ -31,7 +32,7 @@ router = APIRouter(prefix="/api/v1", tags=["graph"])
         500: {"model": ErrorResponse},
     },
 )
-@limiter.limit("20/minute")
+@limiter.limit(settings.graph_rate_limit)
 def get_graph(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     response: Response,
@@ -46,8 +47,7 @@ def get_graph(
 
     Returns nodes and edges within specified depth from seed article.
     """
-    # Set cache headers
-    response.headers["Cache-Control"] = "public, max-age=3600"
+    response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_default}"
 
     try:
         result = GraphService.get_graph_neighbors(

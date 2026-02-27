@@ -34,7 +34,7 @@ def mock_anthropic_response() -> Mock:
 def test_training_baseline_evaluator_init():
     """Test TrainingBaselineEvaluator initialization."""
     evaluator = TrainingBaselineEvaluator(api_key="test_key")
-    assert evaluator.model == "claude-sonnet-4-5-20250929"
+    assert evaluator.model == "claude-opus-4-6"
 
 
 @patch("wikigr.packs.eval.baselines.Anthropic")
@@ -68,7 +68,7 @@ def test_knowledge_pack_evaluator_init(tmp_path: Path):
 
     evaluator = KnowledgePackEvaluator(pack_path, api_key="test_key")
     assert evaluator.pack_path == pack_path
-    assert evaluator.model == "claude-sonnet-4-5-20250929"
+    assert evaluator.model == "claude-opus-4-6"
 
 
 @patch("wikigr.packs.eval.baselines.Anthropic")

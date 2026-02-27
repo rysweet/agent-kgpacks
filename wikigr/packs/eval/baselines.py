@@ -13,6 +13,11 @@ from anthropic import Anthropic
 
 from wikigr.packs.eval.models import Answer, Question
 
+# Model and pricing constants (Opus 4.6)
+DEFAULT_MODEL = "claude-opus-4-6"
+INPUT_COST_PER_MTOK = 15  # USD per million input tokens
+OUTPUT_COST_PER_MTOK = 75  # USD per million output tokens
+
 
 class TrainingBaselineEvaluator:
     """Evaluate using Claude without any tools (training data only).
@@ -28,7 +33,7 @@ class TrainingBaselineEvaluator:
             api_key: Anthropic API key (uses ANTHROPIC_API_KEY env var if not provided)
         """
         self.client = Anthropic(api_key=api_key)
-        self.model = "claude-sonnet-4-5-20250929"
+        self.model = DEFAULT_MODEL
 
     def evaluate(self, questions: list[Question]) -> list[Answer]:
         """Evaluate questions using only training data.
@@ -55,10 +60,11 @@ class TrainingBaselineEvaluator:
             # Extract answer text
             answer_text = response.content[0].text if response.content else ""
 
-            # Estimate cost (Sonnet 3.5: $3/MTok input, $15/MTok output)
             input_tokens = response.usage.input_tokens
             output_tokens = response.usage.output_tokens
-            cost_usd = (input_tokens * 3 + output_tokens * 15) / 1_000_000
+            cost_usd = (
+                input_tokens * INPUT_COST_PER_MTOK + output_tokens * OUTPUT_COST_PER_MTOK
+            ) / 1_000_000
 
             answers.append(
                 Answer(
@@ -89,7 +95,7 @@ class KnowledgePackEvaluator:
         """
         self.pack_path = pack_path
         self.client = Anthropic(api_key=api_key)
-        self.model = "claude-sonnet-4-5-20250929"
+        self.model = DEFAULT_MODEL
 
     def _retrieve_context(self, question: str) -> str:
         """Retrieve relevant context from knowledge pack.
@@ -170,10 +176,11 @@ Provide a comprehensive answer with references to the context."""
 
             answer_text = response.content[0].text if response.content else ""
 
-            # Estimate cost
             input_tokens = response.usage.input_tokens
             output_tokens = response.usage.output_tokens
-            cost_usd = (input_tokens * 3 + output_tokens * 15) / 1_000_000
+            cost_usd = (
+                input_tokens * INPUT_COST_PER_MTOK + output_tokens * OUTPUT_COST_PER_MTOK
+            ) / 1_000_000
 
             answers.append(
                 Answer(

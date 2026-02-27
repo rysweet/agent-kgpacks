@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from sse_starlette.sse import EventSourceResponse
 
+from backend.config import settings
 from backend.db import get_db
 from backend.models.chat import ChatRequest, ChatResponse
 from backend.rate_limit import limiter
@@ -45,7 +46,7 @@ def _get_anthropic_client():
         503: {"description": "Agent unavailable (missing API key or DB)"},
     },
 )
-@limiter.limit("5/minute")
+@limiter.limit(settings.chat_rate_limit)
 def chat(
     request_body: ChatRequest,
     request: Request,  # noqa: ARG001 - required by slowapi limiter
@@ -109,7 +110,7 @@ def chat(
 
 
 @router.get("/chat/stream")
-@limiter.limit("5/minute")
+@limiter.limit(settings.chat_rate_limit)
 def chat_stream(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
     question: str = Query(..., max_length=500),
