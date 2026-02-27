@@ -1102,8 +1102,8 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 )
                 df = result.get_as_df()
                 facts.extend(df["content"].dropna().tolist())
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug("Failed to fetch facts for '%s': %s", title, e)
 
         return {
             "sources": source_titles,

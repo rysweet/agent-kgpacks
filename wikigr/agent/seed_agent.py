@@ -178,8 +178,8 @@ Return ONLY valid JSON:
                         "Anthropic API authentication failed. "
                         "Set ANTHROPIC_API_KEY or pass anthropic_api_key=."
                     ) from e
-            except ImportError:
-                pass
+            except ImportError as imp_err:
+                logger.debug("Optional import unavailable: %s", imp_err)
             logger.error(f"Failed to generate titles for '{topic}': {type(e).__name__}: {e}")
             return []
 

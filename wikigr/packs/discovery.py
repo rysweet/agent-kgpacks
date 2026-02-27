@@ -4,11 +4,14 @@ This module provides functions to discover installed knowledge packs and
 validate their structure.
 """
 
+import logging
 from pathlib import Path
 
 from wikigr.packs.manifest import load_manifest
 from wikigr.packs.models import PackInfo
 from wikigr.packs.validator import validate_pack_structure
+
+logger = logging.getLogger(__name__)
 
 
 def is_valid_pack(pack_dir: Path) -> bool:
@@ -73,8 +76,8 @@ def discover_packs(packs_dir: Path = Path.home() / ".wikigr/packs") -> list[Pack
                 skill_path=skill_path.resolve(),  # Make absolute
             )
             packs.append(pack_info)
-        except Exception:
-            # Skip packs that fail to load
+        except Exception as e:
+            logger.warning("Failed to load pack from %s: %s", item, e)
             continue
 
     return packs
