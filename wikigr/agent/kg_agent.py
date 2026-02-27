@@ -30,6 +30,9 @@ def _safe_json_loads(value: object) -> dict:
 class KnowledgeGraphAgent:
     """Agent that queries WikiGR knowledge graph and synthesizes answers."""
 
+    # Default synthesis model — Opus for best quality
+    DEFAULT_MODEL = "claude-opus-4-6"
+
     def __init__(
         self,
         db_path: str,
@@ -40,6 +43,7 @@ class KnowledgeGraphAgent:
         enable_reranker: bool = True,
         enable_multidoc: bool = True,
         enable_fewshot: bool = True,
+        synthesis_model: str | None = None,
     ):
         """
         Initialize agent with database connection and Claude API.
@@ -53,10 +57,12 @@ class KnowledgeGraphAgent:
             enable_reranker: Enable graph reranker (default True when use_enhancements=True)
             enable_multidoc: Enable multi-doc synthesizer (default True when use_enhancements=True)
             enable_fewshot: Enable few-shot examples (default True when use_enhancements=True)
+            synthesis_model: Claude model for all synthesis/planning (default: claude-opus-4-6)
         """
         self.db = kuzu.Database(db_path, read_only=read_only)
         self.conn = kuzu.Connection(self.db)
         self.claude = Anthropic(api_key=anthropic_api_key)
+        self.synthesis_model = synthesis_model or self.DEFAULT_MODEL
         self._embedding_generator = None
         self._plan_cache: dict[str, dict] = {}
         self.use_enhancements = use_enhancements
@@ -511,7 +517,7 @@ class KnowledgeGraphAgent:
 
         try:
             response = self.claude.messages.create(
-                model="claude-haiku-4-5-20251001",
+                model=self.synthesis_model,
                 max_tokens=256,
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -630,7 +636,7 @@ class KnowledgeGraphAgent:
 
         try:
             response = self.claude.messages.create(
-                model="claude-haiku-4-5-20251001",
+                model=self.synthesis_model,
                 max_tokens=1024,
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -717,7 +723,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
 
         try:
             response = self.claude.messages.create(
-                model="claude-haiku-4-5-20251001",
+                model=self.synthesis_model,
                 max_tokens=1024,
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -997,10 +1003,16 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
 
             max_similarity = max(r.get("similarity", 0.0) for r in vector_results)
             sources = [r["title"] for r in vector_results]
+            # Extract section content directly from vector results for richer context
+            facts = []
+            for r in vector_results:
+                content = r.get("content", "")
+                if content:
+                    facts.append(f"[{r['title']}] {content[:500]}")
             return {
                 "sources": sources,
                 "entities": [],
-                "facts": [],
+                "facts": facts,
                 "raw": [
                     {"title": r["title"], "score": r.get("similarity", 0.0)} for r in vector_results
                 ],
@@ -1101,34 +1113,67 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         }
 
     def _fetch_source_text(self, source_titles: list[str], max_articles: int = 5) -> str:
-        """Fetch original section text for source articles (batched, single query).
+        """Fetch section text for source articles (batched, single query).
 
-        Retrieves the lead section (index 0) content for each source article,
-        providing Claude with the original Wikipedia text for grounded synthesis.
+        Retrieves ALL section content for each source article, concatenated,
+        providing Claude with rich source text for grounded synthesis.
+        Falls back to article-level content if sections aren't available.
         """
         self._check_open()
         titles = source_titles[:max_articles]
         if not titles:
             return ""
+
+        texts: list[str] = []
+
+        # Try to get section content (works for all pack types)
         try:
             result = self.conn.execute(
-                "MATCH (a:Article)-[:HAS_SECTION {section_index: 0}]->(s:Section) "
+                "MATCH (a:Article)-[:HAS_SECTION]->(s:Section) "
                 "WHERE a.title IN $titles "
-                "RETURN a.title AS title, s.content AS content",
+                "RETURN a.title AS title, s.content AS content "
+                "ORDER BY a.title",
                 {"titles": titles},
             )
             df = result.get_as_df()
-            texts: list[str] = []
-            for _, row in df.iterrows():
-                content = row.get("content")
-                title = row.get("title", "")
-                if content:
-                    truncated = content[:500] + ("..." if len(content) > 500 else "")
-                    texts.append(f"## {title}\n{truncated}")
-            return "\n\n".join(texts)
+            if not df.empty:
+                # Group sections by article, concatenate content
+                by_article: dict[str, list[str]] = {}
+                for _, row in df.iterrows():
+                    title = row.get("title", "")
+                    content = row.get("content", "")
+                    if title and content:
+                        by_article.setdefault(title, []).append(content)
+
+                for title in titles:
+                    sections = by_article.get(title, [])
+                    if sections:
+                        combined = "\n\n".join(sections)
+                        # Allow up to 3000 chars per article for rich context
+                        truncated = combined[:3000] + ("..." if len(combined) > 3000 else "")
+                        texts.append(f"## {title}\n{truncated}")
         except Exception as e:
-            logger.warning(f"Failed to fetch source text: {e}")
-            return ""
+            logger.debug(f"Section fetch failed: {e}")
+
+        # Fallback: try article.content directly if no sections found
+        if not texts:
+            try:
+                result = self.conn.execute(
+                    "MATCH (a:Article) WHERE a.title IN $titles "
+                    "RETURN a.title AS title, a.content AS content",
+                    {"titles": titles},
+                )
+                df = result.get_as_df()
+                for _, row in df.iterrows():
+                    title = row.get("title", "")
+                    content = row.get("content", "")
+                    if title and content:
+                        truncated = content[:3000] + ("..." if len(content) > 3000 else "")
+                        texts.append(f"## {title}\n{truncated}")
+            except Exception as e:
+                logger.debug(f"Article content fallback failed: {e}")
+
+        return "\n\n".join(texts)
 
     def _build_synthesis_context(
         self,
@@ -1189,14 +1234,16 @@ Original Article Text (for grounding):
 {source_text}
 """
 
-        return f"""{few_shot_section}Using the knowledge graph results AND original article text below, answer this question concisely and accurately.
+        return f"""{few_shot_section}You are a knowledgeable expert. Answer the question below using BOTH your own expertise AND the retrieved content from a knowledge graph.
+
+When the retrieved content provides specific, detailed, or up-to-date information, prefer it and cite the source articles. When the retrieved content is limited or irrelevant, draw on your own knowledge to provide the best possible answer.
 
 Question: {question}
 
-Knowledge Graph Results:
+Retrieved Knowledge Graph Content:
 {context}
 
-Provide a clear, factual answer grounded in the source text. Cite specific articles. If the KG has no relevant data, say so."""
+Provide a clear, accurate, comprehensive answer. Cite source articles when you use retrieved content."""
 
     def _synthesize_answer(
         self,
@@ -1216,7 +1263,7 @@ Provide a clear, factual answer grounded in the source text. Cite specific artic
 
         try:
             response = self.claude.messages.create(
-                model="claude-haiku-4-5-20251001",
+                model=self.synthesis_model,
                 max_tokens=512,
                 messages=[{"role": "user", "content": prompt}],
             )
@@ -1402,18 +1449,21 @@ Provide a clear, factual answer grounded in the source text. Cite specific artic
         if df.empty:
             return []
 
-        # Aggregate by article
+        # Aggregate by article, keeping best-matching section content
         articles = {}
         for _, row in df.iterrows():
-            section_id = row["node"]["section_id"]
+            node = row["node"]
+            section_id = node.get("section_id", "")
             article_title = section_id.split("#")[0]
             distance = row["distance"]
+            content = node.get("content", "")
 
             if article_title not in articles or distance < articles[article_title]["distance"]:
                 articles[article_title] = {
                     "title": article_title,
                     "similarity": max(0.0, min(1.0, 1.0 - distance)),
                     "distance": distance,
+                    "content": content or "",
                 }
 
         # Sort by similarity
