@@ -73,6 +73,7 @@ class KnowledgeGraphAgent:
         self.synthesis_model = synthesis_model or self.DEFAULT_MODEL
         self._embedding_generator = None
         self._plan_cache: dict[str, dict] = {}
+        self._hyde_cache: dict[str, str] = {}
         self.use_enhancements = use_enhancements
         self.enable_reranker = enable_reranker
         self.enable_multidoc = enable_multidoc
@@ -1036,6 +1037,43 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
 
         return candidates[:3]
 
+    def _rewrite_query_for_retrieval(self, question: str) -> str:
+        """Rewrite question as a hypothetical answer passage for better embedding match.
+
+        HyDE (Hypothetical Document Embeddings) technique: generate a short passage
+        that would answer the question, then use it for vector search. The passage
+        embeddings are closer to actual article content than question embeddings.
+
+        Results are cached per-question to avoid redundant Claude calls when both
+        _vector_primary_retrieve and _hybrid_retrieve process the same question.
+        """
+        if question in self._hyde_cache:
+            return self._hyde_cache[question]
+        try:
+            response = self.claude.messages.create(
+                model=self.synthesis_model,
+                max_tokens=150,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            "Write a brief 2-3 sentence factual passage that would "
+                            "answer this question. Write as if from a technical "
+                            "article, not as a response to the question.\n\n"
+                            f"Question: {question}"
+                        ),
+                    }
+                ],
+            )
+            if response.content:
+                rewritten = response.content[0].text.strip()
+                logger.info(f"Query rewritten for retrieval: '{rewritten[:80]}...'")
+                self._hyde_cache[question] = rewritten
+                return rewritten
+        except Exception as e:
+            logger.debug(f"Query rewriting failed: {e}")
+        return question
+
     def _vector_primary_retrieve(
         self, question: str, max_results: int
     ) -> tuple[dict | None, float]:
@@ -1047,10 +1085,11 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
 
         Returns:
             (kg_results_dict, max_similarity) or (None, 0.0) on failure.
-            max_similarity is the highest cosine similarity among results (0.0–1.0).
+            max_similarity is the highest cosine similarity among results (0.0-1.0).
         """
         try:
-            vector_results = self.semantic_search(question, top_k=max_results)
+            search_query = self._rewrite_query_for_retrieval(question)
+            vector_results = self.semantic_search(search_query, top_k=max_results)
             if not vector_results:
                 return None, 0.0
 
@@ -1096,9 +1135,10 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         """
         scored: dict[str, float] = {}
 
-        # Signal 1: Vector search (semantic similarity via existing semantic_search)
+        # Signal 1: Vector search (HyDE-rewritten query for better embedding match)
         try:
-            vector_results = self.semantic_search(question, top_k=max_results)
+            search_query = self._rewrite_query_for_retrieval(question)
+            vector_results = self.semantic_search(search_query, top_k=max_results)
             for r in vector_results:
                 title = r.get("article", r.get("title", ""))
                 if title:

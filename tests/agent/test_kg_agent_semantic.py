@@ -243,7 +243,8 @@ class TestVectorPrimaryRetrieval:
                 )
             ),
         ]
-        results, max_sim = agent._vector_primary_retrieve("What is Python?", 10)
+        with patch.object(agent, "_rewrite_query_for_retrieval", side_effect=lambda q: q):
+            results, max_sim = agent._vector_primary_retrieve("What is Python?", 10)
         assert results is not None
         assert max_sim >= 0.6
         assert "Python" in results["sources"]
@@ -257,14 +258,16 @@ class TestVectorPrimaryRetrieval:
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
             _make_execute_result(pd.DataFrame()),
         ]
-        results, max_sim = agent._vector_primary_retrieve("test", 10)
+        with patch.object(agent, "_rewrite_query_for_retrieval", side_effect=lambda q: q):
+            results, max_sim = agent._vector_primary_retrieve("test", 10)
         assert results is None
         assert max_sim == 0.0
 
     def test_exception_returns_none(self, agent):
         """If vector search raises, returns (None, 0.0) gracefully."""
         agent.conn.execute.side_effect = Exception("DB error")
-        results, max_sim = agent._vector_primary_retrieve("test", 10)
+        with patch.object(agent, "_rewrite_query_for_retrieval", side_effect=lambda q: q):
+            results, max_sim = agent._vector_primary_retrieve("test", 10)
         assert results is None
         assert max_sim == 0.0
 
@@ -282,7 +285,8 @@ class TestVectorPrimaryRetrieval:
                 )
             ),
         ]
-        results, max_sim = agent._vector_primary_retrieve("test", 10)
+        with patch.object(agent, "_rewrite_query_for_retrieval", side_effect=lambda q: q):
+            results, max_sim = agent._vector_primary_retrieve("test", 10)
         assert results is not None
         assert max_sim < 0.6
 
@@ -304,14 +308,17 @@ class TestVectorPrimaryRetrieval:
         mock_response.content = [MagicMock(text="answer")]
         agent.claude.messages.create.return_value = mock_response
 
-        with patch.object(agent, "_plan_query") as mock_plan:
+        with (
+            patch.object(agent, "_rewrite_query_for_retrieval", side_effect=lambda q: q),
+            patch.object(agent, "_plan_query") as mock_plan,
+        ):
             result = agent.query("physics question")
 
         mock_plan.assert_not_called()
         assert result["query_type"] == "vector_search"
 
     def test_query_uses_llm_when_low_confidence(self, agent):
-        """query() calls _plan_query when vector similarity < 0.6."""
+        """query() calls _plan_query when vector similarity < threshold."""
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
@@ -334,6 +341,7 @@ class TestVectorPrimaryRetrieval:
         agent.claude.messages.create.return_value = mock_response
 
         with (
+            patch.object(agent, "_rewrite_query_for_retrieval", side_effect=lambda q: q),
             patch.object(agent, "_plan_query", return_value=mock_plan) as mock_plan_fn,
             patch.object(
                 agent,
