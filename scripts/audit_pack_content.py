@@ -12,6 +12,7 @@ Usage:
 
 import argparse
 import logging
+import re
 import statistics
 import sys
 from pathlib import Path
@@ -27,11 +28,17 @@ THIN_CONTENT_THRESHOLD = 200
 PACKS_DIR = Path(__file__).parent.parent / "data" / "packs"
 
 
-def open_db(db_path: Path) -> kuzu.Connection:
+def open_db(db_path: Path) -> tuple[kuzu.Database, kuzu.Connection]:
+    """Open a Kuzu pack database.
+
+    Returns both db and conn so the caller keeps db alive for the lifetime
+    of conn usage (prevents GC of db under non-CPython runtimes).
+    """
     if not db_path.exists():
         raise FileNotFoundError(f"Database not found: {db_path}")
     db = kuzu.Database(str(db_path), read_only=True)
-    return kuzu.Connection(db)
+    conn = kuzu.Connection(db)
+    return db, conn
 
 
 def query_article_word_counts(conn: kuzu.Connection) -> list[dict]:
@@ -46,7 +53,7 @@ def query_article_word_counts(conn: kuzu.Connection) -> list[dict]:
         )
         rows = result.get_as_df()
         if not rows.empty and "word_count" in rows.columns:
-            return rows[["title", "word_count"]].to_dict("records")
+            return rows[["title", "word_count"]].fillna(0).to_dict("records")
     except Exception as exc:
         logger.debug(
             "word_count column unavailable, falling back to Section content query: %s", exc
@@ -81,7 +88,7 @@ def compute_stats(word_counts: list[int]) -> dict:
 
 
 def audit_pack(db_path: Path, thin_threshold: int = THIN_CONTENT_THRESHOLD) -> dict:
-    conn = open_db(db_path)
+    db, conn = open_db(db_path)
     articles = query_article_word_counts(conn)
 
     if not articles:
@@ -171,6 +178,8 @@ def main() -> None:
 
     db_paths: list[Path] = []
 
+    _SAFE_PACK_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
+
     if args.all:
         db_paths = find_all_pack_dbs()
         if not db_paths:
@@ -178,6 +187,8 @@ def main() -> None:
             sys.exit(1)
     elif args.compare:
         for pack_name in args.compare:
+            if not _SAFE_PACK_NAME_RE.match(pack_name):
+                parser.error(f"Invalid pack name: {pack_name!r}")
             candidate = PACKS_DIR / pack_name / "pack.db"
             if not candidate.exists():
                 print(f"Warning: {candidate} not found, skipping")
