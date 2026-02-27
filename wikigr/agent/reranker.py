@@ -82,20 +82,17 @@ class GraphReranker:
         if not article_ids:
             return {}
 
-        # Build Cypher query for degree centrality with normalization
-        # Count both incoming and outgoing LINKS_TO edges, then normalize
-        # Works with both integer IDs and string titles as article identifiers
+        # Build Cypher query for raw degree centrality per article.
+        # Normalization is done in Python to avoid Kuzu nested-aggregation errors
+        # when collect() and max() both operate on aggregated values.
         cypher = """
         UNWIND $article_ids AS aid
         MATCH (a:Article) WHERE a.title = aid
         OPTIONAL MATCH (a)-[r:LINKS_TO]->()
         WITH a, count(r) AS out_degree
         OPTIONAL MATCH (a)<-[r2:LINKS_TO]-()
-        WITH a, out_degree, count(r2) AS in_degree, (out_degree + count(r2)) AS degree
-        WITH collect({title: a.title, degree: degree}) AS articles, max(degree) AS max_degree
-        UNWIND articles AS article
-        RETURN article.title AS article_id,
-               CASE WHEN max_degree > 0 THEN toFloat(article.degree) / toFloat(max_degree) ELSE 0.0 END AS centrality
+        WITH a, out_degree, count(r2) AS in_degree
+        RETURN a.title AS article_id, out_degree + in_degree AS degree
         """
 
         try:
@@ -106,13 +103,13 @@ class GraphReranker:
                 # No articles found in graph
                 return {aid: 0.0 for aid in article_ids}
 
+            # Normalize in Python to avoid Kuzu nested-aggregation errors
+            max_degree = float(df["degree"].max()) if not df.empty else 0.0
             centrality = {}
-
-            # Extract already-normalized centrality values from result
             for _, row in df.iterrows():
                 article_id = row["article_id"]
-                centrality_score = float(row["centrality"])
-                centrality[article_id] = centrality_score
+                raw_degree = float(row["degree"])
+                centrality[article_id] = raw_degree / max_degree if max_degree > 0 else 0.0
 
             # Fill in missing articles with 0.0
             for aid in article_ids:
