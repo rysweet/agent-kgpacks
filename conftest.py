@@ -1,6 +1,7 @@
 """Root conftest.py: ensure the local workstream source takes priority over installed packages."""
-import sys
+
 import os
+import sys
 
 # Insert the workstream root at the beginning of sys.path so that our local
 # wikigr/ and bootstrap/ directories take precedence over the installed package

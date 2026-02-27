@@ -234,10 +234,14 @@ class TestVectorPrimaryRetrieval:
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
-            _make_execute_result(pd.DataFrame({
-                "node": [{"section_id": "Python#intro"}],
-                "distance": [0.05],
-            })),
+            _make_execute_result(
+                pd.DataFrame(
+                    {
+                        "node": [{"section_id": "Python#intro"}],
+                        "distance": [0.05],
+                    }
+                )
+            ),
         ]
         results, max_sim = agent._vector_primary_retrieve("What is Python?", 10)
         assert results is not None
@@ -269,10 +273,14 @@ class TestVectorPrimaryRetrieval:
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
-            _make_execute_result(pd.DataFrame({
-                "node": [{"section_id": "Unrelated#intro"}],
-                "distance": [0.9],  # similarity = 0.1
-            })),
+            _make_execute_result(
+                pd.DataFrame(
+                    {
+                        "node": [{"section_id": "Unrelated#intro"}],
+                        "distance": [0.9],  # similarity = 0.1
+                    }
+                )
+            ),
         ]
         results, max_sim = agent._vector_primary_retrieve("test", 10)
         assert results is not None
@@ -283,10 +291,14 @@ class TestVectorPrimaryRetrieval:
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
-            _make_execute_result(pd.DataFrame({
-                "node": [{"section_id": "Physics#intro"}],
-                "distance": [0.05],
-            })),
+            _make_execute_result(
+                pd.DataFrame(
+                    {
+                        "node": [{"section_id": "Physics#intro"}],
+                        "distance": [0.05],
+                    }
+                )
+            ),
         ] + [_make_execute_result(pd.DataFrame())] * 10
         mock_response = MagicMock()
         mock_response.content = [MagicMock(text="answer")]
@@ -303,10 +315,14 @@ class TestVectorPrimaryRetrieval:
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
-            _make_execute_result(pd.DataFrame({
-                "node": [{"section_id": "Unrelated#intro"}],
-                "distance": [0.9],
-            })),
+            _make_execute_result(
+                pd.DataFrame(
+                    {
+                        "node": [{"section_id": "Unrelated#intro"}],
+                        "distance": [0.9],
+                    }
+                )
+            ),
         ]
         mock_plan = {
             "type": "entity_search",
@@ -319,7 +335,11 @@ class TestVectorPrimaryRetrieval:
 
         with (
             patch.object(agent, "_plan_query", return_value=mock_plan) as mock_plan_fn,
-            patch.object(agent, "_execute_query", return_value={"sources": [], "entities": [], "facts": [], "raw": []}),
+            patch.object(
+                agent,
+                "_execute_query",
+                return_value={"sources": [], "entities": [], "facts": [], "raw": []},
+            ),
             patch.object(agent, "_direct_title_lookup", return_value=[]),
             patch.object(agent, "_hybrid_retrieve", return_value={"sources": [], "facts": []}),
         ):
@@ -345,6 +365,7 @@ class TestABTestingFlags:
             mock_kuzu.Database.return_value = MagicMock()
             mock_kuzu.Connection.return_value = MagicMock()
             from wikigr.agent.kg_agent import KnowledgeGraphAgent
+
             return KnowledgeGraphAgent(db_path="/fake/db", use_enhancements=True, **kwargs)
 
     def test_all_enabled_by_default(self):
@@ -391,6 +412,7 @@ class TestABTestingFlags:
         """from_connection() initializes new attributes to safe defaults."""
         with patch("wikigr.agent.kg_agent.kuzu"), patch("wikigr.agent.kg_agent.Anthropic"):
             from wikigr.agent.kg_agent import KnowledgeGraphAgent
+
             ag = KnowledgeGraphAgent.from_connection(MagicMock(), MagicMock())
         assert ag.use_enhancements is False
         assert ag.enable_reranker is True

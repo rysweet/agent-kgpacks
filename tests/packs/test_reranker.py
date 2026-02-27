@@ -135,8 +135,10 @@ class TestGraphRerankerRerank:
         ]
 
         # Dense graph density check (2.0+ avg links/article → centrality enabled)
-        dense_links = Mock(); dense_links.get_as_df.return_value = pd.DataFrame({"total_links": [20]})
-        dense_articles = Mock(); dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
+        dense_links = Mock()
+        dense_links.get_as_df.return_value = pd.DataFrame({"total_links": [20]})
+        dense_articles = Mock()
+        dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
         # Mock centrality calculation
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
@@ -163,8 +165,10 @@ class TestGraphRerankerRerank:
             {"article_id": 2, "score": 0.7, "title": "Article 2"},
         ]
 
-        dense_links = Mock(); dense_links.get_as_df.return_value = pd.DataFrame({"total_links": [20]})
-        dense_articles = Mock(); dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
+        dense_links = Mock()
+        dense_links.get_as_df.return_value = pd.DataFrame({"total_links": [20]})
+        dense_articles = Mock()
+        dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
             {"article_id": [1, 2], "centrality": [0.3, 0.8]}
@@ -205,8 +209,10 @@ class TestGraphRerankerRerank:
             {"article_id": 2, "score": 0.7, "title": "Article 2"},
         ]
 
-        dense_links = Mock(); dense_links.get_as_df.return_value = pd.DataFrame({"total_links": [20]})
-        dense_articles = Mock(); dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
+        dense_links = Mock()
+        dense_links.get_as_df.return_value = pd.DataFrame({"total_links": [20]})
+        dense_articles = Mock()
+        dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
             {"article_id": [1, 2], "centrality": [0.3, 0.8]}
@@ -329,8 +335,10 @@ class TestGraphRerankerIntegration:
         ]
 
         # Article 2 is central hub despite lower vector score
-        dense_links = Mock(); dense_links.get_as_df.return_value = pd.DataFrame({"total_links": [20]})
-        dense_articles = Mock(); dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
+        dense_links = Mock()
+        dense_links.get_as_df.return_value = pd.DataFrame({"total_links": [20]})
+        dense_articles = Mock()
+        dense_articles.get_as_df.return_value = pd.DataFrame({"total_articles": [10]})
         mock_result = Mock()
         mock_result.get_as_df.return_value = pd.DataFrame(
             {"article_id": [1, 2, 3], "centrality": [0.2, 0.95, 0.5]}

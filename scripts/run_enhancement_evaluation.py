@@ -183,11 +183,13 @@ def main():
     print(f"Questions: {SAMPLE_SIZE} (sample)")
     print(f"Model: {MODEL}")
     disabled = [
-        c for c, v in [
+        c
+        for c, v in [
             ("reranker", args.disable_reranker),
             ("multidoc", args.disable_multidoc),
             ("fewshot", args.disable_fewshot),
-        ] if v
+        ]
+        if v
     ]
     if disabled:
         print(f"Disabled components: {', '.join(disabled)}")

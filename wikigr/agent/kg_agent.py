@@ -78,11 +78,13 @@ class KnowledgeGraphAgent:
             else:
                 self.few_shot = None
             active = [
-                c for c, e in [
+                c
+                for c, e in [
                     ("reranker", enable_reranker),
                     ("multi-doc", enable_multidoc),
                     ("few-shot", enable_fewshot),
-                ] if e
+                ]
+                if e
             ]
             logger.info(f"Phase 1 enhancements enabled: {', '.join(active) or 'none'}")
         else:
@@ -987,8 +989,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 "entities": [],
                 "facts": [],
                 "raw": [
-                    {"title": r["title"], "score": r.get("similarity", 0.0)}
-                    for r in vector_results
+                    {"title": r["title"], "score": r.get("similarity", 0.0)} for r in vector_results
                 ],
             }, max_similarity
         except Exception as e:

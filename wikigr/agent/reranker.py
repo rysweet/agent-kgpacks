@@ -46,15 +46,11 @@ class GraphReranker:
             Average links per article (float). Returns 0.0 on error.
         """
         try:
-            result = self.conn.execute(
-                "MATCH ()-[:LINKS_TO]->() RETURN count(*) AS total_links"
-            )
+            result = self.conn.execute("MATCH ()-[:LINKS_TO]->() RETURN count(*) AS total_links")
             links_df = result.get_as_df()
             total_links = int(links_df.iloc[0]["total_links"]) if not links_df.empty else 0
 
-            result = self.conn.execute(
-                "MATCH (a:Article) RETURN count(a) AS total_articles"
-            )
+            result = self.conn.execute("MATCH (a:Article) RETURN count(a) AS total_articles")
             articles_df = result.get_as_df()
             total_articles = (
                 int(articles_df.iloc[0]["total_articles"]) if not articles_df.empty else 0
