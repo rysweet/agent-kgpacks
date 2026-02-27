@@ -34,7 +34,7 @@ class KnowledgeGraphAgent:
     DEFAULT_MODEL = "claude-opus-4-6"
 
     # --- Extracted constants (avoid magic numbers) ---
-    VECTOR_CONFIDENCE_THRESHOLD = 0.6
+    VECTOR_CONFIDENCE_THRESHOLD = 0.4
     PLAN_CACHE_MAX_SIZE = 128
     MAX_ARTICLE_CHARS = 3000
     PLAN_MAX_TOKENS = 512
@@ -321,6 +321,17 @@ class KnowledgeGraphAgent:
                     kg_results.setdefault("facts", []).append(fact)
         except Exception as e:
             logger.debug(f"Hybrid retrieval augmentation failed: {e}")
+
+        # Clear error key if hybrid/direct retrieval recovered usable sources.
+        # Without this, _synthesize_answer() short-circuits on the error and
+        # returns the raw error message instead of calling Claude — the #1 cause
+        # of 0-scoring answers.
+        if kg_results.get("sources") and "error" in kg_results:
+            logger.info(
+                "Hybrid retrieval recovered %d sources after primary query failure; clearing error",
+                len(kg_results["sources"]),
+            )
+            del kg_results["error"]
 
         t_exec = time.perf_counter() - t_exec_start
 
@@ -890,6 +901,11 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         """
         try:
             self._validate_cypher(cypher)
+            # Strip parameters not referenced in the query to avoid Kuzu
+            # "Parameter not found" errors from LLM-generated Cypher.
+            if params:
+                used_params = {k: v for k, v in params.items() if f"${k}" in cypher}
+                params = used_params if used_params else None
             result = self.conn.execute(cypher, params or {})
             df = result.get_as_df()
         except Exception as e:
@@ -1027,7 +1043,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         if not candidates:
             df = self._safe_query(
                 "MATCH (a:Article) WHERE lower(a.title) CONTAINS $q "
-                "RETURN a.title ORDER BY length(a.title) ASC LIMIT 3",
+                "RETURN a.title ORDER BY size(a.title) ASC LIMIT 3",
                 {"q": cleaned},
                 log_context="direct title partial match",
             )
