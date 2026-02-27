@@ -129,10 +129,14 @@ def unpackage_pack(archive_path: Path, install_dir: Path) -> Path:
 
         # Extract archive
         with tarfile.open(archive_path, "r:gz") as tar:
-            # Security check: ensure no absolute paths or parent refs
+            # Security check: ensure no absolute paths, parent refs, or symlinks
             for member in tar.getmembers():
                 if member.name.startswith("/") or ".." in member.name:
                     raise ValueError(f"Invalid archive member path: {member.name}")
+                if member.issym() or member.islnk():
+                    raise ValueError(
+                        f"Symlinks/hardlinks not allowed in pack archives: {member.name}"
+                    )
 
             # Extract all files
             tar.extractall(temp_path)

@@ -290,6 +290,52 @@ class TestUnpackagePack:
         with pytest.raises(tarfile.TarError):
             unpackage_pack(archive_path, install_dir)
 
+    def test_unpackage_rejects_symlinks(self, tmp_path: Path):
+        """Test unpackaging rejects archives containing symlinks (#177)."""
+        archive_path = tmp_path / "symlink-pack.tar.gz"
+
+        # Create a tar archive with a symlink member
+        with tarfile.open(archive_path, "w:gz") as tar:
+            # Add a normal file first
+            normal_file = tmp_path / "normal.txt"
+            normal_file.write_text("normal content")
+            tar.add(normal_file, arcname="normal.txt")
+            normal_file.unlink()
+
+            # Add a symlink pointing outside the archive
+            info = tarfile.TarInfo(name="evil_link")
+            info.type = tarfile.SYMTYPE
+            info.linkname = "/etc/passwd"
+            tar.addfile(info)
+
+        install_dir = tmp_path / "installed"
+
+        with pytest.raises(ValueError, match="Symlinks/hardlinks not allowed"):
+            unpackage_pack(archive_path, install_dir)
+
+    def test_unpackage_rejects_hardlinks(self, tmp_path: Path):
+        """Test unpackaging rejects archives containing hardlinks (#177)."""
+        archive_path = tmp_path / "hardlink-pack.tar.gz"
+
+        # Create a tar archive with a hardlink member
+        with tarfile.open(archive_path, "w:gz") as tar:
+            # Add a normal file
+            normal_file = tmp_path / "normal.txt"
+            normal_file.write_text("normal content")
+            tar.add(normal_file, arcname="normal.txt")
+            normal_file.unlink()
+
+            # Add a hardlink
+            info = tarfile.TarInfo(name="evil_hardlink")
+            info.type = tarfile.LNKTYPE
+            info.linkname = "normal.txt"
+            tar.addfile(info)
+
+        install_dir = tmp_path / "installed"
+
+        with pytest.raises(ValueError, match="Symlinks/hardlinks not allowed"):
+            unpackage_pack(archive_path, install_dir)
+
     def test_unpackage_extracts_to_pack_name_directory(self, tmp_path: Path):
         """Test unpackaging extracts to directory named after pack."""
         archive_path = tmp_path / "my-pack-1.0.0.tar.gz"
