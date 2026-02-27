@@ -361,6 +361,10 @@ class TestABTestingFlags:
             patch("wikigr.agent.few_shot.FewShotManager"),
             patch("wikigr.agent.multi_doc_synthesis.MultiDocSynthesizer"),
             patch("wikigr.agent.reranker.GraphReranker"),
+            patch(
+                "wikigr.agent.kg_agent.KnowledgeGraphAgent._resolve_few_shot_path",
+                return_value="/fake/few_shot.json",
+            ),
         ):
             mock_kuzu.Database.return_value = MagicMock()
             mock_kuzu.Connection.return_value = MagicMock()

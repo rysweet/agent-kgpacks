@@ -89,6 +89,7 @@ def evaluate_pack(
     enable_reranker: bool = True,
     enable_multidoc: bool = True,
     enable_fewshot: bool = True,
+    few_shot_path: str | None = None,
 ) -> list[dict]:
     """Pack evaluation with or without enhancements."""
     from wikigr.agent.kg_agent import KnowledgeGraphAgent
@@ -96,7 +97,7 @@ def evaluate_pack(
     agent = KnowledgeGraphAgent(
         str(db_path),
         use_enhancements=use_enhancements,
-        few_shot_path="data/few_shot/physics_examples.json" if use_enhancements else None,
+        few_shot_path=few_shot_path if use_enhancements else None,
         enable_reranker=enable_reranker,
         enable_multidoc=enable_multidoc,
         enable_fewshot=enable_fewshot,
@@ -190,6 +191,7 @@ def main():
         pack_results = evaluate_pack(questions, pack["db"], use_enhancements=False)
 
         print("  Running enhanced...")
+        pack_few_shot = pack["dir"] / "eval" / "questions.jsonl"
         enhanced = evaluate_pack(
             questions,
             pack["db"],
@@ -197,6 +199,7 @@ def main():
             enable_reranker=not args.disable_reranker,
             enable_multidoc=not args.disable_multidoc,
             enable_fewshot=not args.disable_fewshot,
+            few_shot_path=str(pack_few_shot) if pack_few_shot.exists() else None,
         )
 
         # Judge all

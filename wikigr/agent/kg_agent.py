@@ -53,7 +53,7 @@ class KnowledgeGraphAgent:
             anthropic_api_key: Anthropic API key (or from ANTHROPIC_API_KEY env var)
             read_only: Open database in read-only mode (allows concurrent access during expansion)
             use_enhancements: Enable Phase 1 enhancements (reranking, multi-doc, few-shot)
-            few_shot_path: Path to few-shot examples JSON (default: data/few_shot/physics_examples.json)
+            few_shot_path: Path to few-shot examples JSON (auto-detected from pack dir when None)
             enable_reranker: Enable graph reranker (default True when use_enhancements=True)
             enable_multidoc: Enable multi-doc synthesizer (default True when use_enhancements=True)
             enable_fewshot: Enable few-shot examples (default True when use_enhancements=True)
@@ -92,8 +92,16 @@ class KnowledgeGraphAgent:
             self.reranker = GraphReranker(self.conn) if enable_reranker else None
             self.synthesizer = MultiDocSynthesizer(self.conn) if enable_multidoc else None
             if enable_fewshot:
-                few_shot_examples = few_shot_path or "data/few_shot/physics_examples.json"
-                self.few_shot = FewShotManager(few_shot_examples)
+                resolved_path = self._resolve_few_shot_path(few_shot_path, db_path)
+                if resolved_path is not None:
+                    self.few_shot = FewShotManager(resolved_path)
+                else:
+                    self.few_shot = None
+                    logger.warning(
+                        "Few-shot enabled but no examples file found for pack at %s. "
+                        "Pass few_shot_path explicitly or add eval/questions.jsonl next to pack.db.",
+                        db_path,
+                    )
             else:
                 self.few_shot = None
             active = [
@@ -114,6 +122,38 @@ class KnowledgeGraphAgent:
         logger.info(
             f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only}, use_enhancements={use_enhancements})"
         )
+
+    @staticmethod
+    def _resolve_few_shot_path(few_shot_path: str | None, db_path: str) -> str | None:
+        """Resolve the few-shot examples file path for the current pack.
+
+        Priority:
+        1. Explicit ``few_shot_path`` argument (caller knows best).
+        2. ``<pack_dir>/eval/questions.jsonl`` adjacent to ``pack.db``.
+        3. Legacy ``data/few_shot/physics_examples.json`` (only if it exists).
+        4. None -- caller should disable few-shot gracefully.
+        """
+        from pathlib import Path
+
+        if few_shot_path is not None:
+            if Path(few_shot_path).exists():
+                return few_shot_path
+            logger.warning("Explicit few_shot_path %s does not exist", few_shot_path)
+            return None
+
+        # Auto-detect: look next to the database file
+        pack_questions = Path(db_path).parent / "eval" / "questions.jsonl"
+        if pack_questions.exists():
+            logger.info("Auto-detected few-shot examples: %s", pack_questions)
+            return str(pack_questions)
+
+        # Legacy fallback -- only use if the file actually exists
+        legacy = Path("data/few_shot/physics_examples.json")
+        if legacy.exists():
+            logger.info("Using legacy few-shot examples: %s", legacy)
+            return str(legacy)
+
+        return None
 
     @classmethod
     def from_connection(
