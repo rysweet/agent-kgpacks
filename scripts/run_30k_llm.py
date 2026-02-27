@@ -58,7 +58,8 @@ def process_article_with_llm(title: str, conn, wiki_client, embedder, extractor,
             redirect_target = redirect_match.group(1).split("|")[0].strip()
             try:
                 article = wiki_client.fetch_article(redirect_target)
-            except Exception:
+            except Exception as e:
+                logger.warning("Cannot follow redirect '%s' -> '%s': %s", title, redirect_target, e)
                 return True  # Skip unfollowable redirects
 
         # Parse
