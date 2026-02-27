@@ -52,6 +52,7 @@ class KnowledgeGraphAgent:
         enable_multidoc: bool = True,
         enable_fewshot: bool = True,
         synthesis_model: str | None = None,
+        cypher_pack_path: str | None = None,
     ):
         """
         Initialize agent with database connection and Claude API.
@@ -66,6 +67,7 @@ class KnowledgeGraphAgent:
             enable_multidoc: Enable multi-doc synthesizer (default True when use_enhancements=True)
             enable_fewshot: Enable few-shot examples (default True when use_enhancements=True)
             synthesis_model: Claude model for all synthesis/planning (default: claude-opus-4-6)
+            cypher_pack_path: Path to OpenCypher expert pack examples for RAG-augmented generation
         """
         self.db = kuzu.Database(db_path, read_only=read_only)
         self.conn = kuzu.Connection(self.db)
@@ -127,6 +129,9 @@ class KnowledgeGraphAgent:
             self.synthesizer = None
             self.few_shot = None
 
+        # Initialize CypherRAG if a pack path is provided
+        self.cypher_rag = self._init_cypher_rag(cypher_pack_path)
+
         logger.info(
             f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only}, use_enhancements={use_enhancements})"
         )
@@ -163,6 +168,49 @@ class KnowledgeGraphAgent:
 
         return None
 
+    def _init_cypher_rag(self, cypher_pack_path: str | None) -> Any:
+        """Initialize CypherRAG if a Cypher pattern pack path is provided.
+
+        Args:
+            cypher_pack_path: Path to OpenCypher expert pack examples JSON/JSONL.
+
+        Returns:
+            CypherRAG instance or None if unavailable.
+        """
+        if cypher_pack_path is None:
+            return None
+
+        from pathlib import Path
+
+        pack_path = Path(cypher_pack_path)
+        if not pack_path.exists():
+            logger.warning(
+                "cypher_pack_path %s does not exist, CypherRAG disabled", cypher_pack_path
+            )
+            return None
+
+        try:
+            from wikigr.agent.cypher_rag import CypherRAG, build_schema_string
+            from wikigr.agent.few_shot import FewShotManager
+
+            pattern_manager = FewShotManager(pack_path)
+            schema = build_schema_string(self.conn)
+            rag = CypherRAG(
+                pattern_manager=pattern_manager,
+                claude_client=self.claude,
+                schema=schema,
+                model=self.synthesis_model,
+            )
+            logger.info(
+                "CypherRAG initialized with pack: %s (%d patterns)",
+                cypher_pack_path,
+                len(pattern_manager.examples),
+            )
+            return rag
+        except Exception as e:
+            logger.warning("CypherRAG initialization failed: %s", e)
+            return None
+
     @classmethod
     def from_connection(
         cls, conn: kuzu.Connection, claude_client: Anthropic
@@ -187,6 +235,7 @@ class KnowledgeGraphAgent:
         agent.reranker = None
         agent.synthesizer = None
         agent.few_shot = None
+        agent.cypher_rag = None
         return agent
 
     def _check_open(self) -> None:
@@ -724,7 +773,23 @@ class KnowledgeGraphAgent:
         return plan
 
     def _plan_query_uncached(self, question: str) -> dict:
-        """Generate a fresh query plan via Claude API (uncached)."""
+        """Generate a fresh query plan via Claude API (uncached).
+
+        When CypherRAG is available, uses pattern-informed generation.
+        Falls back to the original inline prompt otherwise.
+        """
+        # Use CypherRAG when available for pattern-informed generation
+        if self.cypher_rag is not None:
+            try:
+                plan = self.cypher_rag.generate_cypher(question)
+                if plan and plan.get("cypher"):
+                    logger.info(
+                        "CypherRAG generated plan (patterns_used=%d)", plan.get("patterns_used", 0)
+                    )
+                    return plan
+            except Exception as e:
+                logger.warning("CypherRAG failed, falling back to inline prompt: %s", e)
+
         prompt = f"""You are a Cypher query generator for a Kuzu graph database (NOT Neo4j).
 
 The graph schema:
