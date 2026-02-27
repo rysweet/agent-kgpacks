@@ -221,3 +221,203 @@ class TestSemanticSearchValidation:
         agent._embedding_generator = MagicMock()
         agent.close()
         assert agent._embedding_generator is None
+
+
+# --------------------------------------------------------------------------
+# Priority 5: Vector search as primary retrieval
+# --------------------------------------------------------------------------
+class TestVectorPrimaryRetrieval:
+    """Vector search is primary; LLM Cypher is fallback for low-confidence results."""
+
+    def test_high_confidence_returns_results(self, agent):
+        """When max similarity >= 0.6, _vector_primary_retrieve returns results."""
+        fake_emb = [0.1] * 384
+        agent.conn.execute.side_effect = [
+            _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
+            _make_execute_result(
+                pd.DataFrame(
+                    {
+                        "node": [{"section_id": "Python#intro"}],
+                        "distance": [0.05],
+                    }
+                )
+            ),
+        ]
+        results, max_sim = agent._vector_primary_retrieve("What is Python?", 10)
+        assert results is not None
+        assert max_sim >= 0.6
+        assert "Python" in results["sources"]
+        assert results["entities"] == []
+        assert results["facts"] == []
+
+    def test_empty_vector_results_returns_none(self, agent):
+        """When vector index returns nothing, returns (None, 0.0)."""
+        fake_emb = [0.1] * 384
+        agent.conn.execute.side_effect = [
+            _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
+            _make_execute_result(pd.DataFrame()),
+        ]
+        results, max_sim = agent._vector_primary_retrieve("test", 10)
+        assert results is None
+        assert max_sim == 0.0
+
+    def test_exception_returns_none(self, agent):
+        """If vector search raises, returns (None, 0.0) gracefully."""
+        agent.conn.execute.side_effect = Exception("DB error")
+        results, max_sim = agent._vector_primary_retrieve("test", 10)
+        assert results is None
+        assert max_sim == 0.0
+
+    def test_low_similarity_returns_results_with_low_sim(self, agent):
+        """Low-confidence results are returned with max_sim < 0.6."""
+        fake_emb = [0.1] * 384
+        agent.conn.execute.side_effect = [
+            _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
+            _make_execute_result(
+                pd.DataFrame(
+                    {
+                        "node": [{"section_id": "Unrelated#intro"}],
+                        "distance": [0.9],  # similarity = 0.1
+                    }
+                )
+            ),
+        ]
+        results, max_sim = agent._vector_primary_retrieve("test", 10)
+        assert results is not None
+        assert max_sim < 0.6
+
+    def test_query_skips_llm_when_high_confidence(self, agent):
+        """query() should not call _plan_query when vector similarity >= 0.6."""
+        fake_emb = [0.1] * 384
+        agent.conn.execute.side_effect = [
+            _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
+            _make_execute_result(
+                pd.DataFrame(
+                    {
+                        "node": [{"section_id": "Physics#intro"}],
+                        "distance": [0.05],
+                    }
+                )
+            ),
+        ] + [_make_execute_result(pd.DataFrame())] * 10
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text="answer")]
+        agent.claude.messages.create.return_value = mock_response
+
+        with patch.object(agent, "_plan_query") as mock_plan:
+            result = agent.query("physics question")
+
+        mock_plan.assert_not_called()
+        assert result["query_type"] == "vector_search"
+
+    def test_query_uses_llm_when_low_confidence(self, agent):
+        """query() calls _plan_query when vector similarity < 0.6."""
+        fake_emb = [0.1] * 384
+        agent.conn.execute.side_effect = [
+            _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
+            _make_execute_result(
+                pd.DataFrame(
+                    {
+                        "node": [{"section_id": "Unrelated#intro"}],
+                        "distance": [0.9],
+                    }
+                )
+            ),
+        ]
+        mock_plan = {
+            "type": "entity_search",
+            "cypher": "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($q) RETURN a.title LIMIT 10",
+            "cypher_params": {"q": "test"},
+        }
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text="answer")]
+        agent.claude.messages.create.return_value = mock_response
+
+        with (
+            patch.object(agent, "_plan_query", return_value=mock_plan) as mock_plan_fn,
+            patch.object(
+                agent,
+                "_execute_query",
+                return_value={"sources": [], "entities": [], "facts": [], "raw": []},
+            ),
+            patch.object(agent, "_direct_title_lookup", return_value=[]),
+            patch.object(agent, "_hybrid_retrieve", return_value={"sources": [], "facts": []}),
+        ):
+            agent.query("obscure query")
+
+        mock_plan_fn.assert_called_once()
+
+
+# --------------------------------------------------------------------------
+# Priority 7: A/B testing flags
+# --------------------------------------------------------------------------
+class TestABTestingFlags:
+    """Test enable_reranker, enable_multidoc, enable_fewshot constructor flags."""
+
+    def _make_enhanced_agent(self, **kwargs):
+        with (
+            patch("wikigr.agent.kg_agent.kuzu") as mock_kuzu,
+            patch("wikigr.agent.kg_agent.Anthropic"),
+            patch("wikigr.agent.few_shot.FewShotManager"),
+            patch("wikigr.agent.multi_doc_synthesis.MultiDocSynthesizer"),
+            patch("wikigr.agent.reranker.GraphReranker"),
+        ):
+            mock_kuzu.Database.return_value = MagicMock()
+            mock_kuzu.Connection.return_value = MagicMock()
+            from wikigr.agent.kg_agent import KnowledgeGraphAgent
+
+            return KnowledgeGraphAgent(db_path="/fake/db", use_enhancements=True, **kwargs)
+
+    def test_all_enabled_by_default(self):
+        """With use_enhancements=True, all 3 components default to enabled."""
+        agent = self._make_enhanced_agent()
+        assert agent.reranker is not None
+        assert agent.synthesizer is not None
+        assert agent.few_shot is not None
+        assert agent.enable_reranker is True
+        assert agent.enable_multidoc is True
+        assert agent.enable_fewshot is True
+
+    def test_disable_reranker(self):
+        """enable_reranker=False: reranker is None, others active."""
+        agent = self._make_enhanced_agent(enable_reranker=False)
+        assert agent.reranker is None
+        assert agent.synthesizer is not None
+        assert agent.enable_reranker is False
+
+    def test_disable_multidoc(self):
+        """enable_multidoc=False: synthesizer is None, others active."""
+        agent = self._make_enhanced_agent(enable_multidoc=False)
+        assert agent.synthesizer is None
+        assert agent.reranker is not None
+        assert agent.enable_multidoc is False
+
+    def test_disable_fewshot(self):
+        """enable_fewshot=False: few_shot is None, others active."""
+        agent = self._make_enhanced_agent(enable_fewshot=False)
+        assert agent.few_shot is None
+        assert agent.reranker is not None
+        assert agent.enable_fewshot is False
+
+    def test_all_disabled(self):
+        """All flags False: all components are None."""
+        agent = self._make_enhanced_agent(
+            enable_reranker=False, enable_multidoc=False, enable_fewshot=False
+        )
+        assert agent.reranker is None
+        assert agent.synthesizer is None
+        assert agent.few_shot is None
+
+    def test_from_connection_sets_defaults(self):
+        """from_connection() initializes new attributes to safe defaults."""
+        with patch("wikigr.agent.kg_agent.kuzu"), patch("wikigr.agent.kg_agent.Anthropic"):
+            from wikigr.agent.kg_agent import KnowledgeGraphAgent
+
+            ag = KnowledgeGraphAgent.from_connection(MagicMock(), MagicMock())
+        assert ag.use_enhancements is False
+        assert ag.enable_reranker is True
+        assert ag.enable_multidoc is True
+        assert ag.enable_fewshot is True
+        assert ag.reranker is None
+        assert ag.synthesizer is None
+        assert ag.few_shot is None

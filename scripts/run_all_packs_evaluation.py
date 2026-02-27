@@ -82,7 +82,14 @@ def evaluate_training(client: Anthropic, questions: list[dict]) -> list[dict]:
     return results
 
 
-def evaluate_pack(questions: list[dict], db_path: str, use_enhancements: bool) -> list[dict]:
+def evaluate_pack(
+    questions: list[dict],
+    db_path: str,
+    use_enhancements: bool,
+    enable_reranker: bool = True,
+    enable_multidoc: bool = True,
+    enable_fewshot: bool = True,
+) -> list[dict]:
     """Pack evaluation with or without enhancements."""
     from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
@@ -90,6 +97,9 @@ def evaluate_pack(questions: list[dict], db_path: str, use_enhancements: bool) -
         str(db_path),
         use_enhancements=use_enhancements,
         few_shot_path="data/few_shot/physics_examples.json" if use_enhancements else None,
+        enable_reranker=enable_reranker,
+        enable_multidoc=enable_multidoc,
+        enable_fewshot=enable_fewshot,
     )
     results = []
     for q in questions:
@@ -139,6 +149,9 @@ Return ONLY JSON: {{"score": N, "reason": "brief"}}"""
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample", type=int, default=5, help="Questions per pack")
+    parser.add_argument("--disable-reranker", action="store_true", help="Disable graph reranker")
+    parser.add_argument("--disable-multidoc", action="store_true", help="Disable multi-doc")
+    parser.add_argument("--disable-fewshot", action="store_true", help="Disable few-shot examples")
     args = parser.parse_args()
 
     packs = find_all_packs()
@@ -177,7 +190,14 @@ def main():
         pack_results = evaluate_pack(questions, pack["db"], use_enhancements=False)
 
         print("  Running enhanced...")
-        enhanced = evaluate_pack(questions, pack["db"], use_enhancements=True)
+        enhanced = evaluate_pack(
+            questions,
+            pack["db"],
+            use_enhancements=True,
+            enable_reranker=not args.disable_reranker,
+            enable_multidoc=not args.disable_multidoc,
+            enable_fewshot=not args.disable_fewshot,
+        )
 
         # Judge all
         print("  Judging answers...")

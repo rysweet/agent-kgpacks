@@ -37,6 +37,9 @@ class KnowledgeGraphAgent:
         read_only: bool = True,
         use_enhancements: bool = False,
         few_shot_path: str | None = None,
+        enable_reranker: bool = True,
+        enable_multidoc: bool = True,
+        enable_fewshot: bool = True,
     ):
         """
         Initialize agent with database connection and Claude API.
@@ -47,6 +50,9 @@ class KnowledgeGraphAgent:
             read_only: Open database in read-only mode (allows concurrent access during expansion)
             use_enhancements: Enable Phase 1 enhancements (reranking, multi-doc, few-shot)
             few_shot_path: Path to few-shot examples JSON (default: data/few_shot/physics_examples.json)
+            enable_reranker: Enable graph reranker (default True when use_enhancements=True)
+            enable_multidoc: Enable multi-doc synthesizer (default True when use_enhancements=True)
+            enable_fewshot: Enable few-shot examples (default True when use_enhancements=True)
         """
         self.db = kuzu.Database(db_path, read_only=read_only)
         self.conn = kuzu.Connection(self.db)
@@ -54,6 +60,22 @@ class KnowledgeGraphAgent:
         self._embedding_generator = None
         self._plan_cache: dict[str, dict] = {}
         self.use_enhancements = use_enhancements
+        self.enable_reranker = enable_reranker
+        self.enable_multidoc = enable_multidoc
+        self.enable_fewshot = enable_fewshot
+
+        # Warn if enable_* flags are set but use_enhancements=False (they have no effect)
+        if not use_enhancements and any(
+            [
+                enable_reranker is not True,
+                enable_multidoc is not True,
+                enable_fewshot is not True,
+            ]
+        ):
+            logger.warning(
+                "enable_reranker/enable_multidoc/enable_fewshot flags have no effect "
+                "when use_enhancements=False. Set use_enhancements=True to use them."
+            )
 
         # Initialize enhancement modules if enabled
         if use_enhancements:
@@ -61,11 +83,23 @@ class KnowledgeGraphAgent:
             from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
             from wikigr.agent.reranker import GraphReranker
 
-            self.reranker = GraphReranker(self.conn)
-            self.synthesizer = MultiDocSynthesizer(self.conn)
-            few_shot_examples = few_shot_path or "data/few_shot/physics_examples.json"
-            self.few_shot = FewShotManager(few_shot_examples)
-            logger.info("Phase 1 enhancements enabled (reranker, multi-doc, few-shot)")
+            self.reranker = GraphReranker(self.conn) if enable_reranker else None
+            self.synthesizer = MultiDocSynthesizer(self.conn) if enable_multidoc else None
+            if enable_fewshot:
+                few_shot_examples = few_shot_path or "data/few_shot/physics_examples.json"
+                self.few_shot = FewShotManager(few_shot_examples)
+            else:
+                self.few_shot = None
+            active = [
+                c
+                for c, e in [
+                    ("reranker", enable_reranker),
+                    ("multi-doc", enable_multidoc),
+                    ("few-shot", enable_fewshot),
+                ]
+                if e
+            ]
+            logger.info(f"Phase 1 enhancements enabled: {', '.join(active) or 'none'}")
         else:
             self.reranker = None
             self.synthesizer = None
@@ -91,6 +125,13 @@ class KnowledgeGraphAgent:
         agent.claude = claude_client
         agent._embedding_generator = None
         agent._plan_cache = {}
+        agent.use_enhancements = False
+        agent.enable_reranker = True
+        agent.enable_multidoc = True
+        agent.enable_fewshot = True
+        agent.reranker = None
+        agent.synthesizer = None
+        agent.few_shot = None
         return agent
 
     def _check_open(self) -> None:
@@ -144,16 +185,39 @@ class KnowledgeGraphAgent:
 
         t_start = time.perf_counter()
 
-        # Step 1: Classify query type and generate Cypher
+        # Step 1: PRIMARY = Vector Search; FALLBACK = LLM-generated Cypher
+        # Vector search reduces the 30% query failure rate from bad Cypher generation.
+        # Fall back to LLM Cypher only when vector confidence is low (< 0.6 cosine similarity).
         t_plan_start = time.perf_counter()
-        query_plan = self._plan_query(question)
+        vector_kg_results, max_similarity = self._vector_primary_retrieve(question, max_results)
+        use_vector_primary = vector_kg_results is not None and max_similarity >= 0.6
+
+        if use_vector_primary:
+            kg_results = vector_kg_results
+            query_plan = {
+                "type": "vector_search",
+                "cypher": f"CALL QUERY_VECTOR_INDEX('Section', 'embedding_idx', $emb, {max_results * 3}) RETURN *",
+                "cypher_params": {"emb": "<embedding_vector>"},
+            }
+            logger.info(f"Vector primary retrieval succeeded (max_similarity={max_similarity:.3f})")
+        else:
+            if vector_kg_results is not None:
+                logger.info(
+                    f"Vector search low confidence (max_similarity={max_similarity:.3f} < 0.6), "
+                    "falling back to LLM Cypher"
+                )
+            else:
+                logger.info("Vector search returned no results, falling back to LLM Cypher")
+            query_plan = self._plan_query(question)
+
         t_plan = time.perf_counter() - t_plan_start
 
-        # Step 2: Execute Cypher query + hybrid retrieval
+        # Step 2: Execute Cypher query (only when LLM Cypher fallback is used)
         t_exec_start = time.perf_counter()
-        kg_results = self._execute_query(
-            query_plan["cypher"], max_results, query_plan.get("cypher_params")
-        )
+        if not use_vector_primary:
+            kg_results = self._execute_query(
+                query_plan["cypher"], max_results, query_plan.get("cypher_params")
+            )
 
         # Phase 2 Fix: Direct title matching as primary retrieval boost
         # Extract key terms from question and look up articles directly
@@ -210,15 +274,16 @@ class KnowledgeGraphAgent:
                         rrf_scores[src] = rrf_scores.get(src, 0) + 1.0 / (rrf_k + rank)
 
                     # Graph centrality ranking contribution (lower weight)
-                    try:
-                        centrality = self.reranker.calculate_centrality(original_sources[:10])
-                        sorted_by_centrality = sorted(
-                            centrality.items(), key=lambda x: x[1], reverse=True
-                        )
-                        for rank, (src, _score) in enumerate(sorted_by_centrality):
-                            rrf_scores[src] = rrf_scores.get(src, 0) + 0.5 / (rrf_k + rank)
-                    except Exception as e:
-                        logger.debug(f"Centrality calculation failed: {e}")
+                    if self.reranker is not None:
+                        try:
+                            centrality = self.reranker.calculate_centrality(original_sources[:10])
+                            sorted_by_centrality = sorted(
+                                centrality.items(), key=lambda x: x[1], reverse=True
+                            )
+                            for rank, (src, _score) in enumerate(sorted_by_centrality):
+                                rrf_scores[src] = rrf_scores.get(src, 0) + 0.5 / (rrf_k + rank)
+                        except Exception as e:
+                            logger.debug(f"Centrality calculation failed: {e}")
 
                     # Sort by fused score, but PRESERVE original top result
                     fused = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
@@ -234,7 +299,7 @@ class KnowledgeGraphAgent:
 
                 # Enhancement 2: Conditional multi-doc expansion
                 # Only expand if we have a HIGH-CONFIDENCE top result (appears in both rankings)
-                if len(kg_results.get("sources", [])) >= 1:
+                if self.synthesizer is not None and len(kg_results.get("sources", [])) >= 1:
                     seed_title = kg_results["sources"][0]
                     try:
                         result = self.conn.execute(
@@ -253,7 +318,8 @@ class KnowledgeGraphAgent:
                         logger.debug(f"Multi-doc expansion failed: {e}")
 
                 # Enhancement 3: Few-shot examples (always safe - they guide format, not content)
-                few_shot_examples = self.few_shot.find_similar_examples(question, k=2)
+                if self.few_shot is not None:
+                    few_shot_examples = self.few_shot.find_similar_examples(question, k=2)
 
                 t_enhance = time.perf_counter() - t_enhance_start
                 logger.info(f"Adaptive enhancements applied in {t_enhance:.2f}s")
@@ -910,6 +976,38 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             logger.debug(f"Direct title lookup query failed: {e}")
 
         return candidates[:3]
+
+    def _vector_primary_retrieve(
+        self, question: str, max_results: int
+    ) -> tuple[dict | None, float]:
+        """Attempt vector search as primary retrieval.
+
+        Args:
+            question: Natural language question.
+            max_results: Maximum results to return.
+
+        Returns:
+            (kg_results_dict, max_similarity) or (None, 0.0) on failure.
+            max_similarity is the highest cosine similarity among results (0.0–1.0).
+        """
+        try:
+            vector_results = self.semantic_search(question, top_k=max_results)
+            if not vector_results:
+                return None, 0.0
+
+            max_similarity = max(r.get("similarity", 0.0) for r in vector_results)
+            sources = [r["title"] for r in vector_results]
+            return {
+                "sources": sources,
+                "entities": [],
+                "facts": [],
+                "raw": [
+                    {"title": r["title"], "score": r.get("similarity", 0.0)} for r in vector_results
+                ],
+            }, max_similarity
+        except Exception as e:
+            logger.warning(f"Vector primary retrieve failed: {e}")
+            return None, 0.0
 
     def _hybrid_retrieve(
         self,
