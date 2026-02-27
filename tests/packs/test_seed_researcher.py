@@ -125,16 +125,20 @@ def test_init_with_api_key():
 
 def test_init_with_env_api_key():
     """Test initialization with API key from environment."""
-    with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-env"}), \
-         patch("anthropic.Anthropic") as mock_anthropic:
+    with (
+        patch.dict(os.environ, {"ANTHROPIC_API_KEY": "sk-ant-env"}),
+        patch("anthropic.Anthropic") as mock_anthropic,
+    ):
         LLMSeedResearcher()
         mock_anthropic.assert_called_once_with(api_key="sk-ant-env")
 
 
 def test_init_missing_api_key():
     """Test initialization fails without API key."""
-    with patch.dict(os.environ, {}, clear=True), \
-         pytest.raises(ConfigurationError, match="ANTHROPIC_API_KEY"):
+    with (
+        patch.dict(os.environ, {}, clear=True),
+        pytest.raises(ConfigurationError, match="ANTHROPIC_API_KEY"),
+    ):
         LLMSeedResearcher()
 
 
