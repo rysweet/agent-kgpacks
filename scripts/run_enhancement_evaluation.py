@@ -105,7 +105,7 @@ def evaluate_enhanced(questions: list[dict], args: argparse.Namespace) -> list[d
     agent = KnowledgeGraphAgent(
         db_path,
         use_enhancements=True,
-        few_shot_path="data/few_shot/physics_examples.json",
+        few_shot_path=str(PACK_DIR / "eval" / "questions.jsonl"),
         enable_reranker=not args.disable_reranker,
         enable_multidoc=not args.disable_multidoc,
         enable_fewshot=not args.disable_fewshot,
