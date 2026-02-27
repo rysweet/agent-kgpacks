@@ -118,9 +118,7 @@ def sample_db_context(db_path: Path, max_articles: int = 20) -> str:
         db = kuzu.Database(str(db_path))
         conn = kuzu.Connection(db)
 
-        result = conn.execute(
-            f"MATCH (a:Article) RETURN a.title AS title LIMIT {max_articles}"
-        )
+        result = conn.execute(f"MATCH (a:Article) RETURN a.title AS title LIMIT {max_articles}")
         df = result.get_as_df()
         if df.empty:
             logger.warning(f"No articles found in {db_path}")
@@ -144,7 +142,7 @@ def sample_db_context(db_path: Path, max_articles: int = 20) -> str:
             for _, row in sections_df.iterrows():
                 if row["title"] not in seen_titles and len(seen_titles) < 5:
                     snippet = str(row["content"])[:200].replace("\n", " ")
-                    context_parts.append(f'\n[{row["title"]}]: {snippet}...')
+                    context_parts.append(f"\n[{row['title']}]: {snippet}...")
                     seen_titles.add(row["title"])
 
         return "\n".join(context_parts)
@@ -188,7 +186,7 @@ def build_generation_prompt(
 DIFFICULTY: {difficulty} — {difficulty_guidance[difficulty]}
 
 OUTPUT FORMAT: Return a JSON array. Each element must have these exact fields:
-- "id": string like "{id_prefix}_{id_start:03d}", "{id_prefix}_{id_start+1:03d}", etc.
+- "id": string like "{id_prefix}_{id_start:03d}", "{id_prefix}_{id_start + 1:03d}", etc.
 - "domain": "{domain_name}"
 - "difficulty": "{difficulty}"
 - "question": the question text (specific, testable, domain-relevant)
@@ -318,8 +316,7 @@ def generate_eval_questions(
     # Scale difficulty counts to total_count
     base_total = sum(n for _, n in DIFFICULTY_DISTRIBUTION)
     difficulty_counts: dict[str, int] = {
-        d: max(1, round(n * total_count / base_total))
-        for d, n in DIFFICULTY_DISTRIBUTION
+        d: max(1, round(n * total_count / base_total)) for d, n in DIFFICULTY_DISTRIBUTION
     }
     # Fix rounding to hit exact total
     diff = total_count - sum(difficulty_counts.values())

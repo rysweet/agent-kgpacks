@@ -311,10 +311,16 @@ def build_pack(test_mode: bool = False) -> None:
             failed += 1
 
     # Collect final stats
-    articles_count = conn.execute("MATCH (a:Article) RETURN count(a) AS count").get_as_df().iloc[0]["count"]
-    entities_count = conn.execute("MATCH (e:Entity) RETURN count(e) AS count").get_as_df().iloc[0]["count"]
+    articles_count = (
+        conn.execute("MATCH (a:Article) RETURN count(a) AS count").get_as_df().iloc[0]["count"]
+    )
+    entities_count = (
+        conn.execute("MATCH (e:Entity) RETURN count(e) AS count").get_as_df().iloc[0]["count"]
+    )
     relationships_count = (
-        conn.execute("MATCH ()-[r:ENTITY_RELATION]->() RETURN count(r) AS count").get_as_df().iloc[0]["count"]
+        conn.execute("MATCH ()-[r:ENTITY_RELATION]->() RETURN count(r) AS count")
+        .get_as_df()
+        .iloc[0]["count"]
     )
 
     logger.info(f"Build complete: {successful} successful, {failed} failed")

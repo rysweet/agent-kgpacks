@@ -21,13 +21,14 @@ def check_url(url: str, timeout: int = 10, retries: int = 2) -> tuple[str, int, 
     Treats 429 as VALID (the URL exists, just rate-limited).
     """
     import time as _time
+
     for attempt in range(retries + 1):
         try:
             r = requests.head(url, timeout=timeout, allow_redirects=True)
             if r.status_code == 429:
                 # Rate limited - URL is valid, just throttled
                 if attempt < retries:
-                    _time.sleep(2 ** attempt)
+                    _time.sleep(2**attempt)
                     continue
                 return (url, 200, "ok (rate-limited but valid)")
             return (url, r.status_code, "ok" if r.status_code < 400 else f"HTTP {r.status_code}")
@@ -46,7 +47,8 @@ def check_url(url: str, timeout: int = 10, retries: int = 2) -> tuple[str, int, 
 def load_urls(path: Path) -> list[str]:
     with open(path) as f:
         return [
-            line.strip() for line in f
+            line.strip()
+            for line in f
             if line.strip() and not line.strip().startswith("#") and line.strip().startswith("http")
         ]
 
