@@ -73,7 +73,8 @@ bootstrap/data/seeds.json
 *.temp
 
 # Claude / AI Agent state
-.claude/
+.claude/*
+!.claude/skills/
 
 # Git worktrees
 worktrees/
