@@ -1,0 +1,77 @@
+# Zig Expert Knowledge Pack - Source URLs
+# Total: 40 URLs from official Zig documentation and community resources
+# Focus: Zig 0.13+ (comptime, error unions, allocators, build system, safety, interop with C)
+
+# ============================================================================
+# OFFICIAL ZIG LANGUAGE REFERENCE (ziglang.org)
+# Master branch documentation (single comprehensive page)
+# ============================================================================
+
+https://ziglang.org/documentation/master/
+https://ziglang.org/documentation/master/std/
+
+# Release-specific documentation
+https://ziglang.org/documentation/0.13.0/
+https://ziglang.org/documentation/0.14.0/
+
+# ============================================================================
+# ZIG.GUIDE (Community Tutorial)
+# Structured learning path
+# ============================================================================
+
+# Language Basics
+https://zig.guide/language-basics/assignment/
+https://zig.guide/language-basics/arrays/
+https://zig.guide/language-basics/comptime/
+https://zig.guide/language-basics/optionals/
+https://zig.guide/language-basics/error-union-type/
+https://zig.guide/language-basics/payload-captures/
+https://zig.guide/language-basics/functions/
+https://zig.guide/language-basics/slices/
+https://zig.guide/language-basics/enums/
+https://zig.guide/language-basics/structs/
+https://zig.guide/language-basics/unions/
+https://zig.guide/language-basics/pointers/
+https://zig.guide/language-basics/labelled-blocks/
+https://zig.guide/language-basics/labelled-loops/
+https://zig.guide/language-basics/while-loops/
+https://zig.guide/language-basics/for-loops/
+https://zig.guide/language-basics/if-expressions/
+https://zig.guide/language-basics/switch/
+
+# Standard Library
+https://zig.guide/standard-library/allocators/
+https://zig.guide/standard-library/arraylist/
+https://zig.guide/standard-library/filesystem/
+https://zig.guide/standard-library/formatting-and-printing/
+
+# Build System
+https://zig.guide/build-system/build-modes/
+https://zig.guide/build-system/build-zig/
+
+# Working with C
+https://zig.guide/working-with-c/c-import/
+https://zig.guide/working-with-c/abi/
+https://zig.guide/working-with-c/translate-c/
+
+# ============================================================================
+# ZIGLANG.ORG - Learning Resources
+# ============================================================================
+
+https://ziglang.org/learn/overview/
+https://ziglang.org/learn/samples/
+
+# ============================================================================
+# RELEASE NOTES (major changes and features)
+# ============================================================================
+
+https://ziglang.org/download/0.13.0/release-notes.html
+https://ziglang.org/download/0.14.0/release-notes.html
+https://ziglang.org/download/0.12.0/release-notes.html
+
+# ============================================================================
+# ZIG STANDARD LIBRARY (versioned)
+# ============================================================================
+
+https://ziglang.org/documentation/0.13.0/std/
+https://ziglang.org/documentation/0.14.0/std/

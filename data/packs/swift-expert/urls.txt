@@ -1,0 +1,81 @@
+# Swift Expert Knowledge Pack - Source URLs
+# Total: 50 URLs from official Swift documentation
+# Focus: Swift 6 (strict concurrency, typed throws, noncopyable types, macros, SwiftUI)
+
+# ============================================================================
+# THE SWIFT PROGRAMMING LANGUAGE (docs.swift.org/swift-book/)
+# Official Language Guide - Core Language Features
+# ============================================================================
+
+# Language Fundamentals
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/thebasics/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/basicoperators/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/stringsandcharacters/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/collectiontypes/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/controlflow/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/functions/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/closures/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/enumerations/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/classesandstructures/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/properties/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/methods/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/subscripts/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/inheritance/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/initialization/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/deinitialization/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/optionalchaining/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/errorhandling/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/concurrency/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/macros/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/typecasting/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/nestedtypes/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/extensions/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/protocols/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/generics/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/opaqueandboxedtypes/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/automaticreferencecounting/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/memorysafety/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/accesscontrol/
+https://docs.swift.org/swift-book/documentation/the-swift-programming-language/advancedoperators/
+
+# ============================================================================
+# APPLE DEVELOPER DOCUMENTATION (developer.apple.com/documentation/swift)
+# Concurrency, Actors, and Swift 6 Features
+# ============================================================================
+
+# Concurrency
+https://developer.apple.com/documentation/swift/concurrency
+https://developer.apple.com/documentation/swift/updating_an_app_to_use_swift_concurrency
+https://developer.apple.com/documentation/swift/actor
+https://developer.apple.com/documentation/swift/mainactor
+https://developer.apple.com/documentation/swift/sendable
+https://developer.apple.com/documentation/swift/asyncsequence
+https://developer.apple.com/documentation/swift/asyncstream
+https://developer.apple.com/documentation/swift/taskgroup
+
+# Swift 6 Migration and Strict Concurrency
+https://developer.apple.com/documentation/swift/adoptingswift6
+https://www.swift.org/migration/documentation/swift-6-concurrency-migration-guide/commonproblems/
+
+# ============================================================================
+# SWIFT.ORG DOCUMENTATION
+# Language Design, Server, Interop
+# ============================================================================
+
+https://www.swift.org/documentation/
+https://www.swift.org/documentation/standard-library/
+https://www.swift.org/documentation/api-design-guidelines/
+https://www.swift.org/documentation/cxx-interop/
+https://www.swift.org/documentation/server/
+https://www.swift.org/documentation/articles/value-and-reference-types.html
+https://www.swift.org/documentation/swift-compiler/
+
+# Swift 6 Announcement and What's New
+https://www.swift.org/blog/announcing-swift-6/
+
+# ============================================================================
+# SwiftUI (developer.apple.com/documentation/swiftui)
+# ============================================================================
+
+https://developer.apple.com/documentation/swiftui
+https://developer.apple.com/documentation/swiftui/managing-model-data-in-your-app
