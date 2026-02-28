@@ -75,6 +75,7 @@ class KnowledgeGraphAgent:
         self.synthesis_model = synthesis_model or self.DEFAULT_MODEL
         self._embedding_generator = None
         self._plan_cache: dict[str, dict] = {}
+        self.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
         self.use_enhancements = use_enhancements
         self.enable_reranker = enable_reranker
         self.enable_multidoc = enable_multidoc
@@ -211,6 +212,15 @@ class KnowledgeGraphAgent:
             logger.warning("CypherRAG initialization failed: %s", e)
             return None
 
+    def _track_response(self, response) -> None:
+        """Accumulate token usage from a Claude API response."""
+        if not hasattr(self, "token_usage"):
+            self.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
+        if hasattr(response, "usage"):
+            self.token_usage["input_tokens"] += getattr(response.usage, "input_tokens", 0)
+            self.token_usage["output_tokens"] += getattr(response.usage, "output_tokens", 0)
+            self.token_usage["api_calls"] += 1
+
     @classmethod
     def from_connection(
         cls, conn: kuzu.Connection, claude_client: Anthropic
@@ -228,6 +238,7 @@ class KnowledgeGraphAgent:
         agent._embedding_generator = None
         agent._plan_cache = {}
         agent.use_enhancements = True
+        agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
         agent.enable_reranker = True
         agent.enable_multidoc = True
         agent.enable_fewshot = True
@@ -462,6 +473,7 @@ class KnowledgeGraphAgent:
             "facts": kg_results.get("facts", []),
             "cypher_query": query_plan["cypher"],
             "query_type": query_plan["type"],
+            "token_usage": dict(self.token_usage),
         }
 
     # ------------------------------------------------------------------
@@ -613,6 +625,7 @@ class KnowledgeGraphAgent:
                 max_tokens=self.SEED_EXTRACT_MAX_TOKENS,
                 messages=[{"role": "user", "content": prompt}],
             )
+            self._track_response(response)
         except Exception as e:
             logger.warning(f"Claude API error in _identify_seed_articles: {e}")
             return self._fallback_seed_extraction(question)
@@ -732,6 +745,7 @@ class KnowledgeGraphAgent:
                 max_tokens=self.SYNTHESIS_MAX_TOKENS,
                 messages=[{"role": "user", "content": prompt}],
             )
+            self._track_response(response)
         except Exception as e:
             logger.warning(f"Claude API error in _synthesize_graph_rag_answer: {e}")
             return (
@@ -835,6 +849,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 max_tokens=self.PLAN_MAX_TOKENS,
                 messages=[{"role": "user", "content": prompt}],
             )
+            self._track_response(response)
         except Exception as e:
             logger.warning(f"Claude API error in _plan_query: {e}")
             return {
@@ -1365,6 +1380,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
                 max_tokens=self.SYNTHESIS_MAX_TOKENS,
                 messages=[{"role": "user", "content": prompt}],
             )
+            self._track_response(response)
         except Exception as e:
             logger.warning(f"Claude API error in _synthesize_answer: {e}")
             sources = ", ".join(kg_results.get("sources", [])[:5])
