@@ -1,0 +1,16 @@
+{
+  "name": "opentelemetry-expert",
+  "version": "1.0.0",
+  "description": "Expert knowledge of OpenTelemetry covering SDK instrumentation (Python, JS, Go, Java), collector pipeline configuration (receivers, processors, exporters), OTLP protocol, semantic conventions, context propagation, auto-instrumentation, and observability best practices",
+  "domain": "observability",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["opentelemetry", "observability", "tracing", "metrics", "logs", "otlp", "collector", "instrumentation", "semantic-conventions"],
+  "source_urls": [
+    "https://opentelemetry.io/docs/what-is-opentelemetry/",
+    "https://opentelemetry.io/docs/collector/",
+    "https://opentelemetry.io/docs/concepts/signals/traces/"
+  ],
+  "created": "2026-02-28T00:00:00Z",
+  "license": "MIT"
+}

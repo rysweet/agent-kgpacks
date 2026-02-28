@@ -1,0 +1,16 @@
+{
+  "name": "kubernetes-networking",
+  "version": "1.0.0",
+  "description": "Expert knowledge of Kubernetes networking covering CNI plugins (Cilium, Calico), service mesh (Istio, Linkerd), ingress controllers, Gateway API, network policies, DNS (CoreDNS), EndpointSlices, topology-aware routing, and eBPF-based networking",
+  "domain": "kubernetes",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["kubernetes", "networking", "cni", "cilium", "gateway-api", "ingress", "network-policy", "service-mesh", "ebpf"],
+  "source_urls": [
+    "https://kubernetes.io/docs/concepts/services-networking/service/",
+    "https://gateway-api.sigs.k8s.io/",
+    "https://docs.cilium.io/en/stable/overview/intro/"
+  ],
+  "created": "2026-02-28T00:00:00Z",
+  "license": "MIT"
+}

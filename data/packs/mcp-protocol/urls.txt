@@ -1,0 +1,60 @@
+# Model Context Protocol (MCP) - Official Documentation & Specification
+# Core specification, server development, tool definitions, resource handlers, transport
+
+# Specification & Core Concepts
+https://modelcontextprotocol.io/specification/2025-11-25
+https://modelcontextprotocol.io/specification/2025-06-18/basic
+https://modelcontextprotocol.io/specification/2025-06-18/server/tools
+https://modelcontextprotocol.io/specification/2025-06-18/server/resources
+https://modelcontextprotocol.io/specification/2025-06-18/server/prompts
+https://modelcontextprotocol.io/docs/learn/architecture
+
+# Concepts & Guides
+https://modelcontextprotocol.io/docs/concepts/tools
+https://modelcontextprotocol.io/docs/concepts/resources
+https://modelcontextprotocol.io/docs/concepts/prompts
+https://modelcontextprotocol.io/docs/concepts/sampling
+https://modelcontextprotocol.io/docs/concepts/transports
+
+# Development Guides
+https://modelcontextprotocol.io/docs/develop/build-client
+https://modelcontextprotocol.io/docs/develop/build-server
+
+# Python SDK
+https://py.sdk.modelcontextprotocol.io/
+https://github.com/modelcontextprotocol/python-sdk
+
+# TypeScript SDK
+https://ts.sdk.modelcontextprotocol.io/
+https://ts.sdk.modelcontextprotocol.io/v2/
+https://github.com/modelcontextprotocol/typescript-sdk
+
+# Official Blog & Updates
+https://blog.modelcontextprotocol.io/posts/2025-11-25-first-mcp-anniversary/
+https://blog.modelcontextprotocol.io/posts/2025-07-29-prompts-for-automation/
+https://blog.modelcontextprotocol.io/posts/2025-12-19-mcp-transport-future/
+
+# GitHub Organization & Repos
+https://github.com/modelcontextprotocol/modelcontextprotocol
+https://github.com/modelcontextprotocol
+
+# Anthropic MCP Documentation
+https://docs.anthropic.com/en/docs/agents-and-tools/mcp
+https://docs.anthropic.com/en/docs/agents-and-tools/mcp/quickstart
+
+# Community Documentation
+https://modelcontextprotocol.info/docs/
+https://modelcontextprotocol.info/docs/concepts/transports/
+https://modelcontextprotocol.info/docs/concepts/prompts/
+https://modelcontextprotocol.info/docs/concepts/resources/
+https://modelcontextprotocol.info/specification/
+
+# Extension Apps
+https://apps.extensions.modelcontextprotocol.io/api/documents/Quickstart.html
+https://apps.extensions.modelcontextprotocol.io/api/
+
+# Security & Auth
+https://auth0.com/blog/mcp-specs-update-all-about-auth/
+
+# Third-Party Guides
+https://obot.ai/resources/learning-center/mcp-tools/

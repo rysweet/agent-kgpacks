@@ -1,0 +1,16 @@
+{
+  "name": "azure-ai-foundry",
+  "version": "1.0.0",
+  "description": "Expert knowledge of Azure AI Foundry (Microsoft Foundry) covering model catalog, prompt flow, fine-tuning (SFT, RFT), deployments (serverless, managed), Foundry Agent Service, evaluations, responsible AI, and SDK integration",
+  "domain": "azure-ai",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["azure", "ai-foundry", "microsoft-foundry", "prompt-flow", "fine-tuning", "model-catalog", "responsible-ai"],
+  "source_urls": [
+    "https://learn.microsoft.com/en-us/azure/ai-foundry/what-is-foundry",
+    "https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/foundry-models-overview",
+    "https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/prompt-flow"
+  ],
+  "created": "2026-02-28T00:00:00Z",
+  "license": "MIT"
+}

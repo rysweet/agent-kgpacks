@@ -250,6 +250,70 @@ DOMAIN_DESCRIPTIONS: dict[str, str] = {
         "expressions, secrets management, self-hosted runners, and security hardening "
         "(pinning actions to SHA, GITHUB_TOKEN permissions, fork PR restrictions)."
     ),
+    "python-expert": (
+        "Expert Python programming knowledge covering Python 3.12+ features. "
+        "Key topics: structural pattern matching (match/case statements, PEP 636), "
+        "modern typing system (PEP 695 type parameter syntax, Self type PEP 673, "
+        "TypedDict kwargs PEP 692, type defaults PEP 696, dataclass transforms PEP 681), "
+        "asyncio (coroutines, tasks, event loops, streams, synchronization primitives, "
+        "subprocess, TaskGroup), dataclasses (field, post_init, frozen, slots, KW_ONLY), "
+        "packaging with pyproject.toml and tomllib, pathlib, collections (Counter, deque, "
+        "defaultdict, namedtuple), functools (cache, lru_cache, reduce, partial, wraps), "
+        "itertools, contextlib (contextmanager, asynccontextmanager, suppress), enum, "
+        "abstract base classes, f-string improvements, per-interpreter GIL, "
+        "free-threaded CPython, and improved error messages."
+    ),
+    "typescript-expert": (
+        "Expert TypeScript programming knowledge covering the TypeScript 5.x type system. "
+        "Key topics: generics (type parameters, constraints, inference), decorators "
+        "(class, method, property, parameter decorators, stage 3 decorators in TS 5.0), "
+        "satisfies operator, const assertions, template literal types, conditional types "
+        "(infer keyword, distributive conditional types), mapped types (key remapping, "
+        "modifiers), utility types (Partial, Required, Pick, Omit, Exclude, Extract, "
+        "NonNullable, ReturnType, Parameters, Awaited, NoInfer), type narrowing "
+        "(type guards, discriminated unions, exhaustiveness checking), keyof and typeof "
+        "type operators, indexed access types, modules and module resolution, "
+        "declaration files, project references, tsconfig configuration, "
+        "and TypeScript 5.0-5.9 release features."
+    ),
+    "go-expert": (
+        "Expert Go programming knowledge covering Go 1.22+ features. "
+        "Key topics: generics (type parameters, type constraints, type inference, "
+        "when to use generics), range-over-func iterators (Go 1.23, iterator functions, "
+        "slices.All, maps.Keys), structured logging with slog (Logger, Handler, Attrs, "
+        "context integration), error handling (errors.Is, errors.As, fmt.Errorf wrapping, "
+        "custom error types), concurrency (goroutines, channels, select, WaitGroups, "
+        "mutexes, context, worker pools, pipelines), modules (go.mod, dependencies, "
+        "versioning, workspaces), testing (table-driven tests, benchmarks, fuzzing, "
+        "subtests), Effective Go patterns, and Go 1.22-1.23 release features."
+    ),
+    "java-expert": (
+        "Expert Java programming knowledge covering Java 21+ features. "
+        "Key topics: virtual threads (Project Loom, Thread.ofVirtual, "
+        "Executors.newVirtualThreadPerTaskExecutor), pattern matching for switch "
+        "(type patterns, record patterns, guarded patterns, exhaustiveness), "
+        "records (compact constructors, local records, record patterns), sealed classes "
+        "(permits clause, exhaustive switch), Foreign Function & Memory API "
+        "(MemorySegment, Arena, Linker, MethodHandle), ZGC (generational ZGC, "
+        "low-latency GC tuning), structured concurrency (StructuredTaskScope, "
+        "subtask management), scoped values (ScopedValue, thread-local replacement), "
+        "sequenced collections, text blocks, local variable type inference (var), "
+        "and Java Language Specification updates."
+    ),
+    "csharp-expert": (
+        "Expert C# programming knowledge covering C# 13 and .NET 9 features. "
+        "Key topics: primary constructors (class and struct primary constructors, "
+        "parameter capture, base constructor calls), collection expressions "
+        "(spread operator, target-typed collections), interceptors (source generators, "
+        "AOT optimization), Native AOT compilation (trimming, deployment), "
+        "pattern matching (property patterns, list patterns, extended patterns, "
+        "positional patterns), records (record class, record struct, with expressions), "
+        "nullable reference types (null safety, annotations, warnings), "
+        "async/await (Task, ValueTask, async streams, cancellation), "
+        "LINQ (query expressions, method syntax, deferred execution), "
+        "generics (constraints, where clause, covariance/contravariance), "
+        "dependency injection, minimal APIs, and .NET 9 performance improvements."
+    ),
 }
 
 # Difficulty distribution: ~40% easy, 40% medium, 20% hard
