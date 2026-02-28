@@ -46,7 +46,7 @@ class KnowledgeGraphAgent:
         db_path: str,
         anthropic_api_key: str | None = None,
         read_only: bool = True,
-        use_enhancements: bool = False,
+        use_enhancements: bool = True,
         few_shot_path: str | None = None,
         enable_reranker: bool = True,
         enable_multidoc: bool = True,
@@ -227,7 +227,7 @@ class KnowledgeGraphAgent:
         agent.claude = claude_client
         agent._embedding_generator = None
         agent._plan_cache = {}
-        agent.use_enhancements = False
+        agent.use_enhancements = True
         agent.enable_reranker = True
         agent.enable_multidoc = True
         agent.enable_fewshot = True
