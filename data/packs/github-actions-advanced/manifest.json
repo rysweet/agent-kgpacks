@@ -1,0 +1,16 @@
+{
+  "name": "github-actions-advanced",
+  "version": "1.0.0",
+  "description": "Advanced GitHub Actions knowledge covering reusable workflows, composite actions, OIDC authentication for cloud providers, environments with protection rules, matrix strategies, caching, artifacts, secrets management, security hardening, and workflow optimization",
+  "domain": "ci-cd",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["github-actions", "ci-cd", "reusable-workflows", "composite-actions", "oidc", "matrix", "environments", "security"],
+  "source_urls": [
+    "https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions",
+    "https://docs.github.com/en/actions/concepts/workflows-and-actions/reusable-workflows",
+    "https://docs.github.com/en/actions/concepts/security/openid-connect"
+  ],
+  "created": "2026-02-28T00:00:00Z",
+  "license": "MIT"
+}
