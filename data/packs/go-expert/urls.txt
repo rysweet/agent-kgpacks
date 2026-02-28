@@ -1,0 +1,97 @@
+# Go Expert Knowledge Pack - Source URLs
+# Focus: Go 1.22+ (generics, range-over-func, structured logging, error handling, testing)
+# Total: 50 URLs from go.dev, gobyexample.com
+
+# ============================================================================
+# RELEASE NOTES (go.dev/doc)
+# Go 1.22 and 1.23 new features
+# ============================================================================
+
+https://go.dev/doc/go1.23
+https://go.dev/doc/go1.22
+https://go.dev/doc/go1.21
+
+# ============================================================================
+# CORE DOCUMENTATION (go.dev/doc)
+# Getting started, effective Go, language specification
+# ============================================================================
+
+https://go.dev/doc/effective_go
+https://go.dev/doc/code
+https://go.dev/doc/
+https://go.dev/ref/spec
+
+# ============================================================================
+# TUTORIALS (go.dev/doc/tutorial)
+# Guided tutorials covering key features
+# ============================================================================
+
+https://go.dev/doc/tutorial/getting-started
+https://go.dev/doc/tutorial/create-module
+https://go.dev/doc/tutorial/call-module-code
+https://go.dev/doc/tutorial/handle-errors
+https://go.dev/doc/tutorial/random-greeting
+https://go.dev/doc/tutorial/greetings-multiple-people
+https://go.dev/doc/tutorial/add-a-test
+https://go.dev/doc/tutorial/compile-install
+https://go.dev/doc/tutorial/generics
+https://go.dev/doc/tutorial/fuzz
+https://go.dev/doc/tutorial/database-access
+https://go.dev/doc/tutorial/web-service-gin
+https://go.dev/doc/tutorial/govulncheck
+https://go.dev/doc/tutorial/workspaces
+
+# ============================================================================
+# MODULES (go.dev/doc/modules)
+# Go module system
+# ============================================================================
+
+https://go.dev/doc/modules/managing-dependencies
+https://go.dev/doc/modules/layout
+https://go.dev/doc/modules/developing
+https://go.dev/doc/modules/publishing
+https://go.dev/doc/modules/version-numbers
+https://go.dev/doc/modules/gomod-ref
+
+# ============================================================================
+# BLOG POSTS (go.dev/blog)
+# In-depth articles on key topics
+# ============================================================================
+
+https://go.dev/blog/range-functions
+https://go.dev/blog/go1.23
+https://go.dev/blog/slog
+https://go.dev/blog/intro-generics
+https://go.dev/blog/when-generics
+https://go.dev/blog/error-handling-and-go
+https://go.dev/blog/defer-panic-and-recover
+https://go.dev/blog/context
+https://go.dev/blog/go-concurrency-patterns-timing-out-and
+https://go.dev/blog/pipelines
+https://go.dev/blog/using-go-modules
+https://go.dev/blog/cover
+https://go.dev/blog/subtests
+
+# ============================================================================
+# GO BY EXAMPLE (gobyexample.com)
+# Practical examples
+# ============================================================================
+
+https://gobyexample.com/goroutines
+https://gobyexample.com/channels
+https://gobyexample.com/channel-buffering
+https://gobyexample.com/channel-directions
+https://gobyexample.com/select
+https://gobyexample.com/generics
+https://gobyexample.com/errors
+https://gobyexample.com/custom-errors
+https://gobyexample.com/interfaces
+https://gobyexample.com/struct-embedding
+https://gobyexample.com/testing-and-benchmarking
+https://gobyexample.com/worker-pools
+https://gobyexample.com/waitgroups
+https://gobyexample.com/mutexes
+https://gobyexample.com/stateful-goroutines
+https://gobyexample.com/context
+https://gobyexample.com/closures
+https://gobyexample.com/json

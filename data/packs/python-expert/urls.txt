@@ -1,0 +1,101 @@
+# Python Expert Knowledge Pack - Source URLs
+# Focus: Python 3.12+ features (match, typing, asyncio, dataclasses, packaging)
+# Total: 50 URLs from docs.python.org, realpython.com, peps.python.org
+
+# ============================================================================
+# WHAT'S NEW (docs.python.org)
+# Python 3.10-3.13 new features and changes
+# ============================================================================
+
+https://docs.python.org/3/whatsnew/3.13.html
+https://docs.python.org/3/whatsnew/3.12.html
+https://docs.python.org/3/whatsnew/3.11.html
+https://docs.python.org/3/whatsnew/3.10.html
+
+# ============================================================================
+# TYPING & TYPE HINTS (docs.python.org)
+# Modern Python type system
+# ============================================================================
+
+https://docs.python.org/3/library/typing.html
+https://docs.python.org/3/library/types.html
+https://docs.python.org/3/howto/annotations.html
+
+# ============================================================================
+# ASYNCIO (docs.python.org)
+# Asynchronous programming
+# ============================================================================
+
+https://docs.python.org/3/library/asyncio.html
+https://docs.python.org/3/library/asyncio-task.html
+https://docs.python.org/3/library/asyncio-stream.html
+https://docs.python.org/3/library/asyncio-eventloop.html
+https://docs.python.org/3/library/asyncio-sync.html
+https://docs.python.org/3/library/asyncio-queue.html
+https://docs.python.org/3/library/asyncio-subprocess.html
+https://docs.python.org/3/library/asyncio-dev.html
+https://docs.python.org/3/howto/a-conceptual-overview-of-asyncio.html
+
+# ============================================================================
+# DATACLASSES (docs.python.org)
+# Data-oriented programming
+# ============================================================================
+
+https://docs.python.org/3/library/dataclasses.html
+
+# ============================================================================
+# PATTERN MATCHING (docs.python.org)
+# Structural pattern matching (match/case)
+# ============================================================================
+
+https://docs.python.org/3/reference/compound_stmts.html
+https://docs.python.org/3/tutorial/controlflow.html
+
+# ============================================================================
+# STANDARD LIBRARY ESSENTIALS (docs.python.org)
+# Key modules for modern Python
+# ============================================================================
+
+https://docs.python.org/3/library/pathlib.html
+https://docs.python.org/3/library/collections.html
+https://docs.python.org/3/library/functools.html
+https://docs.python.org/3/library/itertools.html
+https://docs.python.org/3/library/contextlib.html
+https://docs.python.org/3/library/enum.html
+https://docs.python.org/3/library/abc.html
+https://docs.python.org/3/library/tomllib.html
+https://docs.python.org/3/library/logging.html
+https://docs.python.org/3/library/json.html
+https://docs.python.org/3/library/re.html
+https://docs.python.org/3/library/os.html
+https://docs.python.org/3/library/subprocess.html
+https://docs.python.org/3/library/unittest.html
+https://docs.python.org/3/library/concurrent.futures.html
+
+# ============================================================================
+# PEPs (peps.python.org)
+# Python Enhancement Proposals for modern features
+# ============================================================================
+
+https://peps.python.org/pep-0636/
+https://peps.python.org/pep-0695/
+https://peps.python.org/pep-0681/
+https://peps.python.org/pep-0673/
+https://peps.python.org/pep-0692/
+https://peps.python.org/pep-0696/
+https://peps.python.org/pep-0557/
+https://peps.python.org/pep-0589/
+https://peps.python.org/pep-0712/
+
+# ============================================================================
+# REAL PYTHON (realpython.com)
+# Practical tutorials and guides
+# ============================================================================
+
+https://realpython.com/python312-new-features/
+https://realpython.com/python313-new-features/
+https://realpython.com/async-io-python/
+https://realpython.com/python-data-classes/
+https://realpython.com/python310-new-features/
+https://realpython.com/python312-typing/
+https://realpython.com/python314-new-features/
