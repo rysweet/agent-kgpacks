@@ -148,16 +148,18 @@ jobs:
           echo "result_json=$RESULT_LINE" >> "$GITHUB_OUTPUT"
 
       - name: Generate eval questions
+        env:
+          PACK_NAME: ${{ steps.validate.outputs.pack_name }}
         run: |
-          PACK_NAME="${{ steps.validate.outputs.pack_name }}"
           uv run python scripts/generate_eval_questions.py \
             --pack "$PACK_NAME" \
             --count 50
 
       - name: Run evaluation (5-question sample)
         id: eval
+        env:
+          PACK_NAME: ${{ steps.validate.outputs.pack_name }}
         run: |
-          PACK_NAME="${{ steps.validate.outputs.pack_name }}"
           RESULT=$(uv run python scripts/eval_single_pack.py "$PACK_NAME" --sample 5)
           echo "$RESULT" | tee eval_result.json
           echo "eval_json=$RESULT" >> "$GITHUB_OUTPUT"
@@ -166,8 +168,9 @@ jobs:
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACK_NAME: ${{ steps.validate.outputs.pack_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
-          PACK_NAME="${{ steps.validate.outputs.pack_name }}"
           BRANCH="auto/pack-${PACK_NAME}"
 
           git config user.name "github-actions[bot]"
@@ -189,7 +192,7 @@ jobs:
 
           git commit -m "feat: add ${PACK_NAME} knowledge pack
 
-          Built from issue #${{ github.event.issue.number }}.
+          Built from issue #${ISSUE_NUMBER}.
           Contains urls.txt, manifest.json, eval questions, and build script."
 
           git push origin "$BRANCH"
@@ -205,7 +208,7 @@ jobs:
           cat > pr_body.md <<EOF
           ## New Knowledge Pack: ${PACK_NAME}
 
-          Built automatically from issue #${{ github.event.issue.number }}.
+          Built automatically from issue #${ISSUE_NUMBER}.
 
           ### Eval Results (${N_QUESTIONS} questions sampled)
 
@@ -223,7 +226,7 @@ jobs:
           > The pack database (pack.db) is not included in the PR due to size.
           > Run: uv run python scripts/build_${PACK_VAR}_pack.py to rebuild locally.
 
-          Closes #${{ github.event.issue.number }}
+          Closes #${ISSUE_NUMBER}
           EOF
           # Strip leading whitespace from heredoc lines (indented for YAML readability)
           sed -i 's/^          //' pr_body.md

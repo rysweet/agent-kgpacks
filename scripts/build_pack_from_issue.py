@@ -137,13 +137,13 @@ from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
 from bootstrap.src.sources.web import WebContentSource  # noqa: E402
 
-PACK_NAME = "{pack_name}"
+PACK_NAME = {json.dumps(pack_name)}
 PACK_DIR = Path(f"data/packs/{{PACK_NAME}}")
 URLS_FILE = PACK_DIR / "urls.txt"
 DB_PATH = PACK_DIR / "pack.db"
 MANIFEST_PATH = PACK_DIR / "manifest.json"
-CATEGORY = "{category}"
-DOMAIN = "{domain}"
+CATEGORY = {json.dumps(category)}
+DOMAIN = {json.dumps(domain)}
 
 logging.basicConfig(
     level=logging.INFO,
@@ -248,7 +248,7 @@ def create_manifest(db_path, manifest_path, articles, entities, relationships):
     manifest = {{
         "name": PACK_NAME,
         "version": "1.0.0",
-        "description": """{description}""",
+        "description": {json.dumps(description)},
         "graph_stats": {{
             "articles": int(articles),
             "entities": int(entities),
@@ -272,18 +272,10 @@ def build_pack(test_mode=False):
     if test_mode:
         logger.info("TEST MODE: Building 5-URL pack")
     if DB_PATH.exists():
-        if test_mode:
-            import shutil
+        import shutil
 
-            shutil.rmtree(DB_PATH) if DB_PATH.is_dir() else DB_PATH.unlink()
-        else:
-            logger.warning(f"Database already exists: {{DB_PATH}}")
-            response = input("Delete and rebuild? (y/N): ")
-            if response.lower() != "y":
-                return
-            import shutil
-
-            shutil.rmtree(DB_PATH) if DB_PATH.is_dir() else DB_PATH.unlink()
+        logger.warning(f"Database already exists: {{DB_PATH}} -- removing for rebuild")
+        shutil.rmtree(DB_PATH) if DB_PATH.is_dir() else DB_PATH.unlink()
     create_schema(str(DB_PATH), drop_existing=True)
     db = kuzu.Database(str(DB_PATH))
     conn = kuzu.Connection(db)
