@@ -84,6 +84,98 @@ DOMAIN_DESCRIPTIONS: dict[str, str] = {
         "Expert Rust programming knowledge covering ownership, borrowing, lifetimes, "
         "traits, async/await, unsafe code, macros, Cargo, and systems programming."
     ),
+    "rust-async-expert": (
+        "Expert knowledge of Rust asynchronous programming covering async/await syntax, "
+        "the Tokio runtime (spawning tasks, shared state, channels, select!, streams), "
+        "Pin and Unpin mechanics, the Future trait and polling, Send/Sync marker traits, "
+        "async traits, Waker and task wakeups, tokio::sync primitives (Mutex, mpsc, "
+        "oneshot, broadcast, watch), AsyncRead/AsyncWrite, tokio::time utilities, "
+        "bridging sync and async code, and error handling in async contexts."
+    ),
+    "postgresql-internals": (
+        "Deep knowledge of PostgreSQL internals covering MVCC (multi-version concurrency "
+        "control, transaction isolation levels, tuple visibility), Write-Ahead Logging "
+        "(WAL configuration, checkpoints, async commit, WAL internals), query planner "
+        "(EXPLAIN/EXPLAIN ANALYZE, cost estimation, plan nodes, join strategies), index "
+        "types (B-tree, GIN, GiST, SP-GiST, BRIN, Hash, partial and expression indexes), "
+        "table partitioning (range, list, hash), VACUUM and autovacuum (dead tuple cleanup, "
+        "transaction ID wraparound prevention, VACUUM FULL), and performance tuning "
+        "(shared_buffers, work_mem, effective_cache_size, statistics collection)."
+    ),
+    "wasm-components": (
+        "Expert knowledge of the WebAssembly Component Model covering WIT (WebAssembly "
+        "Interface Types) language for defining interfaces and worlds, WASI Preview 2 "
+        "(wasi:io, wasi:http, wasi:cli, wasi:filesystem), wit-bindgen code generation "
+        "for guest languages, wasmtime embedding API (Component, Linker, Store, Engine), "
+        "host/guest interface patterns, WasiCtx configuration, adapter modules, "
+        "component composition with wasm-tools, resource types and handles, canonical ABI, "
+        "and the WebAssembly component ecosystem (wasmCloud, Fermyon Spin)."
+    ),
+    "prompt-engineering": (
+        "Comprehensive prompt engineering knowledge covering system prompts and role "
+        "assignment, tool use and function calling patterns, chain-of-thought (CoT) "
+        "reasoning, few-shot and multishot prompting with examples, XML tag structuring, "
+        "prompt chaining for complex tasks, extended thinking and reasoning models, "
+        "structured outputs (JSON mode, schema adherence), constitutional AI principles, "
+        "evaluation techniques (evals, benchmarks, A/B testing), context engineering "
+        "for agents, prompt templates and variables, safety best practices, and "
+        "model-specific optimizations for Claude and GPT models."
+    ),
+    "bicep-infrastructure": (
+        "Expert knowledge of Azure Bicep infrastructure-as-code covering Bicep file "
+        "structure and syntax, modules (local and registry), deployment stacks with "
+        "lifecycle management, what-if operations for deployment preview, private "
+        "module registry (Azure Container Registry), user-defined data types and "
+        "functions, linter rules and bicepconfig.json, deployment patterns (CLI, "
+        "PowerShell, GitHub Actions), conditional deployment and loops, Key Vault "
+        "parameter references, template specs, deployment scripts, Azure Verified "
+        "Modules (AVM), and Azure Landing Zones with Bicep."
+    ),
+    "swift-expert": (
+        "Expert Swift programming knowledge covering Swift 6 strict concurrency with "
+        "actors and sendable types, typed throws, noncopyable types (~Copyable), macros, "
+        "SwiftUI, async/await, structured concurrency, protocol-oriented programming, "
+        "generics, optionals, closures, memory safety, ARC, opaque types, and the Swift "
+        "standard library. Key topics: data-race safety at compile time, MainActor, "
+        "actor isolation, task groups, async sequences, Swift Package Manager, "
+        "result builders, property wrappers, C++ interop, and embedded Swift."
+    ),
+    "kotlin-expert": (
+        "Expert Kotlin programming knowledge covering Kotlin 2.x with the K2 compiler, "
+        "coroutines and structured concurrency, Kotlin Multiplatform (KMP), Compose "
+        "Multiplatform, sealed classes, data classes, null safety, extension functions, "
+        "scope functions, delegation, generics with variance, inline functions, flow, "
+        "channels, and Android development. Key topics: suspend functions, coroutine "
+        "context and dispatchers, StateFlow and SharedFlow, Kotlin/Native, Kotlin/JS, "
+        "Kotlin/Wasm, K2 compiler migration, context receivers, and Gradle DSL."
+    ),
+    "ruby-expert": (
+        "Expert Ruby programming knowledge covering Ruby 3.3+ with YJIT JIT compiler, "
+        "Ractors for actor-based parallelism, pattern matching (case/in), RBS type "
+        "signatures, Prism parser, M:N thread scheduler, fibers, blocks and procs, "
+        "metaprogramming, mixins, open classes, and the core standard library. Key "
+        "topics: Enumerable, method_missing, define_method, refinements, frozen string "
+        "literals, garbage collection, Ruby gems, Bundler, Rack, and Rails integration."
+    ),
+    "cpp-expert": (
+        "Expert C++ programming knowledge covering C++23 and C++26 features including "
+        "modules, ranges library with views and adaptors, std::expected for error handling, "
+        "coroutines with std::generator, constexpr and consteval, std::mdspan for "
+        "multidimensional arrays, concepts and constraints, std::format and std::print, "
+        "flat_map, span, structured bindings, and lambda improvements. Key topics: "
+        "RAII, smart pointers (unique_ptr, shared_ptr), move semantics, perfect forwarding, "
+        "template metaprogramming, STL containers and algorithms, threading with jthread, "
+        "atomic operations, and memory model."
+    ),
+    "zig-expert": (
+        "Expert Zig programming knowledge covering comptime metaprogramming and "
+        "compile-time code execution, error unions and error handling, explicit allocator "
+        "pattern, the build system (build.zig), safety features and undefined behavior "
+        "checks, C interoperability via @cImport, optionals, slices, packed structs, "
+        "and the standard library. Key topics: comptime generics, @typeInfo reflection, "
+        "ArenaAllocator, page_allocator, FixedBufferAllocator, errdefer, payload captures, "
+        "labeled blocks, sentinel-terminated types, async I/O, and cross-compilation."
+    ),
     "opencypher-expert": (
         "Expert knowledge for writing OpenCypher graph queries, specifically targeting "
         "the Kuzu embedded graph database. Key topics: Cypher syntax and clauses "
@@ -101,6 +193,62 @@ DOMAIN_DESCRIPTIONS: dict[str, str] = {
         "query optimization (indexes, parameterized queries, PROFILE, avoiding cartesian "
         "products, WITH clause for breaking down complex queries), and graph data modeling "
         "best practices for property graphs."
+    ),
+    "mcp-protocol": (
+        "The Model Context Protocol (MCP) is an open standard for connecting LLMs to "
+        "external tools, data sources, and services. Key topics: MCP specification "
+        "(JSON-RPC 2.0 based), server development (Python SDK, TypeScript SDK), tool "
+        "definitions (executable functions for AI), resource handlers (data exposure via "
+        "URIs), prompt templates (reusable LLM interaction patterns), sampling (server- "
+        "initiated completions), transport setup (stdio, Streamable HTTP, SSE), lifecycle "
+        "management (initialization, capability negotiation, shutdown), security best "
+        "practices (input validation, authorization), and client features (roots, elicitation)."
+    ),
+    "azure-ai-foundry": (
+        "Azure AI Foundry (now Microsoft Foundry) is a unified platform for enterprise AI "
+        "operations. Key topics: model catalog (1900+ models from OpenAI, Meta, Mistral, "
+        "Anthropic), prompt flow (LLM app development, standard and chat flows, deployment "
+        "as endpoints), fine-tuning (supervised SFT, reinforcement RFT, serverless and "
+        "managed compute), deployments (standard, serverless API, managed compute), Foundry "
+        "Agent Service (multi-agent orchestration, knowledge integration), evaluations "
+        "(agent evaluation SDK, continuous monitoring), responsible AI (content safety, "
+        "discover-protect-govern framework), RBAC, private link networking, and SDK "
+        "integration (Python, C#, TypeScript, Java)."
+    ),
+    "kubernetes-networking": (
+        "Kubernetes networking covers the full networking stack for container orchestration. "
+        "Key topics: CNI plugins (Cilium with eBPF, Calico, Flannel), Services (ClusterIP, "
+        "NodePort, LoadBalancer, ExternalName), EndpointSlices, DNS (CoreDNS, service "
+        "discovery), ingress controllers (NGINX, HAProxy, Traefik), Gateway API (HTTPRoute, "
+        "GRPCRoute, TLSRoute, GatewayClass, flexible conformance), network policies "
+        "(ingress/egress rules, namespace isolation, L3/L4 filtering), service mesh (Istio "
+        "ambient mode, Linkerd, Cilium service mesh), topology-aware routing, dual-stack "
+        "networking (IPv4/IPv6), and kube-proxy replacement with eBPF."
+    ),
+    "opentelemetry-expert": (
+        "OpenTelemetry is the CNCF observability framework for generating, collecting, and "
+        "exporting telemetry data. Key topics: SDK instrumentation (Python, JavaScript, Go, "
+        "Java - TracerProvider, MeterProvider, LoggerProvider), collector pipeline "
+        "(receivers, processors, exporters, connectors, extensions), OTLP protocol "
+        "(gRPC and HTTP/protobuf transports), semantic conventions (HTTP, database, "
+        "messaging, RPC attributes), context propagation (W3C TraceContext, baggage), "
+        "auto-instrumentation (zero-code, monkey patching, Kubernetes operator), "
+        "exporter configuration (Jaeger, Prometheus, Zipkin, vendor backends), "
+        "collector configuration best practices (batching, memory limits, filtering), "
+        "and distributed tracing concepts (spans, traces, sampling)."
+    ),
+    "github-actions-advanced": (
+        "Advanced GitHub Actions covers sophisticated CI/CD patterns and security. Key "
+        "topics: reusable workflows (workflow_call trigger, inputs, outputs, secrets "
+        "inheritance, nesting up to 10 levels), composite actions (step-level reuse, "
+        "action.yml metadata), OIDC authentication (id-token permission, JWT claims, "
+        "cloud provider federation for AWS/Azure/GCP, custom sub claims), environments "
+        "(protection rules, required reviewers, deployment branches, environment secrets), "
+        "matrix strategies (dynamic matrices, include/exclude, fail-fast, max-parallel), "
+        "caching (actions/cache, dependency caching), artifacts (upload/download, retention), "
+        "concurrency groups, workflow commands (set-output, add-mask, group), contexts and "
+        "expressions, secrets management, self-hosted runners, and security hardening "
+        "(pinning actions to SHA, GITHUB_TOKEN permissions, fork PR restrictions)."
     ),
 }
 
