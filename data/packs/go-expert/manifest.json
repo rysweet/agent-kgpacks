@@ -1,0 +1,23 @@
+{
+  "name": "go-expert",
+  "version": "1.0.0",
+  "description": "Expert Go programming knowledge covering Go 1.22+ features including generics, range-over-func iterators, structured logging with slog, error handling patterns, concurrency with goroutines and channels, modules, and testing",
+  "graph_stats": {
+    "articles": 0,
+    "entities": 0,
+    "relationships": 0,
+    "size_mb": 0
+  },
+  "eval_scores": {
+    "accuracy": 0.0,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.0
+  },
+  "source_urls": [
+    "https://go.dev/doc/",
+    "https://gobyexample.com/",
+    "https://go.dev/blog/"
+  ],
+  "created": "2026-02-28T00:00:00Z",
+  "license": "MIT"
+}

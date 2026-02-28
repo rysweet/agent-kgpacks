@@ -1,0 +1,89 @@
+# Azure Bicep Infrastructure Knowledge Pack - Source URLs
+# Focus: modules, deployment stacks, what-if, registry, user-defined types, linting
+# Total: ~50 URLs from learn.microsoft.com/azure/azure-resource-manager/bicep
+
+# ====================
+# Source 1: Bicep Core Documentation (learn.microsoft.com) - 30 URLs
+# ====================
+
+# Overview and Fundamentals
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/overview
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/file
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/data-types
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/parameters
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/variables
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/outputs
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/existing-resource
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/child-resource-name-type
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/scope-functions
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/bicep-functions
+
+# Modules and Registry
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/modules
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/private-module-registry
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/bicep-cli#publish
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/bicep-cli#restore
+
+# User-Defined Types and Decorators
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/user-defined-data-types
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/user-defined-functions
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/patterns/configuration-set
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/type-definitions
+
+# Deployment Stacks
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deployment-stacks
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/quickstart-create-deployment-stacks
+
+# What-If and Deployment
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-what-if
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-cli
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-powershell
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-github-actions
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deploy-vscode
+
+# Linting and Configuration
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/linter
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/linter-rule-no-unused-params
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/linter-rule-prefer-interpolation
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/bicep-config
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/bicep-config-linter-disable
+
+# ====================
+# Source 2: Bicep CLI and Tools - 5 URLs
+# ====================
+
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/bicep-cli
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/visual-studio-code
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/decompile
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/compare-template-syntax
+
+# ====================
+# Source 3: Bicep Advanced Topics - 8 URLs
+# ====================
+
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/scenarios/secrets
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/scenarios/virtual-wan
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/conditional-resource-deployment
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/loops
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/key-vault-parameter
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/template-specs
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deployment-script-bicep
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/scope-extension-resources
+
+# ====================
+# Source 4: Azure Verified Modules and Landing Zones - 4 URLs
+# ====================
+
+https://azure.github.io/Azure-Verified-Modules/indexes/bicep/
+https://azure.github.io/Azure-Landing-Zones/bicep/
+https://github.com/Azure/bicep-registry-modules
+https://github.com/Azure/bicep
+
+# ====================
+# Source 5: Best Practices and Patterns - 3 URLs
+# ====================
+
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/best-practices
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/patterns/configuration-set
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/patterns/shared-variable-file

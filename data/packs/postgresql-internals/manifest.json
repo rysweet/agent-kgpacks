@@ -1,0 +1,25 @@
+{
+  "name": "postgresql-internals",
+  "version": "1.0.0",
+  "description": "Deep knowledge of PostgreSQL internals covering MVCC, Write-Ahead Logging (WAL), query planner and EXPLAIN analysis, index types (B-tree, GIN, GiST, BRIN, Hash), table partitioning, VACUUM and autovacuum, and performance tuning",
+  "graph_stats": {
+    "articles": 0,
+    "entities": 0,
+    "relationships": 0,
+    "size_mb": 0
+  },
+  "eval_scores": {
+    "accuracy": 0.0,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.0
+  },
+  "source_urls": [
+    "https://www.postgresql.org/docs/current/mvcc.html",
+    "https://www.postgresql.org/docs/current/wal.html",
+    "https://www.postgresql.org/docs/current/using-explain.html",
+    "https://www.postgresql.org/docs/current/indexes-types.html",
+    "https://pganalyze.com/docs/explain/basics-of-postgres-query-planning"
+  ],
+  "created": "2026-02-28T00:00:00Z",
+  "license": "MIT"
+}
