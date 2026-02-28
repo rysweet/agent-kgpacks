@@ -1,0 +1,71 @@
+name: Build Knowledge Pack
+description: Request a new knowledge pack be built and evaluated via CI
+title: "[Pack] "
+labels: ["build-pack"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Build a New Knowledge Pack
+
+        Fill out this form to trigger an automated CI build and evaluation of a new
+        knowledge pack. Only maintainers can trigger the workflow.
+
+  - type: input
+    id: pack_name
+    attributes:
+      label: Pack Name
+      description: >
+        Identifier for the pack (lowercase, hyphens only).
+        Example: aws-lambda-expert, react-hooks, bayesian-statistics
+      placeholder: my-topic-expert
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Domain Description
+      description: >
+        Describe the knowledge domain. This is used to generate evaluation
+        questions and guide URL discovery. Be specific about key subtopics.
+      placeholder: |
+        Expert knowledge of AWS Lambda covering function configuration,
+        event sources, layers, cold starts, concurrency, IAM permissions,
+        VPC integration, container images, and performance tuning.
+    validations:
+      required: true
+
+  - type: textarea
+    id: urls
+    attributes:
+      label: Seed URLs (one per line)
+      description: >
+        URLs to crawl for pack content. Leave empty to use search_terms for
+        automatic URL discovery.
+      placeholder: |
+        https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
+        https://docs.aws.amazon.com/lambda/latest/dg/configuration-function-common.html
+      render: text
+
+  - type: input
+    id: search_terms
+    attributes:
+      label: Search Terms
+      description: >
+        Comma-separated search terms for automatic URL discovery. Used when
+        seed URLs are not provided or to supplement them.
+      placeholder: "AWS Lambda tutorial, Lambda best practices, Lambda cold start optimization"
+
+  - type: dropdown
+    id: article_count_target
+    attributes:
+      label: Article Count Target
+      description: How many articles to aim for in the pack.
+      options:
+        - "20"
+        - "50"
+        - "100"
+      default: 0
+    validations:
+      required: true

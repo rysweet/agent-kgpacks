@@ -1,0 +1,280 @@
+name: Build Knowledge Pack
+
+on:
+  issues:
+    types: [opened, labeled]
+
+concurrency:
+  group: build-pack-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  HF_TOKEN: ${{ secrets.HF_TOKEN }}
+
+jobs:
+  build-and-eval:
+    name: Build & Evaluate Pack
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Only run for maintainers/owners when 'build-pack' label is present
+    if: |
+      contains(github.event.issue.labels.*.name, 'build-pack') &&
+      (github.event.issue.author_association == 'OWNER' ||
+       github.event.issue.author_association == 'MEMBER' ||
+       github.event.issue.author_association == 'COLLABORATOR')
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - run: uv venv && uv pip install -e ".[dev]"
+
+      - name: Parse issue body and write JSON
+        id: parse
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = context.payload.issue.body || '';
+
+            function extractField(body, fieldId) {
+              // GitHub issue forms render as:  ### Label\n\nvalue\n\n### Next
+              const labelMap = {
+                'pack_name': 'Pack Name',
+                'description': 'Domain Description',
+                'urls': 'Seed URLs',
+                'search_terms': 'Search Terms',
+                'article_count_target': 'Article Count Target',
+              };
+              const patterns = [
+                new RegExp(`### .*${fieldId}.*\\n\\n([\\s\\S]*?)(?=\\n### |$)`, 'i'),
+              ];
+              if (labelMap[fieldId]) {
+                patterns.push(
+                  new RegExp(`### ${labelMap[fieldId]}\\n\\n([\\s\\S]*?)(?=\\n### |$)`, 'i')
+                );
+              }
+              for (const re of patterns) {
+                const m = body.match(re);
+                if (m && m[1].trim() && m[1].trim() !== '_No response_') {
+                  return m[1].trim();
+                }
+              }
+              return '';
+            }
+
+            const packName = extractField(body, 'pack_name');
+            const description = extractField(body, 'description');
+            const rawUrls = extractField(body, 'urls');
+            const searchTerms = extractField(body, 'search_terms');
+            const articleCountTarget = extractField(body, 'article_count_target') || '20';
+
+            // Parse URLs from multiline text
+            const urls = rawUrls
+              .split('\n')
+              .map(u => u.trim())
+              .filter(u => u.startsWith('http'));
+
+            // Write the complete issue payload to a file to avoid shell escaping issues
+            const issueData = {
+              pack_name: packName,
+              description: description,
+              urls: urls,
+              search_terms: searchTerms,
+              article_count_target: parseInt(articleCountTarget, 10) || 20,
+            };
+            fs.writeFileSync('issue_payload.json', JSON.stringify(issueData, null, 2));
+
+            core.setOutput('pack_name', packName);
+            core.setOutput('article_count_target', articleCountTarget);
+            console.log(`Parsed: pack_name=${packName}, target=${articleCountTarget}`);
+
+      - name: Validate pack name
+        id: validate
+        run: |
+          PACK_NAME=$(python3 -c "import json; print(json.load(open('issue_payload.json'))['pack_name'])")
+
+          if [ -z "$PACK_NAME" ]; then
+            echo "::error::Pack name is empty. Issue body may not match expected format."
+            exit 1
+          fi
+
+          # Allow only lowercase alphanumeric and hyphens, no leading/trailing hyphens
+          if ! echo "$PACK_NAME" | grep -qE '^[a-z0-9][a-z0-9-]*[a-z0-9]$'; then
+            if ! echo "$PACK_NAME" | grep -qE '^[a-z0-9]+$'; then
+              echo "::error::Invalid pack name '$PACK_NAME'. Use lowercase alphanumeric and hyphens only."
+              exit 1
+            fi
+          fi
+
+          if [ -f "data/packs/$PACK_NAME/pack.db" ] || [ -d "data/packs/$PACK_NAME/pack.db" ]; then
+            echo "::error::Pack '$PACK_NAME' already exists with a database."
+            exit 1
+          fi
+
+          echo "pack_name=$PACK_NAME" >> "$GITHUB_OUTPUT"
+          echo "Validated pack name: $PACK_NAME"
+
+      - name: Comment — build starting
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `**Pack build started** for \`${{ steps.validate.outputs.pack_name }}\`.\n\nWorkflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+            });
+
+      - name: Build pack
+        id: build
+        run: |
+          # issue_payload.json was written by the parse step — no shell escaping needed
+          ISSUE_JSON=$(cat issue_payload.json)
+          echo "Issue JSON: $ISSUE_JSON"
+
+          uv run python scripts/build_pack_from_issue.py --issue-json "$ISSUE_JSON" \
+            | tee build_output.txt
+
+          RESULT_LINE=$(tail -1 build_output.txt)
+          echo "result_json=$RESULT_LINE" >> "$GITHUB_OUTPUT"
+
+      - name: Generate eval questions
+        run: |
+          PACK_NAME="${{ steps.validate.outputs.pack_name }}"
+          uv run python scripts/generate_eval_questions.py \
+            --pack "$PACK_NAME" \
+            --count 50
+
+      - name: Run evaluation (5-question sample)
+        id: eval
+        run: |
+          PACK_NAME="${{ steps.validate.outputs.pack_name }}"
+          RESULT=$(uv run python scripts/eval_single_pack.py "$PACK_NAME" --sample 5)
+          echo "$RESULT" | tee eval_result.json
+          echo "eval_json=$RESULT" >> "$GITHUB_OUTPUT"
+
+      - name: Create PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PACK_NAME="${{ steps.validate.outputs.pack_name }}"
+          BRANCH="auto/pack-${PACK_NAME}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+
+          # Add pack files (urls.txt, manifest, eval questions, build script)
+          # Do NOT add .db files — they are too large for git
+          git add "data/packs/${PACK_NAME}/urls.txt" || true
+          git add "data/packs/${PACK_NAME}/manifest.json" || true
+          git add "data/packs/${PACK_NAME}/eval/" || true
+          git add "scripts/build_${PACK_NAME//-/_}_pack.py" || true
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 1
+          fi
+
+          git commit -m "feat: add ${PACK_NAME} knowledge pack
+
+          Built from issue #${{ github.event.issue.number }}.
+          Contains urls.txt, manifest.json, eval questions, and build script."
+
+          git push origin "$BRANCH"
+
+          # Build PR body with eval results
+          EVAL_RESULT=$(cat eval_result.json 2>/dev/null || echo '{}')
+          PACK_AVG=$(echo "$EVAL_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('pack',{}).get('avg','N/A'))" 2>/dev/null || echo "N/A")
+          TRAIN_AVG=$(echo "$EVAL_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('training',{}).get('avg','N/A'))" 2>/dev/null || echo "N/A")
+          DELTA=$(echo "$EVAL_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('delta','N/A'))" 2>/dev/null || echo "N/A")
+          N_QUESTIONS=$(echo "$EVAL_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('n','N/A'))" 2>/dev/null || echo "N/A")
+
+          PACK_VAR="${PACK_NAME//-/_}"
+          cat > pr_body.md <<EOF
+          ## New Knowledge Pack: ${PACK_NAME}
+
+          Built automatically from issue #${{ github.event.issue.number }}.
+
+          ### Eval Results (${N_QUESTIONS} questions sampled)
+
+          | Metric | Training (baseline) | Pack (KG Agent) | Delta |
+          |--------|-------------------|-----------------|-------|
+          | Avg Score (0-10) | ${TRAIN_AVG} | ${PACK_AVG} | ${DELTA} |
+
+          ### Contents
+
+          - \`data/packs/${PACK_NAME}/urls.txt\` -- source URLs
+          - \`data/packs/${PACK_NAME}/manifest.json\` -- pack metadata
+          - \`data/packs/${PACK_NAME}/eval/\` -- evaluation questions
+          - \`scripts/build_${PACK_VAR}_pack.py\` -- reproducible build script
+
+          > The pack database (pack.db) is not included in the PR due to size.
+          > Run: uv run python scripts/build_${PACK_VAR}_pack.py to rebuild locally.
+
+          Closes #${{ github.event.issue.number }}
+          EOF
+          # Strip leading whitespace from heredoc lines (indented for YAML readability)
+          sed -i 's/^          //' pr_body.md
+
+          PR_URL=$(gh pr create \
+            --title "feat: add ${PACK_NAME} knowledge pack" \
+            --body-file pr_body.md \
+            --label "build-pack")
+
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on issue with results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const prUrl = '${{ steps.pr.outputs.pr_url }}' || 'N/A';
+
+            let evalSummary = 'Eval did not complete.';
+            try {
+              const raw = fs.readFileSync('eval_result.json', 'utf8').trim();
+              const ev = JSON.parse(raw);
+              evalSummary = [
+                `**Eval Results** (${ev.n} questions):`,
+                '',
+                '| Metric | Training | Pack | Delta |',
+                '|--------|----------|------|-------|',
+                `| Avg Score | ${ev.training?.avg ?? "N/A"} | ${ev.pack?.avg ?? "N/A"} | ${ev.delta ?? "N/A"} |`,
+                `| Accuracy (>=7) | ${ev.training?.acc ?? "N/A"}% | ${ev.pack?.acc ?? "N/A"}% | — |`,
+              ].join('\n');
+            } catch (e) {
+              console.log('Could not parse eval result:', e.message);
+            }
+
+            const status = '${{ job.status }}';
+            const icon = status === 'success' ? ':white_check_mark:' : ':x:';
+
+            const body = [
+              `${icon} **Pack build ${status}** for \`${{ steps.validate.outputs.pack_name }}\``,
+              '',
+              evalSummary,
+              '',
+              prUrl !== 'N/A' ? `**PR**: ${prUrl}` : '',
+              '',
+              `[Workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+            ].filter(Boolean).join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
