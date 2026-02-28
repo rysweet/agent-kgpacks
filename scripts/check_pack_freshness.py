@@ -30,6 +30,11 @@ from pathlib import Path
 
 import requests
 
+# Add project root to path for wikigr imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from wikigr.packs._url_validation import validate_download_url  # noqa: E402
+
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
@@ -40,6 +45,7 @@ DEFAULT_TIMEOUT = 15
 DEFAULT_WORKERS = 8
 MAX_RETRIES = 2
 CHANGE_THRESHOLD = 0.20  # 20 % of URLs must change to trigger rebuild
+MAX_CONTENT_BYTES = 50 * 1024 * 1024  # 50 MB limit for content-hash mode
 
 
 # ---------------------------------------------------------------------------
@@ -126,6 +132,20 @@ def check_url(
     timeout: int = DEFAULT_TIMEOUT,
 ) -> URLStatus:
     """Send a HEAD (or GET for content hashing) request and compare against cache."""
+    # SSRF protection: validate URL before any network request
+    try:
+        validate_download_url(url)
+    except ValueError as exc:
+        return URLStatus(
+            url=url,
+            status_code=0,
+            etag=None,
+            last_modified=None,
+            content_hash=None,
+            changed=False,
+            error=f"blocked: {exc}",
+        )
+
     for attempt in range(MAX_RETRIES + 1):
         try:
             if content_hash:
@@ -134,7 +154,39 @@ def check_url(
                     timeout=timeout,
                     headers={"User-Agent": USER_AGENT},
                     allow_redirects=True,
+                    stream=True,
                 )
+                # Enforce response size limit for content-hash mode
+                content_length = resp.headers.get("Content-Length")
+                if content_length and int(content_length) > MAX_CONTENT_BYTES:
+                    resp.close()
+                    return URLStatus(
+                        url=url,
+                        status_code=resp.status_code,
+                        etag=None,
+                        last_modified=None,
+                        content_hash=None,
+                        changed=False,
+                        error=f"response too large: {content_length} bytes",
+                    )
+                # Read body with size limit
+                chunks: list[bytes] = []
+                total = 0
+                for chunk in resp.iter_content(chunk_size=65536):
+                    total += len(chunk)
+                    if total > MAX_CONTENT_BYTES:
+                        resp.close()
+                        return URLStatus(
+                            url=url,
+                            status_code=resp.status_code,
+                            etag=None,
+                            last_modified=None,
+                            content_hash=None,
+                            changed=False,
+                            error=f"response too large: >{MAX_CONTENT_BYTES} bytes",
+                        )
+                    chunks.append(chunk)
+                resp._content = b"".join(chunks)
             else:
                 resp = requests.head(
                     url,
