@@ -1,0 +1,372 @@
+name: Pack Freshness Check
+
+on:
+  schedule:
+    # Weekly on Mondays at 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      pack:
+        description: "Pack name to check (leave empty for all packs)"
+        required: false
+        type: string
+      content_hash:
+        description: "Use content hashing instead of header comparison"
+        required: false
+        type: boolean
+        default: false
+      threshold:
+        description: "Change ratio threshold to trigger rebuild (0.0-1.0)"
+        required: false
+        type: string
+        default: "0.20"
+      skip_rebuild:
+        description: "Only check freshness, do not rebuild"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: pack-freshness-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # --------------------------------------------------------------------------
+  # Stage 1: Check URL freshness for all (or specified) packs
+  # --------------------------------------------------------------------------
+  check-freshness:
+    name: Check URL Freshness
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      packs_to_rebuild: ${{ steps.check.outputs.packs_to_rebuild }}
+      report_json: ${{ steps.check.outputs.report_json }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - run: uv venv && uv pip install requests
+
+      - name: Check freshness
+        id: check
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.pack }}" ]; then
+            ARGS="data/packs/${{ inputs.pack }}"
+          else
+            ARGS="--all"
+          fi
+
+          if [ "${{ inputs.content_hash }}" = "true" ]; then
+            ARGS="$ARGS --content-hash"
+          fi
+
+          THRESHOLD="${{ inputs.threshold }}"
+          THRESHOLD="${THRESHOLD:-0.20}"
+          ARGS="$ARGS --threshold $THRESHOLD --json"
+
+          echo "Running: uv run python scripts/check_pack_freshness.py $ARGS"
+          uv run python scripts/check_pack_freshness.py $ARGS > freshness_report.json || true
+
+          cat freshness_report.json
+
+          # Extract packs needing rebuild
+          PACKS_TO_REBUILD=$(
+            python3 -c "
+          import json, sys
+          with open('freshness_report.json') as f:
+              reports = json.load(f)
+          rebuilds = [r['pack_name'] for r in reports if r['needs_rebuild']]
+          print(json.dumps(rebuilds))
+          "
+          )
+          echo "Packs needing rebuild: $PACKS_TO_REBUILD"
+          echo "packs_to_rebuild=$PACKS_TO_REBUILD" >> "$GITHUB_OUTPUT"
+
+          # Store full report for later jobs
+          REPORT_JSON=$(cat freshness_report.json | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin)))")
+          echo "report_json=$REPORT_JSON" >> "$GITHUB_OUTPUT"
+
+      - name: Upload freshness report
+        uses: actions/upload-artifact@v4
+        with:
+          name: freshness-report
+          path: freshness_report.json
+          retention-days: 30
+
+  # --------------------------------------------------------------------------
+  # Stage 2: Rebuild packs that have changed (matrix strategy)
+  # --------------------------------------------------------------------------
+  rebuild-pack:
+    name: Rebuild ${{ matrix.pack }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: check-freshness
+    if: |
+      needs.check-freshness.outputs.packs_to_rebuild != '[]' &&
+      inputs.skip_rebuild != true
+    strategy:
+      fail-fast: false
+      matrix:
+        pack: ${{ fromJson(needs.check-freshness.outputs.packs_to_rebuild) }}
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - run: uv venv && uv pip install -e ".[dev]"
+
+      - name: Rebuild pack
+        run: |
+          PACK="${{ matrix.pack }}"
+          SCRIPT="scripts/build_${PACK//-/_}_pack.py"
+
+          if [ ! -f "$SCRIPT" ]; then
+            echo "No build script found at $SCRIPT, skipping"
+            exit 0
+          fi
+
+          echo "Rebuilding $PACK using $SCRIPT --test-mode"
+          uv run python "$SCRIPT" --test-mode
+
+      - name: Upload rebuilt pack
+        uses: actions/upload-artifact@v4
+        with:
+          name: rebuilt-pack-${{ matrix.pack }}
+          path: |
+            data/packs/${{ matrix.pack }}/pack.db/
+            data/packs/${{ matrix.pack }}/manifest.json
+            data/packs/${{ matrix.pack }}/.freshness_cache.json
+          retention-days: 7
+
+  # --------------------------------------------------------------------------
+  # Stage 3: Quick eval on rebuilt packs
+  # --------------------------------------------------------------------------
+  eval-pack:
+    name: Eval ${{ matrix.pack }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [check-freshness, rebuild-pack]
+    if: |
+      needs.check-freshness.outputs.packs_to_rebuild != '[]' &&
+      inputs.skip_rebuild != true
+    strategy:
+      fail-fast: false
+      matrix:
+        pack: ${{ fromJson(needs.check-freshness.outputs.packs_to_rebuild) }}
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - run: uv venv && uv pip install -e ".[dev]"
+
+      - name: Download rebuilt pack
+        uses: actions/download-artifact@v4
+        with:
+          name: rebuilt-pack-${{ matrix.pack }}
+          path: data/packs/${{ matrix.pack }}/
+
+      - name: Run quick eval (5 questions)
+        run: |
+          PACK="${{ matrix.pack }}"
+          QUESTIONS_FILE="data/packs/${PACK}/eval/questions.json"
+
+          if [ ! -f "$QUESTIONS_FILE" ]; then
+            echo "No eval questions found at $QUESTIONS_FILE, skipping"
+            exit 0
+          fi
+
+          echo "Running eval for $PACK (5 questions)"
+          uv run python -c "
+          import json, sys
+          from pathlib import Path
+          from wikigr.packs.eval.runner import EvalRunner
+          from wikigr.packs.eval.models import Question
+
+          pack_path = Path('data/packs/${PACK}')
+          questions_path = pack_path / 'eval/questions.json'
+
+          with open(questions_path) as f:
+              raw = json.load(f)
+
+          questions = [
+              Question(
+                  id=q['id'],
+                  question=q['question'],
+                  ground_truth=q['ground_truth'],
+                  domain=q['domain'],
+                  difficulty=q['difficulty'],
+              )
+              for q in raw[:5]  # Quick sanity: 5 questions only
+          ]
+
+          runner = EvalRunner(pack_path)
+          result = runner.run_evaluation(questions)
+          runner.save_results(result, pack_path / 'eval/freshness_eval.json')
+
+          print(f'Eval complete: accuracy={result.knowledge_pack.accuracy:.2f}')
+          print(f'Surpasses training: {result.surpasses_training}')
+          "
+
+      - name: Upload eval results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results-${{ matrix.pack }}
+          path: data/packs/${{ matrix.pack }}/eval/freshness_eval.json
+          retention-days: 30
+
+  # --------------------------------------------------------------------------
+  # Stage 4: Create PR with updated packs
+  # --------------------------------------------------------------------------
+  create-pr:
+    name: Create Update PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [check-freshness, rebuild-pack, eval-pack]
+    if: |
+      always() &&
+      needs.check-freshness.outputs.packs_to_rebuild != '[]' &&
+      needs.rebuild-pack.result == 'success' &&
+      inputs.skip_rebuild != true
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all rebuilt packs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: rebuilt-pack-*
+          merge-multiple: true
+          path: data/packs/
+
+      - name: Download freshness report
+        uses: actions/download-artifact@v4
+        with:
+          name: freshness-report
+          path: .
+
+      - name: Download eval results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: eval-results-*
+          merge-multiple: true
+          path: eval-results/
+        continue-on-error: true
+
+      - name: Generate freshness report body
+        id: report
+        run: |
+          python3 -c "
+          import json
+          from pathlib import Path
+
+          with open('freshness_report.json') as f:
+              reports = json.load(f)
+
+          rebuilds = [r for r in reports if r['needs_rebuild']]
+          if not rebuilds:
+              print('No packs needed rebuilding.')
+              exit(0)
+
+          lines = ['## Pack Freshness Report', '']
+          lines.append(f'**Checked at:** {reports[0][\"checked_at\"]}')
+          lines.append(f'**Packs checked:** {len(reports)}')
+          lines.append(f'**Packs rebuilt:** {len(rebuilds)}')
+          lines.append('')
+          lines.append('| Pack | Changed | Total | Ratio | Status |')
+          lines.append('|------|---------|-------|-------|--------|')
+
+          for r in reports:
+              status = 'Rebuilt' if r['needs_rebuild'] else 'OK'
+              lines.append(
+                  f'| {r[\"pack_name\"]} | {len(r[\"changed_urls\"])} '
+                  f'| {r[\"checked\"]} | {r[\"change_ratio\"]:.0%} | {status} |'
+              )
+
+          lines.append('')
+          lines.append('### Changed URLs')
+          for r in rebuilds:
+              lines.append(f'')
+              lines.append(f'**{r[\"pack_name\"]}:**')
+              for url in r['changed_urls']:
+                  lines.append(f'- {url}')
+
+          # Add eval results if available
+          eval_dir = Path('eval-results')
+          if eval_dir.exists():
+              eval_files = list(eval_dir.rglob('freshness_eval.json'))
+              if eval_files:
+                  lines.append('')
+                  lines.append('### Eval Results')
+                  lines.append('| Pack | Accuracy | Surpasses Training |')
+                  lines.append('|------|----------|-------------------|')
+                  for ef in eval_files:
+                      with open(ef) as f:
+                          ev = json.load(f)
+                      lines.append(
+                          f'| {ev[\"pack_name\"]} '
+                          f'| {ev[\"knowledge_pack\"][\"accuracy\"]:.2f} '
+                          f'| {ev[\"surpasses_training\"]} |'
+                      )
+
+          body = '\n'.join(lines)
+          # Write to file for the PR body
+          with open('pr_body.md', 'w') as f:
+              f.write(body)
+          print(body)
+          "
+
+      - name: Create branch and PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PACKS_JSON='${{ needs.check-freshness.outputs.packs_to_rebuild }}'
+          PACK_LIST=$(echo "$PACKS_JSON" | python3 -c "import json,sys; print(', '.join(json.load(sys.stdin)))")
+          BRANCH="auto/pack-freshness-$(date +%Y%m%d)"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+
+          # Add updated pack files (manifests + freshness caches, NOT .db files)
+          git add data/packs/*/.freshness_cache.json || true
+          git add data/packs/*/manifest.json || true
+
+          # Check if there are changes to commit
+          if git diff --cached --quiet; then
+            echo "No file changes to commit"
+            exit 0
+          fi
+
+          git commit -m "chore: update pack freshness data for $PACK_LIST
+
+          Automated freshness check detected content changes in source URLs.
+          Updated freshness caches and manifests for affected packs.
+
+          Packs updated: $PACK_LIST"
+
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --title "chore: pack freshness update ($PACK_LIST)" \
+            --body-file pr_body.md \
+            --label "automated,pack-freshness"
