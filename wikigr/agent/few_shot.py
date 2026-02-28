@@ -58,7 +58,7 @@ class FewShotManager:
             raise ValueError(f"Too many examples: {len(self.examples)} (max 1000)")
 
         # Initialize embedding model (sentence-transformers)
-        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.model = SentenceTransformer("BAAI/bge-base-en-v1.5")
 
         # Precompute embeddings for all examples
         if self.examples:

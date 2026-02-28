@@ -2,7 +2,7 @@
 Unit tests for EmbeddingGenerator.
 
 Tests verify the module fulfills its contract:
-- Generates embeddings of correct shape (N, 384)
+- Generates embeddings of correct shape (N, 768)
 - Handles batch processing correctly
 - Auto-detects GPU availability
 - Provides consistent output
@@ -37,7 +37,7 @@ class TestEmbeddingGenerator:
         """Test generator initializes with CPU device."""
         gen = EmbeddingGenerator(use_gpu=False)
         assert gen.device == "cpu"
-        assert gen.model_name == "paraphrase-MiniLM-L3-v2"
+        assert gen.model_name == "BAAI/bge-base-en-v1.5"
 
     def test_initialization_auto_detect(self):
         """Test generator auto-detects device."""
@@ -45,9 +45,9 @@ class TestEmbeddingGenerator:
         assert gen.device in ["cpu", "cuda"]
 
     def test_generate_shape(self, generator, sample_texts):
-        """Test embeddings have correct shape (N, 384)."""
+        """Test embeddings have correct shape (N, 768)."""
         embeddings = generator.generate(sample_texts)
-        assert embeddings.shape == (3, 384)
+        assert embeddings.shape == (3, 768)
 
     def test_generate_type(self, generator, sample_texts):
         """Test embeddings are numpy arrays."""
@@ -69,13 +69,13 @@ class TestEmbeddingGenerator:
     def test_generate_single_text(self, generator):
         """Test generating embedding for single text."""
         embeddings = generator.generate(["Single text"])
-        assert embeddings.shape == (1, 384)
+        assert embeddings.shape == (1, 768)
 
     def test_generate_large_batch(self, generator):
         """Test generating embeddings for 100 texts."""
         texts = [f"Sample text number {i}" for i in range(100)]
         embeddings = generator.generate(texts, batch_size=32)
-        assert embeddings.shape == (100, 384)
+        assert embeddings.shape == (100, 768)
 
     def test_generate_consistency(self, generator):
         """Test same text produces same embedding."""
@@ -136,7 +136,7 @@ class TestEmbeddingGenerator:
         """Test string representation."""
         repr_str = repr(generator)
         assert "EmbeddingGenerator" in repr_str
-        assert "paraphrase-MiniLM-L3-v2" in repr_str
+        assert "BAAI/bge-base-en-v1.5" in repr_str
         assert "cpu" in repr_str
 
     def test_variance(self, generator):
@@ -158,5 +158,5 @@ if __name__ == "__main__":
         gen = EmbeddingGenerator(use_gpu=False)
         texts = ["Test 1", "Test 2", "Test 3"]
         embeddings = gen.generate(texts)
-        assert embeddings.shape == (3, 384)
+        assert embeddings.shape == (3, 768)
         print("✓ Basic tests passed!")
