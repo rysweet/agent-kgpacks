@@ -1,0 +1,22 @@
+{
+  "name": "huggingface-transformers",
+  "version": "1.0.0",
+  "description": "Expert knowledge of the Vercel AI SDK for building AI-powered applications in TypeScript, covering generateText, streamText, tool calling, agents, provider integrations, and AI SDK UI.",
+  "graph_stats": {
+    "articles": 5,
+    "entities": 18,
+    "relationships": 19,
+    "size_mb": 2.08
+  },
+  "eval_scores": {
+    "accuracy": 0.0,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.0
+  },
+  "source_urls": [
+    "https://huggingface.co/docs/transformers/index",
+    "https://huggingface.co/docs/transformers/en/peft"
+  ],
+  "created": "2026-02-28T21:16:30.399069Z",
+  "license": "MIT"
+}
