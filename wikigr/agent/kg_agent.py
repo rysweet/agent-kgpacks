@@ -810,7 +810,7 @@ The graph schema:
 - Article (title STRING PK, category STRING, word_count INT32)
 - Entity (entity_id STRING PK, name STRING, type STRING, description STRING)
 - Fact (fact_id STRING PK, content STRING)
-- Section (section_id STRING PK, title STRING, content STRING, embedding DOUBLE[384], level INT32, word_count INT32)
+- Section (section_id STRING PK, title STRING, content STRING, embedding DOUBLE[768], level INT32, word_count INT32)
 - Relationships: HAS_ENTITY, HAS_FACT, ENTITY_RELATION (relation STRING, context STRING), LINKS_TO (link_type STRING), HAS_SECTION (section_index INT32)
 
 IMPORTANT Kuzu syntax rules:
@@ -1255,7 +1255,9 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 title = row.get("title", "")
                 sect_content = row.get("content", "")
                 if title and sect_content:
-                    by_article.setdefault(title, []).append(sect_content)
+                    from wikigr.packs.content_cleaner import clean_content
+
+                    by_article.setdefault(title, []).append(clean_content(sect_content))
 
             for title in titles:
                 sections = by_article.get(title, [])
@@ -1543,7 +1545,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
             # Fallback: generate embedding on the fly for free-text queries
             logger.info(f"No article titled {query!r}; generating embedding on the fly")
             generator = self._get_embedding_generator()
-            embeddings = generator.generate([query])
+            embeddings = generator.generate_query([query])
             query_embedding = embeddings[0].tolist()
 
         # Vector search

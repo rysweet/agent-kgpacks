@@ -93,7 +93,7 @@ try:
             section_id STRING,
             title STRING,
             content STRING,
-            embedding DOUBLE[384],
+            embedding DOUBLE[768],
             level INT32,
             PRIMARY KEY(section_id)
         )

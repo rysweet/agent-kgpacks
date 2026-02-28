@@ -102,7 +102,7 @@ def create_schema(db_path: str, drop_existing: bool = False):
                 section_id STRING,
                 title STRING,
                 content STRING,
-                embedding DOUBLE[384],
+                embedding DOUBLE[768],
                 level INT32,
                 word_count INT32,
                 PRIMARY KEY(section_id)
@@ -208,7 +208,7 @@ def create_schema(db_path: str, drop_existing: bool = False):
             CREATE NODE TABLE Chunk(
                 chunk_id STRING,
                 content STRING,
-                embedding DOUBLE[384],
+                embedding DOUBLE[768],
                 article_title STRING,
                 section_index INT32,
                 chunk_index INT32,
@@ -363,7 +363,7 @@ def create_schema(db_path: str, drop_existing: bool = False):
         """)
 
         # Insert test section
-        test_embedding = [0.1] * 384
+        test_embedding = [0.1] * 768
         conn.execute(
             """
             CREATE (s:Section {

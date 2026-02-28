@@ -68,7 +68,7 @@ def main():
         "CREATE NODE TABLE Article(title STRING, category STRING, word_count INT32, expansion_state STRING, expansion_depth INT32, claimed_at TIMESTAMP, processed_at TIMESTAMP, retry_count INT32, PRIMARY KEY(title))"
     )
     conn.execute(
-        "CREATE NODE TABLE Section(section_id STRING, title STRING, content STRING, word_count INT32, level INT32, embedding FLOAT[384], PRIMARY KEY(section_id))"
+        "CREATE NODE TABLE Section(section_id STRING, title STRING, content STRING, word_count INT32, level INT32, embedding FLOAT[768], PRIMARY KEY(section_id))"
     )
     conn.execute("CREATE NODE TABLE Category(name STRING, article_count INT32, PRIMARY KEY(name))")
     conn.execute("CREATE REL TABLE HAS_SECTION(FROM Article TO Section, section_index INT32)")
