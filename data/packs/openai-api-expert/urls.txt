@@ -1,0 +1,51 @@
+# OpenAI API - Official Documentation
+# Chat completions, Responses API, assistants, function calling, embeddings
+
+# Getting Started
+https://platform.openai.com/docs/overview
+https://platform.openai.com/docs/quickstart
+https://platform.openai.com/docs/models
+https://platform.openai.com/docs/api-reference/introduction
+
+# API Reference - Core
+https://platform.openai.com/docs/api-reference/chat
+https://platform.openai.com/docs/api-reference/chat/create
+https://platform.openai.com/docs/api-reference/responses
+https://platform.openai.com/docs/api-reference/embeddings
+https://platform.openai.com/docs/api-reference/embeddings/create
+https://platform.openai.com/docs/api-reference/fine-tuning
+https://platform.openai.com/docs/api-reference/batch
+https://platform.openai.com/docs/api-reference/images
+https://platform.openai.com/docs/api-reference/audio
+https://platform.openai.com/docs/api-reference/moderations
+https://platform.openai.com/docs/api-reference/assistants
+
+# Guides
+https://platform.openai.com/docs/guides/text-generation
+https://platform.openai.com/docs/guides/function-calling
+https://platform.openai.com/docs/guides/structured-outputs
+https://platform.openai.com/docs/guides/vision
+https://platform.openai.com/docs/guides/embeddings
+https://platform.openai.com/docs/guides/fine-tuning
+https://platform.openai.com/docs/guides/batch
+https://platform.openai.com/docs/guides/reasoning
+https://platform.openai.com/docs/guides/prompt-engineering
+https://platform.openai.com/docs/guides/safety-best-practices
+https://platform.openai.com/docs/guides/latency-optimization
+https://platform.openai.com/docs/guides/production-best-practices
+
+# Migration & Updates
+https://platform.openai.com/docs/guides/migrate-to-responses
+https://platform.openai.com/docs/deprecations
+https://platform.openai.com/docs/changelog
+
+# Assistants
+https://platform.openai.com/docs/assistants/deep-dive
+https://platform.openai.com/docs/assistants/tools/function-calling
+
+# SDKs
+https://github.com/openai/openai-python
+https://github.com/openai/openai-node
+
+# Cookbook
+https://cookbook.openai.com/

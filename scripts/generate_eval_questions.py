@@ -268,6 +268,103 @@ DOMAIN_DESCRIPTIONS: dict[str, str] = {
         "management (initialization, capability negotiation, shutdown), security best "
         "practices (input validation, authorization), and client features (roots, elicitation)."
     ),
+    "claude-agent-sdk": (
+        "The Claude Agent SDK is Anthropic's open-source framework for building autonomous "
+        "AI agents in Python and TypeScript. Key topics: agent loop, built-in tools (file "
+        "operations, code execution, web search), MCP integration for custom tools, subagent "
+        "orchestration (filesystem-based, programmatic, built-in), session management "
+        "(resume, fork), hooks for tool events, permissions (fine-grained agent capabilities), "
+        "ClaudeSDKClient vs query() API, custom tools as in-process MCP servers, streaming "
+        "responses, prompt caching, configuration (setting sources), agent skills, slash "
+        "commands, plugins, and authentication (API key, Bedrock, Vertex, Azure AI Foundry)."
+    ),
+    "github-copilot-sdk": (
+        "GitHub Copilot Extensions SDK enables building extensions that expand Copilot Chat "
+        "functionality. Key topics: Copilot Extensions architecture (agents, skillsets), "
+        "MCP server integration (local and remote), VS Code chat participants, preview SDK "
+        "(request verification, response formatting), building Copilot agents (server-side), "
+        "VS Code Copilot extension configuration, GitHub MCP server setup, enterprise MCP "
+        "policies, Copilot coding agent, repository indexing, custom instructions, GitHub "
+        "Marketplace integration, and migration from GitHub App extensions to MCP servers."
+    ),
+    "microsoft-agent-framework": (
+        "Microsoft Agent Framework is the unified SDK for building, orchestrating, and "
+        "deploying AI agents and multi-agent workflows, converging AutoGen and Semantic "
+        "Kernel. Key topics: ChatAgent abstractions, @ai_function decorator, graph-based "
+        "Workflow APIs, orchestration patterns (sequential, concurrent, handoff, group chat, "
+        "magentic), state management (checkpointing, long-running processes), tool integration, "
+        "model clients, custom agents, migration from AutoGen and Semantic Kernel, Azure AI "
+        "Foundry deployment, Agent2Agent (A2A) protocol, MCP integration, and Process "
+        "Framework for deterministic business workflows."
+    ),
+    "workiq-mcp": (
+        "Microsoft Work IQ is a CLI and MCP server for connecting AI assistants to M365 "
+        "Copilot data. Key topics: CLI mode (workiq ask command), MCP server mode "
+        "(integration with GitHub Copilot, Claude Desktop), Microsoft Graph API (emails, "
+        "meetings, files, Teams messages), workplace insights, people-related information, "
+        "meeting transcript retrieval, SharePoint document access, npm installation, admin "
+        "consent and RBAC, GitHub Copilot CLI plugin setup, Work IQ vs Fabric IQ vs Foundry "
+        "IQ, adaptive intelligence with Dataverse, and security/privacy considerations."
+    ),
+    "langchain-expert": (
+        "LangChain is the leading framework for building agents and LLM-powered applications. "
+        "Key topics: agents (ReAct, OpenAI Functions, structured tool calling), LCEL (LangChain "
+        "Expression Language, pipe operator chains), RAG pipelines (document loaders, text "
+        "splitters, embeddings, vector stores, retrievers), chat models and prompts, output "
+        "parsers, memory systems, callbacks, tool calling, structured output, streaming, "
+        "LangGraph (stateful graph-based agent orchestration, checkpoints, human-in-the-loop), "
+        "LangSmith (tracing, evaluation, monitoring, observability), middleware and guardrails, "
+        "1000+ integrations, and LangServe deployment."
+    ),
+    "llamaindex-expert": (
+        "LlamaIndex is a data framework for RAG and agent applications. Key topics: "
+        "Documents and Nodes (data primitives), indexing (VectorStoreIndex, SummaryIndex, "
+        "TreeIndex, KeywordTableIndex), embeddings, query engines, retrievers, response "
+        "synthesizers, node parsers and text splitters, AgentWorkflow (multi-agent "
+        "orchestration, task handoffs), Workflows (event-driven step-based execution), "
+        "agentic document workflows (ADW), LlamaParse (document parsing for complex PDFs), "
+        "LlamaCloud, 300+ integration packages, evaluation modules, and production "
+        "optimization (chunking strategies, retrieval tuning, observability)."
+    ),
+    "semantic-kernel": (
+        "Microsoft Semantic Kernel is an AI orchestration SDK for C#, Python, and Java. "
+        "Key topics: Kernel object (dependency injection container), plugins (native code, "
+        "OpenAPI, MCP server), functions and function calling, planners (deprecated Stepwise/ "
+        "Handlebars replaced by auto function calling), AI services (chat completion, text "
+        "generation), prompts and prompt templates, vector store connectors (Azure AI Search, "
+        "Chroma, Pinecone), text search, agent orchestration (sequential, concurrent, handoff, "
+        "group chat), process framework (local and cloud runtime), enterprise readiness "
+        "(filters, telemetry, middleware), and integration with Azure OpenAI."
+    ),
+    "autogen-expert": (
+        "Microsoft AutoGen is a multi-agent AI framework for building conversational and "
+        "event-driven agent systems. Key topics: AgentChat API (high-level, preset behaviors), "
+        "Core API (event-driven, message passing), ConversableAgent, AssistantAgent, "
+        "UserProxyAgent, GroupChat (speaker selection, resume), SelectorGroupChat, teams, "
+        "code executors (Docker, local), MagenticOne multi-agent system, tools and custom "
+        "functions, state management, AutoGen Studio (no-code UI), Extensions API (LLM "
+        "clients, code execution), v0.4 redesign (async messaging, cross-language), and "
+        "migration path to Microsoft Agent Framework."
+    ),
+    "crew-ai-expert": (
+        "CrewAI is the leading open-source multi-agent orchestration framework. Key topics: "
+        "agents (role-based design, manager/worker/researcher), tasks (descriptions, guardrails, "
+        "async execution), crews (sequential and hierarchical processes, kickoff methods), "
+        "flows (event-driven workflows, state management), tools (100+ built-in, custom tools, "
+        "MCP integration), knowledge (agentic RAG), memory (short-term, long-term, entity, "
+        "contextual, LanceDB-backed), planning agent, reasoning, training and testing, CLI, "
+        "event listeners, production architecture, and observability (Langfuse, Datadog, MLflow)."
+    ),
+    "model-context-protocol": (
+        "Deep dive into the MCP specification covering the complete protocol. Key topics: "
+        "JSON-RPC 2.0 transport, specification versions (June 2025, November 2025), server "
+        "primitives (tools, resources, prompts), client features (roots, sampling, elicitation), "
+        "lifecycle management (initialization, capability negotiation, shutdown), transports "
+        "(stdio, Streamable HTTP, SSE), authorization (OAuth Resource Servers, RFC 8707), "
+        "Tasks primitive (async long-running operations), Python SDK, TypeScript SDK, security "
+        "best practices, MCP Registry, .well-known discovery, and industry adoption (OpenAI, "
+        "Google, Microsoft, 97M+ monthly SDK downloads)."
+    ),
     "azure-ai-foundry": (
         "Azure AI Foundry (now Microsoft Foundry) is a unified platform for enterprise AI "
         "operations. Key topics: model catalog (1900+ models from OpenAI, Meta, Mistral, "
@@ -313,6 +410,104 @@ DOMAIN_DESCRIPTIONS: dict[str, str] = {
         "concurrency groups, workflow commands (set-output, add-mask, group), contexts and "
         "expressions, secrets management, self-hosted runners, and security hardening "
         "(pinning actions to SHA, GITHUB_TOKEN permissions, fork PR restrictions)."
+    ),
+    "vercel-ai-sdk": (
+        "The Vercel AI SDK is a TypeScript toolkit for building AI-powered applications. "
+        "Key topics: generateText and streamText for text generation, generateObject and "
+        "streamObject for structured data, tool calling (single-step and multi-step with "
+        "stopWhen), agents, AI SDK UI for chatbots and completions, provider integrations "
+        "(OpenAI, Anthropic, Google, AWS Bedrock, Azure), middleware, RAG patterns, "
+        "testing utilities, Generative UI with AI RSC, prompt engineering, streaming "
+        "protocols, and lifecycle callbacks for observability."
+    ),
+    "anthropic-api-expert": (
+        "The Anthropic Claude API provides access to Claude language models. Key topics: "
+        "Messages API (create, stream, count tokens), server-sent events streaming, tool "
+        "use and function calling, computer use tool for desktop automation, vision for "
+        "image understanding, prompt caching (ephemeral 5-min and 1-hour TTL), extended "
+        "thinking with thinking_delta events, structured output, Message Batches API for "
+        "50% cost reduction, PDF support, citations, MCP integration, prompt engineering "
+        "best practices, model selection (Opus, Sonnet, Haiku), rate limits, error "
+        "handling, and Python/TypeScript SDK usage."
+    ),
+    "openai-api-expert": (
+        "The OpenAI API provides access to GPT and reasoning models. Key topics: Chat "
+        "Completions API, Responses API (recommended for new integrations), function "
+        "calling with strict mode and structured outputs, embeddings (text-embedding-3 "
+        "models with configurable dimensions), fine-tuning (supervised, DPO, reinforcement), "
+        "Batch API for 50% cost reduction, vision capabilities, reasoning models (o3, o3-pro), "
+        "Assistants API (deprecated, migrating to Responses), prompt engineering, safety "
+        "best practices, latency optimization, and production deployment patterns."
+    ),
+    "huggingface-transformers": (
+        "Hugging Face Transformers is a library for state-of-the-art pretrained models. "
+        "Key topics: Pipeline API for inference (text generation, classification, QA, "
+        "summarization, translation, image tasks, audio), tokenizers (AutoTokenizer, "
+        "fast vs slow), Trainer API for fine-tuning with mixed precision and distributed "
+        "training, PEFT (LoRA, IA3, AdaLoRA for parameter-efficient fine-tuning), "
+        "quantization (bitsandbytes 4/8-bit, GPTQ, AWQ, HQQ), generation strategies "
+        "(beam search, sampling, contrastive), model sharing on Hub, custom models, "
+        "data collators, and performance optimization for GPU training."
+    ),
+    "dspy-expert": (
+        "DSPy is a framework for programming (not prompting) language models. Key topics: "
+        "signatures (input/output schemas replacing prompts), modules (ChainOfThought, "
+        "ReAct, ProgramOfThought, Predict, RLM for recursive exploration, "
+        "MultiChainComparison), optimizers (BootstrapFewShot for few-shot learning, "
+        "MIPROv2 for prompt optimization, BootstrapFinetune, BetterTogether for "
+        "composing optimizers), assertions and suggestions (dspy.Suggest, dspy.Refine), "
+        "evaluation with custom metrics, retrieval models (ColBERTv2, ChromaRM), "
+        "language model configuration via LiteLLM, and agent development patterns."
+    ),
+    "vscode-extensions": (
+        "VS Code extension development using the Extension API. Key topics: extension "
+        "anatomy (package.json manifest, activation events, contribution points), commands "
+        "and keybindings, tree views (TreeDataProvider, TreeView), webviews (WebviewPanel, "
+        "WebviewView, security with asWebviewUri), Language Server Protocol (LSP) for "
+        "language features, custom editors, notebook API, debugger extensions (Debug Adapter "
+        "Protocol), task providers, SCM providers, testing extensions (@vscode/test-electron), "
+        "web extensions (@vscode/test-web), publishing to Marketplace (vsce), extension "
+        "bundling (webpack/esbuild), UX guidelines, and remote development support."
+    ),
+    "docker-expert": (
+        "Docker containerization platform. Key topics: Dockerfile reference (FROM, RUN, "
+        "COPY, ENTRYPOINT, CMD, EXPOSE, VOLUME, USER, WORKDIR, ARG, ENV, HEALTHCHECK), "
+        "multi-stage builds (COPY --from, named stages), Docker Compose v5 (Go SDK, "
+        "compose.yaml, services, networks, volumes, depends_on, profiles), Docker Build "
+        "(BuildKit, Bake, build cache, build secrets), networking (bridge, overlay, host, "
+        "macvlan), volumes and bind mounts, security (non-root users, Docker Scout, "
+        "content trust, secret management), image optimization, CLI reference, and "
+        "language-specific containerization (Python, Node.js, Go, Java)."
+    ),
+    "terraform-expert": (
+        "Terraform infrastructure as code by HashiCorp. Key topics: HCL configuration "
+        "language (syntax, expressions, functions, dynamic blocks), providers (configuration, "
+        "requirements, aliases, source addresses), modules (local, registry, composition, "
+        "input variables, output values), state management (backends: local, remote, S3, "
+        "Azure Blob; workspaces; state locking; remote state data source), CLI commands "
+        "(init, plan, apply, destroy, import, workspace, state), HCP Terraform (Cloud) "
+        "workspaces, resources and data sources, provisioners, lifecycle meta-arguments "
+        "(create_before_destroy, prevent_destroy, ignore_changes), and deployment patterns."
+    ),
+    "react-expert": (
+        "React 19+ with modern patterns and Server Components. Key topics: Server "
+        "Components and Server Functions ('use server' directive), Actions with "
+        "useActionState and useOptimistic for form handling, the use hook (reading "
+        "promises and context in conditionals/loops), hooks (useState, useEffect, "
+        "useCallback, useMemo, useRef, useReducer, useContext, useTransition, "
+        "useDeferredValue, useId, useEffectEvent), Suspense boundaries for async UI, "
+        "React DOM form integration, memo and lazy for performance, createContext, "
+        "startTransition, rules of hooks, component composition, and error boundaries."
+    ),
+    "nextjs-expert": (
+        "Next.js 15+ with App Router and Turbopack. Key topics: App Router (file-based "
+        "routing with layouts, pages, loading, error, not-found conventions), Server "
+        "Components and Server Actions ('use server'), Turbopack (default bundler, "
+        "filesystem caching), data fetching (fetch with caching/revalidation, React "
+        "cache, server components), ISR (Incremental Static Regeneration, revalidatePath, "
+        "revalidateTag), middleware (authentication, redirects, headers), caching "
+        "(Router Cache, Full Route Cache, Data Cache), route handlers, parallel routes, "
+        "route groups, dynamic routes, environment variables, and deployment strategies."
     ),
 }
 

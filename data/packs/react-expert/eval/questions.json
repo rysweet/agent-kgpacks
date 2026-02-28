@@ -1,0 +1,402 @@
+[
+  {
+    "id": "re_001",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What is the primary purpose of React Expert?",
+    "ground_truth": "React Expert is a specialized knowledge system designed to provide expert-level guidance, best practices, and solutions for React development, helping developers build scalable and maintainable React applications.",
+    "source": "core_purpose"
+  },
+  {
+    "id": "re_002",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "Name three core pillars of React Expert knowledge.",
+    "ground_truth": "Three core pillars are: component architecture, state management patterns, and performance optimization. These form the foundation of expert React development practices.",
+    "source": "foundational_pillars"
+  },
+  {
+    "id": "re_003",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What does React Expert emphasize regarding component design?",
+    "ground_truth": "React Expert emphasizes creating reusable, composable, and maintainable components with clear separation of concerns, proper prop typing, and adherence to single responsibility principle.",
+    "source": "component_design"
+  },
+  {
+    "id": "re_004",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "Which state management approaches does React Expert typically recommend?",
+    "ground_truth": "React Expert recommends context API for simple use cases, Redux or Zustand for complex applications, and newer solutions like Jotai or Recoil for atomic state management patterns.",
+    "source": "state_management"
+  },
+  {
+    "id": "re_005",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What is a key performance optimization technique highlighted in React Expert?",
+    "ground_truth": "Memoization using React.memo, useMemo, and useCallback hooks is a key technique to prevent unnecessary re-renders and optimize performance in React applications.",
+    "source": "performance_optimization"
+  },
+  {
+    "id": "re_006",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "How does React Expert approach handling side effects?",
+    "ground_truth": "React Expert recommends using the useEffect hook with proper dependency arrays, custom hooks for reusable side effect logic, and avoiding common pitfalls like infinite loops and memory leaks.",
+    "source": "side_effects"
+  },
+  {
+    "id": "re_007",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What testing practices does React Expert advocate for React components?",
+    "ground_truth": "React Expert advocates unit testing with Jest, integration testing with React Testing Library, and snapshot testing for UI consistency, focusing on testing behavior rather than implementation details.",
+    "source": "testing_practices"
+  },
+  {
+    "id": "re_008",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "Define what React Expert considers a 'smart' vs 'dumb' component.",
+    "ground_truth": "Smart (container) components manage state and logic, while dumb (presentational) components are stateless and focused on rendering UI based on props, promoting reusability and testability.",
+    "source": "component_patterns"
+  },
+  {
+    "id": "re_009",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What is the significance of React hooks according to React Expert?",
+    "ground_truth": "React hooks enable functional components to use state and side effects without class components, providing a cleaner API, better code reusability through custom hooks, and improved component logic organization.",
+    "source": "hooks_fundamentals"
+  },
+  {
+    "id": "re_010",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "How does React Expert recommend handling props drilling?",
+    "ground_truth": "React Expert recommends using Context API for theme or user data, restructuring component hierarchy, or implementing proper state management solutions to avoid excessive prop drilling.",
+    "source": "props_management"
+  },
+  {
+    "id": "re_011",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What does React Expert say about immutability in state?",
+    "ground_truth": "React Expert emphasizes treating state as immutable; when updating state, create new objects rather than mutating existing ones to ensure React can properly detect changes and trigger re-renders.",
+    "source": "state_immutability"
+  },
+  {
+    "id": "re_012",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What is the purpose of the key prop in React lists according to React Expert?",
+    "ground_truth": "The key prop helps React identify which items have changed, been added, or removed, enabling proper re-rendering and maintaining component state in lists, preventing identity bugs.",
+    "source": "list_rendering"
+  },
+  {
+    "id": "re_013",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "Name two common pitfalls React Expert warns developers about.",
+    "ground_truth": "Two common pitfalls are: missing dependency arrays in useEffect causing infinite loops, and directly mutating state instead of creating new state objects, both undermining React's rendering model.",
+    "source": "common_pitfalls"
+  },
+  {
+    "id": "re_014",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What approach does React Expert recommend for error handling in React?",
+    "ground_truth": "React Expert recommends using Error Boundaries for class component error handling, try-catch in async functions, and proper error state management with user-friendly error messages.",
+    "source": "error_handling"
+  },
+  {
+    "id": "re_015",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "How should conditional rendering be handled according to React Expert?",
+    "ground_truth": "React Expert recommends using ternary operators, logical AND operators, or separate rendering functions for simple cases, and extracting complex conditional logic into custom hooks or separate components.",
+    "source": "conditional_rendering"
+  },
+  {
+    "id": "re_016",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What does React Expert recommend for code splitting in React applications?",
+    "ground_truth": "React Expert recommends using React.lazy with Suspense for route-based code splitting, dynamic imports, and bundler features to reduce initial bundle size and improve load times.",
+    "source": "code_splitting"
+  },
+  {
+    "id": "re_017",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What is React Expert's stance on using index as a key in lists?",
+    "ground_truth": "React Expert advises against using array index as a key unless the list is static and non-filtered, as it can cause bugs when items are reordered, filtered, or added/removed from the list.",
+    "source": "key_best_practices"
+  },
+  {
+    "id": "re_018",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "How does React Expert approach form handling in React?",
+    "ground_truth": "React Expert recommends controlled components with state for form inputs, using libraries like Formik or React Hook Form for complex forms, and proper validation and error handling.",
+    "source": "form_handling"
+  },
+  {
+    "id": "re_019",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What is the recommended pattern for managing async data fetching in React Expert?",
+    "ground_truth": "React Expert recommends using useEffect with proper cleanup functions, handling loading and error states, and considering libraries like TanStack Query for caching and synchronization of server state.",
+    "source": "async_data_fetching"
+  },
+  {
+    "id": "re_020",
+    "domain": "react_expert",
+    "difficulty": "easy",
+    "question": "What guidance does React Expert provide on component composition?",
+    "ground_truth": "React Expert advocates composition over inheritance, using render props or compound components patterns to create flexible and reusable component hierarchies that are easier to maintain and extend.",
+    "source": "component_composition"
+  },
+  {
+    "id": "re_021",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "How does React's fiber architecture improve upon the previous stack reconciler in terms of incremental rendering?",
+    "ground_truth": "Fiber allows React to split rendering work into units and pause, abort, or reuse work based on priority. It enables incremental rendering by breaking updates into smaller chunks that can be interrupted, allowing high-priority updates (like user input) to be processed before lower-priority updates (like data fetching).",
+    "source": "fiber_architecture"
+  },
+  {
+    "id": "re_022",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "What is the difference between useCallback and useMemo, and when should you use each one?",
+    "ground_truth": "useCallback memoizes a function reference and returns the same function if dependencies haven't changed, useful for passing callbacks to optimized child components. useMemo memoizes a computed value and is used to avoid expensive calculations on every render. Use useCallback for function dependencies, useMemo for computed values.",
+    "source": "hooks_optimization"
+  },
+  {
+    "id": "re_023",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "How do you handle error boundaries in modern React, and what are their limitations?",
+    "ground_truth": "Error boundaries are class components using getDerivedStateFromError() or componentDidCatch() to catch errors in child components. They cannot catch errors from event handlers (use try-catch instead), asynchronous code, or server-side rendering. Hooks-based error boundaries are not yet available in React.",
+    "source": "error_handling"
+  },
+  {
+    "id": "re_024",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "Explain the purpose of React.memo and under what conditions it prevents unnecessary re-renders.",
+    "ground_truth": "React.memo wraps a functional component to perform shallow comparison of props; it prevents re-renders if props haven't changed. It only works with functional components and compares reference equality for objects/arrays, so inline object/array props will bypass memoization. It's useful for expensive components with stable props.",
+    "source": "performance_optimization"
+  },
+  {
+    "id": "re_025",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "What is the purpose of the key prop in React lists, and what happens if you use array indices as keys?",
+    "ground_truth": "The key prop helps React identify which items have changed, been added, or removed, enabling correct state preservation. Using array indices as keys causes issues when lists are reordered, filtered, or items are added/removed, as the index may map to different items, breaking component state and leading to bugs.",
+    "source": "list_rendering"
+  },
+  {
+    "id": "re_026",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "How does React's concurrent rendering work, and what problems does it solve?",
+    "ground_truth": "Concurrent rendering allows React to interleave rendering work with browser tasks, preventing main thread blocking. It enables features like Suspense and transitions to prioritize updates and maintain responsiveness. It solves the problem of long renders causing janky UI by yielding control back to the browser.",
+    "source": "concurrent_rendering"
+  },
+  {
+    "id": "re_027",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "Explain the difference between controlled and uncontrolled components, and when to use each.",
+    "ground_truth": "Controlled components have their state managed by React (value prop controlled by state), while uncontrolled components manage their own state via the DOM (accessed via refs). Use controlled components for validation, conditional rendering, or instant feedback; use uncontrolled for simple cases or integrating non-React code.",
+    "source": "form_handling"
+  },
+  {
+    "id": "re_028",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "How do you prevent memory leaks when using useEffect with subscriptions or timers?",
+    "ground_truth": "Return a cleanup function from useEffect that unsubscribes or clears timers when the component unmounts or before the effect runs again. Example: useEffect(() => { const timer = setTimeout(...); return () => clearTimeout(timer); }, []). Without cleanup, subscriptions persist and timers continue after unmounting.",
+    "source": "hooks_cleanup"
+  },
+  {
+    "id": "re_029",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "What is the relationship between React.StrictMode and detecting side effects or unsafe lifecycle methods?",
+    "ground_truth": "StrictMode intentionally double-invokes render functions, effects, and state updaters in development to help identify impure code and side effects. It highlights deprecated lifecycle methods and warns about unsafe patterns. It only runs in development mode and helps catch bugs caused by side effects.",
+    "source": "strict_mode"
+  },
+  {
+    "id": "re_030",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "How do you optimize performance when rendering large lists in React?",
+    "ground_truth": "Use windowing/virtualization libraries (like react-window) to render only visible items, implement proper keys, memoize list items with React.memo, use useCallback for handlers, and consider pagination. Combine with code splitting and lazy loading to reduce initial bundle and improve render performance.",
+    "source": "list_performance"
+  },
+  {
+    "id": "re_031",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "Explain how Context API works and its performance implications compared to Redux.",
+    "ground_truth": "Context API provides a way to pass data through the component tree without prop drilling. Performance issue: any Context value change re-renders all consumers, unlike Redux which allows fine-grained subscriptions. For complex, frequently-changing state, Redux is more efficient; for simpler state, Context is sufficient.",
+    "source": "state_management"
+  },
+  {
+    "id": "re_032",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "What are the differences between useLayoutEffect and useEffect, and when should you use useLayoutEffect?",
+    "ground_truth": "useEffect runs asynchronously after paint, while useLayoutEffect runs synchronously after DOM mutations but before paint. Use useLayoutEffect for DOM measurements, positioning calculations, or when you need to update DOM before the browser paints. Use useEffect for most cases to avoid blocking paint.",
+    "source": "advanced_hooks"
+  },
+  {
+    "id": "re_033",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "How does React handle event delegation, and what is event pooling?",
+    "ground_truth": "React uses event delegation to attach listeners at the root level, improving performance. Event pooling (React 16 and earlier) reused synthetic event objects to reduce garbage collection; React 17+ removed pooling for better async/await compatibility. Events are normalized across browsers through the SyntheticEvent wrapper.",
+    "source": "event_handling"
+  },
+  {
+    "id": "re_034",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "What is the purpose of refs in React, and why should you avoid overusing them?",
+    "ground_truth": "Refs allow direct access to DOM elements or class component instances, bypassing React's declarative model. Use them for managing focus, triggering animations, or integrating with third-party libraries. Overuse breaks React's declarative paradigm, makes components harder to reason about, and can cause state synchronization issues.",
+    "source": "refs"
+  },
+  {
+    "id": "re_035",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "How does React's dependency array work in hooks, and what are common pitfalls?",
+    "ground_truth": "The dependency array controls when the hook effect runs: empty array runs once, undefined/omitted runs every render, specific dependencies run when those values change (by reference equality). Pitfalls include missing dependencies (causing stale closures), including non-primitive values without memoization, and comparing by reference instead of value.",
+    "source": "hooks_dependencies"
+  },
+  {
+    "id": "re_036",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "What is the purpose of Suspense, and what limitations does it currently have?",
+    "ground_truth": "Suspense lets components pause rendering while data is being loaded and show a fallback UI. It works with lazy code splitting and async libraries that integrate with it. Limitations: doesn't catch errors (use Error Boundaries), only works with async libraries that support Suspense, server rendering support is partial.",
+    "source": "suspense"
+  },
+  {
+    "id": "re_037",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "Explain the difference between shallow and deep equality checks, and how they affect component optimization.",
+    "ground_truth": "Shallow equality checks only the top level of objects/arrays (reference comparison), while deep equality recursively compares all nested properties. Shallow checks are faster but miss nested changes; deep checks catch all changes but are slower. React.memo uses shallow by default; use custom comparators for deep checks.",
+    "source": "equality_optimization"
+  },
+  {
+    "id": "re_038",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "How do you handle async operations in React, and what are the trade-offs between different approaches?",
+    "ground_truth": "Approaches include useEffect with promises/async-await, libraries like react-query or SWR, or Suspense. useEffect is flexible but requires manual loading/error handling. Libraries abstract patterns and add caching. Suspense is newer but has limitations. Trade-offs: complexity vs. features, bundle size vs. functionality.",
+    "source": "async_patterns"
+  },
+  {
+    "id": "re_039",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "What is the virtual DOM, and how does React's reconciliation algorithm determine when to update it?",
+    "ground_truth": "The virtual DOM is an in-memory representation of the actual DOM. React's reconciliation algorithm (diffing) compares the new virtual DOM tree with the previous one, identifies differences, and batches updates to the actual DOM. It uses element type, keys, and props to determine if elements are the same; rebuilds if type changes.",
+    "source": "reconciliation"
+  },
+  {
+    "id": "re_040",
+    "domain": "react_expert",
+    "difficulty": "medium",
+    "question": "How do you implement custom hooks, and what best practices should you follow?",
+    "ground_truth": "Custom hooks are JavaScript functions that use React hooks internally, enabling logic reuse. Name them with 'use' prefix, call hooks unconditionally and only at the top level, and return state/functions. Best practices: keep them focused, document dependencies, use TypeScript for type safety, avoid complex nested logic.",
+    "source": "custom_hooks"
+  },
+  {
+    "id": "re_041",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "When implementing concurrent rendering with useTransition, how does React prioritize state updates between urgent and non-urgent updates, and what are the performance implications of interrupting a non-urgent render?",
+    "ground_truth": "React uses a priority-based scheduler where urgent updates (user input, animations) interrupt non-urgent transitions. Non-urgent renders can be abandoned mid-way without completing side effects, reducing main-thread blocking but requiring careful dependency management to avoid inconsistent state exposure.",
+    "source": "concurrent_rendering_and_transitions"
+  },
+  {
+    "id": "re_042",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "Explain the difference between controlled and uncontrolled components in React, and describe a scenario where mixing both patterns in a single form could cause subtle bugs.",
+    "ground_truth": "Controlled components rely on React state for their value, while uncontrolled components use the DOM directly via refs. Mixing both causes inconsistencies when one component resets while another doesn't, leading to stale values and validation failures since React can't track uncontrolled component state changes.",
+    "source": "form_handling_patterns"
+  },
+  {
+    "id": "re_043",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "What are the security implications of using dangerouslySetInnerHTML, and how can you safely render user-generated HTML content while preventing XSS attacks?",
+    "ground_truth": "dangerouslySetInnerHTML bypasses React's escaping and enables XSS if used with untrusted content. Safe alternatives include sanitizing HTML with libraries like DOMPurify before rendering, using a markdown parser with XSS protection, or rendering user content in an iframe sandbox to isolate it from the main application context.",
+    "source": "security_xss_prevention"
+  },
+  {
+    "id": "re_044",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "How does React's fiber architecture handle error boundaries, and what happens when an error occurs during the render phase versus the commit phase?",
+    "ground_truth": "Error boundaries catch errors during render and lifecycle methods but not during event handlers or asynchronous code. Render-phase errors are caught by nearest boundary and trigger fallback UI; commit-phase errors (useLayoutEffect, useEffect) aren't caught and propagate to the browser, requiring separate error handling.",
+    "source": "error_boundaries_and_fiber"
+  },
+  {
+    "id": "re_045",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "Describe how useMemo and useCallback interact with object identity and explain why incorrect dependency arrays can cause performance degradation instead of improvement.",
+    "ground_truth": "useMemo and useCallback memoize based on dependency arrays using Object.is comparison. If dependencies are incorrectly specified (e.g., omitting array props), they recompute on every render, adding overhead. If dependencies are too broad, they never recompute when needed. Both patterns can hurt performance if used without profiling.",
+    "source": "memoization_hooks_optimization"
+  },
+  {
+    "id": "re_046",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "Explain the batching behavior in React 18 and how automatic batching differs from React 17, including cases where batching may not occur.",
+    "ground_truth": "React 18 automatically batches state updates inside event handlers, timeouts, and promises by default. However, batching doesn't occur for microtasks before React 18 or in some edge cases like flushSync calls. flushSync forces immediate synchronous updates, breaking batching when explicit sequential updates are needed.",
+    "source": "react18_batching_behavior"
+  },
+  {
+    "id": "re_047",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "What is the purpose of the key prop in React reconciliation, and how can incorrect keys cause bugs with component state and form inputs?",
+    "ground_truth": "Keys help React identify which items have changed, aiding efficient reconciliation. Incorrect keys (using array indices, random values) cause React to reuse component instances incorrectly, leading to state bleeding between list items, form input values appearing in wrong positions, and animation glitches.",
+    "source": "reconciliation_and_keys"
+  },
+  {
+    "id": "re_048",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "How does React's context API handle performance optimization, and why can context consumer updates cause unnecessary re-renders even when using useMemo?",
+    "ground_truth": "Context updates cause all consumers to re-render regardless of whether their subscribed value changed. Even with useMemo, child components re-render due to React's propagation model. Solutions include splitting contexts by update frequency, using useReducer for derived state, or third-party state management with selective subscriptions.",
+    "source": "context_api_performance"
+  },
+  {
+    "id": "re_049",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "Explain the difference between shallow and deep equality in React, and describe how PureComponent and React.memo determine when to skip re-renders.",
+    "ground_truth": "Shallow equality compares only top-level property references using Object.is, not nested values. PureComponent and React.memo use shallow comparison by default; if props contain new object/array references with identical contents, they still re-render. Custom comparators enable deep checks but add performance overhead.",
+    "source": "equality_comparison_memoization"
+  },
+  {
+    "id": "re_050",
+    "domain": "react_expert",
+    "difficulty": "hard",
+    "question": "What are the memory leak risks when using useEffect with subscriptions or event listeners, and how should cleanup functions be structured to prevent them?",
+    "ground_truth": "Unmounted components with active subscriptions or listeners retain references, preventing garbage collection. Cleanup functions must unsubscribe and remove listeners on unmount. Failing to include dependencies causes stale closures; incorrect cleanup (removing only initial listener) causes duplicates. Proper dependencies and cleanup functions are essential.",
+    "source": "useeffect_cleanup_memory_leaks"
+  }
+]
