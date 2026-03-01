@@ -1,81 +1,131 @@
 # Agent Knowledge Packs
 
-**Domain-specific knowledge graph databases that augment LLMs beyond their training data.**
+**Domain-specific knowledge graph databases that make AI coding assistants smarter.**
 
-Knowledge Packs are self-contained graph databases built from curated documentation and web content. Each pack bundles a Kuzu graph DB, BGE vector embeddings, and a retrieval pipeline that feeds grounded context into Claude for synthesis. The result: answers that are more accurate, more current, and traceable to specific sources.
+Knowledge Packs are curated, domain-specific knowledge graph databases that provide up-to-date, deeply sourced content retrieved at query time. They solve three LLM limitations:
+
+1. **Training cutoff** — Models can't know about APIs, frameworks, or features released after training. Packs ingest current documentation and make it queryable.
+2. **Depth gaps** — Training covers topics broadly but misses implementation details, edge cases, and advanced patterns. Packs contain full documentation with section-level granularity.
+3. **Hallucination on niche topics** — Without grounding in authoritative sources, models generate plausible-sounding but incorrect details. Every pack answer traces back to specific articles and sections.
 
 ---
-
-## The Problem
-
-Large language models have three structural limitations that Knowledge Packs address:
-
-| Limitation | Description | How Packs Help |
-|------------|-------------|----------------|
-| **Training cutoff** | Models cannot know about APIs, frameworks, or features released after training | Packs ingest current documentation and make it queryable |
-| **Depth gaps** | Training covers topics broadly but misses implementation details, edge cases, and advanced patterns | Packs contain full documentation with section-level granularity |
-| **Grounding** | Models generate plausible-sounding answers without source attribution | Every pack answer traces back to specific articles and sections |
 
 ## Key Metrics
 
-The system has been evaluated across 48 domain-specific packs covering programming languages, frameworks, cloud services, and AI/ML toolkits.
+48 domain-specific packs evaluated across 2,716 questions:
 
-| Condition | Avg Score | Accuracy |
-|-----------|-----------|----------|
-| **Training** (Claude alone) | 9.3/10 | 98% |
-| **Pack** (KG Agent, base) | 9.3/10 | 92% |
-| **Enhanced** (KG Agent + all improvements) | **9.7/10** | **99%** |
+| Metric | Training (Claude alone) | With Knowledge Pack |
+|--------|:-----------------------:|:-------------------:|
+| **Accuracy** | 91.7% | **99%** |
+| **Avg Score** | 9.3/10 | **9.7/10** |
+| **Pack wins** | — | **38 of 48 (79%)** |
 
-The Enhanced configuration -- which adds confidence gating, cross-encoder reranking, multi-query retrieval, content quality scoring, graph reranking, multi-document synthesis, and few-shot examples -- beats the training baseline by **+1 percentage point** on accuracy across 80 evaluated questions (judged by Claude Opus).
+Packs are most impactful for niche or rapidly-evolving domains. See [full results](evaluation/results.md).
 
 ---
 
-## Quick Navigation
+## Use a Pack with Claude Code
+
+```bash
+# Install
+git clone https://github.com/rysweet/agent-kgpacks.git && cd agent-kgpacks
+uv sync
+
+# Build a pack (e.g., Go expert)
+echo "y" | uv run python scripts/build_go_pack.py
+```
+
+Add the pack server to your Claude Code MCP config (`.claude/settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "knowledge-packs": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "wikigr.mcp_server"],
+      "env": { "PACK_DIR": "/path/to/agent-kgpacks/data/packs" }
+    }
+  }
+}
+```
+
+Then just ask Claude Code domain questions — it automatically retrieves from the relevant pack.
+
+## Use a Pack with GitHub Copilot
+
+Start the pack API server and use it as a Copilot Chat skill:
+
+```bash
+# Start the server
+uv run uvicorn backend.main:app --port 8000
+
+# In VS Code with Copilot Chat:
+# @knowledge-packs How do I configure Azure Bicep modules?
+```
+
+Or query the REST API directly from any tool:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "How do I use Go generics?", "pack": "go-expert"}'
+```
+
+## Use a Pack with Python
+
+```python
+from wikigr.agent.kg_agent import KnowledgeGraphAgent
+
+with KnowledgeGraphAgent(db_path="data/packs/go-expert/pack.db") as agent:
+    result = agent.query("What changed in Go 1.23 iterators?")
+    print(result["answer"])
+    print("Sources:", result["sources"])
+```
+
+---
+
+## Build a New Pack
+
+Full tutorial: **[How to Build a Pack](howto/build-a-pack.md)**
+
+Quick version:
+
+1. **Curate 50-80 documentation URLs** in `data/packs/my-pack/urls.txt`
+2. **Build**: `echo "y" | uv run python scripts/build_my_pack.py`
+3. **Evaluate**: `uv run python scripts/eval_single_pack.py my-pack --sample 10`
+
+For a complete end-to-end walkthrough, see the **[Tutorial](getting-started/tutorial.md)**.
+
+---
+
+## Documentation
 
 ### Getting Started
 
-New to Knowledge Packs? Start with the **[Overview](getting-started/overview.md)** to understand what packs are and when to use them, then follow the **[Quick Start](getting-started/quickstart.md)** to build and query your first pack in 5 minutes. For a complete walkthrough, see the **[Tutorial](getting-started/tutorial.md)**.
+- **[Overview](getting-started/overview.md)** — What packs are and when to use them
+- **[Quick Start](getting-started/quickstart.md)** — Build and query your first pack in 5 minutes
+- **[Tutorial](getting-started/tutorial.md)** — Complete walkthrough from domain selection to deployment
 
 ### Concepts
 
-Understand **[How Packs Work](concepts/how-packs-work.md)** under the hood -- from content ingestion through the full **[Retrieval Pipeline](concepts/retrieval-pipeline.md)** and **[Architecture](concepts/architecture.md)**.
+- **[How Packs Work](concepts/how-packs-work.md)** — Content pipeline, query pipeline, retrieval modules
+- **[Architecture](concepts/architecture.md)** — System design, data model, technology stack
+- **[Retrieval Pipeline](concepts/retrieval-pipeline.md)** — Each stage explained in detail
 
 ### Evaluation
 
-Learn the **[Methodology](evaluation/methodology.md)** behind the three-condition evaluation framework, review current **[Results](evaluation/results.md)** across all packs, and discover strategies for **[Improving Accuracy](evaluation/improving-accuracy.md)**.
+- **[Methodology](evaluation/methodology.md)** — How we measure pack quality (scoring, conditions, judge model)
+- **[Results](evaluation/results.md)** — Full accuracy data for all 48 packs
+- **[Improving Accuracy](evaluation/improving-accuracy.md)** — The 7 techniques that brought accuracy to 99%
 
 ### How-To Guides
 
-Step-by-step instructions to **[Build a Pack](howto/build-a-pack.md)**, **[Run Evaluations](howto/run-evaluations.md)**, and **[Configure Enhancements](howto/configure-enhancements.md)**.
+- **[Build a Pack](howto/build-a-pack.md)** — Step-by-step from URLs to evaluation
+- **[Run Evaluations](howto/run-evaluations.md)** — Single-pack and cross-pack evaluation
+- **[Configure the Retrieval Pipeline](howto/configure-enhancements.md)** — Tuning retrieval modules
 
 ### Reference
 
-Complete technical reference for the **[KG Agent API](reference/kg-agent-api.md)**, **[CLI Commands](reference/cli-commands.md)**, and **[Pack Manifest](reference/pack-manifest.md)** format.
-
----
-
-## Project Structure
-
-```
-agent-kgpacks/
-├── wikigr/                 # Python package (CLI + agents)
-│   ├── cli.py              # wikigr pack create / install / eval / ...
-│   └── agent/
-│       ├── kg_agent.py     # KnowledgeGraphAgent - core query engine
-│       ├── reranker.py     # GraphReranker (PageRank-based)
-│       ├── multi_doc_synthesis.py  # MultiDocSynthesizer
-│       ├── few_shot.py     # FewShotManager
-│       └── cross_encoder.py # CrossEncoderReranker
-├── scripts/                # Build and evaluation scripts
-│   ├── build_*_pack.py     # Per-pack build scripts (48 packs)
-│   ├── eval_single_pack.py # Single-pack evaluation
-│   └── run_all_packs_evaluation.py  # Cross-pack evaluation
-├── data/packs/             # Pack databases and evaluation data
-│   ├── go-expert/          # Example pack
-│   │   ├── pack.db/        # Kuzu graph database
-│   │   ├── manifest.json   # Pack metadata
-│   │   ├── urls.txt        # Source URLs
-│   │   └── eval/           # Evaluation questions and results
-│   └── all_packs_evaluation.json  # Cross-pack results
-└── docs/                   # This documentation site
-```
+- **[KG Agent API](reference/kg-agent-api.md)** — Constructor, query(), response format
+- **[CLI Commands](reference/cli-commands.md)** — All `wikigr` commands
+- **[Pack Manifest](reference/pack-manifest.md)** — manifest.json format

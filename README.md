@@ -1,248 +1,192 @@
-# WikiGR - Wikipedia Knowledge Graph
+# Agent Knowledge Packs
 
-Build topic-specific knowledge graphs from Wikipedia. Query them with natural language, semantic search, graph traversal, or a web UI.
+**Domain-specific knowledge graph databases that make AI coding assistants smarter.**
 
-## What It Does
+## The Problem: LLMs Have Blind Spots
 
-Give WikiGR a list of topics. It fetches Wikipedia articles, extracts entities and relationships using Claude, generates vector embeddings, and stores everything in an embedded Kuzu graph database. You can then:
+Large language models like Claude are remarkably capable, but they have three fundamental limitations:
 
-- **Ask questions in natural language** via the Knowledge Graph Agent
-- **Search by meaning** using vector similarity (not just keywords)
-- **Traverse the graph** to discover connections between articles
-- **Explore visually** through an interactive web interface with force-directed graph visualization
+1. **Training cutoff** — Claude's knowledge has a fixed date. New frameworks, API changes, and version updates after that date are invisible.
+2. **Depth gaps** — While Claude knows the basics of most technologies, it lacks the deep, expert-level detail found in official documentation, tutorials, and API references.
+3. **Hallucination on niche topics** — Without grounding in authoritative sources, Claude may generate plausible-sounding but incorrect details about less common technologies.
 
-## When This Is Useful (and When It Isn't)
+**Knowledge Packs solve all three.** They are curated, domain-specific knowledge graph databases that provide up-to-date, deeply sourced content retrieved at query time. The KG Agent retrieves relevant sections from the pack and synthesizes answers grounded in actual documentation.
 
-A knowledge graph adds value over just asking Claude or searching Wikipedia directly in specific cases:
+## Evaluation Results — 48 Packs, 2,716 Questions
 
-**Where a KG helps:**
-- **Structured relationship queries** — "What entities are connected to X within 3 hops?" is trivial for a graph database but hard for an LLM from training data
-- **Constrained domains** — Answers come only from your curated article set, preventing hallucination about topics outside the graph
-- **Offline/air-gapped** — The Kuzu database works locally with no internet
-- **Aggregation** — "How many articles are about biology?" or "What's the most connected entity?" are database queries, not LLM queries
-- **Provenance** — Every answer traces back to specific articles, sections, and extracted facts
+| Metric | Training (Claude alone) | With Knowledge Pack |
+|--------|:-----------------------:|:-------------------:|
+| **Accuracy** | 91.7% | **99%** |
+| **Delta** | — | **+7.3pp** |
+| **Pack wins** | — | **38 of 48 (79%)** |
 
-**Where a KG doesn't help:**
-- **General factual recall** — Claude already knows Wikipedia's content from training
-- **Coverage** — Your graph has thousands of articles; Wikipedia has 6.8 million
-- **Freshness** — The graph is a frozen snapshot
-- **Simple questions** — "What is quantum entanglement?" gets a better answer from Claude directly than from synthesizing extracted fragments
-
-## Knowledge Packs - Reusable Domain-Specific Skills
-
-**Knowledge Packs** are distributable, graph-enhanced agent skills that package domain expertise into self-contained archives:
-
-```bash
-# Create a pack from topics
-wikigr pack create --name physics-expert --topics physics_topics.txt --target 500
-
-# Install from archive
-wikigr pack install physics-expert-v1.0.0.tar.gz
-
-# Use in Claude Code
-# The pack skill auto-loads when you ask physics questions!
-```
-
-**What's in a Pack:**
-- **Knowledge Graph**: Kuzu database with articles, entities, relationships, facts
-- **Vector Search**: Semantic retrieval via HNSW index
-- **Eval Framework**: Benchmark questions proving pack surpasses training data
-- **Claude Code Skill**: Auto-discovered skill that enriches responses with graph context
-
-**Benefits:**
-- **Provable Improvement**: Evaluation shows pack beats vanilla Claude on domain questions
-- **Offline Expertise**: Works without internet once installed
-- **No Hallucination**: Answers constrained to curated article set
-- **Distributable**: Share packs as tarballs or via package registry
-
-See `docs/design/knowledge-packs.md` for complete design specification.
+Packs are most impactful for niche or rapidly-evolving domains: workiq-mcp (+62pp), fabric-graphql (+23pp), claude-agent-sdk (+18pp). See [full results](https://rysweet.github.io/agent-kgpacks/evaluation/results/).
 
 ---
 
-## Architecture
-
-- **Database**: Kuzu 0.11.3 (embedded graph database, zero external dependencies)
-- **Embeddings**: paraphrase-MiniLM-L3-v2 (384 dimensions)
-- **Vector Index**: HNSW with cosine similarity
-- **Data Source**: Wikipedia Action API or web content
-- **LLM**: Claude (seed generation, entity extraction, query planning, answer synthesis)
-
-## Quick Start
-
-### 1. Install
+## Use a Pack with Claude Code
 
 ```bash
-uv pip install -e ".[dev]"
+# Install
+git clone https://github.com/rysweet/agent-kgpacks.git && cd agent-kgpacks
+uv sync
+
+# Build a pack
+echo "y" | uv run python scripts/build_go_pack.py
 ```
 
-### 2. Build a Knowledge Graph
+Add the pack server to your Claude Code MCP config (`.claude/settings.json`):
+
+```json
+{
+  "mcpServers": {
+    "knowledge-packs": {
+      "command": "uv",
+      "args": ["run", "python", "-m", "wikigr.mcp_server"],
+      "env": { "PACK_DIR": "/path/to/agent-kgpacks/data/packs" }
+    }
+  }
+}
+```
+
+Then just ask Claude Code domain questions — it automatically retrieves from the relevant pack.
+
+## Use a Pack with GitHub Copilot
+
+Start the pack API server and use it as a Copilot Chat skill:
 
 ```bash
-cat > topics.md << 'EOF'
-- Quantum Computing
-- Marine Biology
-- Renaissance Art
-EOF
+# Start the server
+uv run uvicorn backend.main:app --port 8000
 
-export ANTHROPIC_API_KEY=your-key-here
-wikigr create --topics topics.md --db data/ --target 500
+# In VS Code with Copilot Chat:
+# @knowledge-packs How do I configure Azure Bicep modules?
 ```
 
-This generates seed articles using Claude, validates them against Wikipedia, fetches and parses articles, generates embeddings, expands via link discovery, and extracts entities/relationships/facts via LLM.
-
-### 3. Query with Natural Language
+Or query the REST API directly:
 
 ```bash
-python examples/query_kg_agent.py "What is quantum entanglement?" data/quantum-computing.db
+curl -X POST http://localhost:8000/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{"question": "How do I use Go generics with type constraints?", "pack": "go-expert"}'
 ```
 
-Or in Python:
+## Use a Pack with Python
 
 ```python
-from wikigr.agent import KnowledgeGraphAgent
+from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
-with KnowledgeGraphAgent(db_path="data/quantum-computing.db") as agent:
-    # Natural language Q&A
-    result = agent.query("What is quantum entanglement?")
+with KnowledgeGraphAgent(db_path="data/packs/go-expert/pack.db") as agent:
+    result = agent.query("What changed in Go 1.23 iterators?")
     print(result["answer"])
-
-    # Graph-aware multi-hop retrieval (follows LINKS_TO edges)
-    result = agent.graph_query("How are qubits and error correction related?")
-    print(result["answer"])
-
-    # Direct entity/fact lookup
-    entity = agent.find_entity("Qubit")
-    facts = agent.get_entity_facts("Quantum Computing")
+    print("Sources:", result["sources"])
 ```
 
-### 4. Programmatic Search
+---
 
-```python
-import kuzu
-from bootstrap.src.query.search import semantic_search, graph_traversal
+## Build a New Pack
 
-db = kuzu.Database("data/quantum-computing.db", read_only=True)
-conn = kuzu.Connection(db)
+### 1. Curate URLs
 
-# Find articles by meaning
-results = semantic_search(conn, query_title="Quantum Computing", top_k=10)
+Create `data/packs/my-pack/urls.txt` with 50-80 documentation URLs:
 
-# Explore link neighborhood
-neighbors = graph_traversal(conn, seed_title="Quantum Computing", max_hops=2)
+```
+# Official documentation
+https://docs.example.com/guide/getting-started
+https://docs.example.com/api/reference
+https://docs.example.com/tutorials/advanced
+
+# GitHub source (for JS-heavy sites that block scrapers)
+https://github.com/example/repo/blob/main/README.md
+https://raw.githubusercontent.com/example/repo/main/docs/guide.md
 ```
 
-### 5. Web Interface
+**Tips:**
+- 50-80 URLs is ideal. More content = better retrieval.
+- Prefer server-rendered pages over JS-heavy SPAs
+- Add GitHub raw URLs as fallback for sites that block automated fetchers
+- Cover: getting started, core concepts, API reference, tutorials, advanced topics
+
+### 2. Build
 
 ```bash
-# Install backend dependencies
-uv pip install -e ".[backend]"
-
-# Terminal 1: Start API server
-WIKIGR_DATABASE_PATH=data/quantum-computing.db uvicorn backend.main:app --port 8000
-
-# Terminal 2: Start frontend
-cd frontend && npm install && npm run dev
-# Open http://localhost:5173
+echo "y" | uv run python scripts/build_my_pack.py
 ```
 
-The web UI provides:
-- Force-directed graph visualization (D3.js) with pan, zoom, and node selection
-- Semantic search with autocomplete
-- Hybrid search combining vector similarity and graph proximity
-- Chat panel for natural language Q&A with streaming responses
-- Category and depth filters
+Expected runtime: 3-5 hours for 50-80 URLs with LLM extraction.
 
-### 6. Kuzu Explorer (Optional)
-
-Browse the raw graph with [Kuzu Explorer](https://github.com/kuzudb/explorer) (requires Docker):
+### 3. Evaluate
 
 ```bash
-wikigr-explore --db data/quantum-computing.db --port 8000
+uv run python scripts/eval_single_pack.py my-pack --sample 10
 ```
 
-## REST API
+See the **[full tutorial](https://rysweet.github.io/agent-kgpacks/getting-started/tutorial/)** for a complete walkthrough.
 
-Start the backend with `uvicorn backend.main:app` and open `http://localhost:8000/docs` for interactive documentation.
+---
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Service status and database connectivity |
-| `/api/v1/search` | GET | Semantic search by vector similarity |
-| `/api/v1/autocomplete` | GET | Article title suggestions |
-| `/api/v1/graph` | GET | Graph traversal around a seed article |
-| `/api/v1/hybrid-search` | GET | Combined semantic + graph proximity search |
-| `/api/v1/articles/{title}` | GET | Article details, sections, links, backlinks |
-| `/api/v1/categories` | GET | All categories with article counts |
-| `/api/v1/stats` | GET | Database statistics |
-| `/api/v1/chat` | POST | Natural language Q&A (SSE streaming) |
+## When to Build a Knowledge Pack
 
-All endpoints are rate-limited. See [backend/API.md](backend/API.md) for full parameter documentation.
+Build a pack when:
 
-## Project Structure
+- **The domain changes faster than training** — LangChain, Vercel AI SDK, OpenAI API
+- **Claude's training coverage is thin** — Niche tools, internal frameworks, new projects
+- **Expert-level depth matters** — Precise API signatures, configuration options, patterns
+- **Grounding is critical** — Answers must be traceable to authoritative sources
+
+Do NOT build a pack when:
+
+- **Claude already knows the topic perfectly** — Stable technologies like Go, React, Python
+- **The content is static** — Topics unchanged in years
+- **The domain is too broad** — "All of computer science" is too broad; "Azure Bicep" is right
+
+## How It Works
 
 ```
-wikigr/
-├── wikigr/                 # Python package (CLI + agents)
-│   ├── cli.py             # wikigr create / update / status
-│   └── agent/
-│       ├── kg_agent.py    # Knowledge Graph query agent
-│       └── seed_agent.py  # Seed generation agent
-├── backend/                # FastAPI REST API
-│   ├── api/v1/            # Endpoint routers
-│   ├── services/          # Business logic
-│   ├── models/            # Pydantic schemas
-│   └── db/                # Connection management
-├── frontend/               # React + TypeScript PWA
-│   └── src/
-│       ├── components/    # Graph, Search, Chat, Sidebar
-│       ├── store/         # Zustand state management
-│       └── services/      # API client
-├── bootstrap/              # Data pipeline
-│   ├── src/
-│   │   ├── wikipedia/     # Wikipedia API client + parser
-│   │   ├── embeddings/    # Sentence-transformers embeddings
-│   │   ├── expansion/     # Orchestrator, work queue, link discovery
-│   │   ├── extraction/    # LLM entity/relationship extraction
-│   │   └── query/         # Search functions
-│   ├── schema/            # Kuzu graph schema
-│   └── tests/             # Integration tests
-├── tests/agent/            # KG Agent tests + benchmarks
-└── data/                   # Database storage
+URLs (urls.txt)
+    |
+    v
+[Fetch] ──> Web content scraper (requests/BeautifulSoup)
+    |
+    v
+[Extract] ──> Claude Haiku extracts entities, relationships, facts
+    |
+    v
+[Embed] ──> BGE bge-base-en-v1.5 generates 768-dim vectors
+    |
+    v
+[Store] ──> Kuzu graph database with HNSW vector index
+    |
+    v
+pack.db (distributable knowledge graph)
 ```
 
-## Performance (30K articles)
+At query time:
 
-| Metric | Value |
-|--------|-------|
-| Articles | 31,777 |
-| Entities | 87,500 |
-| Relationships | 54,393 |
-| Article links | 6.2M |
-| Database size | 3.0 GB |
-| P95 query latency | 298ms |
-| Semantic precision | 100% |
-| Memory usage | ~350 MB |
-
-## Development
-
-```bash
-# Run all tests
-python3.10 -m pytest
-
-# Lint + format
-ruff check . && ruff format .
-
-# Type checking
-pyright
 ```
+Question ──> Vector Search ──> Confidence Gate ──> Cross-Encoder Rerank
+    ──> Hybrid Retrieval ──> Quality Filter ──> Claude Synthesis ──> Answer
+```
+
+| Module | What it does |
+|--------|-------------|
+| **Confidence Gating** | Skips pack context when similarity < 0.5 (prevents noise) |
+| **Cross-Encoder Reranking** | Neural pairwise relevance scoring (+10-15% precision) |
+| **Multi-Query Retrieval** | Generates query reformulations (+15-25% recall) |
+| **Content Quality Scoring** | Filters thin/irrelevant sections |
+| **Graph Reranking** | Degree centrality boosts well-connected articles |
+| **Multi-Doc Synthesis** | Follows graph edges for related context |
 
 ## Documentation
 
-- [API Reference](backend/API.md)
-- [Architecture](bootstrap/docs/architecture-specification.md)
-- [Seed Agent & CLI](bootstrap/docs/seed-agent.md)
-- [Embedding Model Choice](bootstrap/docs/embedding-model-choice.md)
-- [Research Findings](bootstrap/docs/research-findings.md)
+Full docs: **https://rysweet.github.io/agent-kgpacks/**
+
+- [Getting Started](https://rysweet.github.io/agent-kgpacks/getting-started/overview/) — What packs are and when to use them
+- [Tutorial](https://rysweet.github.io/agent-kgpacks/getting-started/tutorial/) — Build your first pack end-to-end
+- [How to Build a Pack](https://rysweet.github.io/agent-kgpacks/howto/build-a-pack/) — Step-by-step guide
+- [Evaluation Results](https://rysweet.github.io/agent-kgpacks/evaluation/results/) — Full accuracy data for all 48 packs
+- [Evaluation Methodology](https://rysweet.github.io/agent-kgpacks/evaluation/methodology/) — How we measure pack quality
+- [API Reference](https://rysweet.github.io/agent-kgpacks/reference/kg-agent-api/) — KnowledgeGraphAgent API
 
 ## License
 
