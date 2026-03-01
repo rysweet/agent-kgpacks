@@ -1,143 +1,85 @@
-# WikiGR Documentation
+# Agent Knowledge Packs
 
-Complete documentation for building knowledge graphs from Wikipedia and web content, plus reusable knowledge packs for domain expertise.
+**Domain-specific knowledge graph databases that augment LLMs beyond their training data.**
 
-## Getting Started
+Knowledge Packs are self-contained graph databases built from curated documentation and web content. Each pack bundles a Kuzu graph DB, BGE vector embeddings, and a retrieval pipeline that feeds grounded context into Claude for synthesis. The result: answers that are more accurate, more current, and traceable to specific sources.
 
-New to WikiGR? Start here:
+---
 
-- [Getting Started with Web Content Sources](./tutorials/web-sources-getting-started.md) - Learn how to build knowledge graphs from web URLs with LLM extraction and link crawling
+## The Problem
 
-## Design Documents
+Large language models have three structural limitations that Knowledge Packs address:
 
-- [Knowledge Packs Design](./design/knowledge-packs.md) - Reusable graph-enhanced agent skills for domain expertise
-- [CLI Pack Commands](./CLI_PACK_COMMANDS.md) - Complete reference for pack management commands
+| Limitation | Description | How Packs Help |
+|------------|-------------|----------------|
+| **Training cutoff** | Models cannot know about APIs, frameworks, or features released after training | Packs ingest current documentation and make it queryable |
+| **Depth gaps** | Training covers topics broadly but misses implementation details, edge cases, and advanced patterns | Packs contain full documentation with section-level granularity |
+| **Grounding** | Models generate plausible-sounding answers without source attribution | Every pack answer traces back to specific articles and sections |
 
-## Knowledge Packs
+## Key Metrics
 
-Pre-built domain-specific knowledge graphs:
+The system has been evaluated across 48 domain-specific packs covering programming languages, frameworks, cloud services, and AI/ML toolkits.
 
-- [Physics-Expert Pack](./packs/physics-expert/README.md) - 5,247 articles covering classical mechanics, quantum mechanics, thermodynamics, and relativity
-  - [Evaluation Results](./packs/physics-expert/EVALUATION.md) - 84.7% accuracy vs 71.5% web search baseline
-- [Pack URL Coverage: Expanded Packs](./knowledge_packs/pack-url-coverage.md) - URL coverage summary for langchain-expert, openai-api-expert, vercel-ai-sdk, llamaindex-expert, and zig-expert after Issue 211 expansion
-- [How to Create Your Own Pack](./packs/HOW_TO_CREATE_YOUR_OWN.md) - Step-by-step guide for building custom knowledge packs
+| Condition | Avg Score | Accuracy |
+|-----------|-----------|----------|
+| **Training** (Claude alone) | 8.9/10 | 96.2% |
+| **Pack** (KG Agent, base) | 8.7/10 | 95.0% |
+| **Enhanced** (KG Agent + all improvements) | **9.1/10** | **97.5%** |
 
-## How-To Guides
+The Enhanced configuration -- which adds confidence gating, cross-encoder reranking, multi-query retrieval, content quality scoring, graph reranking, multi-document synthesis, and few-shot examples -- beats the training baseline by **+1.3 percentage points** on accuracy across 80 evaluated questions.
 
-Task-oriented guides for specific problems:
+---
 
-- [Multi-Query Retrieval and Content Quality Scoring](./howto/retrieval-enhancements.md) - Enable multi-query fan-out (+15–25% recall) and stub filtering via `enable_multi_query` and quality threshold
-- [Phase 1 Pack Enhancements](./howto/phase1-enhancements.md) - Use retrieval enhancements to improve pack accuracy from 50% to 70-75%
-- [Vector Search as Primary Retrieval](./howto/vector-search-primary-retrieval.md) - Phase 3 retrieval pipeline with vector-first search, sparse graph detection, and A/B testing flags
-- [Confidence-Gated Context Injection](./howto/confidence-gated-context-injection.md) - Skip irrelevant pack context when vector similarity is low, letting Claude answer from its own expertise
-- [Generating Evaluation Questions](./howto/generating-evaluation-questions.md) - Generate Q&A pairs for new packs and run all-packs accuracy evaluation
-- [Improving Eval Questions](./howto/improving-eval-questions.md) - Audit and correct questions to measure pack-specific knowledge, not training data
-- [Improving .NET Pack Content Quality](./howto/dotnet-content-quality.md) - Audit article content, fix hallucinated URLs, set minimum content threshold
-- [How to Configure LLM Extraction](./howto/configure-llm-extraction.md) - Control entity and relationship extraction parameters
-- [How to Filter Link Crawling](./howto/filter-link-crawling.md) - Control which links are followed during BFS crawling
-- [How to Curate and Expand Pack URL Lists](./howto/curate-pack-urls.md) - Audit existing URLs, add coverage by section, validate reachability, and rebuild
+## Quick Navigation
 
-## API Reference
+<div class="grid cards" markdown>
 
-Complete technical reference for classes and commands:
+-   **Getting Started**
 
-- [Retrieval Enhancements API](./reference/retrieval-enhancements.md) - `_multi_query_retrieve`, `_score_section_quality`, `enable_multi_query`, `CONTENT_QUALITY_THRESHOLD`
-- [Phase 1 Enhancements API](./reference/phase1-enhancements.md) - GraphReranker, MultiDocSynthesizer, FewShotManager complete reference
-  - [GraphReranker Module](./reference/module-docs/graph-reranker.md) - Graph-based reranking with PageRank
-  - [MultiDocSynthesizer Module](./reference/module-docs/multidoc-synthesizer.md) - Multi-document retrieval and synthesis
-  - [FewShotManager Module](./reference/module-docs/few-shot-manager.md) - Few-shot example injection
-- [Web Content Source API](./reference/web-content-source.md) - `WebContentSource` class and CLI commands
-- [ArticleProcessor API](./reference/article-processor.md) - Shared extraction pipeline for all content sources
-- [urls.txt Format and Conventions](./reference/urls-txt-format.md) - File format, canonical hosts, GitHub URL forms, validation rules
+    New to Knowledge Packs? Start with the [Overview](getting-started/overview.md) to understand what packs are and when to use them, then follow the [Quick Start](getting-started/quickstart.md) to build and query your first pack in 5 minutes.
 
-## Concepts and Architecture
+-   **Concepts**
 
-Understanding how WikiGR works internally:
+    Understand [How Packs Work](concepts/how-packs-work.md) under the hood -- from content ingestion through the full [Retrieval Pipeline](concepts/retrieval-pipeline.md) and [Architecture](concepts/architecture.md).
 
-- [Multi-Query Retrieval and Quality Scoring Design](./concepts/retrieval-enhancements-design.md) - Design rationale for Issue 211 Improvements 4 and 5
-- [Phase 1 Enhancements Design](./concepts/phase1-enhancements-design.md) - Design rationale and architecture for retrieval enhancements
-- [ContentSource Architecture](./concepts/content-source-design.md) - Protocol-based design for source-agnostic knowledge graph construction
-- [BFS Link Expansion Algorithm](./concepts/bfs-link-expansion.md) - How WikiGR crawls web content using breadth-first search
+-   **Evaluation**
 
-## Feature Overview
+    Learn the [Methodology](evaluation/methodology.md) behind the three-condition evaluation framework, review current [Results](evaluation/results.md) across all packs, and discover strategies for [Improving Accuracy](evaluation/improving-accuracy.md).
 
-### Web Content Sources
+-   **How-To Guides**
 
-Build knowledge graphs from web URLs with full feature parity to Wikipedia sources:
+    Step-by-step instructions to [Build a Pack](howto/build-a-pack.md), [Run Evaluations](howto/run-evaluations.md), and [Configure Enhancements](howto/configure-enhancements.md).
 
-- **LLM Extraction**: GPT-4 powered entity and relationship extraction
-- **Link Expansion**: BFS crawling with configurable depth and breadth
-- **Incremental Updates**: Add new content without rebuilding entire graph
-- **Flexible Filtering**: Control link following with domain and pattern filters
+-   **Reference**
 
-### Knowledge Packs
+    Complete technical reference for the [KG Agent API](reference/kg-agent-api.md), [CLI Commands](reference/cli-commands.md), and [Pack Manifest](reference/pack-manifest.md) format.
 
-Reusable graph-enhanced agent skills that surpass training data and web search:
+</div>
 
-- **Bundled Distribution**: Graph DB + Skill + Retrieval + Evaluation
-- **3-Baseline Evaluation**: Prove packs beat training and web search
-- **Skills Integration**: Auto-discovered as Claude Code skills
-- **CLI Management**: 8 commands for pack lifecycle (create, install, eval, etc.)
+---
 
-### Supported Content Sources
+## Project Structure
 
-| Source | Status | Documentation |
-|--------|--------|---------------|
-| Wikipedia | ✓ Production | [Wikipedia API docs](./reference/wikipedia-source.md) *(planned)* |
-| Web (HTTP/HTTPS) | ✓ Production | [Web Content Source API](./reference/web-content-source.md) |
-| Local Files | ⏳ Planned | - |
-| GitHub Wiki | ⏳ Planned | - |
-
-### Shared Features Across All Sources
-
-All content sources use the same extraction pipeline via `ArticleProcessor`:
-
-- **Entity Extraction**: Identify named entities (people, organizations, technologies, concepts)
-- **Relationship Extraction**: Discover semantic relationships between entities
-- **Vector Embeddings**: Generate embeddings for semantic search
-- **Graph Construction**: Create nodes and edges in Kuzu database
-
-## Quick Reference
-
-### Create Knowledge Graph from Web
-
-```bash
-# Single page
-wikigr create --source=web --url="https://example.com/article" --db-path=output.db
-
-# With link expansion
-wikigr create \
-  --source=web \
-  --url="https://learn.microsoft.com/en-us/azure/aks/what-is-aks" \
-  --max-depth=2 \
-  --max-links=50 \
-  --db-path=azure_aks.db
 ```
-
-### Create and Use Knowledge Packs
-
-```bash
-# Create pack
-wikigr pack create --name physics-expert \
-  --source wikipedia --topics physics.txt \
-  --target 5000
-
-# Install and use
-wikigr pack install physics-expert.tar.gz
-wikigr pack eval physics-expert  # Proves it surpasses training data
+agent-kgpacks/
+├── wikigr/                 # Python package (CLI + agents)
+│   ├── cli.py              # wikigr pack create / install / eval / ...
+│   └── agent/
+│       ├── kg_agent.py     # KnowledgeGraphAgent - core query engine
+│       ├── reranker.py     # GraphReranker (PageRank-based)
+│       ├── multi_doc_synthesis.py  # MultiDocSynthesizer
+│       ├── few_shot.py     # FewShotManager
+│       └── cross_encoder.py # CrossEncoderReranker
+├── scripts/                # Build and evaluation scripts
+│   ├── build_*_pack.py     # Per-pack build scripts (48 packs)
+│   ├── eval_single_pack.py # Single-pack evaluation
+│   └── run_all_packs_evaluation.py  # Cross-pack evaluation
+├── data/packs/             # Pack databases and evaluation data
+│   ├── go-expert/          # Example pack
+│   │   ├── pack.db/        # Kuzu graph database
+│   │   ├── manifest.json   # Pack metadata
+│   │   ├── urls.txt        # Source URLs
+│   │   └── eval/           # Evaluation questions and results
+│   └── all_packs_evaluation.json  # Cross-pack results
+└── docs/                   # This documentation site
 ```
-
-## Documentation Organization
-
-This documentation follows the [Diataxis framework](https://diataxis.fr/):
-
-- **Tutorials**: Learning-oriented, step-by-step lessons
-- **How-To Guides**: Task-oriented, solve specific problems
-- **Reference**: Information-oriented, technical specifications
-- **Concepts**: Understanding-oriented, explain design and rationale
-
-## Related Resources
-
-- [Project README](../README.md) - Project overview and setup
-- [WikiGR GitHub Repository](https://github.com/rysweet/wikigr)
-- [Kuzu Database Documentation](https://kuzudb.com/docs/)

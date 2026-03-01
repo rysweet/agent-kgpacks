@@ -94,6 +94,9 @@ data/**/*.db/
 data/**/*.wal
 bootstrap/data/*.db
 
+# MkDocs build output
+site/
+
 # Amplihack runtime directories (auto-generated)
 .claude/logs/
 .claude/runtime/

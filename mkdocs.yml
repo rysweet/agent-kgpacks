@@ -1,0 +1,60 @@
+site_name: Agent Knowledge Packs
+site_description: Domain-specific knowledge graph databases that augment LLMs
+site_url: https://rysweet.github.io/agent-kgpacks
+repo_url: https://github.com/rysweet/agent-kgpacks
+repo_name: rysweet/agent-kgpacks
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - content.code.copy
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Overview: getting-started/overview.md
+    - Quick Start: getting-started/quickstart.md
+    - Tutorial: getting-started/tutorial.md
+  - Concepts:
+    - How Packs Work: concepts/how-packs-work.md
+    - Architecture: concepts/architecture.md
+    - Retrieval Pipeline: concepts/retrieval-pipeline.md
+  - Evaluation:
+    - Methodology: evaluation/methodology.md
+    - Results: evaluation/results.md
+    - Improving Accuracy: evaluation/improving-accuracy.md
+  - How-To Guides:
+    - Build a Pack: howto/build-a-pack.md
+    - Run Evaluations: howto/run-evaluations.md
+    - Configure Enhancements: howto/configure-enhancements.md
+  - Reference:
+    - KG Agent API: reference/kg-agent-api.md
+    - CLI Commands: reference/cli-commands.md
+    - Pack Manifest: reference/pack-manifest.md
