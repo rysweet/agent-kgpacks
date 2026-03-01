@@ -1,0 +1,53 @@
+# Microsoft AutoGen Multi-Agent Framework - Official Documentation
+# AgentChat, Core API, teams, tools, code executors, AutoGen Studio
+
+# Main Documentation
+https://microsoft.github.io/autogen/stable/index.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/index.html
+https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/index.html
+
+# AgentChat Tutorial
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/index.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/agents.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/teams.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/termination.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/human-in-the-loop.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/state.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/custom-agents.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/models.html
+
+# AgentChat Advanced
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/selector-group-chat.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/swarm.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/magentic-one.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/migration-guide.html
+
+# Core User Guide
+https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/quickstart.html
+https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/core-concepts/agent-and-multi-agent-application.html
+https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/framework/agent-and-agent-runtime.html
+https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/framework/message-and-communication.html
+https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/framework/distributed-agent-runtime.html
+https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/framework/model-clients.html
+https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/framework/tools.html
+
+# AutoGen Studio
+https://microsoft.github.io/autogen/stable/user-guide/autogenstudio-user-guide/index.html
+https://microsoft.github.io/autogen/stable/user-guide/autogenstudio-user-guide/usage.html
+https://microsoft.github.io/autogen/stable/user-guide/autogenstudio-user-guide/faq.html
+
+# Extensions & API Reference
+https://microsoft.github.io/autogen/stable/user-guide/extensions-user-guide/index.html
+https://microsoft.github.io/autogen/stable/reference/python/autogen_agentchat.teams.html
+https://microsoft.github.io/autogen/stable/reference/python/autogen_agentchat.agents.html
+
+# GitHub
+https://github.com/microsoft/autogen
+
+# Legacy 0.2 (Migration Reference)
+https://microsoft.github.io/autogen/0.2/docs/Getting-Started/
+https://microsoft.github.io/autogen/0.2/docs/Use-Cases/agent_chat/
+https://microsoft.github.io/autogen/0.2/docs/Examples/
+
+# Exploration Guide
+https://microsoft.github.io/ai-agents-for-beginners/14-microsoft-agent-framework/

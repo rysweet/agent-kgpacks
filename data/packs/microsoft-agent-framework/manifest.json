@@ -1,0 +1,15 @@
+{
+  "name": "microsoft-agent-framework",
+  "version": "1.0.0",
+  "description": "Expert knowledge of Microsoft Agent Framework covering agent types, graph-based workflows, middleware, telemetry, MCP integration, A2A protocol, orchestration patterns, and migration from Semantic Kernel and AutoGen.",
+  "domain": "ai-agents",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["microsoft", "agent-framework", "workflows", "mcp", "a2a", "orchestration", "telemetry", "middleware"],
+  "source_urls": [
+    "https://learn.microsoft.com/en-us/agent-framework/",
+    "https://github.com/microsoft/agent-framework"
+  ],
+  "created": "2026-03-01T00:00:00Z",
+  "license": "MIT"
+}
