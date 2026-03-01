@@ -36,7 +36,7 @@ KnowledgeGraphAgent(
 | `read_only` | `bool` | `True` | Open database in read-only mode. Enables concurrent access during expansion |
 | `use_enhancements` | `bool` | `True` | Master switch for Phase 1 enhancements (reranking, multi-doc, few-shot). When `False`, all `enable_*` flags are ignored |
 | `few_shot_path` | `str \| None` | `None` | Path to few-shot examples JSON. When `None`, auto-detected from pack directory |
-| `enable_reranker` | `bool` | `True` | Enable GraphReranker (PageRank-based authority blending). Only active when `use_enhancements=True` |
+| `enable_reranker` | `bool` | `True` | Enable GraphReranker (degree centrality via RRF). Only active when `use_enhancements=True` |
 | `enable_multidoc` | `bool` | `True` | Enable MultiDocSynthesizer (multi-article retrieval). Only active when `use_enhancements=True` |
 | `enable_fewshot` | `bool` | `True` | Enable FewShotManager (example injection). Only active when `use_enhancements=True` |
 | `enable_cross_encoder` | `bool` | `False` | Enable CrossEncoderReranker (joint query-document scoring). Opt-in. Only active when `use_enhancements=True` |
@@ -73,7 +73,8 @@ agent = KnowledgeGraphAgent(
 def query(
     self,
     question: str,
-    max_results: int = 5,
+    max_results: int = 10,
+    use_graph_rag: bool = False,
 ) -> dict
 ```
 
@@ -84,7 +85,8 @@ Query the knowledge graph and synthesize an answer.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `question` | `str` | (required) | The natural language question |
-| `max_results` | `int` | `5` | Maximum number of vector search results. Clamped to [1, 20] |
+| `max_results` | `int` | `10` | Maximum number of vector search results. Clamped to [1, 1000] |
+| `use_graph_rag` | `bool` | `False` | If True, delegate to `graph_query()` for multi-hop retrieval that follows LINKS_TO edges before synthesizing |
 
 #### Returns
 
@@ -94,7 +96,7 @@ A dictionary with the following structure:
 {
     "answer": str,          # Synthesized answer text
     "sources": list[str],   # Article titles used as sources
-    "entities": list[str],  # Entities mentioned in the answer
+    "entities": list[dict], # Entities mentioned in the answer
     "facts": list[str],     # Key facts from retrieved content
     "cypher_query": str,    # The vector search query executed
     "query_type": str,      # "vector_search" | "confidence_gated_fallback" | "vector_fallback"
@@ -154,15 +156,18 @@ print(result["token_usage"])
 ```python
 from wikigr.agent.reranker import GraphReranker
 
-reranker = GraphReranker(
-    conn: kuzu.Connection,
-    alpha: float = 0.7,  # vector similarity weight
-    beta: float = 0.3,   # PageRank weight
-)
+reranker = GraphReranker(kuzu_conn: kuzu.Connection)
 
+# Calculate degree centrality for specific articles
+centrality = reranker.calculate_centrality(
+    article_ids: list[int],
+) -> dict[int, float]
+
+# Rerank results using weighted combination of vector similarity and centrality
 reranked = reranker.rerank(
-    results: list[dict],  # [{"title": str, "score": float}, ...]
-    top_k: int = 10,
+    vector_results: list[dict],  # [{"article_id": int, "score": float, ...}, ...]
+    vector_weight: float = 0.6,  # vector similarity weight
+    graph_weight: float = 0.4,   # degree centrality weight
 ) -> list[dict]
 ```
 
@@ -171,17 +176,20 @@ reranked = reranker.rerank(
 ```python
 from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
 
-synthesizer = MultiDocSynthesizer(
-    conn: kuzu.Connection,
-    num_docs: int = 5,
-    max_sections: int = 3,
-    min_relevance: float = 0.7,
-)
+synthesizer = MultiDocSynthesizer(kuzu_conn: kuzu.Connection)
 
-context = synthesizer.retrieve(
-    question: str,
-    embedding_generator,  # callable that generates embeddings
-) -> dict
+# Expand seed articles by traversing LINKS_TO edges (BFS)
+expanded = synthesizer.expand_to_related_articles(
+    seed_articles: list[int],
+    max_hops: int = 1,
+    max_articles: int = 50,
+) -> dict[int, dict]
+
+# Create markdown text with numbered citations
+text = synthesizer.synthesize_with_citations(
+    articles: dict[int, dict],
+    query: str,
+) -> str
 ```
 
 ### FewShotManager
@@ -193,10 +201,11 @@ manager = FewShotManager(
     examples_path: str,  # path to JSON or JSONL file
 )
 
-examples = manager.get_examples(
-    question: str,
-    num_examples: int = 3,
+examples = manager.find_similar_examples(
+    query: str,
+    k: int = 3,
 ) -> list[dict]
+# Returns list of dicts with "score" key, sorted by similarity (descending)
 ```
 
 ### CrossEncoderReranker

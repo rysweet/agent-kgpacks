@@ -2,25 +2,6 @@
 
 Complete reference for the `wikigr` command-line interface and pack management scripts.
 
-## wikigr query
-
-Query a knowledge pack with a natural language question.
-
-```bash
-uv run wikigr query "<question>" --pack <pack-path>
-```
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `question` | Yes | Natural language question (quoted) |
-| `--pack` | Yes | Path to the pack directory |
-
-**Example:**
-
-```bash
-uv run wikigr query "What is goroutine scheduling?" --pack data/packs/go-expert
-```
-
 ## wikigr pack Commands
 
 The `wikigr pack` subcommand provides 8 commands for pack lifecycle management.
@@ -205,13 +186,14 @@ python scripts/generate_eval_questions.py --pack <pack-name> [--count N] [--outp
 Check that all URLs in a pack's `urls.txt` are reachable.
 
 ```bash
-python scripts/validate_pack_urls.py --pack <pack-name> [--fix]
+python scripts/validate_pack_urls.py <urls-file>
+python scripts/validate_pack_urls.py --all  # Validate all packs
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `--pack` | Pack name |
-| `--fix` | Attempt to fix common issues (trailing slashes, redirects) |
+| `urls-file` | Positional path to a `urls.txt` file (e.g., `data/packs/go-expert/urls.txt`) |
+| `--all` | Validate all packs in `data/packs/` |
 
 ## Build Scripts
 

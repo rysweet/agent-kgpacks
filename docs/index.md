@@ -35,10 +35,11 @@ uv sync
 echo "y" | uv run python scripts/build_go_pack.py
 
 # Install the pack (registers as a Claude Code skill)
-wikigr pack install go-expert
+cd data/packs && tar -czf go-expert.tar.gz go-expert
+wikigr pack install go-expert.tar.gz
 ```
 
-Packs install to `~/.wikigr/packs/` and auto-register as Claude Code skills. Once installed, just ask domain questions — the skill activates automatically:
+Packs install to `~/.wikigr/packs/` and auto-register as Claude Code skills. Once installed, just ask domain questions -- the skill activates automatically:
 
 ```
 You: "Explain how Go 1.23 range-over-func iterators work"
@@ -59,7 +60,7 @@ Query via the REST API:
 ```bash
 curl -X POST http://localhost:8000/api/v1/chat \
   -H "Content-Type: application/json" \
-  -d '{"question": "How do I use Go generics?", "pack": "go-expert"}'
+  -d '{"question": "How do I use Go generics?", "max_results": 10}'
 ```
 
 ## Use a Pack with Python

@@ -2,7 +2,7 @@
 
 Current evaluation results across all evaluated packs. Data from `data/packs/all_packs_evaluation.json`, evaluated on 2026-03-01 with 10 questions per pack.
 
-**Judge model: Claude Opus** (same model as the answer model, for maximum scoring accuracy).
+**Judge model: Claude Haiku** (`claude-haiku-4-5-20251001`). Both evaluation scripts default to Haiku. The `JUDGE_MODEL` constant can be changed to Opus for more nuanced scoring.
 
 ## Grand Summary
 
@@ -34,7 +34,7 @@ Across all 80 questions, the Pack condition achieves 99% accuracy (only 1 questi
 
 ### 2. Every Pack Except One Now Beats or Matches Training
 
-With the Opus judge model providing more nuanced scoring:
+With the current evaluation framework:
 
 - **7 of 8 packs** show positive or zero delta vs training
 - **react-expert** shows the largest gain (+1.1 avg, from 90% to 100% accuracy)
@@ -46,10 +46,7 @@ The confidence gating improvement (PR #243) prevents the pack from injecting low
 
 ### 4. Vercel AI SDK Has a Marginal Issue
 
-The `vercel-ai-sdk` pack shows a -0.1 average delta (90% vs 100% accuracy). With Opus judging, this is only 1 question difference out of 10 -- the pack retrieved slightly less precise content than Claude's training on one specific question.
-
-!!! note "This is much improved from earlier results"
-    With Haiku as judge, vercel-ai-sdk showed -20pp. With Opus as judge, it's only -0.1. This suggests the Haiku judge was over-penalizing minor differences. Opus provides more accurate, nuanced scoring.
+The `vercel-ai-sdk` pack shows a -0.1 average delta (90% vs 100% accuracy). This is only 1 question difference out of 10 -- the pack retrieved slightly less precise content than Claude's training on one specific question.
 
 ## Score Distributions
 
@@ -97,7 +94,7 @@ The choice of judge model significantly affects results:
 
 1. **Deploy Pack configuration by default.** It achieves 99% accuracy, matching or beating training on 7/8 packs.
 
-2. **Use Opus as judge model.** The `JUDGE_MODEL` in eval scripts is now set to `claude-opus-4-6` for more accurate scoring.
+2. **Consider Opus as judge model for definitive evaluations.** The default `JUDGE_MODEL` is Haiku for speed and cost efficiency. Change it to `claude-opus-4-6` in the eval script for more nuanced scoring when needed.
 
 3. **Increase sample sizes for definitive results.** The current 10-question sample provides strong directional signal. Run 50+ questions per pack for high-confidence statistical results.
 

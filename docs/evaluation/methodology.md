@@ -43,7 +43,7 @@ Pipeline:
 
 ## The Judge Model
 
-Answers are scored by a **judge model** (Claude Opus) on a 0-10 scale.
+Answers are scored by a **judge model** (configurable, defaults to Claude Haiku in `eval_single_pack.py`) on a 0-10 scale.
 
 ### Scoring Prompt
 
@@ -57,17 +57,16 @@ Number only.
 
 The judge compares the generated answer against the `ground_truth` from the evaluation question set and returns a single integer.
 
-### Why Claude Opus as Judge?
+### Judge Model Configuration
+
+Both evaluation scripts use Claude Haiku (`claude-haiku-4-5-20251001`) as the default judge model. The `JUDGE_MODEL` constant at the top of each script can be changed to use a different model (e.g., Claude Opus for more nuanced scoring).
 
 | Consideration | Decision |
 |--------------|----------|
-| Accuracy | Opus provides more nuanced, accurate scoring than Haiku |
-| Consistency | Opus produces stable, reproducible scores at temperature 0 |
-| Fewer false negatives | Haiku over-penalizes minor answer differences; Opus evaluates semantic correctness |
+| Speed | Haiku is fast and cost-effective for iterative evaluation |
+| Consistency | Produces stable, reproducible scores at temperature 0 |
 | Simplicity | Single-number output avoids parsing complexity |
-
-!!! note "Haiku vs Opus judge comparison"
-    Early evaluations used Haiku as judge. Switching to Opus reduced scoring noise significantly -- for example, vercel-ai-sdk's delta went from -20pp (Haiku) to -0.1 (Opus), reflecting a more accurate assessment of answer quality.
+| Configurable | Change `JUDGE_MODEL` in the eval script to use Opus or other models |
 
 ### Scoring Rubric
 
@@ -233,13 +232,13 @@ questions.jsonl
   │    Claude Opus answers without context
   │    │
   │    ▼
-  │    Judge (Opus) scores 0-10 vs ground_truth
+  │    Judge (configurable) scores 0-10 vs ground_truth
   │
   └──► Pack condition
        KG Agent retrieves + synthesizes (full pipeline)
        │
        ▼
-       Judge (Opus) scores 0-10 vs ground_truth
+       Judge (configurable) scores 0-10 vs ground_truth
 
 Results:
   per-question scores

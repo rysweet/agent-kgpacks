@@ -99,13 +99,14 @@ Extract text content (strip navigation, headers, footers)
 LLM extraction (Claude) → entities, relationships, facts
   │
   ▼
-Generate BGE embeddings for each section (384-dim vectors)
+Generate BGE embeddings for each section (768-dim vectors)
   │
   ▼
 Store in Kuzu graph database:
-  - Article nodes (title, url, content)
-  - Section nodes (heading, content, embedding)
+  - Article nodes (title, category, word_count)
+  - Section nodes (title, content, embedding)
   - Entity nodes (name, type, description)
+  - Fact nodes (content)
   - Relationship edges (entity → entity)
   - LINKS_TO edges (article → article)
   │
@@ -288,10 +289,12 @@ result = agent.query("How do Go iterators work in 1.23?")
 print(result["answer"])
 ```
 
-### Via CLI
+### Via Python (Context Manager)
 
-```bash
-uv run wikigr query "How do Go iterators work?" --pack data/packs/go-expert
+```python
+with KnowledgeGraphAgent(db_path="data/packs/go-expert/pack.db") as agent:
+    result = agent.query("How do Go iterators work?")
+    print(result["answer"])
 ```
 
 ### As a Claude Code Skill

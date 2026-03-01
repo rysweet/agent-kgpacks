@@ -161,9 +161,8 @@ data/packs/<pack-name>/
 ├── urls.txt              # Source URLs used to build the pack
 ├── skill.md              # Claude Code skill description
 ├── kg_config.json        # KG Agent configuration overrides
-├── few_shot_examples.json # (optional) Curated few-shot examples
 └── eval/
-    ├── questions.jsonl    # Evaluation questions with ground truth
+    ├── questions.jsonl    # Evaluation questions (also used for few-shot examples)
     └── results/           # Evaluation output files
 ```
 

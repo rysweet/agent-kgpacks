@@ -61,7 +61,7 @@ Packs add complexity. Do not build one when:
 │  │             │  │              │  │               │  │
 │  │ Articles    │  │ Section      │  │ Reranker      │  │
 │  │ Sections    │  │ embeddings   │  │ MultiDoc      │  │
-│  │ Entities    │  │ 384-dim      │  │ FewShot       │  │
+│  │ Entities    │  │ 768-dim      │  │ FewShot       │  │
 │  │ Relations   │  │ cosine sim   │  │ CrossEncoder  │  │
 │  └─────────────┘  └──────────────┘  └───────────────┘  │
 │                                                          │
@@ -84,7 +84,7 @@ Packs add complexity. Do not build one when:
 | Component | Technology | Role |
 |-----------|-----------|------|
 | **Graph Database** | Kuzu (embedded) | Stores articles, sections, entities, relationships as graph nodes and edges |
-| **Vector Embeddings** | BGE / paraphrase-MiniLM-L3-v2 (384-dim) | Enables semantic search over section content via HNSW index |
+| **Vector Embeddings** | BAAI/bge-base-en-v1.5 (768-dim) | Enables semantic search over section content via HNSW index |
 | **Synthesis** | Claude (Opus) | Generates natural language answers from retrieved context |
 | **Query Expansion** | Claude (Haiku) | Generates alternative phrasings for multi-query retrieval |
 | **Enhancement Modules** | Python classes | Confidence gating, cross-encoder reranking, graph reranking, multi-doc synthesis, few-shot examples, content quality scoring |

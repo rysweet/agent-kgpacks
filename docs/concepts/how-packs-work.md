@@ -29,8 +29,8 @@ urls.txt
                        ▼
 ┌──────────────────────────────────────────────────────┐
 │  3. EMBED                                            │
-│  BGE / paraphrase-MiniLM-L3-v2 generates             │
-│  384-dimension vectors for each section              │
+│  BGE / BAAI/bge-base-en-v1.5 generates             │
+│  768-dimension vectors for each section              │
 │  Vectors enable cosine similarity search             │
 └──────────────────────┬───────────────────────────────┘
                        │
@@ -38,8 +38,8 @@ urls.txt
 ┌──────────────────────────────────────────────────────┐
 │  4. STORE                                            │
 │  Kuzu embedded graph database:                        │
-│  • Article nodes (title, url, content)                │
-│  • Section nodes (heading, content, embedding)        │
+│  • Article nodes (title, category, word_count)        │
+│  • Section nodes (title, content, embedding)          │
 │  • Entity nodes (name, type, description)             │
 │  • Relationship edges (entity→entity with label)      │
 │  • LINKS_TO edges (article→article)                   │
@@ -70,7 +70,7 @@ This creates the graph structure that enables graph-based retrieval and rerankin
 
 ### Embedding Stage
 
-Each section's text content is passed through the embedding model to produce a 384-dimensional vector. These vectors are stored alongside the section nodes and indexed using an HNSW (Hierarchical Navigable Small World) index for fast approximate nearest-neighbor search.
+Each section's text content is passed through the embedding model to produce a 768-dimensional vector. These vectors are stored alongside the section nodes and indexed using an HNSW (Hierarchical Navigable Small World) index for fast approximate nearest-neighbor search.
 
 ### Storage Stage
 
@@ -101,7 +101,7 @@ User Question: "What is goroutine scheduling?"
                        ▼
 ┌──────────────────────────────────────────────────────┐
 │  3. HYBRID RETRIEVAL                                 │
-│  Graph reranking (PageRank authority)                  │
+│  Graph reranking (degree centrality authority)                  │
 │  Multi-document expansion (5 articles)                │
 │  Content quality filtering (remove stubs)             │
 │  Cross-encoder reranking (optional)                   │
@@ -118,7 +118,7 @@ User Question: "What is goroutine scheduling?"
 
 ### Vector Search
 
-The question is embedded using the same model used during ingestion. The HNSW index returns the top-K most similar sections by cosine similarity. Default K=5.
+The question is embedded using the same model used during ingestion. The HNSW index returns the top-K most similar sections by cosine similarity. Default K=10.
 
 ### Confidence Gate
 
@@ -132,8 +132,8 @@ When confidence is sufficient, multiple enhancement modules process the results:
 
 | Module | What It Does | Impact |
 |--------|-------------|--------|
-| **GraphReranker** | Reranks by `0.7 * similarity + 0.3 * PageRank` to promote authoritative articles | +5-10% accuracy |
-| **MultiDocSynthesizer** | Expands from 1 article to 5, extracting top 3 sections each | +10-15% accuracy |
+| **GraphReranker** | Reranks by `0.6 * similarity + 0.4 * degree centrality` to promote authoritative articles | +5-10% accuracy |
+| **MultiDocSynthesizer** | Traverses LINKS_TO edges adding up to 2 neighbors, capped at 7 total sources | +10-15% accuracy |
 | **Content Quality Scoring** | Filters sections < 20 words or below quality threshold (0.3) | Reduces noise ~30% |
 | **CrossEncoderReranker** | Joint query-document scoring for precise relevance ranking (opt-in) | +10-15% retrieval precision |
 | **Multi-Query Retrieval** | Generates 2 alternative phrasings via Haiku, fans out search (opt-in) | +15-25% recall |
@@ -177,16 +177,16 @@ Sections below 20 words always score 0.0. Sections below the threshold (0.3) are
 
 ### Graph Reranking
 
-PageRank is computed over the LINKS_TO edge graph. Articles with many incoming links are considered more authoritative. The combined score balances semantic relevance and authority:
+degree centrality is computed over the LINKS_TO edge graph. Articles with many incoming links are considered more authoritative. The combined score balances semantic relevance and authority:
 
 ```
-combined_score = 0.7 * vector_similarity + 0.3 * normalized_pagerank
+combined_score = 0.6 * vector_similarity + 0.4 * normalized_centrality
 ```
 
 ### Multi-Document Synthesis
 
-Instead of synthesizing from a single article, the agent retrieves the top 5 articles and extracts the 3 most relevant sections from each. This provides broader coverage and reduces the chance of missing important information.
+Instead of synthesizing from a single article, the agent traverses LINKS_TO edges from the top result, adding up to 2 neighbors. The total source list is capped at 7 articles. This provides broader coverage and reduces the chance of missing important information.
 
 ### Few-Shot Examples
 
-Pack-specific examples (from `few_shot_examples.json` or `eval/questions.jsonl`) are injected into the synthesis prompt. These guide Claude to follow the pack's preferred answer format, citation style, and reasoning structure.
+Pack-specific examples (from `eval/questions.jsonl`) are injected into the synthesis prompt. These guide Claude to follow the pack's preferred answer format, citation style, and reasoning structure.

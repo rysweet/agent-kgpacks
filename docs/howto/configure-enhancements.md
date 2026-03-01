@@ -6,8 +6,8 @@ How to enable, disable, and tune each enhancement module in the KG Agent retriev
 
 | Module | Flag | Default | What It Does |
 |--------|------|---------|-------------|
-| GraphReranker | `enable_reranker` | True | Reranks by PageRank authority |
-| MultiDocSynthesizer | `enable_multidoc` | True | Expands retrieval to 5 articles |
+| GraphReranker | `enable_reranker` | True | Reranks by degree centrality authority |
+| MultiDocSynthesizer | `enable_multidoc` | True | Traverses LINKS_TO edges for related articles |
 | FewShotManager | `enable_fewshot` | True | Injects pack-specific examples |
 | CrossEncoderReranker | `enable_cross_encoder` | False | Joint query-document scoring |
 | Multi-Query Retrieval | `enable_multi_query` | False | Haiku-generated query alternatives |
@@ -54,7 +54,7 @@ agent = KnowledgeGraphAgent(
 
 ### GraphReranker
 
-Reranks search results using graph centrality (PageRank) to promote authoritative articles.
+Reranks search results using graph degree centrality to promote authoritative articles. In actual use, the reranker is called via Reciprocal Rank Fusion (RRF) with k=60.
 
 ```python
 # Enable (default)
@@ -72,28 +72,30 @@ agent = KnowledgeGraphAgent(
 )
 ```
 
-**Tuning weights** (requires subclassing or direct module access):
+**Direct module access** (for standalone use outside the KG Agent pipeline):
 
 ```python
 from wikigr.agent.reranker import GraphReranker
 
-reranker = GraphReranker(
-    conn=agent.conn,
-    alpha=0.7,  # vector similarity weight (default)
-    beta=0.3,   # PageRank weight (default)
+reranker = GraphReranker(kuzu_conn)  # constructor takes only a Kuzu connection
+
+reranked = reranker.rerank(
+    vector_results,
+    vector_weight=0.6,   # vector similarity weight (default)
+    graph_weight=0.4,    # degree centrality weight (default)
 )
 ```
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `alpha` | 0.7 | Weight for vector similarity score |
-| `beta` | 0.3 | Weight for normalized PageRank |
+| `vector_weight` | 0.6 | Weight for vector similarity score |
+| `graph_weight` | 0.4 | Weight for normalized degree centrality |
 
-Higher `alpha` favors semantic relevance. Higher `beta` favors authoritative articles. Must sum to 1.0.
+Higher `vector_weight` favors semantic relevance. Higher `graph_weight` favors authoritative articles. Must sum to 1.0.
 
 ### MultiDocSynthesizer
 
-Expands retrieval from 1 article to multiple articles for broader coverage.
+Expands retrieval by traversing LINKS_TO edges from the top result, adding up to 2 neighbors and capping at 7 total sources.
 
 ```python
 # Enable (default)
@@ -111,17 +113,18 @@ agent = KnowledgeGraphAgent(
 )
 ```
 
-**Tuning** (via direct module access):
+**Direct module access** (for standalone use):
 
 ```python
 from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
 
-synthesizer = MultiDocSynthesizer(
-    conn=agent.conn,
-    num_docs=5,         # articles to retrieve (default)
-    max_sections=3,     # sections per article (default)
-    min_relevance=0.7,  # minimum similarity threshold (default)
-)
+synthesizer = MultiDocSynthesizer(kuzu_conn)  # constructor takes only a Kuzu connection
+
+# Expand seed articles by traversing LINKS_TO edges
+expanded = synthesizer.expand_to_related_articles(seed_articles=[1, 2], max_hops=1)
+
+# Create synthesis text with citations
+text = synthesizer.synthesize_with_citations(expanded, query="your question")
 ```
 
 ### FewShotManager
@@ -141,7 +144,7 @@ agent = KnowledgeGraphAgent(
     db_path="pack.db",
     use_enhancements=True,
     enable_fewshot=True,
-    few_shot_path="data/packs/go-expert/few_shot_examples.json",
+    few_shot_path="data/packs/go-expert/eval/questions.jsonl",
 )
 
 # Disable
@@ -152,12 +155,9 @@ agent = KnowledgeGraphAgent(
 )
 ```
 
-**Example file auto-detection**: When `few_shot_path` is not specified, the agent looks for:
+**Example file auto-detection**: When `few_shot_path` is not specified, the agent looks for `eval/questions.jsonl` adjacent to `pack.db`.
 
-1. `few_shot_examples.json` in the same directory as `pack.db`
-2. `eval/questions.jsonl` in the same directory as `pack.db`
-
-If neither is found, few-shot is silently disabled with a warning in logs.
+If the file is not found, few-shot is silently disabled with a warning in logs.
 
 ### CrossEncoderReranker
 

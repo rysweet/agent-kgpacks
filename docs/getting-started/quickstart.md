@@ -40,17 +40,26 @@ This will:
 6. Write `manifest.json` with pack metadata
 
 !!! note "Build time"
-    Test mode builds in 1-2 minutes. Full builds fetch all URLs and take 5-15 minutes depending on pack size.
+    Test mode builds in 5-10 minutes. Full builds fetch all URLs and take 3-5 hours depending on pack size.
 
 ## 4. Query the Pack
 
 Ask a question using the KG Agent:
 
-```bash
-uv run wikigr query "What is goroutine scheduling?" --pack data/packs/go-expert
+```python
+from wikigr.agent.kg_agent import KnowledgeGraphAgent
+
+agent = KnowledgeGraphAgent(
+    db_path="data/packs/go-expert/pack.db",
+    use_enhancements=True,
+)
+
+result = agent.query("What is goroutine scheduling?")
+print(result["answer"])
+print(f"Sources: {result['sources']}")
 ```
 
-Or use Python directly:
+Or use the context manager form:
 
 ```python
 from wikigr.agent.kg_agent import KnowledgeGraphAgent

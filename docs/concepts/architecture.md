@@ -23,7 +23,7 @@ This page describes the system architecture of Knowledge Packs, including the da
 │  │                                                             │ │
 │  │  ┌─────────────┐ ┌──────────────┐ ┌───────────────────┐   │ │
 │  │  │ GraphReranker│ │MultiDocSynth.│ │  FewShotManager   │   │ │
-│  │  │ (PageRank)   │ │ (5 articles) │ │  (3 examples)     │   │ │
+│  │  │ (centrality) │ │ (LINKS_TO)   │ │  (2 examples)     │   │ │
 │  │  └─────────────┘ └──────────────┘ └───────────────────┘   │ │
 │  │                                                             │ │
 │  │  ┌─────────────┐ ┌──────────────┐ ┌───────────────────┐   │ │
@@ -53,7 +53,7 @@ This page describes the system architecture of Knowledge Packs, including the da
 | Component | Technology | Version | Purpose |
 |-----------|-----------|---------|---------|
 | Graph Database | Kuzu | 0.11.3+ | Embedded graph storage, Cypher queries |
-| Embeddings | paraphrase-MiniLM-L3-v2 | - | 384-dim sentence embeddings |
+| Embeddings | BAAI/bge-base-en-v1.5 | - | 768-dim sentence embeddings (local, CPU) |
 | Vector Index | HNSW (via Kuzu) | - | Approximate nearest neighbor search |
 | Synthesis Model | Claude Opus | claude-opus-4-6 | Answer generation, entity extraction |
 | Query Expansion | Claude Haiku | claude-haiku-4-5 | Alternative query phrasing |
@@ -72,13 +72,13 @@ Kuzu is an embedded, column-oriented graph database:
 - **Concurrent reads**: Multiple processes can read the same database simultaneously
 - **Small footprint**: Typical pack databases are 1-50 MB
 
-### Why BGE / MiniLM Embeddings?
+### Why BAAI/bge-base-en-v1.5 Embeddings?
 
-The 384-dimensional model provides a good tradeoff between embedding quality and resource usage:
+The 768-dimensional model provides a good tradeoff between embedding quality and resource usage:
 
 - **Fast**: Embeds a section in ~10ms on CPU
-- **Small**: 384 dimensions keeps the HNSW index compact
-- **Good quality**: Strong performance on semantic similarity benchmarks
+- **Quality**: Strong performance on MTEB semantic similarity benchmarks
+- **768 dimensions**: Good quality while keeping the HNSW index manageable
 - **Local**: Runs entirely on CPU, no GPU or API call required
 
 ## Data Model
@@ -86,16 +86,16 @@ The 384-dimensional model provides a good tradeoff between embedding quality and
 ### Node Types
 
 ```
-┌─────────────────┐     HAS_SECTION      ┌─────────────────┐
-│    Article       │────────────────────▶│    Section        │
-│                 │                      │                  │
-│ title: STRING   │                      │ heading: STRING  │
-│ url: STRING     │                      │ content: STRING  │
-│ content: STRING │                      │ embedding: FLOAT[]│
-│ source: STRING  │                      └─────────────────┘
-└────────┬────────┘
+┌─────────────────┐     HAS_SECTION      ┌──────────────────────┐
+│    Article       │────────────────────▶│    Section              │
+│                 │  (section_index)     │                        │
+│ title: STRING   │                      │ section_id: STRING (PK)│
+│ category: STRING│                      │ title: STRING          │
+│ word_count: INT │                      │ content: STRING        │
+│ ...             │                      │ embedding: DOUBLE[768] │
+└────────┬────────┘                      └──────────────────────┘
          │
-         │ LINKS_TO
+         │ LINKS_TO (link_type)
          ▼
 ┌─────────────────┐
 │    Article       │
@@ -104,17 +104,19 @@ The 384-dimensional model provides a good tradeoff between embedding quality and
 ┌─────────────────┐     HAS_ENTITY       ┌─────────────────┐
 │    Article       │────────────────────▶│    Entity         │
 │                 │                      │                  │
-│                 │                      │ name: STRING     │
+│                 │     HAS_FACT         │ entity_id: STR   │
+│                 │────────▶ Fact        │ name: STRING     │
 │                 │                      │ type: STRING     │
-│                 │                      │ description: STR │
-│                 │                      └────────┬────────┘
+│                 │     IN_CATEGORY      │ description: STR │
+│                 │────────▶ Category    └────────┬────────┘
 └─────────────────┘                               │
-                                                  │ RELATES_TO
+                                                  │ ENTITY_RELATION
                                                   ▼
                                          ┌─────────────────┐
                                          │    Entity         │
                                          │                  │
-                                         │ (label on edge)  │
+                                         │ (relation, context│
+                                         │  on edge)         │
                                          └─────────────────┘
 ```
 
@@ -122,35 +124,71 @@ The 384-dimensional model provides a good tradeoff between embedding quality and
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `title` | STRING | Document title (unique identifier) |
-| `url` | STRING | Source URL |
-| `content` | STRING | Full text content |
-| `source` | STRING | Content source type ("web", "wikipedia") |
+| `title` | STRING | Document title (primary key) |
+| `category` | STRING | Article category |
+| `word_count` | INT32 | Total word count |
+| `expansion_state` | STRING | Build pipeline state ("discovered", "expanded", etc.) |
+| `expansion_depth` | INT32 | Graph expansion depth from seed |
+| `claimed_at` | TIMESTAMP | When article was claimed for processing |
+| `processed_at` | TIMESTAMP | When article processing completed |
+| `retry_count` | INT32 | Number of processing retries |
 
 ### Section Node
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `heading` | STRING | Section heading (h2/h3) |
+| `section_id` | STRING | Unique section identifier (primary key) |
+| `title` | STRING | Section title (h2/h3) |
 | `content` | STRING | Section text content |
-| `embedding` | FLOAT[384] | BGE vector embedding |
+| `embedding` | DOUBLE[768] | BGE vector embedding |
+| `level` | INT32 | Heading level |
+| `word_count` | INT32 | Section word count |
 
 ### Entity Node
 
 | Property | Type | Description |
 |----------|------|-------------|
+| `entity_id` | STRING | Unique entity identifier (primary key) |
 | `name` | STRING | Entity name (e.g., "goroutine") |
 | `type` | STRING | Entity type (e.g., "concept", "api", "type") |
 | `description` | STRING | Brief description |
+
+### Fact Node
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `fact_id` | STRING | Unique fact identifier (primary key) |
+| `content` | STRING | Fact text content |
+
+### Chunk Node
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `chunk_id` | STRING | Unique chunk identifier (primary key) |
+| `content` | STRING | Chunk text content |
+| `embedding` | DOUBLE[768] | BGE vector embedding |
+| `article_title` | STRING | Parent article title |
+| `section_index` | INT32 | Parent section index |
+| `chunk_index` | INT32 | Position within section |
+
+### Category Node
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | STRING | Category name (primary key) |
+| `article_count` | INT32 | Number of articles in this category |
 
 ### Edge Types
 
 | Edge | From | To | Properties |
 |------|------|-----|-----------|
-| `HAS_SECTION` | Article | Section | ordinal (section position) |
-| `LINKS_TO` | Article | Article | (none) |
+| `HAS_SECTION` | Article | Section | section_index (INT32) |
+| `LINKS_TO` | Article | Article | link_type (STRING) |
+| `IN_CATEGORY` | Article | Category | (none) |
 | `HAS_ENTITY` | Article | Entity | (none) |
-| `RELATES_TO` | Entity | Entity | label (relationship type) |
+| `HAS_FACT` | Article | Fact | (none) |
+| `ENTITY_RELATION` | Entity | Entity | relation (STRING), context (STRING) |
+| `HAS_CHUNK` | Article | Chunk | section_index (INT32), chunk_index (INT32) |
 
 ## The Retrieval Pipeline
 
@@ -183,10 +221,10 @@ Question
               [enable_cross_encoder]──► CrossEncoder rescoring
                       │
                       ▼
-              [enable_reranker]──► GraphReranker (PageRank blend)
+              [enable_reranker]──► GraphReranker (degree centrality blend via RRF)
                       │
                       ▼
-              [enable_multidoc]──► MultiDocSynthesizer (5 articles)
+              [enable_multidoc]──► MultiDocSynthesizer (LINKS_TO expansion)
                       │
                       ▼
               Content Quality Filtering (score >= 0.3)
@@ -225,8 +263,7 @@ data/packs/<pack-name>/
 ├── urls.txt              # Source URLs used to build the pack
 ├── skill.md              # Claude Code skill description
 ├── kg_config.json        # KG Agent configuration overrides
-├── few_shot_examples.json # (optional) Curated examples for few-shot
 └── eval/
-    ├── questions.jsonl    # Evaluation questions with ground truth
+    ├── questions.jsonl    # Evaluation questions (also used for few-shot examples)
     └── results/           # Evaluation output files
 ```

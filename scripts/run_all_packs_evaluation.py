@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 MODEL = "claude-opus-4-6"
-JUDGE_MODEL = "claude-opus-4-6"
+JUDGE_MODEL = "claude-haiku-4-5-20251001"
 
 
 def find_all_packs() -> list[dict]:

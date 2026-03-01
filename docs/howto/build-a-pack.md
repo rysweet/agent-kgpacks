@@ -58,7 +58,7 @@ https://github.com/example/project/blob/main/README.md
 ### Validate URLs
 
 ```bash
-python scripts/validate_pack_urls.py --pack ${PACK_NAME}
+python scripts/validate_pack_urls.py data/packs/${PACK_NAME}/urls.txt
 ```
 
 This checks that all URLs return HTTP 200 and serve text-based content.
@@ -85,7 +85,7 @@ Edit the copy to point to your pack's `urls.txt` and output directory. Key varia
 echo "y" | uv run python scripts/build_my_domain_expert_pack.py --test-mode
 ```
 
-Test mode processes only the first few URLs, completing in 1-2 minutes. Use this to verify the build pipeline works before committing to a full build.
+Test mode processes only the first few URLs, completing in 5-10 minutes. Use this to verify the build pipeline works before committing to a full build.
 
 ### Full Build
 
@@ -93,14 +93,14 @@ Test mode processes only the first few URLs, completing in 1-2 minutes. Use this
 echo "y" | uv run python scripts/build_my_domain_expert_pack.py
 ```
 
-A full build processes all URLs. Depending on the number of URLs and page sizes, this takes 5-15 minutes.
+A full build processes all URLs. Depending on the number of URLs and page sizes, this takes 3-5 hours.
 
 ### What Happens During Build
 
 1. **Fetch**: Each URL is downloaded and text content extracted
 2. **Parse**: Content is split into sections by headings
 3. **Extract**: Claude identifies entities, relationships, and facts from each section
-4. **Embed**: BGE model generates 384-dim vectors for each section
+4. **Embed**: BAAI/bge-base-en-v1.5 generates 768-dim vectors for each section
 5. **Store**: Everything is written to a Kuzu graph database
 
 ### Build Output
@@ -130,11 +130,7 @@ Look for:
 
 ### Quick Query Test
 
-```bash
-uv run wikigr query "What is the core concept?" --pack data/packs/${PACK_NAME}
-```
-
-Or in Python:
+Query the pack using the Python API:
 
 ```python
 from wikigr.agent.kg_agent import KnowledgeGraphAgent

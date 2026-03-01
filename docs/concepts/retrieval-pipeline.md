@@ -70,14 +70,14 @@ The question (and any alternatives from Step 1) is embedded using the same model
 
 ```python
 # Pseudocode
-query_embedding = embed(question)  # 384-dim vector
-results = hnsw_index.search(query_embedding, top_k=5)
+query_embedding = embed(question)  # 768-dim vector
+results = hnsw_index.search(query_embedding, top_k=10)
 # Returns: [(section_title, similarity_score), ...]
 ```
 
 **Configuration:**
 
-- `max_results`: Number of results per query (default 5, clamped to [1, 20])
+- `max_results`: Number of results per query (default 10, clamped to [1, 1000])
 - When cross-encoder is enabled, fetches 2x candidates to give the cross-encoder a larger pool
 
 ## Step 3: Confidence Gate
@@ -136,53 +136,54 @@ Bi-encoder search scores query and document independently -- it cannot capture i
 
 **Flag**: `enable_reranker=True` (default True)
 
-PageRank is computed over the LINKS_TO edge graph. Articles with many incoming links are considered authoritative. Search results are reranked by a weighted combination:
+Degree centrality (in-degree + out-degree) is computed over the LINKS_TO edge graph. Articles with many connections are considered authoritative. In practice, the reranker is called via Reciprocal Rank Fusion (RRF) with k=60, combining the original vector ranking with the centrality ranking:
 
 ```
-combined_score = alpha * vector_similarity + beta * normalized_pagerank
+rrf_score = 1/(k + vector_rank) + 0.5/(k + centrality_rank)
 ```
 
-Default weights: `alpha=0.7`, `beta=0.3`
+The `GraphReranker.rerank()` method also supports direct weighted combination:
+
+```
+combined_score = vector_weight * vector_similarity + graph_weight * normalized_centrality
+```
+
+Default weights: `vector_weight=0.6`, `graph_weight=0.4`
 
 **Example:**
 
 ```
 Before reranking:
-  1. Quantum_fluctuation  (similarity=0.95, pagerank=0.02)  → combined=0.67 + 0.01 = 0.68
-  2. Quantum_mechanics    (similarity=0.90, pagerank=0.85)  → combined=0.63 + 0.26 = 0.89
+  1. Quantum_fluctuation  (similarity=0.95, centrality=0.02)  → combined=0.57 + 0.01 = 0.58
+  2. Quantum_mechanics    (similarity=0.90, centrality=0.85)  → combined=0.54 + 0.34 = 0.88
 
 After reranking:
-  1. Quantum_mechanics    (combined=0.89)  ← promoted (authoritative)
-  2. Quantum_fluctuation  (combined=0.68)
+  1. Quantum_mechanics    (combined=0.88)  ← promoted (authoritative)
+  2. Quantum_fluctuation  (combined=0.58)
 ```
 
 **Performance:**
 
-- PageRank computation: O(V+E), cached for 1 hour
+- Degree centrality computation: O(V+E), computed per query
+- Sparse graph detection: automatically disables centrality for graphs with < 2 avg links/article
 - Reranking: O(N log N) where N = result count
-- Adds ~50ms per query (with cached PageRank)
+- Adds ~50ms per query
 
 ## Step 6: Multi-Document Expansion
 
 **Flag**: `enable_multidoc=True` (default True)
 
-Instead of using a single article, the synthesizer retrieves the top 5 articles and extracts the 3 most relevant sections from each. This provides 15 sections of context instead of 3.
+Instead of using a single article, the synthesizer traverses LINKS_TO edges from the top result to find related articles.
 
 **How it works:**
 
-1. Take the reranked result list
-2. Group results by article
-3. Select top 5 articles by cumulative section relevance
-4. Extract top 3 sections per article
+1. Take the top result from the reranked list as the seed
+2. Follow LINKS_TO edges from the seed article
+3. Add up to 2 neighbor articles
+4. Cap the total source list at 7 articles
 5. Assemble unified context for synthesis
 
-**Configuration:**
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `num_docs` | 5 | Articles to retrieve |
-| `max_sections` | 3 | Sections per article |
-| `min_relevance` | 0.7 | Minimum similarity threshold |
+**Constructor:** `MultiDocSynthesizer(kuzu_conn)` -- takes only the Kuzu connection. No additional configuration parameters.
 
 ## Step 7: Content Quality Filtering
 
@@ -220,12 +221,11 @@ Sections below `CONTENT_QUALITY_THRESHOLD = 0.3` are excluded from the synthesis
 
 Pack-specific examples are injected into the synthesis prompt before the question. These guide Claude to follow the pack's preferred answer format, citation style, and reasoning structure.
 
-**Example sources:**
+**Example source:**
 
-1. `few_shot_examples.json` in the pack directory (curated examples)
-2. `eval/questions.jsonl` (evaluation questions repurposed as examples)
+The FewShotManager auto-detects examples from `eval/questions.jsonl` adjacent to `pack.db`. If not found, few-shot is silently disabled.
 
-**Selection:** The 3 most semantically similar examples to the current question are chosen via cosine similarity over example question embeddings.
+**Selection:** The 2 most semantically similar examples to the current question are chosen via cosine similarity over example question embeddings (called with `k=2` in the query pipeline).
 
 **Prompt structure:**
 
@@ -281,8 +281,8 @@ The assembled prompt -- containing retrieved context, few-shot examples, and the
 | Flag | Default | What It Controls |
 |------|---------|-----------------|
 | `use_enhancements` | True | Master switch for all enhancement modules |
-| `enable_reranker` | True | GraphReranker (PageRank blending) |
-| `enable_multidoc` | True | MultiDocSynthesizer (5-article expansion) |
+| `enable_reranker` | True | GraphReranker (degree centrality via RRF) |
+| `enable_multidoc` | True | MultiDocSynthesizer (LINKS_TO expansion) |
 | `enable_fewshot` | True | FewShotManager (example injection) |
 | `enable_cross_encoder` | False | CrossEncoderReranker (joint scoring) |
 | `enable_multi_query` | False | Multi-query retrieval (Haiku expansion) |
@@ -301,8 +301,8 @@ Baseline (use_enhancements=False):
 
 Balanced (default):
   Vector search:       ~100ms
-  GraphReranker:       ~50ms   (PageRank cached)
-  MultiDocSynthesizer: ~300ms  (5x vector searches)
+  GraphReranker:       ~50ms   (degree centrality)
+  MultiDocSynthesizer: ~300ms  (LINKS_TO traversal)
   FewShotManager:      ~20ms   (example retrieval)
   Synthesis:           ~200ms  (larger context)
   ─────────────────────────
