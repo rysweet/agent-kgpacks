@@ -43,7 +43,7 @@ Pipeline:
 
 ## The Judge Model
 
-Answers are scored by a **judge model** (configurable, defaults to Claude Haiku in `eval_single_pack.py`) on a 0-10 scale.
+Answers are scored by a **judge model** (Claude Opus `claude-opus-4-6`) on a 0-10 scale.
 
 ### Scoring Prompt
 
@@ -59,14 +59,14 @@ The judge compares the generated answer against the `ground_truth` from the eval
 
 ### Judge Model Configuration
 
-Both evaluation scripts use Claude Haiku (`claude-haiku-4-5-20251001`) as the default judge model. The `JUDGE_MODEL` constant at the top of each script can be changed to use a different model (e.g., Claude Opus for more nuanced scoring).
+Both evaluation scripts use Claude Opus (`claude-opus-4-6`) as the judge model. Opus provides more accurate, nuanced scoring than smaller models — it evaluates semantic correctness rather than surface-level keyword matching.
 
 | Consideration | Decision |
 |--------------|----------|
-| Speed | Haiku is fast and cost-effective for iterative evaluation |
+| Accuracy | Opus provides the most accurate relevance judgments |
 | Consistency | Produces stable, reproducible scores at temperature 0 |
+| Fewer false negatives | Evaluates semantic correctness, not just keyword overlap |
 | Simplicity | Single-number output avoids parsing complexity |
-| Configurable | Change `JUDGE_MODEL` in the eval script to use Opus or other models |
 
 ### Scoring Rubric
 

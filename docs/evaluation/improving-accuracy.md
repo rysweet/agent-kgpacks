@@ -194,7 +194,7 @@ Expand `urls.txt` for each pack to cover:
 4. **Validate reachability**:
 
     ```bash
-    python scripts/validate_pack_urls.py data/packs/langchain-expert/urls.txt
+    python scripts/validate_pack_urls.py --pack langchain-expert
     ```
 
 ### Recommended URL Counts
@@ -298,7 +298,7 @@ Fresh builds incorporate all new URLs, providing the expanded coverage needed fo
 The improvements stack and should be applied together for maximum effect:
 
 1. Expand `urls.txt` (Improvement 5)
-2. Validate URLs: `python scripts/validate_pack_urls.py data/packs/<name>/urls.txt`
+2. Validate URLs: `python scripts/validate_pack_urls.py --pack <name>`
 3. Rebuild pack: `python scripts/build_<pack>_pack.py`
 4. Calibrate eval questions (Improvement 6)
 5. Run evaluation with all enhancements:

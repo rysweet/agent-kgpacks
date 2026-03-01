@@ -42,7 +42,7 @@ For each question in `data/packs/<pack-name>/eval/questions.jsonl`:
 
 1. **Training condition**: Claude Opus answers without any pack context
 2. **Pack condition**: KG Agent retrieves from the pack with the full retrieval pipeline, then Claude Opus synthesizes
-3. **Judge scoring**: Claude Haiku scores each answer 0-10 against the `ground_truth`
+3. **Judge scoring**: Claude Opus scores each answer 0-10 against the `ground_truth`
 
 ### Output
 
@@ -61,7 +61,7 @@ Delta                    +10.0pp
 | Role | Model | Purpose |
 |------|-------|---------|
 | Answer model | `claude-opus-4-6` | Generates answers for both conditions |
-| Judge model | `claude-haiku-4-5-20251001` | Scores answers against ground truth |
+| Judge model | `claude-opus-4-6` | Scores answers against ground truth |
 
 ## All-Packs Evaluation
 
@@ -165,7 +165,7 @@ Evaluation cost depends on the number of questions and conditions:
 | 50 per pack | 8 | ~1200 | ~$1.50 |
 | All (~200 total) | 8 | ~4800 | ~$6.00 |
 
-Each question requires 2 answer calls (Training + Pack) and 2 judge calls, using a mix of Opus (answers) and Haiku (judging).
+Each question requires 2 answer calls (Training + Pack) and 2 judge calls, all using Claude Opus.
 
 ## A/B Testing Enhancement Modules
 

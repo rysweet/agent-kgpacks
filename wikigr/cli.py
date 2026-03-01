@@ -663,6 +663,45 @@ def cmd_status(args: argparse.Namespace) -> None:
     print(f"  Edges (total):          {stats['edges']:>8}")
 
 
+def cmd_query(args: argparse.Namespace) -> None:
+    """Query a knowledge pack with natural language."""
+    import json as _json
+
+    from wikigr.agent.kg_agent import KnowledgeGraphAgent
+
+    pack_path = args.pack
+    # Resolve pack.db path
+    if os.path.isdir(pack_path):
+        db_path = os.path.join(pack_path, "pack.db")
+    elif pack_path.endswith("pack.db"):
+        db_path = pack_path
+    else:
+        db_path = os.path.join("data", "packs", pack_path, "pack.db")
+
+    if not os.path.exists(db_path):
+        print(f"Error: pack database not found at {db_path}", file=sys.stderr)
+        sys.exit(1)
+
+    agent = KnowledgeGraphAgent(db_path, read_only=True)
+    try:
+        result = agent.query(args.question, max_results=args.max_results)
+    finally:
+        agent.close()
+
+    if args.format == "json":
+        output = {
+            "answer": result.get("answer", ""),
+            "sources": result.get("sources", []),
+            "query_type": result.get("query_type", ""),
+        }
+        print(_json.dumps(output, indent=2))
+    else:
+        print(result.get("answer", ""))
+        sources = result.get("sources", [])
+        if sources:
+            print(f"\nSources: {', '.join(sources)}")
+
+
 def cmd_research_sources(args: argparse.Namespace) -> int:
     """Execute 'research-sources' subcommand for discovering authoritative sources.
 
@@ -1398,6 +1437,29 @@ def main() -> None:
         "--validate", action="store_true", help="Validate all URLs (slower but more accurate)"
     )
     research_parser.set_defaults(func=cmd_research_sources)
+
+    # 'query' subcommand
+    query_parser = subparsers.add_parser(
+        "query", help="Query a knowledge pack with natural language"
+    )
+    query_parser.add_argument("question", type=str, help="Natural language question")
+    query_parser.add_argument(
+        "--pack",
+        type=str,
+        required=True,
+        help="Path to pack directory or pack.db file",
+    )
+    query_parser.add_argument(
+        "--max-results", type=int, default=10, help="Maximum retrieval results"
+    )
+    query_parser.add_argument(
+        "--format",
+        type=str,
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)",
+    )
+    query_parser.set_defaults(func=cmd_query)
 
     # 'pack' subcommand group
     pack_parser = subparsers.add_parser("pack", help="Manage knowledge packs")

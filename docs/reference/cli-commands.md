@@ -2,6 +2,36 @@
 
 Complete reference for the `wikigr` command-line interface and pack management scripts.
 
+## wikigr query
+
+Query a knowledge pack with natural language.
+
+```bash
+wikigr query "<question>" --pack <pack-path> [--max-results N] [--format text|json]
+```
+
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `question` | Yes | — | Natural language question |
+| `--pack` | Yes | — | Pack directory path, pack.db path, or pack name (resolves to `data/packs/<name>`) |
+| `--max-results` | No | 10 | Maximum retrieval results |
+| `--format` | No | text | Output format: `text` (answer + sources) or `json` (structured) |
+
+**Examples:**
+
+```bash
+# Query by pack directory
+wikigr query "What changed in Go 1.23 iterators?" --pack data/packs/go-expert
+
+# Query by pack name (resolves to data/packs/<name>/pack.db)
+wikigr query "How do I configure Bicep modules?" --pack bicep-infrastructure
+
+# JSON output for programmatic use
+wikigr query "What is errdefer?" --pack zig-expert --format json
+```
+
+---
+
 ## wikigr pack Commands
 
 The `wikigr pack` subcommand provides 8 commands for pack lifecycle management.
@@ -186,14 +216,18 @@ python scripts/generate_eval_questions.py --pack <pack-name> [--count N] [--outp
 Check that all URLs in a pack's `urls.txt` are reachable.
 
 ```bash
-python scripts/validate_pack_urls.py <urls-file>
-python scripts/validate_pack_urls.py --all  # Validate all packs
+python scripts/validate_pack_urls.py --pack go-expert           # By pack name
+python scripts/validate_pack_urls.py data/packs/go-expert/urls.txt  # By file path
+python scripts/validate_pack_urls.py --all                      # All packs
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `urls-file` | Positional path to a `urls.txt` file (e.g., `data/packs/go-expert/urls.txt`) |
+| `urls-file` | Positional path to a `urls.txt` file |
+| `--pack` | Pack name (resolves to `data/packs/<name>/urls.txt`) |
 | `--all` | Validate all packs in `data/packs/` |
+| `--fix` | Comment out invalid URLs in the file |
+| `--workers` | Concurrent validation workers (default: 10) |
 
 ## Build Scripts
 

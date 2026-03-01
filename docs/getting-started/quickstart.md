@@ -44,7 +44,13 @@ This will:
 
 ## 4. Query the Pack
 
-Ask a question using the KG Agent:
+Ask a question from the command line:
+
+```bash
+uv run wikigr query "What is goroutine scheduling?" --pack go-expert
+```
+
+Or use the Python API:
 
 ```python
 from wikigr.agent.kg_agent import KnowledgeGraphAgent

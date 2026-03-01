@@ -9,6 +9,9 @@ class ChatRequest(BaseModel):
     question: str = Field(
         ..., min_length=1, max_length=500, description="Natural language question"
     )
+    pack: str | None = Field(
+        None, description="Pack name to query (e.g. 'go-expert'). Uses default pack if not specified."
+    )
     max_results: int = Field(10, ge=1, le=50, description="Maximum graph results to retrieve")
 
 

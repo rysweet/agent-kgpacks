@@ -2,7 +2,7 @@
 
 Current evaluation results across all evaluated packs. Data from `data/packs/all_packs_evaluation.json`, evaluated on 2026-03-01 with 10 questions per pack.
 
-**Judge model: Claude Haiku** (`claude-haiku-4-5-20251001`). Both evaluation scripts default to Haiku. The `JUDGE_MODEL` constant can be changed to Opus for more nuanced scoring.
+**Judge model: Claude Opus** (`claude-opus-4-6`). Both evaluation scripts use Opus for accurate, nuanced scoring.
 
 ## Grand Summary
 

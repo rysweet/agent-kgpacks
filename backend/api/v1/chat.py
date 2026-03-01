@@ -78,8 +78,20 @@ def chat(
     try:
         from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
-        # Create agent with injected connection (no DB open overhead)
-        agent = KnowledgeGraphAgent.from_connection(conn, _get_anthropic_client())
+        pack_agent = None
+        if request_body.pack:
+            # Open a specific pack by name
+            pack_db = os.path.join("data", "packs", request_body.pack, "pack.db")
+            if not os.path.exists(pack_db):
+                return JSONResponse(
+                    status_code=404,
+                    content={"error": {"code": "PACK_NOT_FOUND", "message": f"Pack '{request_body.pack}' not found"}},
+                )
+            pack_agent = KnowledgeGraphAgent(pack_db, read_only=True)
+            agent = pack_agent
+        else:
+            # Use the shared connection (default database)
+            agent = KnowledgeGraphAgent.from_connection(conn, _get_anthropic_client())
 
         result = agent.query(
             question=request_body.question,
@@ -107,6 +119,9 @@ def chat(
                 }
             },
         )
+    finally:
+        if pack_agent is not None:
+            pack_agent.close()
 
 
 @router.get("/chat/stream")

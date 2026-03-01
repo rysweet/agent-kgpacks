@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 ANSWER_MODEL = "claude-opus-4-6"
-JUDGE_MODEL = "claude-haiku-4-5-20251001"
+JUDGE_MODEL = "claude-opus-4-6"
 
 # Match pack names: lowercase alphanumeric and hyphens, no path traversal
 PACK_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]+$")

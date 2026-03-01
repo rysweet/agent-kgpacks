@@ -95,7 +95,8 @@ def validate_file(urls_path: Path, fix: bool = False, workers: int = 10) -> dict
 
 def main():
     parser = argparse.ArgumentParser(description="Validate pack URLs")
-    parser.add_argument("urls_file", nargs="?", help="Path to urls.txt")
+    parser.add_argument("urls_file", nargs="?", help="Path to urls.txt file")
+    parser.add_argument("--pack", type=str, help="Pack name (resolves to data/packs/<name>/urls.txt)")
     parser.add_argument("--all", action="store_true", help="Validate all packs")
     parser.add_argument("--fix", action="store_true", help="Remove invalid URLs from file")
     parser.add_argument("--workers", type=int, default=10, help="Concurrent workers")
@@ -105,6 +106,12 @@ def main():
         for urls_file in sorted(Path("data/packs").glob("*/urls.txt")):
             print(f"\n{'=' * 60}")
             validate_file(urls_file, fix=args.fix, workers=args.workers)
+    elif args.pack:
+        pack_urls = Path("data/packs") / args.pack / "urls.txt"
+        if not pack_urls.exists():
+            print(f"Error: {pack_urls} not found", file=sys.stderr)
+            sys.exit(1)
+        validate_file(pack_urls, fix=args.fix, workers=args.workers)
     elif args.urls_file:
         validate_file(Path(args.urls_file), fix=args.fix, workers=args.workers)
     else:
