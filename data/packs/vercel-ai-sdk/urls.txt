@@ -56,3 +56,12 @@ https://sdk.vercel.ai/docs/reference/ai-sdk-rsc
 
 # GitHub
 https://github.com/vercel/ai
+
+# GitHub - Raw Content & Source Files (reliable text extraction)
+https://raw.githubusercontent.com/vercel/ai/main/README.md
+https://github.com/vercel/ai/blob/main/README.md
+https://github.com/vercel/ai/blob/main/packages/ai/README.md
+https://raw.githubusercontent.com/vercel/ai/main/packages/ai/README.md
+https://github.com/vercel/ai/blob/main/content/docs/01-ai-sdk-core/01-overview.mdx
+https://github.com/vercel/ai/blob/main/content/docs/02-guides/01-rag-chatbot.mdx
+https://raw.githubusercontent.com/vercel/ai/main/content/docs/02-guides/01-rag-chatbot.mdx

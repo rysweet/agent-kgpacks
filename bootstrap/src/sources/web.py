@@ -141,7 +141,7 @@ def _validate_url(url: str) -> None:
     """Validate URL to prevent SSRF attacks.
 
     Rejects:
-    - Non-HTTP(S) schemes (file://, ftp://, etc.)
+    - Non-HTTPS schemes (http://, file://, ftp://, etc.)
     - Private/reserved IP ranges (127.x, 10.x, 172.16-31.x, 192.168.x, 169.254.x)
     - IPv6 loopback (::1)
     - IPv6 deprecated site-local addresses (fec0::/10)
@@ -152,8 +152,8 @@ def _validate_url(url: str) -> None:
     """
     parsed = urlparse(url)
 
-    if parsed.scheme not in ("http", "https"):
-        raise ValueError(f"Only HTTP(S) URLs are allowed, got scheme: {parsed.scheme!r}")
+    if parsed.scheme != "https":
+        raise ValueError(f"Only HTTPS URLs are allowed, got scheme: {parsed.scheme!r}")
 
     if not parsed.hostname:
         raise ValueError(f"URL has no hostname: {url}")

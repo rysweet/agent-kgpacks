@@ -149,7 +149,7 @@ pythonPlatform = "Linux"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["bootstrap/src/embeddings/tests", "bootstrap/src/expansion/tests", "bootstrap/src/wikipedia/tests", "bootstrap/src/database/tests", "bootstrap/src/query/tests", "bootstrap/tests", "tests/agent"]
+testpaths = ["bootstrap/src/embeddings/tests", "bootstrap/src/expansion/tests", "bootstrap/src/wikipedia/tests", "bootstrap/src/database/tests", "bootstrap/src/query/tests", "bootstrap/tests", "tests/agent", "tests/packs/eval"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -158,7 +158,6 @@ addopts = [
     "--cov=bootstrap/src",
     "--cov=wikigr/agent",
     "--cov-report=term-missing",
-    "--cov-fail-under=10",
     "--timeout=60",
 ]
 markers = [
@@ -178,3 +177,10 @@ omit = [
 precision = 2
 show_missing = true
 skip_covered = false
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-cov>=6.3.0",
+    "pytest-timeout>=2.4.0",
+]

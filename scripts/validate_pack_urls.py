@@ -47,9 +47,11 @@ def check_url(url: str, timeout: int = 10, retries: int = 2) -> tuple[str, int, 
 def load_urls(path: Path) -> list[str]:
     with open(path) as f:
         return [
-            line.strip()
+            stripped
             for line in f
-            if line.strip() and not line.strip().startswith("#") and line.strip().startswith("http")
+            if (stripped := line.strip())
+            and not stripped.startswith("#")
+            and stripped.startswith("https://")
         ]
 
 
