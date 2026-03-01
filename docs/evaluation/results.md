@@ -9,14 +9,13 @@ Current evaluation results across all evaluated packs. Data from `data/packs/all
 | Condition | Avg Score | Accuracy | n |
 |-----------|-----------|----------|---|
 | **Training** (Claude alone) | 9.3/10 | 98% | 80 |
-| **Pack** (KG Agent, base) | 9.3/10 | 93% | 80 |
-| **Enhanced** (KG Agent + all improvements) | **9.7/10** | **99%** | 80 |
+| **Pack** (KG Agent) | **9.7/10** | **99%** | 80 |
 
-**Key finding:** The Enhanced configuration beats the Training baseline by **+1 percentage point** on accuracy and **+0.4** on average score across 80 evaluated questions. With only 1 question scoring below 7/10 across all 80, the Enhanced mode virtually eliminates errors.
+**Key finding:** The Pack configuration beats the Training baseline by **+1 percentage point** on accuracy and **+0.4** on average score across 80 evaluated questions. With only 1 question scoring below 7/10 across all 80, the Pack mode virtually eliminates errors.
 
 ## Per-Pack Results
 
-| Pack | Training Avg | Training Acc | Enhanced Avg | Enhanced Acc | Delta |
+| Pack | Training Avg | Training Acc | Pack Avg | Pack Acc | Delta |
 |------|:-----------:|:-----------:|:-----------:|:-----------:|:-----:|
 | zig-expert | 9.4 | 100% | **10.0** | **100%** | **+0.6** |
 | react-expert | 8.7 | 90% | **9.8** | **100%** | **+1.1** |
@@ -29,9 +28,9 @@ Current evaluation results across all evaluated packs. Data from `data/packs/all
 
 ## Key Findings
 
-### 1. Enhanced Configuration Achieves 99% Accuracy
+### 1. Pack Configuration Achieves 99% Accuracy
 
-Across all 80 questions, the Enhanced condition achieves 99% accuracy (only 1 question below 7/10) vs 98% for Training. The average score of 9.7/10 demonstrates consistently high-quality answers.
+Across all 80 questions, the Pack condition achieves 99% accuracy (only 1 question below 7/10) vs 98% for Training. The average score of 9.7/10 demonstrates consistently high-quality answers.
 
 ### 2. Every Pack Except One Now Beats or Matches Training
 
@@ -68,7 +67,7 @@ Score  1: █ 1
 Below 7:  4 questions (5%)
 ```
 
-### Enhanced (Opus Judge)
+### Pack (Opus Judge)
 
 ```
 Score 10: ████████████████████████████████████████████████████ 52
@@ -79,7 +78,7 @@ Score  5: █ 1
 Below 7:  1 question (1.25%)
 ```
 
-The Enhanced condition dramatically shifts scores toward 10/10, with 52 of 80 questions (65%) receiving a perfect score.
+The Pack condition dramatically shifts scores toward 10/10, with 52 of 80 questions (65%) receiving a perfect score.
 
 ## Haiku vs Opus Judge Comparison
 
@@ -96,7 +95,7 @@ The choice of judge model significantly affects results:
 
 ## Recommendations
 
-1. **Deploy Enhanced configuration by default.** It achieves 99% accuracy, matching or beating training on 7/8 packs.
+1. **Deploy Pack configuration by default.** It achieves 99% accuracy, matching or beating training on 7/8 packs.
 
 2. **Use Opus as judge model.** The `JUDGE_MODEL` in eval scripts is now set to `claude-opus-4-6` for more accurate scoring.
 

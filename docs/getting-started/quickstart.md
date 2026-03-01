@@ -83,7 +83,7 @@ uv run python scripts/eval_single_pack.py go-expert --sample 5
 This runs 5 questions from the pack's `eval/questions.jsonl` in two conditions:
 
 - **Training**: Claude answers without any pack context
-- **Enhanced**: Claude answers with full KG Agent retrieval + all enhancement modules
+- **Pack**: Claude answers with full KG Agent retrieval pipeline
 
 Output looks like:
 
@@ -94,7 +94,7 @@ Questions: 5
 Condition     Avg Score  Accuracy
 ──────────    ─────────  ────────
 Training      8.7/10     90%
-Enhanced      9.6/10     100%
+Pack          9.6/10     100%
 Delta                    +10pp
 ```
 
@@ -113,4 +113,4 @@ Delta                    +10pp
 
 - [Tutorial](tutorial.md) -- Full lifecycle walkthrough including domain selection, URL curation, and result interpretation
 - [Build a Pack](../howto/build-a-pack.md) -- Step-by-step guide for building packs from scratch
-- [Evaluation Methodology](../evaluation/methodology.md) -- Understanding the three-condition evaluation framework
+- [Evaluation Methodology](../evaluation/methodology.md) -- Understanding the two-condition evaluation framework

@@ -12,13 +12,13 @@ We measure three metrics:
 |--------|-----------|-------------|
 | **Accuracy** | Percentage of answers scored >= 7 out of 10 | `count(score >= 7) / total_questions * 100` |
 | **Average Score** | Mean judge score across all questions | `sum(scores) / total_questions` |
-| **Delta** | Accuracy difference between Enhanced and Training | `enhanced_accuracy - training_accuracy` |
+| **Delta** | Accuracy difference between Pack and Training | `pack_accuracy - training_accuracy` |
 
 A score of 7+ indicates the answer is substantially correct and useful. Scores below 7 indicate significant errors, omissions, or hallucinations.
 
-## The Three Conditions
+## The Two Conditions
 
-Every pack is evaluated under three conditions, all using the same set of questions:
+Every pack is evaluated under two conditions, using the same set of questions:
 
 ### 1. Training Baseline
 
@@ -30,20 +30,9 @@ Prompt:
   Q: {question}
 ```
 
-### 2. Pack (KG Agent, Base)
+### 2. Pack (KG Agent)
 
-The KG Agent retrieves content from the pack database and synthesizes an answer. This tests whether the pack's content adds value beyond training.
-
-```
-Prompt:
-  Use the following context to answer the question:
-  Context: {retrieved_sections}
-  Q: {question}
-```
-
-### 3. Enhanced (KG Agent + All Improvements)
-
-The KG Agent runs with all enhancement modules enabled: confidence gating, graph reranking, multi-document synthesis, content quality scoring, and few-shot examples. This tests the full system.
+The KG Agent retrieves content from the pack database with the full retrieval pipeline enabled: confidence gating, graph reranking, multi-document synthesis, content quality scoring, and few-shot examples. This tests whether the pack adds value beyond training.
 
 ```
 Pipeline:
@@ -172,7 +161,7 @@ However, scores can vary if:
 
 ### Interpreting Delta
 
-The delta (Enhanced accuracy - Training accuracy) is the key metric:
+The delta (Pack accuracy - Training accuracy) is the key metric:
 
 | Delta | Interpretation | Action |
 |-------|---------------|--------|
@@ -222,15 +211,13 @@ Results are saved to `data/packs/all_packs_evaluation.json`:
   "sample_per_pack": 10,
   "grand_summary": {
     "training": {"avg": 8.875, "accuracy": 96.25, "n": 80},
-    "pack": {"avg": 8.725, "accuracy": 95.0, "n": 80},
-    "enhanced": {"avg": 9.05, "accuracy": 97.5, "n": 80}
+    "pack": {"avg": 9.05, "accuracy": 97.5, "n": 80}
   },
   "per_pack": {
     "go-expert": {
       "scores": {
         "training": [5, 9, 10, 10, 9, 10, 7, 9, 9, 9],
-        "pack": [8, 9, 10, 9, 9, 10, 9, 9, 9, 9],
-        "enhanced": [9, 10, 10, 9, 9, 10, 9, 10, 10, 10]
+        "pack": [9, 10, 10, 9, 9, 10, 9, 10, 10, 10]
       }
     }
   }
@@ -248,14 +235,8 @@ questions.jsonl
   │    ▼
   │    Judge (Opus) scores 0-10 vs ground_truth
   │
-  ├──► Pack condition
-  │    KG Agent retrieves + synthesizes
-  │    │
-  │    ▼
-  │    Judge (Opus) scores 0-10 vs ground_truth
-  │
-  └──► Enhanced condition
-       KG Agent + all enhancements
+  └──► Pack condition
+       KG Agent retrieves + synthesizes (full pipeline)
        │
        ▼
        Judge (Opus) scores 0-10 vs ground_truth
@@ -263,5 +244,5 @@ questions.jsonl
 Results:
   per-question scores
   per-condition averages and accuracy
-  delta (enhanced - training)
+  delta (pack - training)
 ```

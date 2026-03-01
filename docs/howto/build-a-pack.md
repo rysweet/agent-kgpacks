@@ -173,7 +173,7 @@ uv run python scripts/eval_single_pack.py ${PACK_NAME}
 
 ### Interpreting Results
 
-| Delta (Enhanced - Training) | Meaning |
+| Delta (Pack - Training) | Meaning |
 |----------------------------|---------|
 | +5pp or more | Strong -- pack clearly adds value |
 | +1pp to +5pp | Moderate -- investigate for further improvement |

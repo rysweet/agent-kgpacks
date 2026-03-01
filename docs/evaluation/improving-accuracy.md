@@ -1,6 +1,6 @@
 # Improving Accuracy
 
-Seven improvements from Issue #211 that collectively raised the Enhanced accuracy from 95.0% to 97.5%. Each addresses a specific failure mode in the retrieval and evaluation pipeline.
+Seven improvements from Issue #211 that collectively raised Pack accuracy from 95.0% to 97.5%. Each addresses a specific failure mode in the retrieval and evaluation pipeline.
 
 ## Overview
 
@@ -315,4 +315,4 @@ agent = KnowledgeGraphAgent(
 ```
 
 6. Evaluate: `python scripts/eval_single_pack.py <pack> --sample 25`
-7. Compare Enhanced vs Training delta
+7. Compare Pack vs Training delta

@@ -212,13 +212,12 @@ uv run python scripts/eval_single_pack.py go-expert
 uv run python scripts/run_all_packs_evaluation.py --sample 10
 ```
 
-### Understanding the Three Conditions
+### Understanding the Two Conditions
 
 | Condition | What It Tests |
 |-----------|--------------|
 | **Training** | Claude answers with no pack context (pure training data) |
-| **Pack** | KG Agent retrieves from pack and synthesizes (base retrieval) |
-| **Enhanced** | KG Agent with all improvement modules enabled |
+| **Pack** | KG Agent retrieves from pack and synthesizes with the full retrieval pipeline |
 
 ## Step 7: Interpret Results
 
@@ -230,15 +229,14 @@ Pack: go-expert  (10 questions)
 Condition     Avg Score  Accuracy
 ──────────    ─────────  ────────
 Training      8.7/10     90.0%
-Pack          9.1/10     100.0%
-Enhanced      9.6/10     100.0%
+Pack          9.6/10     100.0%
 ```
 
 ### What the Numbers Mean
 
 - **Avg Score**: Mean judge score across all questions (0-10 scale)
 - **Accuracy**: Percentage of questions scored >= 7 by the judge
-- **Delta** (Enhanced - Training): Positive means the pack adds value
+- **Delta** (Pack - Training): Positive means the pack adds value
 
 ### Interpreting Deltas
 

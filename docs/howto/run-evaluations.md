@@ -41,7 +41,7 @@ uv run python scripts/eval_single_pack.py go-expert
 For each question in `data/packs/<pack-name>/eval/questions.jsonl`:
 
 1. **Training condition**: Claude Opus answers without any pack context
-2. **Enhanced condition**: KG Agent retrieves from the pack with all enhancements enabled, then Claude Opus synthesizes
+2. **Pack condition**: KG Agent retrieves from the pack with the full retrieval pipeline, then Claude Opus synthesizes
 3. **Judge scoring**: Claude Haiku scores each answer 0-10 against the `ground_truth`
 
 ### Output
@@ -52,7 +52,7 @@ Pack: go-expert  (10 questions)
 Condition     Avg Score  Accuracy
 ──────────    ─────────  ────────
 Training      8.7/10     90.0%
-Enhanced      9.6/10     100.0%
+Pack          9.6/10     100.0%
 Delta                    +10.0pp
 ```
 
@@ -116,15 +116,13 @@ Results are saved to `data/packs/all_packs_evaluation.json`:
   "sample_per_pack": 10,
   "grand_summary": {
     "training": {"avg": 8.875, "accuracy": 96.25, "n": 80},
-    "pack": {"avg": 8.725, "accuracy": 95.0, "n": 80},
-    "enhanced": {"avg": 9.05, "accuracy": 97.5, "n": 80}
+    "pack": {"avg": 9.05, "accuracy": 97.5, "n": 80}
   },
   "per_pack": {
     "go-expert": {
       "scores": {
         "training": [5, 9, 10, 10, 9, 10, 7, 9, 9, 9],
-        "pack": [8, 9, 10, 9, 9, 10, 9, 9, 9, 9],
-        "enhanced": [9, 10, 10, 9, 9, 10, 9, 10, 10, 10]
+        "pack": [9, 10, 10, 9, 9, 10, 9, 10, 10, 10]
       }
     }
   }
@@ -140,20 +138,17 @@ Sample per pack: 10
 
 [1/8] bicep-infrastructure ...
   Training:  avg=9.1  acc=100%
-  Pack:      avg=9.2  acc=100%
-  Enhanced:  avg=9.4  acc=100%
+  Pack:      avg=9.4  acc=100%
 
 [2/8] go-expert ...
   Training:  avg=8.7  acc=90%
-  Pack:      avg=9.1  acc=100%
-  Enhanced:  avg=9.6  acc=100%
+  Pack:      avg=9.6  acc=100%
 
 ...
 
 === Grand Summary ===
 Training:  avg=8.9  acc=96.2%  (n=80)
-Pack:      avg=8.7  acc=95.0%  (n=80)
-Enhanced:  avg=9.1  acc=97.5%  (n=80)
+Pack:      avg=9.1  acc=97.5%  (n=80)
 
 Results saved to data/packs/all_packs_evaluation.json
 ```
@@ -170,7 +165,7 @@ Evaluation cost depends on the number of questions and conditions:
 | 50 per pack | 8 | ~1200 | ~$1.50 |
 | All (~200 total) | 8 | ~4800 | ~$6.00 |
 
-Each question requires 2 answer calls (Training + Enhanced) and 2 judge calls, using a mix of Opus (answers) and Haiku (judging).
+Each question requires 2 answer calls (Training + Pack) and 2 judge calls, using a mix of Opus (answers) and Haiku (judging).
 
 ## A/B Testing Enhancement Modules
 

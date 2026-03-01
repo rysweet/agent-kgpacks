@@ -73,7 +73,7 @@ Packs add complexity. Do not build one when:
 │                                                          │
 │  ┌──────────────────────────────────────────────────┐   │
 │  │              Evaluation Framework                 │   │
-│  │  questions.jsonl -> training | pack | enhanced    │   │
+│  │  questions.jsonl -> training | pack               │   │
 │  │  -> judge scoring -> accuracy metrics             │   │
 │  └──────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────┘
