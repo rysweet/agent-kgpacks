@@ -1,0 +1,51 @@
+# GitHub Copilot Extensions & SDK - Official Documentation
+# Build extensions, MCP servers, VS Code chat participants for Copilot
+
+# GitHub Docs - Copilot Extensions
+https://docs.github.com/en/copilot
+https://docs.github.com/en/copilot/concepts/extensions/build-extensions
+https://docs.github.com/en/copilot/building-copilot-extensions/about-building-copilot-extensions
+https://docs.github.com/en/copilot/building-copilot-extensions/creating-a-copilot-extension
+https://docs.github.com/en/copilot/building-copilot-extensions/setting-up-copilot-extensions
+https://docs.github.com/en/copilot/building-copilot-extensions/building-copilot-agents
+https://docs.github.com/en/copilot/building-copilot-extensions/building-copilot-skillsets
+
+# GitHub Docs - MCP Integration
+https://docs.github.com/en/copilot/concepts/context/mcp
+https://docs.github.com/copilot/customizing-copilot/using-model-context-protocol/extending-copilot-chat-with-mcp
+https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/set-up-the-github-mcp-server
+https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp/managing-mcp-servers
+
+# GitHub Docs - Copilot Features & Configuration
+https://docs.github.com/en/copilot/managing-copilot/configure-personal-settings/installing-the-github-copilot-extension-in-your-environment
+https://docs.github.com/en/copilot/managing-copilot/managing-copilot-as-an-individual-subscriber
+https://docs.github.com/en/copilot/customizing-copilot/indexing-repositories-for-copilot-chat
+https://docs.github.com/en/copilot/using-github-copilot/using-copilot-coding-agent
+
+# VS Code Copilot Documentation
+https://code.visualstudio.com/docs/copilot/overview
+https://code.visualstudio.com/docs/copilot/chat/copilot-chat
+https://code.visualstudio.com/docs/copilot/customization/mcp-servers
+https://code.visualstudio.com/docs/copilot/reference/copilot-vscode-features
+https://code.visualstudio.com/docs/copilot/copilot-extensibility-overview
+
+# GitHub Copilot Extensions Organization
+https://github.com/copilot-extensions
+https://github.com/microsoft/vscode-copilot-chat
+
+# Preview SDK
+https://github.com/copilot-extensions/preview-sdk.js
+
+# GitHub Features & Blog
+https://github.com/features/copilot
+https://github.com/features/copilot/extensions
+https://github.blog/news-insights/product-news/introducing-github-copilot-extensions/
+
+# Example Extensions
+https://github.com/copilot-extensions/blackbeard-extension
+https://github.com/copilot-extensions/github-models-extension
+https://github.com/copilot-extensions/function-calling-extension
+https://github.com/copilot-extensions/rag-extension
+
+# GitHub Copilot CLI
+https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line

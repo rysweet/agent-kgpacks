@@ -1,0 +1,22 @@
+{
+  "name": "crew-ai-expert",
+  "version": "1.0.0",
+  "description": "Expert knowledge of CrewAI multi-agent orchestration covering agents, tasks, crews, flows, tools, knowledge, and memory.",
+  "graph_stats": {
+    "articles": 26,
+    "entities": 51,
+    "relationships": 106,
+    "size_mb": 2.08
+  },
+  "eval_scores": {
+    "accuracy": 0.0,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.0
+  },
+  "source_urls": [
+    "https://docs.crewai.com",
+    "https://github.com/crewAIInc/crewAI"
+  ],
+  "created": "2026-02-28T21:34:23.030234Z",
+  "license": "MIT"
+}

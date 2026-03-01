@@ -1,0 +1,51 @@
+# Microsoft Agent Framework - Official Documentation
+# Build, orchestrate, and deploy AI agents and multi-agent workflows
+
+# Microsoft Learn - Agent Framework
+https://learn.microsoft.com/en-us/agent-framework/overview/
+https://learn.microsoft.com/en-us/agent-framework/overview/agent-framework-overview
+https://learn.microsoft.com/en-us/agent-framework/get-started/
+https://learn.microsoft.com/en-us/agent-framework/tutorials/quick-start
+https://learn.microsoft.com/en-us/agent-framework/workflows/
+https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/using-agents
+https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/as-agents
+https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/core-concepts/workflows
+https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/orchestrations/overview
+https://learn.microsoft.com/en-us/agent-framework/tutorials/workflows/agents-in-workflows
+https://learn.microsoft.com/en-us/agent-framework/user-guide/agents/
+https://learn.microsoft.com/en-us/agent-framework/user-guide/agents/tools
+https://learn.microsoft.com/en-us/agent-framework/user-guide/agents/memory
+https://learn.microsoft.com/en-us/agent-framework/user-guide/agents/state-management
+https://learn.microsoft.com/en-us/agent-framework/concepts/architecture
+https://learn.microsoft.com/en-us/agent-framework/concepts/agents
+https://learn.microsoft.com/en-us/agent-framework/concepts/workflows
+https://learn.microsoft.com/en-us/agent-framework/concepts/orchestrations
+
+# Migration Guides
+https://learn.microsoft.com/en-us/agent-framework/migration-guide/from-autogen/
+https://learn.microsoft.com/en-us/agent-framework/migration-guide/from-semantic-kernel/
+
+# GitHub Repository
+https://github.com/microsoft/agent-framework
+
+# Azure Blog & Announcements
+https://azure.microsoft.com/en-us/blog/introducing-microsoft-agent-framework/
+
+# Integration with Microsoft 365 Agents SDK
+https://learn.microsoft.com/en-us/microsoft-365/agents-sdk/using-semantic-kernel-agent-framework
+
+# AutoGen Documentation (predecessor)
+https://microsoft.github.io/autogen/stable/index.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/index.html
+
+# Microsoft Research
+https://www.microsoft.com/en-us/research/project/autogen/
+
+# Community & Discussions
+https://github.com/orgs/microsoft-foundry/discussions/177
+
+# Related Documentation
+https://learn.microsoft.com/en-us/agent-framework/tutorials/workflows/building-workflows
+https://learn.microsoft.com/en-us/agent-framework/user-guide/workflows/checkpointing
+https://learn.microsoft.com/en-us/agent-framework/user-guide/agents/model-clients
+https://learn.microsoft.com/en-us/agent-framework/user-guide/agents/custom-agents

@@ -1,0 +1,53 @@
+# Microsoft AutoGen - Official Documentation
+# Multi-agent AI framework for building conversational AI systems
+
+# AutoGen Documentation (Stable)
+https://microsoft.github.io/autogen/stable/index.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/index.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/quickstart.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/agents.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/teams.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/selector-group-chat.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/termination.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/models.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/custom-agents.html
+https://microsoft.github.io/autogen/stable/user-guide/core-user-guide/index.html
+https://microsoft.github.io/autogen/stable/user-guide/extensions-user-guide/index.html
+https://microsoft.github.io/autogen/stable/reference/python/autogen_agentchat.agents.html
+https://microsoft.github.io/autogen/stable/reference/python/autogen_agentchat.teams.html
+
+# AutoGen v0.2 Documentation (Legacy)
+https://microsoft.github.io/autogen/0.2/docs/Use-Cases/agent_chat/
+https://microsoft.github.io/autogen/0.2/docs/reference/agentchat/conversable_agent/
+https://microsoft.github.io/autogen/0.2/docs/reference/agentchat/groupchat/
+https://microsoft.github.io/autogen/0.2/docs/Examples/
+https://microsoft.github.io/autogen/0.2/docs/notebooks/agentchat_groupchat_research/
+
+# GitHub Repository
+https://github.com/microsoft/autogen
+
+# Microsoft Research
+https://www.microsoft.com/en-us/research/project/autogen/
+
+# Migration to Agent Framework
+https://learn.microsoft.com/en-us/agent-framework/migration-guide/from-autogen/
+https://learn.microsoft.com/en-us/agent-framework/overview/
+
+# Package Registry
+https://pypi.org/project/autogen-agentchat/
+https://pypi.org/project/autogen-core/
+https://pypi.org/project/autogen-ext/
+
+# Tutorials & Examples
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/examples/index.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/tools.html
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/state.html
+
+# Code Execution
+https://microsoft.github.io/autogen/stable/user-guide/extensions-user-guide/code-execution.html
+
+# MagenticOne Multi-Agent System
+https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/tutorial/magentic-one.html
+
+# AutoGen Studio
+https://microsoft.github.io/autogen/stable/user-guide/autogenstudio-user-guide/index.html

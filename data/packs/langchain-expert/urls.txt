@@ -1,0 +1,54 @@
+# LangChain - Official Documentation & Resources
+# Framework for building agents and LLM-powered applications
+
+# Official Documentation
+https://docs.langchain.com/oss/python/langchain/overview
+https://docs.langchain.com/oss/python/langchain/rag
+https://docs.langchain.com/oss/python/langchain/agents
+https://docs.langchain.com/oss/python/langchain/tools
+https://docs.langchain.com/oss/python/langchain/chains
+https://docs.langchain.com/oss/python/langchain/chat-models
+https://docs.langchain.com/oss/python/langchain/prompts
+https://docs.langchain.com/oss/python/langchain/output-parsers
+https://docs.langchain.com/oss/python/langchain/memory
+https://docs.langchain.com/oss/python/langchain/vectorstores
+https://docs.langchain.com/oss/python/langchain/embeddings
+https://docs.langchain.com/oss/python/langchain/document-loaders
+https://docs.langchain.com/oss/python/langchain/text-splitters
+https://docs.langchain.com/oss/python/langchain/retrievers
+https://docs.langchain.com/oss/python/langchain/callbacks
+
+# LangGraph Documentation
+https://docs.langchain.com/oss/python/langgraph/overview
+https://docs.langchain.com/oss/python/langgraph/quick-start
+https://docs.langchain.com/oss/python/langgraph/concepts
+https://docs.langchain.com/oss/python/langgraph/how-to-guides
+
+# LangSmith Documentation
+https://docs.langchain.com/langsmith/overview
+https://docs.langchain.com/langsmith/trace-claude-agent-sdk
+https://docs.langchain.com/langsmith/evaluation
+
+# JavaScript/TypeScript
+https://docs.langchain.com/oss/typescript/langchainjs/overview
+
+# Website & Product Pages
+https://www.langchain.com
+https://www.langchain.com/langchain
+https://www.langchain.com/langgraph
+https://www.langchain.com/langsmith/observability
+
+# GitHub Repositories
+https://github.com/langchain-ai/langchain
+https://github.com/langchain-ai/langgraph
+https://github.com/langchain-ai/langsmith-sdk
+
+# Package Registry
+https://pypi.org/project/langchain/
+https://pypi.org/project/langgraph/
+
+# Integration & Tutorials
+https://docs.langchain.com/oss/python/langchain/integrations
+https://docs.langchain.com/oss/python/langchain/how-to-guides/tool-calling
+https://docs.langchain.com/oss/python/langchain/how-to-guides/structured-output
+https://docs.langchain.com/oss/python/langchain/how-to-guides/streaming

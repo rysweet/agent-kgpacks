@@ -1,0 +1,53 @@
+# LlamaIndex - Official Documentation & Resources
+# Data framework for RAG, agents, and LLM applications
+
+# Official Documentation
+https://developers.llamaindex.ai/python/framework/getting_started/
+https://developers.llamaindex.ai/python/framework/getting_started/concepts/
+https://developers.llamaindex.ai/python/framework/understanding/rag/
+https://developers.llamaindex.ai/python/framework/understanding/indexing/
+https://developers.llamaindex.ai/python/framework/understanding/querying/
+https://developers.llamaindex.ai/python/framework/understanding/loading/
+https://developers.llamaindex.ai/python/framework/understanding/storing/
+https://developers.llamaindex.ai/python/framework/understanding/putting-it-all-together/
+
+# Agents & Workflows
+https://developers.llamaindex.ai/python/llamaagents/workflows/
+https://developers.llamaindex.ai/python/framework/modules/agents/
+https://developers.llamaindex.ai/python/framework/modules/agents/agent_workflow/
+https://developers.llamaindex.ai/python/framework/modules/agents/tools/
+
+# Core Modules
+https://developers.llamaindex.ai/python/framework/modules/embeddings/
+https://developers.llamaindex.ai/python/framework/modules/llms/
+https://developers.llamaindex.ai/python/framework/modules/vector-stores/
+https://developers.llamaindex.ai/python/framework/modules/retrievers/
+https://developers.llamaindex.ai/python/framework/modules/node-parsers/
+https://developers.llamaindex.ai/python/framework/modules/response-synthesizers/
+https://developers.llamaindex.ai/python/framework/modules/query-engines/
+
+# TypeScript Documentation
+https://developers.llamaindex.ai/typescript/framework/modules/agents/agent_workflow/
+
+# Website & Blog
+https://www.llamaindex.ai/
+https://www.llamaindex.ai/workflows
+https://www.llamaindex.ai/blog/introducing-agentworkflow-a-powerful-system-for-building-ai-agent-systems
+https://www.llamaindex.ai/blog/introducing-agentic-document-workflows
+https://www.llamaindex.ai/blog/rag-is-dead-long-live-agentic-retrieval
+
+# GitHub Repository
+https://github.com/run-llama/llama_index
+
+# Package Registry
+https://pypi.org/project/llama-index/
+https://pypi.org/project/llama-index-core/
+
+# LlamaCloud & LlamaParse
+https://cloud.llamaindex.ai/
+https://www.llamaindex.ai/llamaparse
+
+# Tutorials & Guides
+https://developers.llamaindex.ai/python/framework/examples/
+https://developers.llamaindex.ai/python/framework/advanced/
+https://developers.llamaindex.ai/python/framework/modules/evaluation/

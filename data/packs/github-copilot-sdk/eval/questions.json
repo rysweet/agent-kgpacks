@@ -1,0 +1,402 @@
+[
+  {
+    "id": "gc_001",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What is the primary purpose of the GitHub Copilot Extensions SDK?",
+    "ground_truth": "The GitHub Copilot Extensions SDK enables developers to build extensions that expand Copilot Chat functionality by integrating custom agents and skillsets into the Copilot ecosystem.",
+    "source": "extensions_sdk_overview"
+  },
+  {
+    "id": "gc_002",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What does MCP stand for in the context of GitHub Copilot?",
+    "ground_truth": "MCP stands for Model Context Protocol, a protocol used to integrate servers with GitHub Copilot to extend its Chat functionality with custom capabilities.",
+    "source": "mcp_protocol"
+  },
+  {
+    "id": "gc_003",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "Name two types of MCP servers that can be integrated with GitHub Copilot.",
+    "ground_truth": "Local MCP servers (running on the user's machine) and remote MCP servers (hosted on external servers) can both be integrated with GitHub Copilot.",
+    "source": "mcp_server_types"
+  },
+  {
+    "id": "gc_004",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What is a VS Code chat participant in the context of Copilot Extensions?",
+    "ground_truth": "A VS Code chat participant is a component that extends Copilot Chat by providing custom commands and interactions within the VS Code chat interface to handle specific user queries.",
+    "source": "vscode_chat_participants"
+  },
+  {
+    "id": "gc_005",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What does the preview SDK automate in Copilot extension development?",
+    "ground_truth": "The preview SDK automates request verification, response formatting, and API interactions, streamlining the development process for Copilot extensions.",
+    "source": "preview_sdk"
+  },
+  {
+    "id": "gc_006",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What is the GitHub MCP Server primarily used for?",
+    "ground_truth": "The GitHub MCP Server provides contextual information about GitHub repositories, pull requests, and other GitHub resources to enhance Copilot's understanding of repository content.",
+    "source": "github_mcp_server"
+  },
+  {
+    "id": "gc_007",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "In Copilot Extensions architecture, what is a skillset?",
+    "ground_truth": "A skillset is a collection of capabilities or functions that an agent can perform within the Copilot Extensions architecture, defining what tasks the agent can handle.",
+    "source": "copilot_agents_skillsets"
+  },
+  {
+    "id": "gc_008",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What is the role of agents in GitHub Copilot Extensions?",
+    "ground_truth": "Agents are autonomous components that process user requests and execute tasks using their associated skillsets to provide intelligent responses through Copilot Chat.",
+    "source": "copilot_agents_architecture"
+  },
+  {
+    "id": "gc_009",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What does repository indexing enable for GitHub Copilot Chat?",
+    "ground_truth": "Repository indexing enables GitHub Copilot Chat to understand and reference the contents of a repository, improving the relevance and accuracy of Copilot's responses.",
+    "source": "repository_indexing"
+  },
+  {
+    "id": "gc_010",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "Where can developers publish their Copilot extensions for distribution?",
+    "ground_truth": "Developers can publish Copilot extensions on the GitHub Marketplace to distribute them to users and integrate them into the broader Copilot ecosystem.",
+    "source": "github_marketplace_integration"
+  },
+  {
+    "id": "gc_011",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What is the purpose of custom instructions in Copilot Extensions?",
+    "ground_truth": "Custom instructions allow developers to define specific behaviors and guidelines for how Copilot agents should respond and interact with users.",
+    "source": "custom_instructions"
+  },
+  {
+    "id": "gc_012",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "How is VS Code Copilot extension configuration typically defined?",
+    "ground_truth": "VS Code Copilot extension configuration is typically defined through configuration files and settings that specify agent behaviors, MCP server connections, and chat participant definitions.",
+    "source": "vscode_extension_configuration"
+  },
+  {
+    "id": "gc_013",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What are enterprise MCP policies used for?",
+    "ground_truth": "Enterprise MCP policies establish security and governance rules for MCP server integrations within an organization, controlling which servers can connect to Copilot.",
+    "source": "enterprise_mcp_policies"
+  },
+  {
+    "id": "gc_014",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What is the main advantage of building Copilot agents server-side?",
+    "ground_truth": "Building Copilot agents server-side allows for centralized logic, improved security, easier updates, and the ability to handle complex computations without relying on client resources.",
+    "source": "server_side_agents"
+  },
+  {
+    "id": "gc_015",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What is the Copilot coding agent designed to help with?",
+    "ground_truth": "The Copilot coding agent is designed to assist developers with code generation, debugging, refactoring, and other programming tasks within the development environment.",
+    "source": "copilot_coding_agent"
+  },
+  {
+    "id": "gc_016",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "Why might developers migrate from GitHub App extensions to MCP servers?",
+    "ground_truth": "Developers migrate to MCP servers for better integration standards, improved performance, enhanced security features, and alignment with the newer Copilot Extensions architecture.",
+    "source": "migration_github_app_to_mcp"
+  },
+  {
+    "id": "gc_017",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What does request verification in the preview SDK protect against?",
+    "ground_truth": "Request verification in the preview SDK protects against unauthorized or malformed requests by validating that incoming requests are legitimate and properly formatted.",
+    "source": "preview_sdk_verification"
+  },
+  {
+    "id": "gc_018",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "How do MCP servers integrate with VS Code Copilot?",
+    "ground_truth": "MCP servers integrate with VS Code Copilot through the VS Code chat interface, where they are configured and managed to provide additional context and capabilities to Copilot Chat.",
+    "source": "mcp_vscode_integration"
+  },
+  {
+    "id": "gc_019",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What is the first step in setting up the GitHub MCP Server?",
+    "ground_truth": "The first step is to install and configure the GitHub MCP Server in your environment, which typically involves following GitHub's documentation for proper setup and authentication.",
+    "source": "github_mcp_server_setup"
+  },
+  {
+    "id": "gc_020",
+    "domain": "github_copilot_sdk",
+    "difficulty": "easy",
+    "question": "What type of responses does the preview SDK help format for Copilot extensions?",
+    "ground_truth": "The preview SDK helps format responses that are compatible with Copilot Chat, ensuring proper structure, content type, and presentation for optimal user experience.",
+    "source": "preview_sdk_response_formatting"
+  },
+  {
+    "id": "gc_021",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What is the primary architectural difference between a Copilot agent and a skillset in the GitHub Copilot Extensions architecture?",
+    "ground_truth": "A Copilot agent is a server-side component that processes user requests and orchestrates responses, while a skillset is a collection of predefined tools or capabilities that agents can leverage to perform specific tasks.",
+    "source": "copilot_extensions_architecture"
+  },
+  {
+    "id": "gc_022",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "How does the Model Context Protocol (MCP) enable GitHub Copilot to integrate with external systems?",
+    "ground_truth": "MCP provides a standardized protocol that allows Copilot to communicate with local and remote servers, enabling seamless integration with external tools, APIs, and data sources without modifying Copilot's core functionality.",
+    "source": "mcp_integration"
+  },
+  {
+    "id": "gc_023",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What is the key difference between deploying an MCP server locally versus remotely in VS Code?",
+    "ground_truth": "Local MCP servers run directly on the developer's machine and are accessed via stdio or similar local mechanisms, while remote MCP servers run on external infrastructure and are accessed over network protocols, offering scalability and centralized management.",
+    "source": "mcp_server_deployment"
+  },
+  {
+    "id": "gc_024",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What role do VS Code chat participants play in extending Copilot Chat functionality?",
+    "ground_truth": "VS Code chat participants are specialized components that handle specific conversation contexts or domains, allowing developers to create focused extensions that respond to user queries within defined scopes or with specialized knowledge.",
+    "source": "vscode_chat_participants"
+  },
+  {
+    "id": "gc_025",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What two critical functions does the preview SDK provide for Copilot extension development?",
+    "ground_truth": "The preview SDK provides request verification to validate and authenticate incoming requests from Copilot Chat, and response formatting to ensure responses conform to the expected structure and protocol for Copilot integration.",
+    "source": "preview_sdk"
+  },
+  {
+    "id": "gc_026",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "Why would an enterprise organization choose to implement MCP policies instead of relying solely on GitHub Marketplace extensions?",
+    "ground_truth": "Enterprise MCP policies provide centralized control over which external tools and servers Copilot can access, enabling security compliance, data governance, and standardization across the organization while maintaining security boundaries.",
+    "source": "enterprise_mcp_policies"
+  },
+  {
+    "id": "gc_027",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "How does the GitHub MCP server enhance Copilot's capabilities compared to standard extensions?",
+    "ground_truth": "The GitHub MCP server provides Copilot with direct access to GitHub-specific context such as repository information, issues, pull requests, and organization data, enabling more informed code suggestions and intelligent automation.",
+    "source": "github_mcp_server"
+  },
+  {
+    "id": "gc_028",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What configuration steps are necessary to enable the GitHub MCP server in VS Code?",
+    "ground_truth": "Configuration requires installing the GitHub MCP server component, configuring VS Code settings to recognize and connect to the server, and authenticating with GitHub credentials to grant Copilot access to repository and user data.",
+    "source": "github_mcp_configuration"
+  },
+  {
+    "id": "gc_029",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What is the relationship between repository indexing and Copilot Chat's ability to provide contextual suggestions?",
+    "ground_truth": "Repository indexing creates a searchable index of code, documentation, and metadata within a repository, allowing Copilot Chat to retrieve relevant context quickly and provide more accurate, contextually-aware suggestions and answers.",
+    "source": "repository_indexing"
+  },
+  {
+    "id": "gc_030",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "How do custom instructions modify Copilot's behavior, and what are typical use cases for implementing them?",
+    "ground_truth": "Custom instructions allow developers to specify coding standards, naming conventions, architectural preferences, and organizational guidelines that Copilot applies when generating code, improving alignment with team practices and project requirements.",
+    "source": "custom_instructions"
+  },
+  {
+    "id": "gc_031",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What migration challenges exist when transitioning from GitHub App extensions to MCP server-based extensions?",
+    "ground_truth": "Migration requires refactoring authentication mechanisms, adapting the extension architecture to MCP protocol specifications, updating request/response handling, and potentially restructuring how context is provided to Copilot, which may impact existing integrations.",
+    "source": "migration_strategy"
+  },
+  {
+    "id": "gc_032",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What is the purpose of the Copilot coding agent, and how does it differ from general Copilot Chat interactions?",
+    "ground_truth": "The Copilot coding agent is specialized for code generation and modification tasks, with optimized models and context awareness for programming scenarios, whereas general Copilot Chat handles broader conversational queries across multiple domains.",
+    "source": "copilot_coding_agent"
+  },
+  {
+    "id": "gc_033",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "How does GitHub Marketplace integration differ for MCP-based extensions compared to traditional GitHub App extensions?",
+    "ground_truth": "MCP-based extensions are distributed through GitHub Marketplace with metadata specifying MCP server requirements and configuration, while users install them as VS Code extensions that handle server discovery and connection management automatically.",
+    "source": "github_marketplace_integration"
+  },
+  {
+    "id": "gc_034",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What considerations should guide the choice between building a server-side Copilot agent versus a skillset-based approach?",
+    "ground_truth": "Choose agent development for complex, stateful operations requiring orchestration; choose skillsets for modular, reusable tools that agents consume. Agents handle workflow coordination while skillsets provide granular, composable capabilities.",
+    "source": "agent_vs_skillset"
+  },
+  {
+    "id": "gc_035",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "How does request verification in the preview SDK protect Copilot extensions from unauthorized or malicious requests?",
+    "ground_truth": "Request verification validates request signatures and authenticity tokens to ensure requests originate from legitimate Copilot Chat instances, preventing spoofed or injected requests from accessing extension endpoints.",
+    "source": "request_verification"
+  },
+  {
+    "id": "gc_036",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What are the key components required in VS Code configuration to enable and manage multiple MCP servers simultaneously?",
+    "ground_truth": "VS Code configuration requires defining server endpoints, authentication credentials, resource limits, and health check parameters for each server in settings files, with automatic discovery and connection management for enabled servers.",
+    "source": "vscode_mcp_configuration"
+  },
+  {
+    "id": "gc_037",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "Why might response formatting be critical for MCP-based Copilot extensions, and what issues could result from improper formatting?",
+    "ground_truth": "Proper response formatting ensures Copilot Chat can parse, understand, and display extension responses correctly; improper formatting may cause parsing errors, display issues, security vulnerabilities, or degraded user experience.",
+    "source": "response_formatting"
+  },
+  {
+    "id": "gc_038",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "How does the GitHub MCP server's integration with organization data enhance enterprise use cases?",
+    "ground_truth": "It provides Copilot with access to organizational context such as team structure, policies, and repository metadata, enabling compliance-aware suggestions, team-specific recommendations, and integration with enterprise workflows.",
+    "source": "enterprise_github_mcp"
+  },
+  {
+    "id": "gc_039",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "What performance considerations should developers account for when designing MCP servers that handle high-volume Copilot Chat requests?",
+    "ground_truth": "Developers should implement request queuing, caching for frequently accessed data, rate limiting, asynchronous processing, and load balancing to handle concurrent requests; monitoring and scaling strategies are essential for production reliability.",
+    "source": "mcp_performance"
+  },
+  {
+    "id": "gc_040",
+    "domain": "github_copilot_sdk",
+    "difficulty": "medium",
+    "question": "How does repository indexing configuration impact Copilot's response latency and accuracy in multi-repository workspaces?",
+    "ground_truth": "Properly configured indexing creates pre-computed context that Copilot retrieves quickly, reducing latency; in multi-repository workspaces, selective indexing of relevant repositories balances accuracy with performance overhead.",
+    "source": "indexing_performance"
+  },
+  {
+    "id": "gc_041",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "When migrating from GitHub App extensions to MCP servers, what are the critical architectural differences in how request verification and response formatting are handled, and why does the preview SDK automate these processes?",
+    "ground_truth": "GitHub App extensions required manual implementation of request verification and response formatting at the application layer, whereas MCP servers integrated with the preview SDK automate these processes through built-in verification mechanisms and standardized response formatting. This migration reduces security vulnerabilities and ensures consistency across extensions by centralizing verification logic in the SDK rather than distributing it across individual extension implementations.",
+    "source": "migration_mcp_preview_sdk"
+  },
+  {
+    "id": "gc_042",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "Explain the interaction model between VS Code chat participants and MCP servers in the context of Copilot Extensions. How does the skillset architecture enable multiple specialized agents within a single extension?",
+    "ground_truth": "VS Code chat participants act as interface endpoints that route user queries to MCP servers, which expose multiple specialized tools organized as skillsets. Each skillset represents a domain-specific agent capability; the architecture allows a single extension to host multiple MCP servers or multiple skillsets within one server, enabling modular agent composition where different tools can be invoked based on the user's query context.",
+    "source": "chat_participants_skillsets_architecture"
+  },
+  {
+    "id": "gc_043",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "What are the security implications of deploying both local and remote MCP servers within an enterprise environment, and how do enterprise MCP policies address the risk differential between these deployment models?",
+    "ground_truth": "Local MCP servers execute on user machines with direct access to local resources and sensitive data, creating a larger attack surface for credential theft and data exfiltration. Remote MCP servers execute on controlled infrastructure with network-based access controls. Enterprise MCP policies mitigate these risks by enforcing authentication requirements, network isolation, audit logging, and capability restrictions differently for each model\u2014local servers may require sandboxing and permission scoping, while remote servers require TLS encryption and organizational identity verification.",
+    "source": "enterprise_mcp_policies_security"
+  },
+  {
+    "id": "gc_044",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "In the context of repository indexing for GitHub Copilot Chat, what performance trade-offs exist between full repository indexing and on-demand indexing strategies, and how should this decision factor into custom instructions design?",
+    "ground_truth": "Full repository indexing provides immediate context availability and faster query response times but requires significant upfront computational resources and storage overhead. On-demand indexing reduces resource consumption but introduces latency during initial queries. Custom instructions must account for this trade-off by either assuming indexed context is available (full indexing) or implementing graceful degradation strategies that provide useful responses even with incomplete context (on-demand indexing).",
+    "source": "repository_indexing_performance"
+  },
+  {
+    "id": "gc_045",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "How does the Copilot coding agent differ from a general-purpose chat participant in terms of context window management and tool invocation patterns, and what constraints does this impose on extension developers?",
+    "ground_truth": "The Copilot coding agent operates with specialized context management that prioritizes code-relevant information (current file, diagnostics, git diff) and uses direct tool invocation for code modification rather than natural language responses. Extension developers must design MCP servers with coding-specific tools that return structured code changes, support incremental updates, and handle merge conflicts\u2014rather than building general-purpose knowledge tools that work with arbitrary text responses.",
+    "source": "copilot_coding_agent_constraints"
+  },
+  {
+    "id": "gc_046",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "What is the role of request verification in the preview SDK, and why is cryptographic verification necessary beyond standard HTTPS transport security when handling Copilot Extension requests?",
+    "ground_truth": "Request verification in the preview SDK uses cryptographic signatures (typically HMAC-SHA256) to authenticate that requests originated from GitHub Copilot and haven't been tampered with. While HTTPS provides transport-layer security, cryptographic verification prevents replay attacks, man-in-the-middle attacks at the application layer, and allows extensions to operate across multiple deployment contexts where network security cannot be guaranteed.",
+    "source": "request_verification_cryptography"
+  },
+  {
+    "id": "gc_047",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "When configuring VS Code Copilot extension to support multiple MCP servers, what are the implications for conflict resolution when multiple servers expose tools with identical names, and how should extension manifests be structured to handle this scenario?",
+    "ground_truth": "Tool name conflicts can cause command routing ambiguity and unpredictable behavior. Extension manifests must use namespaced tool identifiers (e.g., 'server-name:tool-name') and define explicit routing rules to disambiguate which server handles specific queries. The extension configuration should prioritize servers and define fallback strategies, ensuring that the chat participant implementation can deterministically select the appropriate server based on query context or explicit user direction.",
+    "source": "vs_code_extension_configuration_conflicts"
+  },
+  {
+    "id": "gc_048",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "Describe the relationship between custom instructions and repository context in the GitHub Copilot Extensions SDK. How should custom instructions be designed to remain effective when repository indexing is incomplete or unavailable?",
+    "ground_truth": "Custom instructions provide behavioral guidance that augments repository context, but they must be designed to work independently if indexing fails. Effective custom instructions should include absolute constraints (security policies, code style rules) that apply regardless of context availability, and conditional guidance that gracefully degrades when repository data is unavailable. Instructions should reference repository patterns abstractly rather than relying on specific indexed entities.",
+    "source": "custom_instructions_context_resilience"
+  },
+  {
+    "id": "gc_049",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "What are the technical requirements and limitations for publishing a Copilot Extension to the GitHub Marketplace, and how do MCP server security certifications impact marketplace visibility and installation rates?",
+    "ground_truth": "Marketplace publication requires extensions to implement proper request verification, provide clear documentation of capabilities and permissions, and pass security scanning for known vulnerabilities. MCP servers must obtain security certifications confirming they don't exfiltrate data or exceed declared capabilities; certified servers receive increased marketplace visibility and user trust signals, while uncertified servers face discovery and adoption barriers, making security certification a competitive advantage.",
+    "source": "github_marketplace_security_certification"
+  },
+  {
+    "id": "gc_050",
+    "domain": "github_copilot_sdk",
+    "difficulty": "hard",
+    "question": "Analyze the architectural decision to support both local and remote MCP servers within the same Copilot Extensions implementation. What debugging and monitoring challenges emerge from this hybrid topology, and how should observability be designed to handle them?",
+    "ground_truth": "Hybrid topologies create debugging complexity because failures can originate from network issues, local process crashes, authentication failures, or resource exhaustion\u2014each with different characteristics. Observability must implement separate telemetry streams for local vs. remote servers, track request latency differential between models, implement structured logging that captures the deployment context, and provide fallback/failover diagnostics. Developers need tools to distinguish whether a failure is infrastructure-related (local) or network-related (remote).",
+    "source": "hybrid_mcp_observability_debugging"
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "pack_name": "fabric-graph-gql-expert",
+  "questions_tested": 5,
+  "webfetch_baseline": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.0,
+    "avg_latency_ms": 15451.385068893433,
+    "total_cost_usd": 0.267675
+  },
+  "knowledge_pack": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.6,
+    "avg_latency_ms": 16351.617622375488,
+    "total_cost_usd": 0.043025999999999995
+  },
+  "surpasses_webfetch": false
+}

@@ -1,0 +1,53 @@
+# Microsoft Work IQ MCP - Official Documentation
+# MCP Server and CLI for accessing M365 Copilot data
+
+# GitHub Repository
+https://github.com/microsoft/work-iq-mcp
+https://github.com/microsoft/work-iq-mcp/blob/main/README.md
+
+# Microsoft Learn Documentation
+https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/workiq-overview
+https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/workiq-setup
+https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/workiq-usage
+https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/workiq-admin
+
+# Microsoft 365 Copilot Documentation
+https://learn.microsoft.com/en-us/microsoft-365-copilot/
+https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/
+https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/overview-mcp-servers
+https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/overview-message-extensions
+https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/overview-api-plugins
+
+# M365 Copilot Docs Repository
+https://github.com/MicrosoftDocs/m365copilot-docs/blob/main/docs/workiq-overview.md
+
+# Microsoft Developer Blog
+https://developer.microsoft.com/blog/bringing-work-context-to-your-code-in-github-copilot
+
+# Microsoft Power Platform Blog
+https://www.microsoft.com/en-us/power-platform/blog/2026/01/27/build-adaptive-intelligence/
+
+# Microsoft 365 Blog
+https://www.microsoft.com/en-us/microsoft-365/blog/2025/11/18/microsoft-ignite-2025-copilot-and-agents-built-to-power-the-frontier-firm/
+
+# Azure Citadel Guide
+https://www.azurecitadel.com/blog/2026-02-13-github-copilot-workiq/
+
+# npm Package
+https://www.npmjs.com/package/@microsoft/workiq
+
+# Microsoft Graph API (underlying data layer)
+https://learn.microsoft.com/en-us/graph/overview
+https://learn.microsoft.com/en-us/graph/api/overview
+https://learn.microsoft.com/en-us/graph/sdks/sdks-overview
+
+# MCP Protocol (for context)
+https://modelcontextprotocol.io/docs/learn/architecture
+https://modelcontextprotocol.io/docs/concepts/tools
+
+# Microsoft Copilot Studio
+https://learn.microsoft.com/en-us/microsoft-copilot-studio/
+https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/overview-copilot-studio
+
+# Microsoft Tech Community
+https://techcommunity.microsoft.com/blog/microsoft365copilotblog/what%E2%80%99s-new-in-microsoft-365-copilot--november--december-2025/4469738

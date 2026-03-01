@@ -1,0 +1,402 @@
+[
+  {
+    "id": "le_001",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What are the two fundamental data primitives in LlamaIndex?",
+    "ground_truth": "Documents and Nodes are the two fundamental data primitives in LlamaIndex. Documents represent raw data sources, while Nodes are the atomic units of data that can be indexed and retrieved.",
+    "source": "Documents and Nodes"
+  },
+  {
+    "id": "le_002",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "Name three types of indices available in LlamaIndex for organizing data.",
+    "ground_truth": "Three types of indices in LlamaIndex are VectorStoreIndex (for semantic search), SummaryIndex (for sequential summarization), and TreeIndex (for hierarchical organization). KeywordTableIndex is another option for keyword-based retrieval.",
+    "source": "indexing"
+  },
+  {
+    "id": "le_003",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is the primary purpose of embeddings in LlamaIndex?",
+    "ground_truth": "Embeddings convert text into numerical vector representations that enable semantic similarity comparisons, allowing LlamaIndex to perform efficient semantic search and retrieval across indexed documents.",
+    "source": "embeddings"
+  },
+  {
+    "id": "le_004",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is a Query Engine in LlamaIndex?",
+    "ground_truth": "A Query Engine is a component that takes user queries and retrieves relevant information from indexed data, combining retrieval, synthesis, and response generation to answer questions against your knowledge base.",
+    "source": "query engines"
+  },
+  {
+    "id": "le_005",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What do Retrievers do in the LlamaIndex RAG pipeline?",
+    "ground_truth": "Retrievers fetch relevant nodes or documents from an index based on a query, serving as the information retrieval layer in the RAG (Retrieval-Augmented Generation) pipeline.",
+    "source": "retrievers"
+  },
+  {
+    "id": "le_006",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is the role of a Response Synthesizer in LlamaIndex?",
+    "ground_truth": "A Response Synthesizer takes retrieved context and a user query, then uses an LLM to generate coherent, contextualized answers by combining the retrieved information into a final response.",
+    "source": "response synthesizers"
+  },
+  {
+    "id": "le_007",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is the difference between a Node Parser and a Text Splitter in LlamaIndex?",
+    "ground_truth": "A Text Splitter breaks documents into chunks of text based on size or structure, while a Node Parser transforms these chunks into Node objects with metadata and relationships, preparing data for indexing.",
+    "source": "node parsers and text splitters"
+  },
+  {
+    "id": "le_008",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What does AgentWorkflow enable in LlamaIndex?",
+    "ground_truth": "AgentWorkflow enables multi-agent orchestration and task handoffs, allowing multiple AI agents to coordinate and delegate work to each other to solve complex problems collaboratively.",
+    "source": "AgentWorkflow"
+  },
+  {
+    "id": "le_009",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is a Workflow in LlamaIndex and how does it execute?",
+    "ground_truth": "A Workflow in LlamaIndex is an event-driven, step-based execution framework that allows you to define sequential or parallel tasks that respond to events and orchestrate complex data processing pipelines.",
+    "source": "Workflows"
+  },
+  {
+    "id": "le_010",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is Agentic Document Workflow (ADW) used for?",
+    "ground_truth": "Agentic Document Workflow (ADW) applies agentic capabilities to document processing, allowing intelligent automated workflows for extracting, organizing, and processing information from complex documents.",
+    "source": "agentic document workflows"
+  },
+  {
+    "id": "le_011",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What specific capability does LlamaParse provide for document handling?",
+    "ground_truth": "LlamaParse is a document parsing service that specializes in handling complex PDFs, extracting structured data, text, tables, and other elements with high accuracy for RAG applications.",
+    "source": "LlamaParse"
+  },
+  {
+    "id": "le_012",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is LlamaCloud and what does it provide?",
+    "ground_truth": "LlamaCloud is a managed platform offering hosted versions of LlamaIndex services, including document parsing, indexing, and retrieval, enabling production-grade RAG applications without infrastructure management.",
+    "source": "LlamaCloud"
+  },
+  {
+    "id": "le_013",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "How many integration packages does LlamaIndex provide?",
+    "ground_truth": "LlamaIndex provides over 300 integration packages, allowing seamless connection with various LLM providers, vector databases, data sources, and other tools in the data and AI ecosystem.",
+    "source": "300+ integration packages"
+  },
+  {
+    "id": "le_014",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What are evaluation modules in LlamaIndex used for?",
+    "ground_truth": "Evaluation modules in LlamaIndex assess the quality and performance of RAG systems by measuring retrieval accuracy, answer relevance, and other metrics to ensure production readiness.",
+    "source": "evaluation modules"
+  },
+  {
+    "id": "le_015",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "Name two key strategies mentioned for production optimization in LlamaIndex.",
+    "ground_truth": "Two key production optimization strategies are chunking strategies (optimizing document split sizes for better retrieval) and retrieval tuning (adjusting retrievers and query parameters for improved performance).",
+    "source": "production optimization"
+  },
+  {
+    "id": "le_016",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What does observability in LlamaIndex production systems help you accomplish?",
+    "ground_truth": "Observability in LlamaIndex production systems provides visibility into system behavior, performance metrics, and logs, enabling debugging, performance monitoring, and continuous improvement of RAG applications.",
+    "source": "production optimization"
+  },
+  {
+    "id": "le_017",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is the main use case for LlamaIndex as described in the key topics?",
+    "ground_truth": "The main use cases for LlamaIndex are building Retrieval-Augmented Generation (RAG) applications and agent-based systems that intelligently process data and generate contextual responses.",
+    "source": "core framework"
+  },
+  {
+    "id": "le_018",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "How do VectorStoreIndex and KeywordTableIndex differ in their retrieval approach?",
+    "ground_truth": "VectorStoreIndex uses semantic embeddings for similarity-based retrieval, finding contextually related content, while KeywordTableIndex uses keyword matching for exact term-based retrieval.",
+    "source": "indexing"
+  },
+  {
+    "id": "le_019",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is the relationship between nodes and documents in LlamaIndex data processing?",
+    "ground_truth": "Documents are raw data inputs that are parsed and split into Nodes, which are smaller, indexed units containing chunks of text along with metadata that enable efficient retrieval and processing.",
+    "source": "Documents and Nodes"
+  },
+  {
+    "id": "le_020",
+    "domain": "llamaindex_expert",
+    "difficulty": "easy",
+    "question": "What is chunking strategy optimization and why does it matter for RAG performance?",
+    "ground_truth": "Chunking strategy optimization involves tuning the size and overlap of text chunks when splitting documents. It matters because proper chunking improves retrieval accuracy by ensuring context-complete chunks are retrieved for better answer generation.",
+    "source": "production optimization"
+  },
+  {
+    "id": "le_021",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Explain the difference between a Document and a Node in LlamaIndex, and describe when you would manually create Nodes instead of relying on automatic parsing.",
+    "ground_truth": "Documents are raw data containers (PDFs, web pages, etc.), while Nodes are processed chunks with metadata, embeddings, and relationships. You manually create Nodes when you need custom chunking logic, specific metadata assignment, or fine-grained control over how content is segmented for retrieval.",
+    "source": "documents_and_nodes"
+  },
+  {
+    "id": "le_022",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "What are the key trade-offs between using VectorStoreIndex and KeywordTableIndex for indexing, and in what retrieval scenarios would you prefer KeywordTableIndex?",
+    "ground_truth": "VectorStoreIndex uses semantic similarity but requires embeddings and vector storage; KeywordTableIndex uses exact keyword matching and requires no embeddings. KeywordTableIndex is preferred for sparse queries, exact term lookups, or when you cannot rely on semantic embeddings due to domain-specific terminology or cost constraints.",
+    "source": "indexing_strategies"
+  },
+  {
+    "id": "le_023",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "How does a TreeIndex differ from a SummaryIndex in terms of retrieval strategy, and what are the computational implications of each?",
+    "ground_truth": "TreeIndex builds a hierarchical tree of summaries and traverses it top-down to find relevant leaf nodes, providing better retrieval precision. SummaryIndex returns all nodes sequentially and relies on the response synthesizer to filter. TreeIndex has higher indexing cost but faster retrieval; SummaryIndex is cheaper to build but requires more processing during synthesis.",
+    "source": "indexing_strategies"
+  },
+  {
+    "id": "le_024",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Describe how node parsers and text splitters work together in LlamaIndex, and explain why choosing the right chunking strategy is critical for RAG performance.",
+    "ground_truth": "Text splitters break documents into chunks; node parsers convert chunks into Nodes with metadata and relationships. Chunking strategy affects retrieval quality\u2014too small chunks lose context, too large chunks reduce precision and increase costs. The strategy must balance semantic coherence with the model's context window and retrieval granularity.",
+    "source": "node_parsers_and_text_splitters"
+  },
+  {
+    "id": "le_025",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "What is the role of a Retriever in the LlamaIndex query pipeline, and how does it differ from a QueryEngine?",
+    "ground_truth": "A Retriever fetches relevant Nodes from an index based on a query. A QueryEngine combines a Retriever with a ResponseSynthesizer to return a natural language answer. The Retriever is the information lookup component; the QueryEngine is the full end-to-end pipeline.",
+    "source": "retrievers_and_query_engines"
+  },
+  {
+    "id": "le_026",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Explain the concept of response synthesis in LlamaIndex and describe two different synthesis modes and their use cases.",
+    "ground_truth": "Response synthesis combines retrieved Nodes into a final answer. 'Create-and-refine' mode generates answers iteratively, improving with each Node. 'Tree-summarize' mode builds a tree of summaries for long contexts. Create-and-refine is slower but generates better quality; tree-summarize is faster for large result sets.",
+    "source": "response_synthesizers"
+  },
+  {
+    "id": "le_027",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "How do embeddings influence RAG performance in LlamaIndex, and what are the trade-offs of using different embedding models?",
+    "ground_truth": "Embeddings encode semantic meaning for similarity-based retrieval. Larger models (e.g., OpenAI) offer better quality but higher costs and latency; smaller open-source models are cheaper but may sacrifice accuracy. The choice depends on domain specificity, query complexity, and latency requirements.",
+    "source": "embeddings"
+  },
+  {
+    "id": "le_028",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "What is an AgentWorkflow in LlamaIndex, and how does task handoff differ from sequential agent execution?",
+    "ground_truth": "AgentWorkflow orchestrates multiple agents and their interactions. Task handoff allows agents to delegate work based on context or specialization, enabling collaborative problem-solving. Sequential execution requires explicit ordering; handoffs are dynamic and conditional, allowing flexible agent cooperation.",
+    "source": "agent_workflow"
+  },
+  {
+    "id": "le_029",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Describe the event-driven, step-based execution model of LlamaIndex Workflows and explain why this architecture is suitable for complex RAG and agent applications.",
+    "ground_truth": "Workflows process events in defined steps, advancing state through conditions and branching. This is suitable for RAG/agents because it handles asynchronous operations (API calls, retrieval), enables complex orchestration (multi-step reasoning), and provides observability at each step for debugging and optimization.",
+    "source": "workflows"
+  },
+  {
+    "id": "le_030",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "What is Agentic Document Workflow (ADW), and how does it differ from traditional document indexing and retrieval?",
+    "ground_truth": "ADW uses agents to intelligently process, extract, and synthesize information from documents dynamically. Unlike traditional indexing (static, pre-built), ADW agents interact with documents on-demand, make contextual decisions, and can handle complex extraction tasks that require reasoning across multiple documents.",
+    "source": "agentic_document_workflows"
+  },
+  {
+    "id": "le_031",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Explain what LlamaParse does and why it is particularly useful for RAG systems handling complex PDFs with tables, figures, and multi-column layouts.",
+    "ground_truth": "LlamaParse is a document parsing service that uses vision and structural understanding to extract content from complex PDFs, preserving table structure, figures, and layout. It solves the problem of traditional text extraction failing on complex layouts, ensuring RAG systems receive high-quality, structured input.",
+    "source": "llamaparse"
+  },
+  {
+    "id": "le_032",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "What is LlamaCloud, and how does it enhance the deployment and management of LlamaIndex applications in production?",
+    "ground_truth": "LlamaCloud is a managed platform for deploying and scaling LlamaIndex applications. It provides hosted indexing, parsing services, observability, and API endpoints, eliminating infrastructure management and enabling easier scaling, monitoring, and integration of RAG pipelines.",
+    "source": "llamacloud"
+  },
+  {
+    "id": "le_033",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Describe the role of the 300+ integration packages in LlamaIndex and provide examples of how they extend functionality for enterprise RAG deployments.",
+    "ground_truth": "Integration packages connect LlamaIndex to external data sources, vector stores, LLMs, and services. Examples include database connectors (SQL, NoSQL), vector stores (Pinecone, Weaviate), LLM providers (OpenAI, Anthropic), and observability tools. They enable seamless enterprise adoption without custom development.",
+    "source": "integration_packages"
+  },
+  {
+    "id": "le_034",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "How are evaluation modules used in LlamaIndex to assess RAG system quality, and what metrics would you use to compare retrieval versus generation performance?",
+    "ground_truth": "Evaluation modules measure RAG performance through metrics like NDCG and MRR for retrieval quality, and BLEU, ROUGE for generation quality. You'd use retrieval metrics to tune indexing/retrieval, and generation metrics to assess response synthesis. Both are needed for comprehensive system tuning.",
+    "source": "evaluation_modules"
+  },
+  {
+    "id": "le_035",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Explain the concept of retrieval tuning in LlamaIndex and describe three strategies for optimizing retrieval performance in production RAG systems.",
+    "ground_truth": "Retrieval tuning optimizes which nodes are returned for queries. Three strategies: (1) adjust chunking size/strategy for better context isolation, (2) use hybrid retrieval combining keyword and semantic search, (3) implement re-ranking to reorder retrieved nodes by relevance. Each trades off cost vs. quality.",
+    "source": "production_optimization"
+  },
+  {
+    "id": "le_036",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Describe the role of observability in production LlamaIndex applications and what metrics should be monitored to ensure RAG system health.",
+    "ground_truth": "Observability tracks query performance, retrieval quality, response latency, and error rates. Key metrics include retrieval precision/recall, response synthesis latency, embedding/LLM API costs, and cache hit rates. Monitoring these reveals bottlenecks and helps optimize indexing, retrieval, and synthesis strategies.",
+    "source": "production_optimization"
+  },
+  {
+    "id": "le_037",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "How would you design a chunking strategy for a knowledge base containing both technical documentation and unstructured customer feedback, and what trade-offs would you consider?",
+    "ground_truth": "For technical docs, use semantic chunking or fixed-size chunks preserving code blocks. For feedback, use smaller chunks capturing individual sentiment/issues. Trade-offs: smaller chunks improve precision but increase retrieval cost; larger chunks reduce cost but may lose detail. Hybrid approach with metadata filtering mitigates this.",
+    "source": "production_optimization"
+  },
+  {
+    "id": "le_038",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Explain how you would implement a multi-agent document processing system using LlamaIndex Workflows where one agent extracts information and another validates it.",
+    "ground_truth": "Define a Workflow with two steps: Step 1 uses an Agent to extract data (using retriever and LLM). Step 2 uses another Agent to validate extracted data against source documents. Use event-driven handoff between steps\u2014Step 1 outputs events triggering Step 2. This ensures sequential, observable processing with error handling.",
+    "source": "workflows"
+  },
+  {
+    "id": "le_039",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "What are the advantages and limitations of using a hybrid retrieval approach combining VectorStoreIndex and KeywordTableIndex, and when would you implement this strategy?",
+    "ground_truth": "Hybrid retrieval combines semantic and keyword matching, improving recall and handling both contextual and exact-match queries. Advantages: robustness across query types; limitations: increased complexity and cost. Implement this for mixed-query domains like legal/medical where specificity (keywords) and context (embeddings) both matter.",
+    "source": "indexing_strategies"
+  },
+  {
+    "id": "le_040",
+    "domain": "llamaindex_expert",
+    "difficulty": "medium",
+    "question": "Describe how you would optimize a LlamaIndex RAG system handling millions of documents, addressing indexing time, retrieval latency, and cost constraints.",
+    "ground_truth": "Use hierarchical indexing (TreeIndex or SummaryIndex), batch embeddings, partition documents by domain/type, implement caching at retrieval layer, use cheaper embedding models, optimize chunking for your query patterns, and deploy on LlamaCloud for scalability. Monitor retrieval quality and latency trade-offs continuously.",
+    "source": "production_optimization"
+  },
+  {
+    "id": "le_041",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "When building a multi-document RAG system, how does the choice between VectorStoreIndex, SummaryIndex, and KeywordTableIndex impact retrieval latency and accuracy trade-offs, and what document characteristics should guide this selection?",
+    "ground_truth": "VectorStoreIndex offers semantic retrieval with O(n) latency but requires embeddings; SummaryIndex summarizes all docs then uses LLM-based filtering (slowest but context-aware); KeywordTableIndex uses keyword matching (fastest but surface-level). Choose VectorStoreIndex for semantic similarity, SummaryIndex for complex reasoning requiring full context, KeywordTableIndex for keyword-heavy domains or when latency is critical.",
+    "source": "indexing_strategies"
+  },
+  {
+    "id": "le_042",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "In a production LlamaIndex deployment using LlamaParse for complex PDF ingestion, what are the key security and cost implications of parsing documents asynchronously versus synchronously, and how should chunking strategy be coordinated with the parsing output?",
+    "ground_truth": "Asynchronous parsing reduces blocking but requires job tracking and retry logic; synchronous parsing is simpler but blocks on large documents. LlamaParse outputs structured markdown preserving layout\u2014coordinate chunking by semantic boundaries (sections) rather than fixed tokens to preserve context. Cost scales with document complexity; implement caching and batch processing to optimize LlamaCloud API usage.",
+    "source": "llamaparse_production"
+  },
+  {
+    "id": "le_043",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "Explain how node parsing and text splitting strategies affect the effectiveness of hybrid retrieval (combining dense and sparse methods) in LlamaIndex, and what is the optimal chunk size range for different embedding models?",
+    "ground_truth": "Node parsing determines metadata granularity; improper splitting creates context loss for dense retrievers. Optimal chunk sizes depend on embedding model: 256-512 tokens for most embeddings (e.g., OpenAI), 1024+ for long-context models. Hybrid retrieval requires balanced splits\u2014too small fragments sparse retrieval noise; too large chunks reduce semantic precision. Use SentenceSplitter with sentence boundaries preservation for coherence.",
+    "source": "node_parsing_optimization"
+  },
+  {
+    "id": "le_044",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "When designing a multi-agent workflow in LlamaIndex using AgentWorkflow with task handoffs, what are the critical considerations for state management, context passing, and preventing infinite loops or stalled handoffs?",
+    "ground_truth": "AgentWorkflow requires explicit state serialization for context passing between agents; use structured events with context snapshots. Prevent loops via: (1) handoff validators checking agent capabilities, (2) maximum iteration limits per task, (3) explicit termination conditions in event definitions. State should be immutable during handoffs to ensure consistency; implement observability hooks to detect stalled transitions.",
+    "source": "agent_workflow_orchestration"
+  },
+  {
+    "id": "le_045",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "How do embedding model selection and dimensionality choices in VectorStoreIndex impact query performance, memory footprint, and retrieval quality in resource-constrained environments, and what are the trade-offs?",
+    "ground_truth": "Larger embeddings (e.g., 1536-dim OpenAI vs 384-dim BAAI) improve semantic precision but increase memory/storage 4x and query latency. In resource-constrained settings, use dimensionality reduction (PCA) or smaller models (384-dim BAAI, DistilBERT) accepting 5-10% accuracy loss for 3-4x resource savings. Quantization (int8) reduces storage without quality loss; consider approximate nearest neighbor algorithms (HNSW) for scaling.",
+    "source": "embedding_optimization"
+  },
+  {
+    "id": "le_046",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "In a RAG system using response synthesizers with citation tracking, what are the failure modes when source documents are contradictory or partially relevant, and how should retrieval tuning mitigate these issues?",
+    "ground_truth": "Failure modes: (1) hallucinated citations when synthesizer conflates sources, (2) conflicting answers from contradictory documents without acknowledgment, (3) over-reliance on irrelevant top-k results. Mitigate via: increase k and implement re-ranking (cross-encoder), use refine synthesizer instead of compact (iterative validation), implement contradiction detection in evaluation modules, and fine-tune retrieval thresholds to filter low-confidence results.",
+    "source": "response_synthesis_reliability"
+  },
+  {
+    "id": "le_047",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "What are the architectural differences between Workflows (event-driven step-based) and AgentWorkflow (multi-agent orchestration) in LlamaIndex, and when should each be used for complex document processing pipelines?",
+    "ground_truth": "Workflows are low-level event systems with defined DAGs suitable for deterministic pipelines (parsing \u2192 chunking \u2192 indexing); AgentWorkflow adds autonomous decision-making with task routing and handoffs. Use Workflows for predictable ETL with fixed steps; use AgentWorkflow when agents must decide routing (e.g., document classification \u2192 specialized processing). AgentWorkflow incurs LLM call overhead; Workflows are cheaper but less flexible.",
+    "source": "workflow_architecture"
+  },
+  {
+    "id": "le_048",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "How should observability and evaluation modules be configured in production LlamaIndex deployments to detect retrieval degradation, and what metrics should trigger reindexing or retriever retuning?",
+    "ground_truth": "Key metrics: (1) mean reciprocal rank (MRR) / NDCG for retrieval quality, (2) latency percentiles (p95, p99), (3) token usage per query, (4) embedding cache hit ratio. Triggers for retuning: MRR drop >10% over 100-query window, retrieval latency p95 exceeding SLA, or relevance threshold misses. Implement continuous evaluation with held-out test sets; use LlamaCloud observability integrations for production monitoring and automated alerting.",
+    "source": "production_observability"
+  },
+  {
+    "id": "le_049",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "In agentic document workflows (ADW), how does the iterative refinement of document understanding differ from static RAG, and what are the implementation challenges when coordinating multiple agents on the same document?",
+    "ground_truth": "ADW iteratively refines understanding: agents extract information, validate against sources, request clarifications, and re-parse. Differs from static RAG which retrieves fixed results. Challenges: (1) maintaining consistent document state across agents, (2) preventing redundant parsing/re-indexing, (3) handling conflicting extractions, (4) scaling to large documents. Solutions: use event-driven state updates, implement extraction caching, add consensus mechanisms, and batch multi-agent operations on document sections.",
+    "source": "agentic_document_workflows"
+  },
+  {
+    "id": "le_050",
+    "domain": "llamaindex_expert",
+    "difficulty": "hard",
+    "question": "When integrating 300+ LlamaIndex packages, what are the critical dependency resolution and version compatibility challenges in production, and how should integration testing be structured to prevent RAG pipeline degradation?",
+    "ground_truth": "Challenges: (1) transitive dependency conflicts (vector stores, embeddings, LLM SDKs), (2) API breaking changes in minor versions, (3) integration-specific timeout/retry logic incompatibilities. Mitigation: pin llamaindex core version strictly, use semantic versioning for integrations, implement integration-specific test suites (e.g., test each vector store with mock data), maintain integration compatibility matrix, and use containerization for environment isolation. Continuous integration should validate end-to-end RAG workflows, not just unit tests.",
+    "source": "integration_management"
+  }
+]

@@ -1,0 +1,50 @@
+# Microsoft Semantic Kernel - Official Documentation
+# AI orchestration SDK for building agents and LLM-powered applications
+
+# Microsoft Learn Documentation
+https://learn.microsoft.com/en-us/semantic-kernel/
+https://learn.microsoft.com/en-us/semantic-kernel/overview/
+https://learn.microsoft.com/en-us/semantic-kernel/get-started/quick-start-guide
+https://learn.microsoft.com/en-us/semantic-kernel/concepts/kernel
+https://learn.microsoft.com/en-us/semantic-kernel/concepts/semantic-kernel-components
+https://learn.microsoft.com/en-us/semantic-kernel/concepts/plugins/
+https://learn.microsoft.com/en-us/semantic-kernel/concepts/planning
+https://learn.microsoft.com/en-us/semantic-kernel/concepts/ai-services/
+https://learn.microsoft.com/en-us/semantic-kernel/concepts/prompts/
+https://learn.microsoft.com/en-us/semantic-kernel/concepts/text-search/
+https://learn.microsoft.com/en-us/semantic-kernel/concepts/vector-store-connectors/
+https://learn.microsoft.com/en-us/semantic-kernel/concepts/enterprise-readiness/
+
+# Agent Framework Integration
+https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/
+https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-orchestration/
+https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/chat-completion-agent
+https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/open-ai-assistant-agent
+https://learn.microsoft.com/en-us/semantic-kernel/frameworks/agent/agent-chat
+
+# Process Framework
+https://learn.microsoft.com/en-us/semantic-kernel/frameworks/process/process-framework
+https://learn.microsoft.com/en-us/semantic-kernel/frameworks/process/process-local-runtime
+
+# How-To Guides
+https://learn.microsoft.com/en-us/semantic-kernel/how-to/function-calling
+https://learn.microsoft.com/en-us/semantic-kernel/how-to/function-calling-auto
+https://learn.microsoft.com/en-us/semantic-kernel/how-to/structured-output
+
+# GitHub Repository
+https://github.com/microsoft/semantic-kernel
+
+# Dev Blog
+https://devblogs.microsoft.com/semantic-kernel/
+
+# Integration with M365 Agents SDK
+https://learn.microsoft.com/en-us/microsoft-365/agents-sdk/using-semantic-kernel-agent-framework
+
+# Cookbook & Samples
+https://github.com/microsoft/SemanticKernelCookBook
+https://github.com/microsoft/semantic-kernel/tree/main/python/samples
+https://github.com/microsoft/semantic-kernel/tree/main/dotnet/samples
+
+# Package Registries
+https://pypi.org/project/semantic-kernel/
+https://www.nuget.org/packages/Microsoft.SemanticKernel

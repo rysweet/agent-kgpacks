@@ -1,0 +1,19 @@
+{
+  "pack_name": "sentinel-graph",
+  "questions_tested": 5,
+  "webfetch_baseline": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.0,
+    "avg_latency_ms": 17468.701934814453,
+    "total_cost_usd": 0.279255
+  },
+  "knowledge_pack": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.0,
+    "avg_latency_ms": 17648.44002723694,
+    "total_cost_usd": 0.046944
+  },
+  "surpasses_webfetch": false
+}

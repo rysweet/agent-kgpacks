@@ -1,0 +1,410 @@
+[
+  {
+    "id": "ma_001",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is Microsoft Agent Framework and what two major frameworks does it converge?",
+    "ground_truth": "Microsoft Agent Framework is a unified SDK for building, orchestrating, and deploying AI agents and multi-agent workflows. It converges AutoGen and Semantic Kernel into a single framework.",
+    "source": "framework_overview"
+  },
+  {
+    "id": "ma_002",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is the purpose of the @ai_function decorator in Microsoft Agent Framework?",
+    "ground_truth": "The @ai_function decorator is used to mark Python functions as AI tools that can be called by agents, enabling integration of custom functions into agent workflows.",
+    "source": "ai_function_decorator"
+  },
+  {
+    "id": "ma_003",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "Name three orchestration patterns supported by Microsoft Agent Framework.",
+    "ground_truth": "Microsoft Agent Framework supports sequential, concurrent, handoff, group chat, and magentic orchestration patterns for coordinating agent interactions.",
+    "source": "orchestration_patterns"
+  },
+  {
+    "id": "ma_004",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is ChatAgent in Microsoft Agent Framework?",
+    "ground_truth": "ChatAgent is a core abstraction in Microsoft Agent Framework that provides a conversational interface for AI agents, handling message passing and response generation.",
+    "source": "chat_agent_abstractions"
+  },
+  {
+    "id": "ma_005",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What API style does Microsoft Agent Framework use for defining workflows?",
+    "ground_truth": "Microsoft Agent Framework uses graph-based Workflow APIs that allow developers to define agents and their interactions as computational graphs.",
+    "source": "workflow_apis"
+  },
+  {
+    "id": "ma_006",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What are the two main mechanisms for state management in long-running agent processes?",
+    "ground_truth": "Microsoft Agent Framework uses checkpointing and persistent state storage to manage state in long-running processes, enabling resumption and recovery.",
+    "source": "state_management"
+  },
+  {
+    "id": "ma_007",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is the Agent2Agent (A2A) protocol in Microsoft Agent Framework?",
+    "ground_truth": "The Agent2Agent (A2A) protocol is a communication protocol that enables agents to interact with each other directly, facilitating multi-agent collaboration.",
+    "source": "a2a_protocol"
+  },
+  {
+    "id": "ma_008",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "How can agents be integrated into workflows in Microsoft Agent Framework?",
+    "ground_truth": "Agents can be used as individual nodes within workflow graphs, allowing them to be orchestrated and composed together as part of larger multi-agent systems.",
+    "source": "agents_in_workflows"
+  },
+  {
+    "id": "ma_009",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is MCP integration in Microsoft Agent Framework?",
+    "ground_truth": "MCP integration refers to Model Context Protocol integration, which allows agents to connect with external tools and services through a standardized protocol.",
+    "source": "mcp_integration"
+  },
+  {
+    "id": "ma_010",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is the Process Framework in Microsoft Agent Framework?",
+    "ground_truth": "The Process Framework is a component that provides deterministic business workflows, allowing structured and predictable orchestration of agent activities.",
+    "source": "process_framework"
+  },
+  {
+    "id": "ma_011",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is the primary purpose of tool integration in Microsoft Agent Framework?",
+    "ground_truth": "Tool integration allows agents to access and invoke external functions, APIs, and services to perform tasks beyond their base capabilities.",
+    "source": "tool_integration"
+  },
+  {
+    "id": "ma_012",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What are model clients in Microsoft Agent Framework?",
+    "ground_truth": "Model clients are components that provide connections to AI language models, handling communication with different model providers and APIs.",
+    "source": "model_clients"
+  },
+  {
+    "id": "ma_013",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "Can Semantic Kernel be used alongside Microsoft Agent Framework?",
+    "ground_truth": "Yes, Semantic Kernel can be used with Microsoft Agent Framework in agents, allowing developers to leverage Semantic Kernel's capabilities within Agent Framework agents.",
+    "source": "semantic_kernel_integration"
+  },
+  {
+    "id": "ma_014",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is the handoff orchestration pattern in Microsoft Agent Framework?",
+    "ground_truth": "The handoff pattern enables an agent to transfer control and context to another agent, facilitating task delegation and specialized agent routing.",
+    "source": "orchestration_patterns"
+  },
+  {
+    "id": "ma_015",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is group chat orchestration in Microsoft Agent Framework?",
+    "ground_truth": "Group chat orchestration allows multiple agents to participate in a conversation together, coordinating responses and interactions in a shared context.",
+    "source": "orchestration_patterns"
+  },
+  {
+    "id": "ma_016",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "Where can Microsoft Agent Framework applications be deployed?",
+    "ground_truth": "Microsoft Agent Framework applications can be deployed to Azure AI Foundry, which provides managed hosting and lifecycle management for agents.",
+    "source": "azure_deployment"
+  },
+  {
+    "id": "ma_017",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "Can custom agents be created in Microsoft Agent Framework?",
+    "ground_truth": "Yes, Microsoft Agent Framework supports the creation of custom agents by extending the ChatAgent abstraction and implementing domain-specific logic.",
+    "source": "custom_agents"
+  },
+  {
+    "id": "ma_018",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What does the Workflow Builder do in Microsoft Agent Framework?",
+    "ground_truth": "The Workflow Builder is a tool that enables developers to design and construct agent workflows using graph-based composition before execution.",
+    "source": "workflow_builder"
+  },
+  {
+    "id": "ma_019",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What is the main benefit of migrating from AutoGen to Microsoft Agent Framework?",
+    "ground_truth": "Migration to Microsoft Agent Framework provides a unified SDK experience, better integration with Semantic Kernel, and access to newer orchestration patterns and deployment features.",
+    "source": "autogen_migration"
+  },
+  {
+    "id": "ma_020",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "easy",
+    "question": "What does checkpointing enable in Microsoft Agent Framework state management?",
+    "ground_truth": "Checkpointing enables agents to save their execution state at key points, allowing long-running processes to resume from checkpoints after interruptions or failures.",
+    "source": "state_management"
+  },
+  {
+    "id": "ma_021",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "How does the @ai_function decorator differ from traditional function definitions when building agents in Microsoft Agent Framework?",
+    "ground_truth": "The @ai_function decorator marks functions as callable by AI agents, automatically generating tool schemas and enabling the framework to discover and invoke them during agent execution without manual schema registration.",
+    "source": "ai_function_decorator"
+  },
+  {
+    "id": "ma_022",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "What is the primary advantage of using graph-based Workflow APIs compared to sequential workflow definitions?",
+    "ground_truth": "Graph-based Workflow APIs enable complex orchestration patterns including concurrent execution, conditional branching, and dynamic routing, allowing more sophisticated multi-agent interactions than simple linear sequences.",
+    "source": "workflow_apis"
+  },
+  {
+    "id": "ma_023",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "Explain how checkpointing in state management supports long-running agent processes in Microsoft Agent Framework.",
+    "ground_truth": "Checkpointing persists agent state at defined intervals, enabling workflows to resume from the last saved point without restarting from the beginning, essential for fault tolerance and recovery in long-running processes.",
+    "source": "state_management"
+  },
+  {
+    "id": "ma_024",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "What orchestration pattern should be used when an agent needs to transfer control to another agent based on task specialization?",
+    "ground_truth": "The handoff pattern is designed for this scenario, allowing one agent to evaluate when another agent is better suited for a task and seamlessly transfer control while maintaining conversation context.",
+    "source": "orchestration_patterns"
+  },
+  {
+    "id": "ma_025",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "How does the ChatAgent abstraction simplify agent development compared to building custom agents from scratch?",
+    "ground_truth": "ChatAgent abstractions provide pre-built conversational capabilities, message handling, and context management, allowing developers to focus on business logic and tool integration rather than implementing low-level communication patterns.",
+    "source": "chat_agent_abstractions"
+  },
+  {
+    "id": "ma_026",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "What is the relationship between model clients and tool integration in the Agent Framework?",
+    "ground_truth": "Model clients handle communication with LLMs and are responsible for executing tool calls returned by the model; tool integration registers available functions that model clients invoke based on agent decisions.",
+    "source": "model_clients_tools"
+  },
+  {
+    "id": "ma_027",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "When migrating from AutoGen to Microsoft Agent Framework, what key architectural concept remains consistent?",
+    "ground_truth": "The agent-based orchestration model remains consistent, though AutoGen's ConversableAgent patterns are refactored into ChatAgent abstractions with updated tool calling mechanisms and workflow definitions.",
+    "source": "autogen_migration"
+  },
+  {
+    "id": "ma_028",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "How does the group chat orchestration pattern differ from concurrent execution in Agent Framework workflows?",
+    "ground_truth": "Group chat maintains turn-based agent interactions with shared context and discussion state, while concurrent execution runs agents in parallel without requiring synchronized message exchange, suited for independent tasks.",
+    "source": "group_chat_pattern"
+  },
+  {
+    "id": "ma_029",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "What is the primary purpose of the Agent2Agent (A2A) protocol in Microsoft Agent Framework?",
+    "ground_truth": "The A2A protocol enables standardized communication between agents, allowing them to exchange information, request services, and coordinate actions while maintaining interoperability across different agent implementations.",
+    "source": "a2a_protocol"
+  },
+  {
+    "id": "ma_030",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "How does MCP (Model Context Protocol) integration expand agent capabilities in the Framework?",
+    "ground_truth": "MCP integration provides standardized tool and resource interfaces from external systems, enabling agents to access a broader ecosystem of pre-built integrations without custom implementation.",
+    "source": "mcp_integration"
+  },
+  {
+    "id": "ma_031",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "What distinguishes the Process Framework from general workflow orchestration in Agent Framework?",
+    "ground_truth": "The Process Framework is specifically designed for deterministic business workflows with explicit state machines, control flow, and audit trails, whereas general workflows support agentic decision-making and dynamic routing.",
+    "source": "process_framework"
+  },
+  {
+    "id": "ma_032",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "When migrating Semantic Kernel agents to Microsoft Agent Framework, how does tool registration change?",
+    "ground_truth": "Semantic Kernel's plugin model is replaced with @ai_function decorators and direct tool registration in Agent Framework, providing tighter integration with agent execution and simplified schema management.",
+    "source": "semantic_kernel_migration"
+  },
+  {
+    "id": "ma_033",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "How can Azure AI Foundry be used to deploy and manage Agent Framework applications in production?",
+    "ground_truth": "Azure AI Foundry provides managed deployment, monitoring, and lifecycle management for Agent Framework applications, including model routing, safety evaluation, and observability features.",
+    "source": "azure_deployment"
+  },
+  {
+    "id": "ma_034",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "In what scenario would the magentic orchestration pattern be preferred over simple sequential or concurrent patterns?",
+    "ground_truth": "The magentic pattern is preferred when agents need dynamic, context-aware routing and decision-making based on intermediate results, enabling adaptive workflows that adjust execution based on real-time conditions.",
+    "source": "magentic_pattern"
+  },
+  {
+    "id": "ma_035",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "What challenges does state management solve when building multi-agent workflows?",
+    "ground_truth": "State management ensures consistency across distributed agents, prevents duplicate work through checkpoints, maintains context through long interactions, and enables recovery from failures without losing progress.",
+    "source": "state_management_multi_agent"
+  },
+  {
+    "id": "ma_036",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "How does custom agent development in Agent Framework compare to using pre-built ChatAgent abstractions?",
+    "ground_truth": "Custom agents provide full control over behavior and internal logic but require implementing more infrastructure, while ChatAgent abstractions accelerate development with built-in patterns at the cost of less flexibility.",
+    "source": "custom_agents"
+  },
+  {
+    "id": "ma_037",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "What is the relationship between Workflows and Agents in Microsoft Agent Framework, and when should each be used as the primary abstraction?",
+    "ground_truth": "Workflows orchestrate multiple agents and business logic with explicit control flow, while Agents handle reasoning and tool use; use Workflows for deterministic processes and Agents when autonomous decision-making is needed.",
+    "source": "workflows_as_agents"
+  },
+  {
+    "id": "ma_038",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "How does the unified SDK approach of converging AutoGen and Semantic Kernel affect developer migration strategy?",
+    "ground_truth": "The unified SDK provides migration guides and compatibility layers allowing incremental adoption, enabling developers to leverage existing AutoGen and Semantic Kernel code while gradually adopting Agent Framework patterns.",
+    "source": "unified_sdk_convergence"
+  },
+  {
+    "id": "ma_039",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "What configuration considerations are important when integrating multiple model clients in a single Agent Framework deployment?",
+    "ground_truth": "Key considerations include model routing policies, cost optimization across different models, latency management, fallback strategies for model failures, and ensuring consistent tool schema compatibility across all integrated models.",
+    "source": "model_client_integration"
+  },
+  {
+    "id": "ma_040",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "medium",
+    "question": "How does the Workflow Builder in Agent Framework facilitate visual composition of multi-agent systems compared to code-first approaches?",
+    "ground_truth": "The Workflow Builder provides visual graph composition with drag-and-drop agent placement, automatic schema inference, and execution visualization, reducing complexity for non-technical stakeholders while maintaining code integration capabilities.",
+    "source": "workflow_builder"
+  },
+  {
+    "id": "ma_041",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "When migrating from AutoGen to Microsoft Agent Framework, what are the key architectural differences in how agent communication patterns must be refactored, particularly regarding the group chat pattern versus the modern orchestration approach?",
+    "ground_truth": "AutoGen's GroupChat relies on a round-robin message passing model, while Microsoft Agent Framework uses graph-based Workflow APIs with explicit sequential, concurrent, and handoff patterns. Migration requires replacing GroupChat logic with Workflow definitions that explicitly define agent transitions and state management through checkpointing, enabling better control over multi-agent orchestration and long-running processes.",
+    "source": "AutoGen_to_MAF_Migration"
+  },
+  {
+    "id": "ma_042",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "Explain the relationship between the @ai_function decorator and tool integration in Microsoft Agent Framework. How does this decorator facilitate both static tool registration and dynamic capability discovery?",
+    "ground_truth": "The @ai_function decorator converts Python functions into callable tools with automatic schema generation and type inference. It enables static tool registration at agent initialization while supporting dynamic discovery through introspection, allowing the underlying model client to understand function signatures, parameters, and return types without explicit schema definition.",
+    "source": "ai_function_decorator"
+  },
+  {
+    "id": "ma_043",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "In a long-running workflow with multiple agents performing financial reconciliation tasks, how would checkpoint-based state management prevent data inconsistency if a failure occurs mid-process, and what are the recovery implications?",
+    "ground_truth": "Checkpointing serializes workflow state at defined intervals, allowing resume-from-checkpoint recovery without reprocessing completed tasks. For financial workflows, this ensures atomic transaction semantics\u2014if a failure occurs after reconciliation step 3, the system resumes from that checkpoint's saved state rather than restarting, preventing duplicate entries or partial state corruption while maintaining audit trails.",
+    "source": "state_management_checkpointing"
+  },
+  {
+    "id": "ma_044",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "How does the Agent2Agent (A2A) protocol differ from traditional agent-to-service communication patterns, and what specific advantages does it provide for orchestrating heterogeneous agents in a multi-model environment?",
+    "ground_truth": "A2A protocol establishes standardized, agent-native communication enabling direct agent-to-agent message passing with semantic understanding of intents and capabilities, unlike HTTP-based service calls. This allows agents to negotiate handoffs, share context directly, and maintain conversation history across model boundaries, supporting seamless orchestration of agents built on different LLM providers without adapter layers.",
+    "source": "Agent2Agent_protocol"
+  },
+  {
+    "id": "ma_045",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "When integrating Model Context Protocol (MCP) servers with Microsoft Agent Framework agents, what are the security considerations and isolation constraints that must be addressed, particularly regarding untrusted tool implementations?",
+    "ground_truth": "MCP integration requires sandboxing untrusted servers to prevent privilege escalation and data exfiltration. Key constraints include capability-based access control, resource quotas on tool execution, and attestation verification. The framework must enforce tool invocation within declared scopes and validate responses before state mutation to prevent malicious MCP servers from compromising agent workflows.",
+    "source": "MCP_integration_security"
+  },
+  {
+    "id": "ma_046",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "Explain the performance implications of choosing between sequential, concurrent, and handoff orchestration patterns in workflows. Under what conditions would concurrent execution create bottlenecks rather than improve performance?",
+    "ground_truth": "Sequential patterns minimize resource overhead but block on agent latency. Concurrent execution improves throughput when tasks are independent, but creates bottlenecks when agents compete for shared resources (model quotas, database connections, API rate limits). For I/O-bound tasks, concurrency reduces wall-clock time; for compute-bound or resource-contended scenarios, it increases latency through context switching and resource starvation.",
+    "source": "orchestration_patterns_performance"
+  },
+  {
+    "id": "ma_047",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "When migrating from Semantic Kernel to Microsoft Agent Framework, how do the plugin architecture and function invocation models differ, and what refactoring is required for complex skill compositions?",
+    "ground_truth": "Semantic Kernel's plugins use kernel-managed function invocation with skill chaining through kernel context, while Agent Framework uses explicit tool registration and stateless @ai_function decorators with agent-managed invocation. Migration requires decomposing Semantic Kernel skills into independent, pure functions decorated with @ai_function, replacing kernel context passing with explicit agent state and workflow variable flow.",
+    "source": "Semantic_Kernel_to_MAF_Migration"
+  },
+  {
+    "id": "ma_048",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "In the Process Framework for deterministic business workflows, how does the framework guarantee deterministic execution across distributed agents, and what constraints does this impose on tool implementations?",
+    "ground_truth": "The Process Framework enforces determinism through idempotent, pure-function tool implementations with deterministic outputs for identical inputs. This requires tools to avoid non-deterministic operations (current time, random values, external state mutations), use reproducible algorithms, and support request deduplication. The framework tracks execution paths and prevents re-execution of deterministic steps, ensuring reproducible audit trails for compliance.",
+    "source": "Process_Framework_determinism"
+  },
+  {
+    "id": "ma_049",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "How does the Workflow Builder in Microsoft Agent Framework differ from direct Workflow API usage in terms of expressiveness, type safety, and runtime optimization, and when should each approach be preferred?",
+    "ground_truth": "Workflow Builder provides visual/declarative composition with automatic graph optimization and type inference at definition time, enabling compile-time validation of agent connections and state flows. Direct Workflow API offers greater expressiveness for dynamic, conditional workflows requiring runtime state inspection. Builder suits static, multi-agent orchestration with strong type guarantees; APIs suit adaptive workflows with complex branching logic.",
+    "source": "Workflow_Builder_vs_API"
+  },
+  {
+    "id": "ma_050",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "In a multi-agent system deployed on Azure AI Foundry with agents specialized in different domains (e.g., finance, legal, technical), how should the framework be configured to prevent cross-domain context leakage while maintaining efficiency in a shared execution environment?",
+    "ground_truth": "Configure isolated agent contexts with separate model client instances and credential scopes per domain. Use workflow-level state compartmentalization to prevent variable sharing across domain boundaries, implement role-based access control on tools, and enforce Azure RBAC policies at the Foundry level. Monitor execution traces for unintended information flow and use separate checkpoints per domain to prevent recovery from cross-contaminated states.",
+    "source": "Azure_AI_Foundry_deployment_isolation"
+  },
+  {
+    "id": "ma_051",
+    "domain": "microsoft_agent_framework",
+    "difficulty": "hard",
+    "question": "When designing a ChatAgent with custom state management beyond the built-in checkpointing, what architectural patterns should be used to ensure consistency between in-memory agent state and persistent storage across network failures and agent restarts?",
+    "ground_truth": "Implement event sourcing with a write-ahead log for state mutations, ensuring all state changes are persisted before acknowledgment to the caller. Use optimistic concurrency control with version vectors to detect conflicts during recovery, and implement a two-phase commit for critical state transitions. The ChatAgent's internal state should be reconstructed from the event log on restart, with checkpoints serving as optimization points to avoid full replay.",
+    "source": "ChatAgent_custom_state_management"
+  }
+]

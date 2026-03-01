@@ -1,0 +1,374 @@
+{
+  "generated_at": "2026-02-28T21:05:18.045002Z",
+  "pack_count": 25,
+  "packs": [
+    {
+      "name": "azure-ai-foundry",
+      "description": "Expert knowledge of Azure AI Foundry (Microsoft Foundry) covering model catalog, prompt flow, fine-tuning (SFT, RFT), deployments (serverless, managed), Foundry Agent Service, evaluations, responsible AI, and SDK integration",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 28.5,
+      "tags": [
+        "azure",
+        "ai-foundry",
+        "microsoft-foundry",
+        "prompt-flow",
+        "fine-tuning",
+        "model-catalog",
+        "responsible-ai"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/azure-ai-foundry.tar.gz"
+    },
+    {
+      "name": "bicep-infrastructure",
+      "description": "Expert knowledge of Azure Bicep infrastructure-as-code covering modules, deployment stacks, what-if operations, module registry (ACR and public), user-defined types, linter rules, deployment patterns, and Azure Verified Modules",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 28.6,
+      "tags": [
+        "bicep",
+        "infrastructure"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/bicep-infrastructure.tar.gz"
+    },
+    {
+      "name": "cpp-expert",
+      "description": "Expert C++ programming knowledge covering C++23/26 features including modules, ranges, std::expected, coroutines with std::generator, constexpr/consteval, mdspan, concepts, and the modern C++ standard library from cppreference.com and isocpp.org",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 29.5,
+      "tags": [
+        "cpp"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/cpp-expert.tar.gz"
+    },
+    {
+      "name": "csharp-expert",
+      "description": "Expert C# programming knowledge covering C# 13 and .NET 9 features including primary constructors, collection expressions, interceptors, Native AOT compilation, pattern matching, records, nullable reference types, async/await, and LINQ",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 29.7,
+      "tags": [
+        "csharp"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/csharp-expert.tar.gz"
+    },
+    {
+      "name": "dotnet-expert",
+      "description": "Expert .NET programming knowledge covering C#, ASP.NET Core, Entity Framework, Blazor, async/await, dependency injection, and common .NET patterns from official Microsoft documentation",
+      "version": "1.0.0",
+      "articles": 204,
+      "size_mb": 37.8,
+      "tags": [
+        "dotnet"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/dotnet-expert.tar.gz"
+    },
+    {
+      "name": "fabric-graphql-expert",
+      "description": "Expert knowledge of Microsoft Fabric API for GraphQL, covering schema generation, authentication, pagination, filtering, mutations, security, performance, monitoring, and integration with Fabric data sources.",
+      "version": "1.0.0",
+      "articles": 21,
+      "size_mb": 26.5,
+      "tags": [
+        "fabric",
+        "graphql"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/fabric-graphql-expert.tar.gz"
+    },
+    {
+      "name": "github-actions-advanced",
+      "description": "Advanced GitHub Actions knowledge covering reusable workflows, composite actions, OIDC authentication for cloud providers, environments with protection rules, matrix strategies, caching, artifacts, secrets management, security hardening, and workflow optimization",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 24.2,
+      "tags": [
+        "github-actions",
+        "ci-cd",
+        "reusable-workflows",
+        "composite-actions",
+        "oidc",
+        "matrix",
+        "environments",
+        "security"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/github-actions-advanced.tar.gz"
+    },
+    {
+      "name": "go-expert",
+      "description": "Expert Go programming knowledge covering Go 1.22+ features including generics, range-over-func iterators, structured logging with slog, error handling patterns, concurrency with goroutines and channels, modules, and testing",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 25.7,
+      "tags": [
+        "go"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/go-expert.tar.gz"
+    },
+    {
+      "name": "java-expert",
+      "description": "Expert Java programming knowledge covering Java 21+ features including virtual threads, pattern matching for switch, records, sealed classes, Foreign Function & Memory API, ZGC, structured concurrency, and scoped values",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 28.6,
+      "tags": [
+        "java"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/java-expert.tar.gz"
+    },
+    {
+      "name": "kotlin-expert",
+      "description": "Expert Kotlin programming knowledge covering Kotlin 2.x with K2 compiler, coroutines, multiplatform development, Compose Multiplatform, sealed classes, null safety, extensions, and Android development from official Kotlin and Android documentation",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 29.3,
+      "tags": [
+        "kotlin"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/kotlin-expert.tar.gz"
+    },
+    {
+      "name": "kubernetes-networking",
+      "description": "Expert knowledge of Kubernetes networking covering CNI plugins (Cilium, Calico), service mesh (Istio, Linkerd), ingress controllers, Gateway API, network policies, DNS (CoreDNS), EndpointSlices, topology-aware routing, and eBPF-based networking",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 27.8,
+      "tags": [
+        "kubernetes",
+        "networking",
+        "cni",
+        "cilium",
+        "gateway-api",
+        "ingress",
+        "network-policy",
+        "service-mesh",
+        "ebpf"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/kubernetes-networking.tar.gz"
+    },
+    {
+      "name": "mcp-protocol",
+      "description": "Expert knowledge of the Model Context Protocol (MCP) covering server development, tool definitions, resource handlers, prompt templates, sampling, transport setup (stdio, HTTP), lifecycle management, and SDK usage for Python and TypeScript",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 27.6,
+      "tags": [
+        "mcp",
+        "model-context-protocol",
+        "anthropic",
+        "ai-tools",
+        "llm-integration",
+        "json-rpc"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/mcp-protocol.tar.gz"
+    },
+    {
+      "name": "opencypher-expert",
+      "description": "Expert knowledge pack for writing efficient OpenCypher/Kuzu graph queries, covering Cypher syntax, query clauses, pattern matching, path traversal, aggregation, data manipulation, optimization, and graph algorithms",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 28.7,
+      "tags": [
+        "cypher",
+        "kuzu",
+        "graph-database",
+        "query-language",
+        "opencypher"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/opencypher-expert.tar.gz"
+    },
+    {
+      "name": "opentelemetry-expert",
+      "description": "Expert knowledge of OpenTelemetry covering SDK instrumentation (Python, JS, Go, Java), collector pipeline configuration (receivers, processors, exporters), OTLP protocol, semantic conventions, context propagation, auto-instrumentation, and observability best practices",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 27.2,
+      "tags": [
+        "opentelemetry",
+        "observability",
+        "tracing",
+        "metrics",
+        "logs",
+        "otlp",
+        "collector",
+        "instrumentation",
+        "semantic-conventions"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/opentelemetry-expert.tar.gz"
+    },
+    {
+      "name": "physics-expert",
+      "description": "Expert-level physics knowledge covering classical mechanics, quantum mechanics, relativity, thermodynamics, electromagnetism, and modern physics",
+      "version": "1.0.0",
+      "articles": 451,
+      "size_mb": 79.6,
+      "tags": [
+        "physics"
+      ],
+      "has_eval": true,
+      "license": "CC-BY-SA-4.0",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/physics-expert.tar.gz"
+    },
+    {
+      "name": "postgresql-internals",
+      "description": "Deep knowledge of PostgreSQL internals covering MVCC, Write-Ahead Logging (WAL), query planner and EXPLAIN analysis, index types (B-tree, GIN, GiST, BRIN, Hash), table partitioning, VACUUM and autovacuum, and performance tuning",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 29.6,
+      "tags": [
+        "postgresql"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/postgresql-internals.tar.gz"
+    },
+    {
+      "name": "prompt-engineering",
+      "description": "Comprehensive prompt engineering knowledge covering system prompts, tool use patterns, chain-of-thought reasoning, few-shot and multishot prompting, constitutional AI, evaluation techniques, and best practices from Anthropic and OpenAI documentation",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 26.5,
+      "tags": [
+        "prompt",
+        "engineering"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/prompt-engineering.tar.gz"
+    },
+    {
+      "name": "python-expert",
+      "description": "Expert Python programming knowledge covering Python 3.12+ features including structural pattern matching, modern typing (PEP 695), asyncio patterns, dataclasses, packaging with pyproject.toml, and essential standard library modules",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 29.9,
+      "tags": [
+        "python"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/python-expert.tar.gz"
+    },
+    {
+      "name": "ruby-expert",
+      "description": "Expert Ruby programming knowledge covering Ruby 3.3+ with YJIT JIT compiler, Ractors for parallelism, pattern matching, RBS type signatures, Prism parser, and the complete core class library from official Ruby documentation",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 29.4,
+      "tags": [
+        "ruby"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/ruby-expert.tar.gz"
+    },
+    {
+      "name": "rust-async-expert",
+      "description": "Expert knowledge of Rust asynchronous programming covering async/await syntax, the Tokio runtime, Pin and Unpin, futures and streams, Send/Sync marker traits, async traits, channels, select!, and concurrent task management",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 29.7,
+      "tags": [
+        "rust",
+        "async"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/rust-async-expert.tar.gz"
+    },
+    {
+      "name": "rust-expert",
+      "description": "Expert Rust programming knowledge covering ownership, traits, async programming, unsafe code, and common patterns from official Rust documentation",
+      "version": "1.0.0",
+      "articles": 294,
+      "size_mb": 40.1,
+      "tags": [
+        "rust"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/rust-expert.tar.gz"
+    },
+    {
+      "name": "swift-expert",
+      "description": "Expert Swift programming knowledge covering Swift 6 strict concurrency, typed throws, noncopyable types, macros, SwiftUI, actors, async/await, and the Swift standard library from official Apple and Swift.org documentation",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 22.8,
+      "tags": [
+        "swift"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/swift-expert.tar.gz"
+    },
+    {
+      "name": "typescript-expert",
+      "description": "Expert TypeScript programming knowledge covering TypeScript 5.x type system, generics, decorators, satisfies operator, const assertions, template literal types, conditional types, mapped types, and utility types",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 29.6,
+      "tags": [
+        "typescript"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/typescript-expert.tar.gz"
+    },
+    {
+      "name": "wasm-components",
+      "description": "Expert knowledge of the WebAssembly Component Model, WASI Preview 2 (P2), WIT interface definitions, wit-bindgen code generation, guest/host component interfaces, and wasmtime runtime embedding",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 28.2,
+      "tags": [
+        "wasm",
+        "components"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/wasm-components.tar.gz"
+    },
+    {
+      "name": "zig-expert",
+      "description": "Expert Zig programming knowledge covering comptime metaprogramming, error unions, explicit allocators, the build system, safety features, and C interoperability from official Zig documentation and community guides",
+      "version": "1.0.0",
+      "articles": 0,
+      "size_mb": 26.0,
+      "tags": [
+        "zig"
+      ],
+      "has_eval": true,
+      "license": "MIT",
+      "download_url": "https://github.com/rysweet/agent-kgpacks/releases/download/v1/zig-expert.tar.gz"
+    }
+  ]
+}

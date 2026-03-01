@@ -1,0 +1,19 @@
+{
+  "pack_name": "security-copilot",
+  "questions_tested": 5,
+  "webfetch_baseline": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.2,
+    "avg_latency_ms": 16110.896062850952,
+    "total_cost_usd": 0.27303
+  },
+  "knowledge_pack": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.2,
+    "citation_quality": 0.2,
+    "avg_latency_ms": 18321.170711517334,
+    "total_cost_usd": 0.05158499999999999
+  },
+  "surpasses_webfetch": false
+}

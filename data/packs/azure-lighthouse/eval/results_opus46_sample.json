@@ -1,0 +1,19 @@
+{
+  "pack_name": "azure-lighthouse",
+  "questions_tested": 5,
+  "webfetch_baseline": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.2,
+    "avg_latency_ms": 19512.60676383972,
+    "total_cost_usd": 0.31245
+  },
+  "knowledge_pack": {
+    "accuracy": 0.5,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.2,
+    "avg_latency_ms": 21291.688537597656,
+    "total_cost_usd": 0.055092
+  },
+  "surpasses_webfetch": false
+}

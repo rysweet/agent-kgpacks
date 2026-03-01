@@ -1,0 +1,402 @@
+[
+  {
+    "id": "fg_001",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What is Microsoft Fabric API for GraphQL used for?",
+    "ground_truth": "Microsoft Fabric API for GraphQL is a service that allows you to create GraphQL APIs to query and manipulate data in Microsoft Fabric, enabling applications to interact with your data through a standardized GraphQL interface.",
+    "source": "introduction"
+  },
+  {
+    "id": "fg_002",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "Name the main editor component used to work with Fabric API for GraphQL.",
+    "ground_truth": "The Microsoft Fabric API for GraphQL editor is the primary tool used to create, modify, and manage GraphQL schemas and queries within the Fabric environment.",
+    "source": "editor"
+  },
+  {
+    "id": "fg_003",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What is the Schema explorer in Fabric API for GraphQL?",
+    "ground_truth": "The Schema explorer is a feature that allows you to view and navigate your GraphQL schema structure, helping you understand the available types, fields, and relationships in your API.",
+    "source": "schema_management"
+  },
+  {
+    "id": "fg_004",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What does introspection allow you to do in Fabric API for GraphQL?",
+    "ground_truth": "Introspection allows you to query the GraphQL schema itself to discover available types, fields, arguments, and documentation, enabling clients to understand the API structure dynamically.",
+    "source": "introspection"
+  },
+  {
+    "id": "fg_005",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "Can you use Stored Procedures with Fabric API for GraphQL?",
+    "ground_truth": "Yes, Fabric API for GraphQL supports the use of Stored Procedures, allowing you to leverage existing database stored procedures in your GraphQL schema and queries.",
+    "source": "stored_procedures"
+  },
+  {
+    "id": "fg_006",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What authentication method uses Service Principals in Fabric API for GraphQL?",
+    "ground_truth": "Service Principals provide an application-based authentication mechanism for Fabric API for GraphQL, enabling automated access and integration without user credentials.",
+    "source": "authentication"
+  },
+  {
+    "id": "fg_007",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "How do you add data to an API for GraphQL in Fabric?",
+    "ground_truth": "You add data to Fabric API for GraphQL by creating mutations in the GraphQL schema that allow you to insert, update, or delete records in your underlying data source.",
+    "source": "data_operations"
+  },
+  {
+    "id": "fg_008",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What is the purpose of connecting applications to Fabric API for GraphQL?",
+    "ground_truth": "Connecting applications to Fabric API for GraphQL enables external applications, web services, and clients to query and manipulate data through the GraphQL endpoint you've created.",
+    "source": "connectivity"
+  },
+  {
+    "id": "fg_009",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What Azure service can be integrated with Fabric API for GraphQL for API management?",
+    "ground_truth": "Azure API Management (APIM) can be integrated with Fabric API for GraphQL to provide additional governance, security, throttling, and monitoring capabilities.",
+    "source": "apim_integration"
+  },
+  {
+    "id": "fg_010",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What do GraphQL operation logs track?",
+    "ground_truth": "GraphQL operation logs track details about GraphQL queries and mutations executed against your API, including execution time, errors, and query patterns for debugging and optimization.",
+    "source": "monitoring"
+  },
+  {
+    "id": "fg_011",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "Is source control supported for Fabric API for GraphQL?",
+    "ground_truth": "Yes, source control and deployment pipelines are supported in Fabric API for GraphQL (in preview), allowing you to version control your API definitions and deploy across environments.",
+    "source": "deployment"
+  },
+  {
+    "id": "fg_012",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "Can you create a GraphQL API directly from a SQL database in Fabric?",
+    "ground_truth": "Yes, you can create a GraphQL API in your SQL database within Fabric, automatically generating GraphQL schemas and queries based on your database structure.",
+    "source": "sql_integration"
+  },
+  {
+    "id": "fg_013",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What information does the Schema view provide?",
+    "ground_truth": "The Schema view displays your GraphQL schema definition, including all types, queries, mutations, fields, and their relationships, providing a structured view of your API structure.",
+    "source": "schema_management"
+  },
+  {
+    "id": "fg_014",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What can be exported from Fabric API for GraphQL introspection?",
+    "ground_truth": "From introspection, you can export the complete GraphQL schema definition, which documents all available types, fields, and operations in a standardized format.",
+    "source": "introspection"
+  },
+  {
+    "id": "fg_015",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What is the monitoring dashboard used for in Fabric API for GraphQL?",
+    "ground_truth": "The monitoring dashboard (in preview) provides visibility into API performance, query execution metrics, error rates, and operational insights for your GraphQL API.",
+    "source": "monitoring"
+  },
+  {
+    "id": "fg_016",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "Which feature allows you to view and manage your GraphQL schema structure visually?",
+    "ground_truth": "The Fabric API for GraphQL editor and Schema explorer provide visual interfaces to view, create, and manage your GraphQL schema structure and relationships.",
+    "source": "editor"
+  },
+  {
+    "id": "fg_017",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What performance considerations should you follow with Fabric API for GraphQL?",
+    "ground_truth": "Performance best practices for Fabric API for GraphQL include optimizing queries, using appropriate indexing, monitoring query execution, and leveraging caching strategies.",
+    "source": "performance"
+  },
+  {
+    "id": "fg_018",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "How does Schema export help in managing Fabric API for GraphQL?",
+    "ground_truth": "Schema export allows you to extract and save your GraphQL schema definition, enabling version control, documentation, and reuse across different environments and projects.",
+    "source": "schema_management"
+  },
+  {
+    "id": "fg_019",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What is the primary benefit of using GraphQL instead of traditional REST APIs?",
+    "ground_truth": "GraphQL allows clients to request exactly the data they need with a single query, reducing over-fetching and under-fetching of data compared to REST APIs.",
+    "source": "fundamentals"
+  },
+  {
+    "id": "fg_020",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "easy",
+    "question": "What deployment environments can you target with Fabric API for GraphQL deployment pipelines?",
+    "ground_truth": "Deployment pipelines in Fabric API for GraphQL allow you to deploy your API definitions across different Fabric environments and workspaces for development, testing, and production.",
+    "source": "deployment"
+  },
+  {
+    "id": "fg_021",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "What are the key differences between using the Fabric API for GraphQL editor versus the schema view for managing your GraphQL API?",
+    "ground_truth": "The editor provides an interactive environment for writing and testing GraphQL queries and mutations, while the schema view displays the structure and relationships of your GraphQL schema in a visual format, and the Schema explorer allows you to navigate and understand the available types and fields.",
+    "source": "editor_and_schema_view"
+  },
+  {
+    "id": "fg_022",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "How does introspection support help in managing a Fabric API for GraphQL schema, and what is the primary benefit of schema export?",
+    "ground_truth": "Introspection allows clients to query the schema structure at runtime to discover available types, fields, and operations, while schema export enables you to extract and version control the complete schema definition for deployment and documentation purposes.",
+    "source": "introspection_and_schema_export"
+  },
+  {
+    "id": "fg_023",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "When integrating stored procedures with Fabric API for GraphQL, what considerations should you account for regarding query complexity and performance?",
+    "ground_truth": "Stored procedures can encapsulate complex business logic and reduce network overhead, but you should monitor execution time, consider parameterization for security, and ensure proper indexing on underlying tables to maintain optimal performance with GraphQL operations.",
+    "source": "stored_procedures_integration"
+  },
+  {
+    "id": "fg_024",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "What role do service principals play in securing Fabric API for GraphQL, and how do they differ from user-based authentication?",
+    "ground_truth": "Service principals provide application-level authentication for automated processes and third-party integrations without requiring user credentials, whereas user-based authentication ties access to individual user identities. Service principals enable programmatic access while maintaining security boundaries.",
+    "source": "service_principals_authentication"
+  },
+  {
+    "id": "fg_025",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "How does Azure API Management integration enhance the capabilities of a Fabric API for GraphQL deployment?",
+    "ground_truth": "APIM integration provides API gateway functionalities including rate limiting, request/response transformation, policy enforcement, developer portal access, and centralized management of multiple API versions, enhancing security, scalability, and operational control.",
+    "source": "apim_integration"
+  },
+  {
+    "id": "fg_026",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "What are the primary performance optimization strategies recommended for high-throughput Fabric API for GraphQL workloads?",
+    "ground_truth": "Key strategies include query depth and complexity limits, field resolution optimization, connection pooling, caching strategies, batch query processing, and monitoring query patterns to identify and optimize slow-running operations.",
+    "source": "performance_best_practices"
+  },
+  {
+    "id": "fg_027",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "How do source control and deployment pipelines improve the development workflow for Fabric API for GraphQL in a team environment?",
+    "ground_truth": "Source control enables version tracking and collaborative development, while deployment pipelines automate the promotion of schema changes across environments (dev, test, prod), ensuring consistency and reducing manual errors through staged rollouts.",
+    "source": "source_control_deployment"
+  },
+  {
+    "id": "fg_028",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "When connecting applications to Fabric API for GraphQL, what authentication mechanisms are available and how do you choose between them?",
+    "ground_truth": "Available mechanisms include user authentication, service principals, and managed identities. Selection depends on use case: user authentication for interactive apps, service principals for automation/integrations, and managed identities for Azure resource-to-resource communication without credential management.",
+    "source": "application_connectivity"
+  },
+  {
+    "id": "fg_029",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "What information is captured in GraphQL operation logs and how can this data be used for troubleshooting and optimization?",
+    "ground_truth": "Operation logs capture query execution details including query text, execution time, errors, and client information. This data enables identification of slow queries, error patterns, security issues, and usage analytics for optimization and debugging.",
+    "source": "operation_logs"
+  },
+  {
+    "id": "fg_030",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "How does the GraphQL monitoring dashboard provide visibility into API health, and what key metrics should you track?",
+    "ground_truth": "The monitoring dashboard displays real-time and historical metrics including query latency, error rates, throughput, and resource utilization. Key metrics to track are query execution times, failure rates, active connections, and schema validation errors for health assessment.",
+    "source": "monitoring_dashboard"
+  },
+  {
+    "id": "fg_031",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "What are the prerequisites and key steps for creating a GraphQL API from an existing SQL database in Fabric?",
+    "ground_truth": "Prerequisites include having a SQL database in Fabric and appropriate permissions. Key steps involve configuring the data source, mapping tables/columns to GraphQL types, defining relationships between entities, and testing the schema before deployment.",
+    "source": "sql_database_integration"
+  },
+  {
+    "id": "fg_032",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "How does the Fabric API for GraphQL handle data relationships and what patterns should you follow when designing schemas with multiple related entities?",
+    "ground_truth": "GraphQL handles relationships through type references and resolvers. Design patterns should avoid circular dependencies, use pagination for large result sets, leverage connection types for complex relationships, and maintain consistency in naming conventions across related types.",
+    "source": "schema_design"
+  },
+  {
+    "id": "fg_033",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "What is the difference between mutation operations and query operations in Fabric API for GraphQL, and when should each be used?",
+    "ground_truth": "Queries retrieve data without side effects and should be used for all read operations. Mutations modify data and should be used for create, update, and delete operations. This separation maintains REST-like conventions and helps clients understand operation intent.",
+    "source": "operations_types"
+  },
+  {
+    "id": "fg_034",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "How can you implement pagination in Fabric API for GraphQL queries to handle large datasets efficiently?",
+    "ground_truth": "Implement cursor-based or offset-based pagination by adding limit and offset/after parameters to connection types. Cursor-based pagination is preferred for stability across data changes, while monitoring query depth to prevent excessive data retrieval.",
+    "source": "pagination_patterns"
+  },
+  {
+    "id": "fg_035",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "What validation and security considerations should be implemented when exposing a SQL database through Fabric API for GraphQL?",
+    "ground_truth": "Implement field-level permissions, input validation on mutations, parameterized queries to prevent SQL injection, rate limiting, and schema restrictions to hide sensitive columns or tables. Use role-based access control and audit logging for compliance.",
+    "source": "security_validation"
+  },
+  {
+    "id": "fg_036",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "How do you handle errors and exceptions in Fabric API for GraphQL, and what information should error responses contain?",
+    "ground_truth": "GraphQL returns errors in a standardized format within the response alongside partial data. Error responses should include error messages, field locations, and error codes/types for debugging, but avoid exposing sensitive system details in production environments.",
+    "source": "error_handling"
+  },
+  {
+    "id": "fg_037",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "What strategies should you employ to version a Fabric API for GraphQL API while maintaining backward compatibility?",
+    "ground_truth": "Strategies include deprecating old fields before removal, adding new fields alongside old ones, using API versioning headers or schema versioning, and maintaining separate schema versions in deployment pipelines. Communicate changes to clients and provide migration periods.",
+    "source": "api_versioning"
+  },
+  {
+    "id": "fg_038",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "How can caching be effectively implemented at different layers of a Fabric API for GraphQL architecture?",
+    "ground_truth": "Implement caching at multiple levels: HTTP response caching with Cache-Control headers, query result caching, database query caching, and field-level caching. Use cache invalidation strategies based on data change patterns and consider Time-To-Live (TTL) policies.",
+    "source": "caching_strategies"
+  },
+  {
+    "id": "fg_039",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "What testing approaches should you follow to ensure a Fabric API for GraphQL implementation meets functional and performance requirements?",
+    "ground_truth": "Use unit testing for resolvers, integration testing with mock data, load testing to validate performance under expected throughput, and functional testing of complex queries and mutations. Include security testing for authorization and input validation scenarios.",
+    "source": "testing_strategies"
+  },
+  {
+    "id": "fg_040",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "medium",
+    "question": "How does the FAQ documentation address common implementation challenges, and what patterns emerge as best practices from frequently asked questions?",
+    "ground_truth": "The FAQ typically covers authentication setup, schema design decisions, performance optimization, error handling, and integration patterns. Emergent best practices include proper use of introspection, consistent naming conventions, thoughtful schema design before implementation, and comprehensive monitoring.",
+    "source": "faq_best_practices"
+  },
+  {
+    "id": "fg_041",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "When implementing Fabric API for GraphQL with Service Principals, what are the key security considerations and authentication flow differences compared to user-based authentication in a production environment?",
+    "ground_truth": "Service Principals use application-based authentication with client credentials (client ID and secret), enabling unattended access for automation and integrations. They require proper role-based access control (RBAC) assignment at the workspace level and should be managed through Azure AD, with secrets rotated regularly and access limited to minimum required permissions.",
+    "source": "service_principals_authentication"
+  },
+  {
+    "id": "fg_042",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "Explain the performance implications of using Stored Procedures versus direct table queries in Fabric API for GraphQL, particularly regarding query optimization and execution plans.",
+    "ground_truth": "Stored Procedures can improve performance by centralizing business logic and leveraging database-level optimization, reducing network roundtrips and allowing pre-compilation. However, they may introduce latency if not properly indexed or if they perform complex computations; direct table queries allow GraphQL to optimize field selection and filtering at the resolver level.",
+    "source": "stored_procedures_performance"
+  },
+  {
+    "id": "fg_043",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "How does schema introspection in Fabric API for GraphQL work, and what are the security implications of exposing your complete schema through introspection queries in a multi-tenant environment?",
+    "ground_truth": "Schema introspection allows clients to query the GraphQL schema itself via the __schema and __type fields, enabling dynamic client generation and API exploration. In multi-tenant environments, unrestricted introspection exposes internal structure and data relationships; this should be restricted based on user roles and permissions to prevent information disclosure attacks.",
+    "source": "introspection_schema_security"
+  },
+  {
+    "id": "fg_044",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "When integrating Azure API Management (APIM) with Fabric API for GraphQL, what specific policies and rate-limiting strategies should be implemented to prevent abuse while maintaining acceptable latency?",
+    "ground_truth": "APIM should implement rate-limiting policies based on subscription keys or OAuth tokens, use query cost analysis to limit complex queries, and employ circuit-breaker patterns for backend protection. Caching of frequently executed queries and implementing request throttling at the policy level helps maintain performance while APIM's analytics monitor query complexity and execution times.",
+    "source": "apim_integration_policies"
+  },
+  {
+    "id": "fg_045",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "Describe the challenges and best practices for managing schema versioning and backward compatibility when using source control and deployment pipelines with Fabric API for GraphQL across development, staging, and production environments.",
+    "ground_truth": "Breaking schema changes (field removal, type changes) require careful versioning strategies such as deprecating fields before removal and maintaining multiple schema versions. Deployment pipelines should include validation checks, canary deployments to detect breaking changes early, and rollback capabilities; semantic versioning and API versioning headers help clients manage transitions.",
+    "source": "source_control_deployment_versioning"
+  },
+  {
+    "id": "fg_046",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "What specific metrics should be monitored in the GraphQL monitoring dashboard and operation logs to identify and troubleshoot N+1 query problems and resolver bottlenecks in production?",
+    "ground_truth": "Monitor query execution time distributions, resolver-level timing data, and query complexity scores to identify slow resolvers; track request counts and operation logs showing recursive or repeated resolver calls that indicate N+1 problems. Use the monitoring dashboard to correlate query patterns with resource utilization and identify queries causing performance degradation.",
+    "source": "monitoring_logging_performance_diagnosis"
+  },
+  {
+    "id": "fg_047",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "When creating a GraphQL API over a SQL database with multiple related tables and complex join requirements, how should you design resolvers and field mappings to optimize database query performance while maintaining schema flexibility?",
+    "ground_truth": "Use field-level resolvers with selective data loading (only fetch required columns), implement batching loaders to prevent N+1 queries on relationships, and leverage SQL views or stored procedures for complex joins. Database query optimization with proper indexing on foreign keys and filtered columns is critical; consider denormalization for frequently accessed aggregations.",
+    "source": "sql_database_resolver_optimization"
+  },
+  {
+    "id": "fg_048",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "How should authorization be implemented in Fabric API for GraphQL when different users require different subsets of data from the same query, and what are the performance trade-offs of row-level security (RLS) versus application-level filtering?",
+    "ground_truth": "RLS implemented at the database level provides security at the source but may impact query performance due to row evaluation overhead; application-level filtering in resolvers offers more control but requires careful implementation to prevent data leakage. Optimal approach combines database RLS for base protection with resolver-level authorization checks and field-level security for sensitive columns.",
+    "source": "authorization_rls_filtering"
+  },
+  {
+    "id": "fg_049",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "Explain how to leverage the Fabric API for GraphQL editor's features for schema design and validation, and what validation rules should be enforced to prevent common schema anti-patterns that degrade API usability.",
+    "ground_truth": "The editor provides real-time validation, syntax checking, and schema visualization; enforce conventions like avoiding deeply nested types (max 3-4 levels), consistent naming patterns, clear field descriptions, and avoiding circular dependencies. Validate that types are reusable, mutations have clear side effects documented, and subscriptions are properly scoped to prevent information exposure.",
+    "source": "schema_editor_validation_design"
+  },
+  {
+    "id": "fg_050",
+    "domain": "fabric_graph_gql_expert",
+    "difficulty": "hard",
+    "question": "In a high-concurrency scenario with thousands of simultaneous GraphQL requests to Fabric API for GraphQL, what connection pooling, caching, and batching strategies should be implemented to maintain performance and prevent database connection exhaustion?",
+    "ground_truth": "Implement connection pooling at the database level with appropriate pool size tuning, enable query result caching for frequently accessed data with intelligent invalidation, use DataLoader or batch resolvers to combine multiple queries into single database calls, and implement request coalescing to deduplicate identical concurrent queries. Monitor connection utilization and implement circuit breakers to fail gracefully under extreme load.",
+    "source": "high_concurrency_optimization"
+  }
+]
