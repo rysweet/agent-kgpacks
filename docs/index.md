@@ -33,37 +33,28 @@ uv sync
 
 # Build a pack (e.g., Go expert)
 echo "y" | uv run python scripts/build_go_pack.py
+
+# Install the pack (registers as a Claude Code skill)
+wikigr pack install go-expert
 ```
 
-Add the pack server to your Claude Code MCP config (`.claude/settings.json`):
+Packs install to `~/.wikigr/packs/` and auto-register as Claude Code skills. Once installed, just ask domain questions — the skill activates automatically:
 
-```json
-{
-  "mcpServers": {
-    "knowledge-packs": {
-      "command": "uv",
-      "args": ["run", "python", "-m", "wikigr.mcp_server"],
-      "env": { "PACK_DIR": "/path/to/agent-kgpacks/data/packs" }
-    }
-  }
-}
 ```
-
-Then just ask Claude Code domain questions — it automatically retrieves from the relevant pack.
+You: "Explain how Go 1.23 range-over-func iterators work"
+# Claude Code loads the go-expert skill, retrieves from the pack's
+# knowledge graph, and synthesizes a grounded answer with citations
+```
 
 ## Use a Pack with GitHub Copilot
 
-Start the pack API server and use it as a Copilot Chat skill:
+Start the pack API server for use with Copilot Chat or any HTTP client:
 
 ```bash
-# Start the server
 uv run uvicorn backend.main:app --port 8000
-
-# In VS Code with Copilot Chat:
-# @knowledge-packs How do I configure Azure Bicep modules?
 ```
 
-Or query the REST API directly from any tool:
+Query via the REST API:
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/chat \
