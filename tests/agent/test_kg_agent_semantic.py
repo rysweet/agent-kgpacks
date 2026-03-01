@@ -109,7 +109,7 @@ class TestSemanticSearchFreeText:
         ]
 
         mock_generator = MagicMock()
-        mock_generator.generate.return_value = fake_embedding
+        mock_generator.generate_query.return_value = fake_embedding
 
         with patch(
             "bootstrap.src.embeddings.generator.EmbeddingGenerator",
@@ -123,13 +123,13 @@ class TestSemanticSearchFreeText:
         assert "Neural network" in titles
 
         # Embedding generator should have been called with the query text
-        mock_generator.generate.assert_called_once_with(["what is backpropagation"])
+        mock_generator.generate_query.assert_called_once_with(["what is backpropagation"])
 
     def test_lazy_initialization_only_once(self, agent):
         """The embedding generator should be created once and reused."""
         fake_embedding = np.array([[0.5] * 384])
         mock_generator = MagicMock()
-        mock_generator.generate.return_value = fake_embedding
+        mock_generator.generate_query.return_value = fake_embedding
 
         empty_df = pd.DataFrame()
         vector_df = pd.DataFrame(
@@ -156,8 +156,8 @@ class TestSemanticSearchFreeText:
 
         # EmbeddingGenerator constructor should have been called only once
         assert mock_cls.call_count == 1
-        # But generate should have been called twice (once per query)
-        assert mock_generator.generate.call_count == 2
+        # But generate_query should have been called twice (once per query)
+        assert mock_generator.generate_query.call_count == 2
 
     def test_deduplicates_articles_across_sections(self, agent):
         """Multiple sections from the same article should be collapsed."""

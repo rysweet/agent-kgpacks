@@ -238,7 +238,7 @@ class KnowledgeGraphAgent:
         agent.claude = claude_client
         agent._embedding_generator = None
         agent._plan_cache = {}
-        agent.use_enhancements = True
+        agent.use_enhancements = False
         agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
         agent.enable_reranker = True
         agent.enable_multidoc = True
