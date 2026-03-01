@@ -1,0 +1,49 @@
+# Claude Agent SDK - Official Documentation
+# Agent loop, tools, hooks, MCP, subagents, permissions, sessions
+
+# Core Documentation (platform.claude.com)
+https://platform.claude.com/docs/en/agent-sdk/overview
+https://platform.claude.com/docs/en/agent-sdk/quickstart
+https://platform.claude.com/docs/en/agent-sdk/python
+https://platform.claude.com/docs/en/agent-sdk/typescript
+https://platform.claude.com/docs/en/agent-sdk/custom-tools
+https://platform.claude.com/docs/en/agent-sdk/hooks
+https://platform.claude.com/docs/en/agent-sdk/mcp
+https://platform.claude.com/docs/en/agent-sdk/subagents
+https://platform.claude.com/docs/en/agent-sdk/permissions
+https://platform.claude.com/docs/en/agent-sdk/plugins
+
+# Anthropic API Docs (broader context)
+https://platform.claude.com/docs/en/home
+https://docs.anthropic.com/en/docs/agents-and-tools/mcp
+https://docs.anthropic.com/en/docs/agents-and-tools/mcp/quickstart
+
+# Claude Code Documentation
+https://code.claude.com/docs/en/overview
+https://code.claude.com/docs/en/mcp
+https://code.claude.com/docs/en/sub-agents
+
+# GitHub Repositories
+https://github.com/anthropics/claude-agent-sdk-python
+https://github.com/anthropics/claude-agent-sdk-typescript
+https://github.com/anthropics/claude-agent-sdk-demos
+https://github.com/anthropics/claude-agent-sdk-python/blob/main/CHANGELOG.md
+https://github.com/anthropics/claude-agent-sdk-typescript/blob/main/CHANGELOG.md
+https://github.com/anthropics/claude-quickstarts
+
+# NPM Package
+https://www.npmjs.com/package/@anthropic-ai/claude-agent-sdk
+
+# Blog & Guides
+https://www.anthropic.com/engineering/desktop-extensions
+https://docs.anthropic.com/en/docs/build-with-claude/tool-use
+https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+
+# Model Context Protocol
+https://modelcontextprotocol.io/specification/2025-11-25
+https://modelcontextprotocol.io/docs/learn/architecture
+https://modelcontextprotocol.io/docs/concepts/tools
+
+# Third-Party Guides
+https://www.datacamp.com/tutorial/how-to-use-claude-agent-sdk
+https://www.promptfoo.dev/docs/providers/claude-agent-sdk/

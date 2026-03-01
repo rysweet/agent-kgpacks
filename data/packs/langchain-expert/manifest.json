@@ -1,0 +1,15 @@
+{
+  "name": "langchain-expert",
+  "version": "1.0.0",
+  "description": "Expert knowledge of the LangChain framework covering agents, chains, retrievers, prompts, embeddings, vector stores, LCEL, output parsers, streaming, chat models, LangGraph integration, and LangSmith observability.",
+  "domain": "ai-frameworks",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["langchain", "agents", "rag", "chains", "retrievers", "lcel", "embeddings", "vector-stores"],
+  "source_urls": [
+    "https://python.langchain.com/docs/concepts/",
+    "https://github.com/langchain-ai/langchain"
+  ],
+  "created": "2026-03-01T00:00:00Z",
+  "license": "MIT"
+}

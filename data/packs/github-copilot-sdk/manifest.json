@@ -1,0 +1,15 @@
+{
+  "name": "github-copilot-sdk",
+  "version": "1.0.0",
+  "description": "Expert knowledge of GitHub Copilot extensions SDK covering the Copilot SDK, building agents and skillsets, coding agent, MCP integration, custom tools, authentication, and Microsoft Agent Framework integration.",
+  "domain": "ai-agents",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["github-copilot", "copilot-sdk", "extensions", "skillsets", "agents", "mcp", "coding-agent"],
+  "source_urls": [
+    "https://docs.github.com/en/copilot/how-tos/copilot-sdk",
+    "https://github.com/github/copilot-sdk"
+  ],
+  "created": "2026-03-01T00:00:00Z",
+  "license": "MIT"
+}

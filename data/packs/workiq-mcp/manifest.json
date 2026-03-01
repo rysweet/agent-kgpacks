@@ -1,0 +1,15 @@
+{
+  "name": "workiq-mcp",
+  "version": "1.0.0",
+  "description": "Expert knowledge of Microsoft Work IQ MCP server and CLI covering Microsoft 365 Copilot data integration, admin setup, authentication, MCP protocol, Claude Code and GitHub Copilot integration, and security.",
+  "domain": "microsoft-365",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["work-iq", "mcp", "microsoft-365", "copilot", "cli", "m365", "authentication"],
+  "source_urls": [
+    "https://github.com/microsoft/work-iq-mcp",
+    "https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/workiq-overview"
+  ],
+  "created": "2026-03-01T00:00:00Z",
+  "license": "MIT"
+}

@@ -1,0 +1,15 @@
+{
+  "name": "fabric-graph-gql-expert",
+  "version": "1.0.0",
+  "description": "Expert knowledge of Microsoft Fabric API for GraphQL covering schema management, queries, mutations, resolvers, stored procedures, relationships, multiple data sources, MCP integration for AI agents, and VS Code development.",
+  "domain": "microsoft-fabric",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["microsoft-fabric", "graphql", "api", "data-engineering", "mcp", "ai-agents", "schema"],
+  "source_urls": [
+    "https://learn.microsoft.com/en-us/fabric/data-engineering/api-graphql-overview",
+    "https://learn.microsoft.com/en-us/fabric/data-engineering/get-started-api-graphql"
+  ],
+  "created": "2026-03-01T00:00:00Z",
+  "license": "MIT"
+}

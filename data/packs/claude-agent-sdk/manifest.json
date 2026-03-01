@@ -1,0 +1,15 @@
+{
+  "name": "claude-agent-sdk",
+  "version": "1.0.0",
+  "description": "Expert knowledge of the Claude Agent SDK covering agent loop, built-in tools, hooks, MCP integration, subagents, permissions, sessions, custom tools, and structured output for Python and TypeScript.",
+  "domain": "ai-agents",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["claude", "anthropic", "agent-sdk", "mcp", "hooks", "subagents", "ai-agents"],
+  "source_urls": [
+    "https://platform.claude.com/docs/en/agent-sdk/overview",
+    "https://github.com/anthropics/claude-agent-sdk-python"
+  ],
+  "created": "2026-03-01T00:00:00Z",
+  "license": "MIT"
+}

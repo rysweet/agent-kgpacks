@@ -1,0 +1,15 @@
+{
+  "name": "semantic-kernel",
+  "version": "1.0.0",
+  "description": "Expert knowledge of Microsoft Semantic Kernel covering the kernel, plugins, agents, planners, AI services, vector store connectors, text search, process framework, observability, filters, and migration to Microsoft Agent Framework.",
+  "domain": "ai-frameworks",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["semantic-kernel", "microsoft", "plugins", "agents", "vector-stores", "ai-services", "planners"],
+  "source_urls": [
+    "https://learn.microsoft.com/en-us/semantic-kernel/",
+    "https://github.com/microsoft/semantic-kernel"
+  ],
+  "created": "2026-03-01T00:00:00Z",
+  "license": "MIT"
+}

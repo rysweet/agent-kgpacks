@@ -1,0 +1,15 @@
+{
+  "name": "autogen-expert",
+  "version": "1.0.0",
+  "description": "Expert knowledge of Microsoft AutoGen multi-agent framework covering AgentChat, Core API, teams, tools, code executors, AutoGen Studio, and migration from v0.2 to v0.4.",
+  "domain": "ai-agents",
+  "source_type": "web",
+  "article_count": 0,
+  "tags": ["autogen", "microsoft", "multi-agent", "agentchat", "group-chat", "ai-agents", "code-executor"],
+  "source_urls": [
+    "https://microsoft.github.io/autogen/stable/index.html",
+    "https://github.com/microsoft/autogen"
+  ],
+  "created": "2026-03-01T00:00:00Z",
+  "license": "MIT"
+}

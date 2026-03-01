@@ -1,0 +1,55 @@
+# LangChain Framework - Official Documentation
+# Agents, chains, retrievers, prompts, embeddings, vector stores, LCEL
+# NOTE: Use python.langchain.com (NOT docs.langchain.com which is dead)
+
+# Core Documentation
+https://python.langchain.com/docs/concepts/
+https://python.langchain.com/docs/concepts/architecture/
+https://python.langchain.com/docs/concepts/agents/
+https://python.langchain.com/docs/concepts/tools/
+https://python.langchain.com/docs/concepts/chat_models/
+https://python.langchain.com/docs/concepts/llms/
+https://python.langchain.com/docs/concepts/prompts/
+https://python.langchain.com/docs/concepts/output_parsers/
+https://python.langchain.com/docs/concepts/retrievers/
+https://python.langchain.com/docs/concepts/vectorstores/
+https://python.langchain.com/docs/concepts/embedding_models/
+https://python.langchain.com/docs/concepts/document_loaders/
+https://python.langchain.com/docs/concepts/text_splitters/
+https://python.langchain.com/docs/concepts/runnables/
+https://python.langchain.com/docs/concepts/callbacks/
+https://python.langchain.com/docs/concepts/streaming/
+
+# How-To Guides
+https://python.langchain.com/docs/how_to/
+https://python.langchain.com/docs/how_to/tool_calling/
+https://python.langchain.com/docs/how_to/structured_output/
+https://python.langchain.com/docs/how_to/chat_models_universal_init/
+
+# Tutorials
+https://python.langchain.com/docs/tutorials/
+https://python.langchain.com/docs/tutorials/rag/
+https://python.langchain.com/docs/tutorials/agents/
+https://python.langchain.com/docs/tutorials/chatbot/
+
+# API Reference
+https://python.langchain.com/api_reference/core/index.html
+https://python.langchain.com/api_reference/langchain/index.html
+https://python.langchain.com/api_reference/community/index.html
+
+# LangGraph (Agent Orchestration)
+https://python.langchain.com/docs/concepts/langgraph/
+
+# Integrations
+https://python.langchain.com/docs/integrations/providers/
+https://python.langchain.com/docs/integrations/chat/
+https://python.langchain.com/docs/integrations/vectorstores/
+
+# GitHub
+https://github.com/langchain-ai/langchain
+
+# LangSmith (Observability)
+https://docs.smith.langchain.com/
+
+# LangChain Hub
+https://smith.langchain.com/hub
