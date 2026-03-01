@@ -19,6 +19,7 @@ Pre-built domain-specific knowledge graphs:
 
 - [Physics-Expert Pack](./packs/physics-expert/README.md) - 5,247 articles covering classical mechanics, quantum mechanics, thermodynamics, and relativity
   - [Evaluation Results](./packs/physics-expert/EVALUATION.md) - 84.7% accuracy vs 71.5% web search baseline
+- [Pack URL Coverage: Expanded Packs](./knowledge_packs/pack-url-coverage.md) - URL coverage summary for langchain-expert, openai-api-expert, vercel-ai-sdk, llamaindex-expert, and zig-expert after Issue 211 expansion
 - [How to Create Your Own Pack](./packs/HOW_TO_CREATE_YOUR_OWN.md) - Step-by-step guide for building custom knowledge packs
 
 ## How-To Guides
@@ -31,6 +32,7 @@ Task-oriented guides for specific problems:
 - [Improving .NET Pack Content Quality](./howto/dotnet-content-quality.md) - Audit article content, fix hallucinated URLs, set minimum content threshold
 - [How to Configure LLM Extraction](./howto/configure-llm-extraction.md) - Control entity and relationship extraction parameters
 - [How to Filter Link Crawling](./howto/filter-link-crawling.md) - Control which links are followed during BFS crawling
+- [How to Curate and Expand Pack URL Lists](./howto/curate-pack-urls.md) - Audit existing URLs, add coverage by section, validate reachability, and rebuild
 
 ## API Reference
 
@@ -42,6 +44,7 @@ Complete technical reference for classes and commands:
   - [FewShotManager Module](./reference/module-docs/few-shot-manager.md) - Few-shot example injection
 - [Web Content Source API](./reference/web-content-source.md) - `WebContentSource` class and CLI commands
 - [ArticleProcessor API](./reference/article-processor.md) - Shared extraction pipeline for all content sources
+- [urls.txt Format and Conventions](./reference/urls-txt-format.md) - File format, canonical hosts, GitHub URL forms, validation rules
 
 ## Concepts and Architecture
 

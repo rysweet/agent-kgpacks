@@ -152,8 +152,8 @@ def _validate_url(url: str) -> None:
     """
     parsed = urlparse(url)
 
-    if parsed.scheme not in ("http", "https"):
-        raise ValueError(f"Only HTTP(S) URLs are allowed, got scheme: {parsed.scheme!r}")
+    if parsed.scheme != "https":
+        raise ValueError(f"Only HTTPS URLs are allowed, got scheme: {parsed.scheme!r}")
 
     if not parsed.hostname:
         raise ValueError(f"URL has no hostname: {url}")

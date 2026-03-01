@@ -5,7 +5,7 @@ Build Zig Expert Knowledge Pack from URLs.
 This script reads Zig documentation URLs from urls.txt and builds a complete
 knowledge graph with LLM-based extraction using the web content pipeline.
 
-Expected runtime: 1-3 hours (40 URLs with LLM extraction)
+Expected runtime: 1-3 hours (47 URLs with LLM extraction)
 Estimated cost: ~$5-10 (Haiku at ~$0.25/1M input tokens)
 
 Usage:
@@ -55,9 +55,11 @@ def load_urls(urls_file: Path, limit: int | None = None) -> list[str]:
     """Load URLs from urls.txt file, skipping comments and blank lines."""
     with open(urls_file) as f:
         urls = [
-            line.strip()
+            stripped
             for line in f
-            if line.strip() and not line.strip().startswith("#") and line.strip().startswith("http")
+            if (stripped := line.strip())
+            and not stripped.startswith("#")
+            and stripped.startswith("https://")
         ]
 
     if limit:

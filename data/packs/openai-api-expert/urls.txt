@@ -49,3 +49,19 @@ https://github.com/openai/openai-node
 
 # Cookbook
 https://cookbook.openai.com/
+
+# OpenAI Agents SDK
+https://github.com/openai/openai-agents-python
+https://openai.github.io/openai-agents-python/
+
+# SDK README
+https://github.com/openai/openai-python/blob/main/README.md
+
+# Cookbook - Specific Examples
+https://cookbook.openai.com/examples/how_to_call_functions_with_chat_models
+https://cookbook.openai.com/examples/assistants_api_overview_python
+https://github.com/openai/openai-cookbook/blob/main/examples/How_to_call_functions_with_chat_models.ipynb
+https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
+https://github.com/openai/openai-cookbook/blob/main/examples/How_to_stream_completions.ipynb
+https://github.com/openai/openai-cookbook/blob/main/examples/Embedding_Wikipedia_articles_for_search.ipynb
+https://github.com/openai/openai-cookbook/blob/main/examples/Fine-tuned_classification.ipynb
