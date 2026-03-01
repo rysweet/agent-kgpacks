@@ -59,8 +59,7 @@ class CrossEncoderReranker:
             logger.info("CrossEncoderReranker loaded model: %s", model_name)
         except Exception as e:
             logger.warning(
-                "CrossEncoderReranker failed to load model '%s': %s. "
-                "Reranking will be skipped.",
+                "CrossEncoderReranker failed to load model '%s': %s. " "Reranking will be skipped.",
                 model_name,
                 e,
             )

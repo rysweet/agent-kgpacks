@@ -18,9 +18,9 @@ All tests mock sentence_transformers.CrossEncoder so no model download is needed
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Workstream launcher - recipe runner execution."""
-import sys
+
 import logging
+import sys
 
 logging.basicConfig(
     level=logging.INFO,

@@ -1131,13 +1131,17 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             max_similarity is the highest cosine similarity among results (0.0–1.0).
         """
         try:
-            candidate_k = min(max_results * 2, 40) if self.cross_encoder is not None else max_results
+            candidate_k = (
+                min(max_results * 2, 40) if self.cross_encoder is not None else max_results
+            )
             vector_results = self.semantic_search(question, top_k=candidate_k)
             if not vector_results:
                 return None, 0.0
 
             if self.cross_encoder is not None:
-                vector_results = self.cross_encoder.rerank(question, vector_results, top_k=max_results)
+                vector_results = self.cross_encoder.rerank(
+                    question, vector_results, top_k=max_results
+                )
 
             # Single pass: compute max_similarity, sources, and facts together
             max_similarity = 0.0
