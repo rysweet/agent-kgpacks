@@ -141,7 +141,7 @@ def _validate_url(url: str) -> None:
     """Validate URL to prevent SSRF attacks.
 
     Rejects:
-    - Non-HTTP(S) schemes (file://, ftp://, etc.)
+    - Non-HTTPS schemes (http://, file://, ftp://, etc.)
     - Private/reserved IP ranges (127.x, 10.x, 172.16-31.x, 192.168.x, 169.254.x)
     - IPv6 loopback (::1)
     - IPv6 deprecated site-local addresses (fec0::/10)
