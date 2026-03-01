@@ -517,3 +517,122 @@ class TestHybridRetrieve:
             )
 
         assert "Thermodynamics" in result["sources"]
+
+
+# ===================================================================
+# 7. Confidence-gated context injection
+# ===================================================================
+
+
+class TestConfidenceGatedContextInjection:
+    """query() skips pack context and uses minimal synthesis when vector similarity < 0.5."""
+
+    def test_low_similarity_triggers_confidence_gated_fallback(self) -> None:
+        """max_similarity < 0.5 → confidence gate fires, _synthesize_answer_minimal called."""
+        agent = _make_agent()
+        agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
+
+        low_sim_results = {"sources": ["Unrelated"], "entities": [], "facts": [], "raw": []}
+
+        with (
+            patch.object(agent, "_vector_primary_retrieve", return_value=(low_sim_results, 0.1)),
+            patch.object(
+                agent, "_synthesize_answer_minimal", return_value="fallback answer"
+            ) as mock_minimal,
+            patch.object(agent, "_synthesize_answer") as mock_synth,
+        ):
+            result = agent.query("What is Python?")
+
+        assert result["query_type"] == "confidence_gated_fallback"
+        assert result["answer"] == "fallback answer"
+        assert result["sources"] == []
+        assert result["entities"] == []
+        assert result["facts"] == []
+        mock_minimal.assert_called_once_with("What is Python?")
+        mock_synth.assert_not_called()
+
+    def test_high_similarity_runs_normal_pipeline(self) -> None:
+        """max_similarity >= 0.5 → normal pipeline, _synthesize_answer called."""
+        agent = _make_agent()
+        agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
+
+        high_sim_results = {"sources": ["Python"], "entities": [], "facts": [], "raw": []}
+
+        with (
+            patch.object(agent, "_vector_primary_retrieve", return_value=(high_sim_results, 0.8)),
+            patch.object(agent, "_direct_title_lookup", return_value=[]),
+            patch.object(agent, "_hybrid_retrieve", return_value={"sources": [], "facts": []}),
+            patch.object(
+                agent, "_synthesize_answer", return_value="synthesized answer"
+            ) as mock_synth,
+            patch.object(agent, "_synthesize_answer_minimal") as mock_minimal,
+        ):
+            result = agent.query("What is Python?")
+
+        assert result["query_type"] == "vector_search"
+        assert result["answer"] == "synthesized answer"
+        mock_synth.assert_called_once()
+        mock_minimal.assert_not_called()
+
+    def test_synthesize_answer_minimal_calls_claude_without_kg_context(self) -> None:
+        """_synthesize_answer_minimal passes only the question to Claude — no KG sections."""
+        agent = _make_agent()
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text="My own answer")]
+        mock_response.usage = MagicMock(input_tokens=10, output_tokens=5)
+        agent.claude.messages.create.return_value = mock_response
+
+        result = agent._synthesize_answer_minimal("What is recursion?")
+
+        assert result == "My own answer"
+
+        create_call = agent.claude.messages.create.call_args
+        content = create_call.kwargs["messages"][0]["content"]
+        assert "What is recursion?" in content
+        assert "no relevant content" in content
+
+        assert agent.token_usage["api_calls"] == 1
+        assert agent.token_usage["input_tokens"] == 10
+        assert agent.token_usage["output_tokens"] == 5
+
+    def test_synthesize_answer_minimal_api_error_returns_fallback_string(self) -> None:
+        """On API error, _synthesize_answer_minimal returns the fallback string and does not raise."""
+        agent = _make_agent()
+        agent.claude.messages.create.side_effect = Exception("API failure")
+
+        result = agent._synthesize_answer_minimal("What is recursion?")
+
+        assert result == "Unable to answer: API error."
+
+    def test_exact_threshold_similarity_does_not_trigger_gate(self) -> None:
+        """max_similarity == 0.5 is NOT < threshold — gate must not fire."""
+        agent = _make_agent()
+        agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
+
+        boundary_results = {"sources": ["Source"], "entities": [], "facts": [], "raw": []}
+
+        with (
+            patch.object(agent, "_vector_primary_retrieve", return_value=(boundary_results, 0.5)),
+            patch.object(agent, "_direct_title_lookup", return_value=[]),
+            patch.object(agent, "_hybrid_retrieve", return_value={"sources": [], "facts": []}),
+            patch.object(agent, "_synthesize_answer", return_value="normal answer"),
+            patch.object(agent, "_synthesize_answer_minimal") as mock_minimal,
+        ):
+            result = agent.query("What is Python?")
+
+        assert result["query_type"] != "confidence_gated_fallback"
+        mock_minimal.assert_not_called()
+
+    def test_synthesize_answer_minimal_empty_response_returns_fallback_string(self) -> None:
+        """Empty content list from Claude returns the empty-response fallback string."""
+        agent = _make_agent()
+
+        mock_response = MagicMock()
+        mock_response.content = []
+        mock_response.usage = MagicMock(input_tokens=5, output_tokens=0)
+        agent.claude.messages.create.return_value = mock_response
+
+        result = agent._synthesize_answer_minimal("What is entropy?")
+
+        assert result == "Unable to synthesize answer: empty response from Claude."
