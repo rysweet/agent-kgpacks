@@ -54,7 +54,7 @@ Pipeline:
 
 ## The Judge Model
 
-Answers are scored by a **judge model** (Claude Haiku) on a 0-10 scale.
+Answers are scored by a **judge model** (Claude Opus) on a 0-10 scale.
 
 ### Scoring Prompt
 
@@ -68,14 +68,17 @@ Number only.
 
 The judge compares the generated answer against the `ground_truth` from the evaluation question set and returns a single integer.
 
-### Why Claude Haiku as Judge?
+### Why Claude Opus as Judge?
 
 | Consideration | Decision |
 |--------------|----------|
-| Cost | Haiku is ~10x cheaper than Opus per scoring call |
-| Speed | Haiku responds in ~50ms vs ~500ms for Opus |
-| Consistency | Haiku produces stable, reproducible scores |
+| Accuracy | Opus provides more nuanced, accurate scoring than Haiku |
+| Consistency | Opus produces stable, reproducible scores at temperature 0 |
+| Fewer false negatives | Haiku over-penalizes minor answer differences; Opus evaluates semantic correctness |
 | Simplicity | Single-number output avoids parsing complexity |
+
+!!! note "Haiku vs Opus judge comparison"
+    Early evaluations used Haiku as judge. Switching to Opus reduced scoring noise significantly -- for example, vercel-ai-sdk's delta went from -20pp (Haiku) to -0.1 (Opus), reflecting a more accurate assessment of answer quality.
 
 ### Scoring Rubric
 
@@ -243,19 +246,19 @@ questions.jsonl
   │    Claude Opus answers without context
   │    │
   │    ▼
-  │    Judge (Haiku) scores 0-10 vs ground_truth
+  │    Judge (Opus) scores 0-10 vs ground_truth
   │
   ├──► Pack condition
   │    KG Agent retrieves + synthesizes
   │    │
   │    ▼
-  │    Judge (Haiku) scores 0-10 vs ground_truth
+  │    Judge (Opus) scores 0-10 vs ground_truth
   │
   └──► Enhanced condition
        KG Agent + all enhancements
        │
        ▼
-       Judge (Haiku) scores 0-10 vs ground_truth
+       Judge (Opus) scores 0-10 vs ground_truth
 
 Results:
   per-question scores

@@ -22,39 +22,35 @@ The system has been evaluated across 48 domain-specific packs covering programmi
 
 | Condition | Avg Score | Accuracy |
 |-----------|-----------|----------|
-| **Training** (Claude alone) | 8.9/10 | 96.2% |
-| **Pack** (KG Agent, base) | 8.7/10 | 95.0% |
-| **Enhanced** (KG Agent + all improvements) | **9.1/10** | **97.5%** |
+| **Training** (Claude alone) | 9.3/10 | 98% |
+| **Pack** (KG Agent, base) | 9.3/10 | 92% |
+| **Enhanced** (KG Agent + all improvements) | **9.7/10** | **99%** |
 
-The Enhanced configuration -- which adds confidence gating, cross-encoder reranking, multi-query retrieval, content quality scoring, graph reranking, multi-document synthesis, and few-shot examples -- beats the training baseline by **+1.3 percentage points** on accuracy across 80 evaluated questions.
+The Enhanced configuration -- which adds confidence gating, cross-encoder reranking, multi-query retrieval, content quality scoring, graph reranking, multi-document synthesis, and few-shot examples -- beats the training baseline by **+1 percentage point** on accuracy across 80 evaluated questions (judged by Claude Opus).
 
 ---
 
 ## Quick Navigation
 
-<div class="grid cards" markdown>
+### Getting Started
 
--   **Getting Started**
+New to Knowledge Packs? Start with the **[Overview](getting-started/overview.md)** to understand what packs are and when to use them, then follow the **[Quick Start](getting-started/quickstart.md)** to build and query your first pack in 5 minutes. For a complete walkthrough, see the **[Tutorial](getting-started/tutorial.md)**.
 
-    New to Knowledge Packs? Start with the [Overview](getting-started/overview.md) to understand what packs are and when to use them, then follow the [Quick Start](getting-started/quickstart.md) to build and query your first pack in 5 minutes.
+### Concepts
 
--   **Concepts**
+Understand **[How Packs Work](concepts/how-packs-work.md)** under the hood -- from content ingestion through the full **[Retrieval Pipeline](concepts/retrieval-pipeline.md)** and **[Architecture](concepts/architecture.md)**.
 
-    Understand [How Packs Work](concepts/how-packs-work.md) under the hood -- from content ingestion through the full [Retrieval Pipeline](concepts/retrieval-pipeline.md) and [Architecture](concepts/architecture.md).
+### Evaluation
 
--   **Evaluation**
+Learn the **[Methodology](evaluation/methodology.md)** behind the three-condition evaluation framework, review current **[Results](evaluation/results.md)** across all packs, and discover strategies for **[Improving Accuracy](evaluation/improving-accuracy.md)**.
 
-    Learn the [Methodology](evaluation/methodology.md) behind the three-condition evaluation framework, review current [Results](evaluation/results.md) across all packs, and discover strategies for [Improving Accuracy](evaluation/improving-accuracy.md).
+### How-To Guides
 
--   **How-To Guides**
+Step-by-step instructions to **[Build a Pack](howto/build-a-pack.md)**, **[Run Evaluations](howto/run-evaluations.md)**, and **[Configure Enhancements](howto/configure-enhancements.md)**.
 
-    Step-by-step instructions to [Build a Pack](howto/build-a-pack.md), [Run Evaluations](howto/run-evaluations.md), and [Configure Enhancements](howto/configure-enhancements.md).
+### Reference
 
--   **Reference**
-
-    Complete technical reference for the [KG Agent API](reference/kg-agent-api.md), [CLI Commands](reference/cli-commands.md), and [Pack Manifest](reference/pack-manifest.md) format.
-
-</div>
+Complete technical reference for the **[KG Agent API](reference/kg-agent-api.md)**, **[CLI Commands](reference/cli-commands.md)**, and **[Pack Manifest](reference/pack-manifest.md)** format.
 
 ---
 
