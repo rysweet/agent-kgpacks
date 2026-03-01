@@ -19,6 +19,7 @@ Pre-built domain-specific knowledge graphs:
 
 - [Physics-Expert Pack](./packs/physics-expert/README.md) - 5,247 articles covering classical mechanics, quantum mechanics, thermodynamics, and relativity
   - [Evaluation Results](./packs/physics-expert/EVALUATION.md) - 84.7% accuracy vs 71.5% web search baseline
+- [Pack URL Coverage: Expanded Packs](./knowledge_packs/pack-url-coverage.md) - URL coverage summary for langchain-expert, openai-api-expert, vercel-ai-sdk, llamaindex-expert, and zig-expert after Issue 211 expansion
 - [How to Create Your Own Pack](./packs/HOW_TO_CREATE_YOUR_OWN.md) - Step-by-step guide for building custom knowledge packs
 
 ## How-To Guides
@@ -28,10 +29,13 @@ Task-oriented guides for specific problems:
 - [Multi-Query Retrieval and Content Quality Scoring](./howto/retrieval-enhancements.md) - Enable multi-query fan-out (+15–25% recall) and stub filtering via `enable_multi_query` and quality threshold
 - [Phase 1 Pack Enhancements](./howto/phase1-enhancements.md) - Use retrieval enhancements to improve pack accuracy from 50% to 70-75%
 - [Vector Search as Primary Retrieval](./howto/vector-search-primary-retrieval.md) - Phase 3 retrieval pipeline with vector-first search, sparse graph detection, and A/B testing flags
+- [Confidence-Gated Context Injection](./howto/confidence-gated-context-injection.md) - Skip irrelevant pack context when vector similarity is low, letting Claude answer from its own expertise
 - [Generating Evaluation Questions](./howto/generating-evaluation-questions.md) - Generate Q&A pairs for new packs and run all-packs accuracy evaluation
+- [Improving Eval Questions](./howto/improving-eval-questions.md) - Audit and correct questions to measure pack-specific knowledge, not training data
 - [Improving .NET Pack Content Quality](./howto/dotnet-content-quality.md) - Audit article content, fix hallucinated URLs, set minimum content threshold
 - [How to Configure LLM Extraction](./howto/configure-llm-extraction.md) - Control entity and relationship extraction parameters
 - [How to Filter Link Crawling](./howto/filter-link-crawling.md) - Control which links are followed during BFS crawling
+- [How to Curate and Expand Pack URL Lists](./howto/curate-pack-urls.md) - Audit existing URLs, add coverage by section, validate reachability, and rebuild
 
 ## API Reference
 
@@ -44,6 +48,7 @@ Complete technical reference for classes and commands:
   - [FewShotManager Module](./reference/module-docs/few-shot-manager.md) - Few-shot example injection
 - [Web Content Source API](./reference/web-content-source.md) - `WebContentSource` class and CLI commands
 - [ArticleProcessor API](./reference/article-processor.md) - Shared extraction pipeline for all content sources
+- [urls.txt Format and Conventions](./reference/urls-txt-format.md) - File format, canonical hosts, GitHub URL forms, validation rules
 
 ## Concepts and Architecture
 

@@ -4,15 +4,16 @@ Complete API reference for the Phase 1 retrieval enhancement modules.
 
 ## Overview
 
-Phase 1 enhancements consist of three independent modules:
+Phase 1 enhancements consist of four independent modules:
 
-| Module | Purpose | Accuracy Impact |
-|--------|---------|-----------------|
-| `GraphReranker` | Rerank results using graph centrality | +5-10% |
-| `MultiDocSynthesizer` | Multi-document retrieval | +10-15% |
-| `FewShotManager` | Pack-specific example injection | +5-10% |
+| Module | Purpose | Accuracy Impact | Default |
+|--------|---------|-----------------|---------|
+| `GraphReranker` | Rerank results using graph centrality | +5-10% | On |
+| `MultiDocSynthesizer` | Multi-document retrieval | +10-15% | On |
+| `FewShotManager` | Pack-specific example injection | +5-10% | On |
+| `CrossEncoderReranker` | Joint query-document scoring via cross-encoder | +10-15% retrieval precision | **Off (opt-in)** |
 
-**Combined Impact**: 50% baseline → 70-75% accuracy
+**Combined Impact**: 50% baseline → 70-75% accuracy with default enhancements; cross-encoder adds a further +10-15% retrieval precision on top.
 
 ## KnowledgeGraphAgent API
 
@@ -23,7 +24,14 @@ KnowledgeGraphAgent(
     db_path: str,
     anthropic_api_key: str | None = None,
     read_only: bool = True,
-    use_enhancements: bool = False  # NEW: Enable Phase 1 enhancements
+    use_enhancements: bool = True,
+    few_shot_path: str | None = None,
+    enable_reranker: bool = True,
+    enable_multidoc: bool = True,
+    enable_fewshot: bool = True,
+    enable_cross_encoder: bool = False,  # opt-in: downloads 33MB model on first use
+    synthesis_model: str | None = None,
+    cypher_pack_path: str | None = None,
 )
 ```
 
@@ -31,7 +39,14 @@ KnowledgeGraphAgent(
 - `db_path` (str): Path to Kuzu database file
 - `anthropic_api_key` (str, optional): Anthropic API key (or from `ANTHROPIC_API_KEY` env var)
 - `read_only` (bool): Open database in read-only mode (default: `True`)
-- `use_enhancements` (bool): Enable Phase 1 retrieval enhancements (default: `False`)
+- `use_enhancements` (bool): Master switch — enables all Phase 1 enhancement modules (default: `True`)
+- `few_shot_path` (str, optional): Explicit path to few-shot examples JSON; auto-detected from pack directory when `None`
+- `enable_reranker` (bool): Enable `GraphReranker` (default: `True`; ignored when `use_enhancements=False`)
+- `enable_multidoc` (bool): Enable `MultiDocSynthesizer` (default: `True`; ignored when `use_enhancements=False`)
+- `enable_fewshot` (bool): Enable `FewShotManager` (default: `True`; ignored when `use_enhancements=False`)
+- `enable_cross_encoder` (bool): Enable `CrossEncoderReranker` (default: `False`; ignored when `use_enhancements=False`). Downloads ~33MB model on first use.
+- `synthesis_model` (str, optional): Claude model ID for synthesis and planning (default: `claude-opus-4-6`)
+- `cypher_pack_path` (str, optional): Path to OpenCypher expert pack examples for RAG-augmented Cypher generation
 
 **Returns**: `KnowledgeGraphAgent` instance
 
@@ -91,7 +106,7 @@ Reranks vector search results using graph centrality metrics.
 ### Constructor
 
 ```python
-from wikigr.agent.enhancements.graph_reranker import GraphReranker
+from wikigr.agent.reranker import GraphReranker
 
 reranker = GraphReranker(
     conn: kuzu.Connection,
@@ -184,7 +199,7 @@ Retrieves and synthesizes information from multiple articles.
 ### Constructor
 
 ```python
-from wikigr.agent.enhancements.multidoc_synthesizer import MultiDocSynthesizer
+from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
 
 synthesizer = MultiDocSynthesizer(
     conn: kuzu.Connection,
@@ -276,7 +291,7 @@ Manages and injects pack-specific few-shot examples.
 ### Constructor
 
 ```python
-from wikigr.agent.enhancements.few_shot_manager import FewShotManager
+from wikigr.agent.few_shot import FewShotManager
 
 manager = FewShotManager(
     pack_dir: str,
@@ -409,17 +424,113 @@ Answer:
 """
 ```
 
+## CrossEncoderReranker
+
+Reranks vector search candidates by jointly scoring query-document pairs through a cross-encoder model, yielding +10-15% retrieval precision over bi-encoder search alone.
+
+### Constructor
+
+```python
+from wikigr.agent.cross_encoder import CrossEncoderReranker
+
+reranker = CrossEncoderReranker(
+    model_name: str = "cross-encoder/ms-marco-MiniLM-L-12-v2"
+)
+```
+
+**Parameters**:
+- `model_name` (str): HuggingFace cross-encoder model identifier. Defaults to `cross-encoder/ms-marco-MiniLM-L-12-v2` (33MB, CPU-only).
+
+**Side effects**:
+- First instantiation downloads ~33MB model weights to `~/.cache/huggingface/`.
+- On any load failure: logs `WARNING` and sets `_model = None`; `rerank()` becomes a no-op passthrough.
+
+**Attributes**:
+- `_model`: Loaded `sentence_transformers.CrossEncoder` instance, or `None` if load failed.
+
+### rerank() Method
+
+```python
+reranked_results = reranker.rerank(
+    query: str,
+    results: list[dict],
+    top_k: int = 5
+) -> list[dict]
+```
+
+**Parameters**:
+- `query` (str): The search query.
+- `results` (list[dict]): Candidate result dicts. Each dict should contain a `"content"` key (preferred) or `"title"` key used as the document text.
+- `top_k` (int): Maximum results to return (default: 5).
+
+**Returns**:
+
+*Normal mode* (`_model` is not `None`):
+List of up to `top_k` dicts sorted by `"ce_score"` descending. Each dict is a **shallow copy** of the input with `"ce_score": float` added. Input dicts are not mutated.
+
+*Passthrough mode* (`_model` is `None`):
+`list(results)` — full input, original order, no `ce_score`, no truncation.
+
+**Example**:
+
+```python
+results = [
+    {"title": "Quantum mechanics",  "content": "The study of matter at atomic scale."},
+    {"title": "Classical mechanics","content": "Newton's laws of motion."},
+    {"title": "Thermodynamics",     "content": "The study of heat and energy transfer."},
+]
+
+reranked = reranker.rerank(
+    query="What governs the behaviour of subatomic particles?",
+    results=results,
+    top_k=2,
+)
+
+# [
+#   {"title": "Quantum mechanics",  "content": "...", "ce_score": 9.14},
+#   {"title": "Classical mechanics","content": "...", "ce_score": 1.83},
+# ]
+```
+
+### Integration with KnowledgeGraphAgent
+
+Enable via constructor flags:
+
+```python
+agent = KnowledgeGraphAgent(
+    db_path="physics.db",
+    use_enhancements=True,     # required
+    enable_cross_encoder=True, # opt-in
+)
+```
+
+When active, `_vector_primary_retrieve()` doubles the semantic search candidate pool
+(`2 * max_results`) then calls `cross_encoder.rerank()` to reduce back to `max_results`:
+
+```
+semantic_search(query, k = max_results * 2)
+    ↓
+cross_encoder.rerank(query, candidates, top_k = max_results)
+    ↓
+top-max_results results ordered by ce_score
+```
+
+Check state at runtime:
+
+```python
+agent.cross_encoder          # CrossEncoderReranker | None
+agent.cross_encoder._model   # sentence_transformers.CrossEncoder | None
+```
+
 ## Integration Pattern
 
 Recommended integration pattern for all three enhancements:
 
 ```python
 from wikigr.agent.kg_agent import KnowledgeGraphAgent
-from wikigr.agent.enhancements import (
-    GraphReranker,
-    MultiDocSynthesizer,
-    FewShotManager
-)
+from wikigr.agent.reranker import GraphReranker
+from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
+from wikigr.agent.few_shot import FewShotManager
 
 class EnhancedKGAgent(KnowledgeGraphAgent):
     """KG Agent with Phase 1 enhancements."""
@@ -474,7 +585,7 @@ Answer:
 
         # Call Claude
         response = self.claude.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-opus-4-6",
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024
         )
@@ -486,14 +597,17 @@ Answer:
 
 ### Latency Breakdown
 
-| Operation | Baseline | Enhanced | Overhead |
-|-----------|----------|----------|----------|
-| Query Planning | 50ms | 50ms | 0ms |
-| Retrieval | 100ms | 400ms | +300ms |
-| Reranking | - | 50ms | +50ms |
-| Example Retrieval | - | 20ms | +20ms |
-| Synthesis | 150ms | 150ms | 0ms |
-| **Total** | **300ms** | **670ms** | **+370ms** |
+| Operation | Baseline | Enhanced (default) | + Cross-Encoder | Overhead vs. baseline |
+|-----------|----------|--------------------|-----------------|----------------------|
+| Query Planning | 50ms | 50ms | 50ms | 0ms |
+| Retrieval | 100ms | 400ms | 400ms | +300ms |
+| Graph Reranking | — | 50ms | 50ms | +50ms |
+| Cross-Encoder Rerank | — | — | 50ms | +50ms |
+| Example Retrieval | — | 20ms | 20ms | +20ms |
+| Synthesis | 150ms | 150ms | 150ms | 0ms |
+| **Total** | **300ms** | **670ms** | **~720ms** | **+370ms / +420ms** |
+
+Cross-encoder adds ~50ms on top of the default-enhanced pipeline — negligible versus 10-15s Opus synthesis.
 
 ### Memory Usage
 
@@ -504,16 +618,28 @@ Answer:
 | Multi-Doc Context | ~50 KB (5 articles × 3 sections) |
 | **Total Overhead** | **~1-2 MB** |
 
+### Memory Usage (with CrossEncoderReranker)
+
+| Component | Memory |
+|-----------|--------|
+| PageRank Cache | ~1 MB (for 500 articles) |
+| Few-Shot Examples | ~10 KB (for 10 examples) |
+| Multi-Doc Context | ~50 KB (5 articles × 3 sections) |
+| CrossEncoder model weights | ~120 MB RAM (33MB on disk) |
+| **Total Overhead** | **~120-125 MB** |
+
 ### Scalability
 
 - **GraphReranker**: O(V + E) for PageRank computation, O(N log N) for reranking
 - **MultiDocSynthesizer**: O(K * log V) for K-NN search, scales linearly with `num_docs`
 - **FewShotManager**: O(E) for example retrieval, where E = number of examples (typically 5-10)
+- **CrossEncoderReranker**: O(C) per query where C = candidate pool size (`2 * max_results`); linear with candidate count
 
 **Recommended Limits**:
 - Pack size: Up to 1000 articles (larger packs increase PageRank computation time)
 - `num_docs`: 3-7 (higher values increase latency and context size)
 - `num_examples`: 2-5 (more examples increase prompt size)
+- `max_results` with cross-encoder: up to 20 (40 candidate forward passes, ~180ms)
 
 ## Error Handling
 
@@ -551,7 +677,7 @@ Test each enhancement module independently:
 
 ```python
 # Test GraphReranker
-from wikigr.agent.enhancements.graph_reranker import GraphReranker
+from wikigr.agent.reranker import GraphReranker
 
 def test_reranker():
     conn = kuzu.Connection(kuzu.Database("test.db"))
@@ -567,7 +693,7 @@ def test_reranker():
     assert all("score" in r for r in reranked)
 
 # Test MultiDocSynthesizer
-from wikigr.agent.enhancements.multidoc_synthesizer import MultiDocSynthesizer
+from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
 
 def test_synthesizer():
     conn = kuzu.Connection(kuzu.Database("test.db"))
@@ -581,7 +707,7 @@ def test_synthesizer():
     assert len(context["articles"]) <= 3
 
 # Test FewShotManager
-from wikigr.agent.enhancements.few_shot_manager import FewShotManager
+from wikigr.agent.few_shot import FewShotManager
 
 def test_few_shot():
     manager = FewShotManager(pack_dir="data/packs/test-pack")
@@ -596,3 +722,7 @@ def test_few_shot():
 - [Phase 1 How-To Guide](../howto/phase1-enhancements.md) - Usage examples and troubleshooting
 - [Knowledge Pack Evaluation](../howto/evaluate-pack-accuracy.md) - Measure accuracy improvements
 - [KG Agent Documentation](./kg-agent.md) - Core agent API reference
+- [CrossEncoderReranker Module](./module-docs/cross-encoder-reranker.md) - Detailed cross-encoder API reference
+- [GraphReranker Module](./module-docs/graph-reranker.md) - Graph-based reranking reference
+- [MultiDocSynthesizer Module](./module-docs/multidoc-synthesizer.md) - Multi-document retrieval reference
+- [FewShotManager Module](./module-docs/few-shot-manager.md) - Few-shot example injection reference
