@@ -41,6 +41,7 @@ def _make_agent() -> KnowledgeGraphAgent:
     agent.reranker = None
     agent.synthesizer = None
     agent.few_shot = None
+    agent.cross_encoder = None
     return agent
 
 
@@ -517,3 +518,64 @@ class TestHybridRetrieve:
             )
 
         assert "Thermodynamics" in result["sources"]
+
+
+# ===================================================================
+# Security hardening: candidate_k cap in _vector_primary_retrieve
+# ===================================================================
+
+
+class TestVectorPrimaryRetrieveCandidateCap:
+    """candidate_k is capped at 40 when cross_encoder is active.
+
+    Without a hard cap, large max_results values (e.g. 30) double to 60 forward
+    passes through the cross-encoder (~3s of CPU inference — resource-exhaustion
+    risk if the caller controls max_results).
+    """
+
+    def test_candidate_k_capped_at_40_when_max_results_is_large(self) -> None:
+        """With max_results=30 and cross_encoder active, semantic_search gets top_k=40 not 60."""
+        agent = _make_agent()
+        # Attach a live (mocked) cross_encoder so the 2x branch activates
+        mock_ce = MagicMock()
+        mock_ce.rerank.side_effect = lambda query, results, top_k: results[:top_k]
+        agent.cross_encoder = mock_ce
+
+        captured_top_k: list[int] = []
+
+        def _fake_semantic_search(question: str, top_k: int = 5):
+            captured_top_k.append(top_k)
+            return [{"title": f"Article {i}", "content": f"Content {i}", "similarity": 0.8} for i in range(top_k)]
+
+        with patch.object(agent, "semantic_search", side_effect=_fake_semantic_search):
+            # _vector_primary_retrieve is private — call it directly
+            agent._vector_primary_retrieve("test question", max_results=30)
+
+        assert len(captured_top_k) == 1
+        assert captured_top_k[0] <= 40, (
+            f"semantic_search was called with top_k={captured_top_k[0]}, "
+            "expected <= 40. Add candidate_k = min(max_results * 2, 40) cap "
+            "in _vector_primary_retrieve()."
+        )
+
+    def test_candidate_k_not_capped_when_max_results_is_small(self) -> None:
+        """With max_results=5 and cross_encoder active, semantic_search gets top_k=10 (2x, within cap)."""
+        agent = _make_agent()
+        mock_ce = MagicMock()
+        mock_ce.rerank.side_effect = lambda query, results, top_k: results[:top_k]
+        agent.cross_encoder = mock_ce
+
+        captured_top_k: list[int] = []
+
+        def _fake_semantic_search(question: str, top_k: int = 5):
+            captured_top_k.append(top_k)
+            return [{"title": f"Article {i}", "content": f"Content {i}", "similarity": 0.8} for i in range(top_k)]
+
+        with patch.object(agent, "semantic_search", side_effect=_fake_semantic_search):
+            agent._vector_primary_retrieve("test question", max_results=5)
+
+        assert len(captured_top_k) == 1
+        # 5 * 2 = 10, which is within the 40 cap — should be 10
+        assert captured_top_k[0] == 10, (
+            f"Expected semantic_search called with top_k=10 (5*2), got {captured_top_k[0]}."
+        )

@@ -51,6 +51,7 @@ class KnowledgeGraphAgent:
         enable_reranker: bool = True,
         enable_multidoc: bool = True,
         enable_fewshot: bool = True,
+        enable_cross_encoder: bool = False,
         synthesis_model: str | None = None,
         cypher_pack_path: str | None = None,
     ):
@@ -66,6 +67,8 @@ class KnowledgeGraphAgent:
             enable_reranker: Enable graph reranker (default True when use_enhancements=True)
             enable_multidoc: Enable multi-doc synthesizer (default True when use_enhancements=True)
             enable_fewshot: Enable few-shot examples (default True when use_enhancements=True)
+            enable_cross_encoder: Enable cross-encoder reranking after vector retrieval
+                (default False — opt-in; only active when use_enhancements=True)
             synthesis_model: Claude model for all synthesis/planning (default: claude-opus-4-6)
             cypher_pack_path: Path to OpenCypher expert pack examples for RAG-augmented generation
         """
@@ -80,6 +83,7 @@ class KnowledgeGraphAgent:
         self.enable_reranker = enable_reranker
         self.enable_multidoc = enable_multidoc
         self.enable_fewshot = enable_fewshot
+        self.enable_cross_encoder = enable_cross_encoder
 
         # Warn if enable_* flags are set but use_enhancements=False (they have no effect)
         if not use_enhancements and any(
@@ -87,11 +91,12 @@ class KnowledgeGraphAgent:
                 enable_reranker is not True,
                 enable_multidoc is not True,
                 enable_fewshot is not True,
+                enable_cross_encoder is not False,
             ]
         ):
             logger.warning(
-                "enable_reranker/enable_multidoc/enable_fewshot flags have no effect "
-                "when use_enhancements=False. Set use_enhancements=True to use them."
+                "enable_reranker/enable_multidoc/enable_fewshot/enable_cross_encoder flags "
+                "have no effect when use_enhancements=False. Set use_enhancements=True to use them."
             )
 
         # Initialize enhancement modules if enabled
@@ -115,12 +120,19 @@ class KnowledgeGraphAgent:
                     )
             else:
                 self.few_shot = None
+            if enable_cross_encoder:
+                from wikigr.agent.cross_encoder import CrossEncoderReranker
+
+                self.cross_encoder = CrossEncoderReranker()
+            else:
+                self.cross_encoder = None
             active = [
                 c
                 for c, e in [
                     ("reranker", enable_reranker),
                     ("multi-doc", enable_multidoc),
                     ("few-shot", enable_fewshot),
+                    ("cross-encoder", enable_cross_encoder),
                 ]
                 if e
             ]
@@ -129,6 +141,7 @@ class KnowledgeGraphAgent:
             self.reranker = None
             self.synthesizer = None
             self.few_shot = None
+            self.cross_encoder = None
 
         # Initialize CypherRAG if a pack path is provided
         self.cypher_rag = self._init_cypher_rag(cypher_pack_path)
@@ -242,10 +255,12 @@ class KnowledgeGraphAgent:
         agent.enable_reranker = True
         agent.enable_multidoc = True
         agent.enable_fewshot = True
+        agent.enable_cross_encoder = False
         agent.synthesis_model = cls.DEFAULT_MODEL
         agent.reranker = None
         agent.synthesizer = None
         agent.few_shot = None
+        agent.cross_encoder = None
         agent.cypher_rag = None
         return agent
 
@@ -1116,18 +1131,27 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             max_similarity is the highest cosine similarity among results (0.0–1.0).
         """
         try:
-            vector_results = self.semantic_search(question, top_k=max_results)
+            candidate_k = min(max_results * 2, 40) if self.cross_encoder is not None else max_results
+            vector_results = self.semantic_search(question, top_k=candidate_k)
             if not vector_results:
                 return None, 0.0
 
-            max_similarity = max(r.get("similarity", 0.0) for r in vector_results)
-            sources = [r["title"] for r in vector_results]
-            # Extract section content directly from vector results for richer context
+            if self.cross_encoder is not None:
+                vector_results = self.cross_encoder.rerank(question, vector_results, top_k=max_results)
+
+            # Single pass: compute max_similarity, sources, and facts together
+            max_similarity = 0.0
+            sources = []
             facts = []
             for r in vector_results:
+                sim = r.get("similarity", 0.0)
+                if sim > max_similarity:
+                    max_similarity = sim
+                title = r["title"]
+                sources.append(title)
                 content = r.get("content", "")
                 if content:
-                    facts.append(f"[{r['title']}] {content[:500]}")
+                    facts.append(f"[{title}] {content[:500]}")
             return {
                 "sources": sources,
                 "entities": [],

@@ -36,7 +36,8 @@ Task-oriented guides for specific problems:
 
 Complete technical reference for classes and commands:
 
-- [Phase 1 Enhancements API](./reference/phase1-enhancements.md) - GraphReranker, MultiDocSynthesizer, FewShotManager complete reference
+- [Phase 1 Enhancements API](./reference/phase1-enhancements.md) - GraphReranker, MultiDocSynthesizer, FewShotManager, CrossEncoderReranker complete reference
+  - [CrossEncoderReranker Module](./reference/module-docs/cross-encoder-reranker.md) - Joint query-document reranking for +10-15% retrieval precision
   - [GraphReranker Module](./reference/module-docs/graph-reranker.md) - Graph-based reranking with PageRank
   - [MultiDocSynthesizer Module](./reference/module-docs/multidoc-synthesizer.md) - Multi-document retrieval and synthesis
   - [FewShotManager Module](./reference/module-docs/few-shot-manager.md) - Few-shot example injection

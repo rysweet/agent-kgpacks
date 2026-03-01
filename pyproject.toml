@@ -178,3 +178,10 @@ omit = [
 precision = 2
 show_missing = true
 skip_covered = false
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-cov>=6.3.0",
+    "pytest-timeout>=2.4.0",
+]
