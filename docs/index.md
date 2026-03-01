@@ -25,6 +25,7 @@ Pre-built domain-specific knowledge graphs:
 
 Task-oriented guides for specific problems:
 
+- [Multi-Query Retrieval and Content Quality Scoring](./howto/retrieval-enhancements.md) - Enable multi-query fan-out (+15–25% recall) and stub filtering via `enable_multi_query` and quality threshold
 - [Phase 1 Pack Enhancements](./howto/phase1-enhancements.md) - Use retrieval enhancements to improve pack accuracy from 50% to 70-75%
 - [Vector Search as Primary Retrieval](./howto/vector-search-primary-retrieval.md) - Phase 3 retrieval pipeline with vector-first search, sparse graph detection, and A/B testing flags
 - [Generating Evaluation Questions](./howto/generating-evaluation-questions.md) - Generate Q&A pairs for new packs and run all-packs accuracy evaluation
@@ -36,6 +37,7 @@ Task-oriented guides for specific problems:
 
 Complete technical reference for classes and commands:
 
+- [Retrieval Enhancements API](./reference/retrieval-enhancements.md) - `_multi_query_retrieve`, `_score_section_quality`, `enable_multi_query`, `CONTENT_QUALITY_THRESHOLD`
 - [Phase 1 Enhancements API](./reference/phase1-enhancements.md) - GraphReranker, MultiDocSynthesizer, FewShotManager complete reference
   - [GraphReranker Module](./reference/module-docs/graph-reranker.md) - Graph-based reranking with PageRank
   - [MultiDocSynthesizer Module](./reference/module-docs/multidoc-synthesizer.md) - Multi-document retrieval and synthesis
@@ -47,6 +49,7 @@ Complete technical reference for classes and commands:
 
 Understanding how WikiGR works internally:
 
+- [Multi-Query Retrieval and Quality Scoring Design](./concepts/retrieval-enhancements-design.md) - Design rationale for Issue 211 Improvements 4 and 5
 - [Phase 1 Enhancements Design](./concepts/phase1-enhancements-design.md) - Design rationale and architecture for retrieval enhancements
 - [ContentSource Architecture](./concepts/content-source-design.md) - Protocol-based design for source-agnostic knowledge graph construction
 - [BFS Link Expansion Algorithm](./concepts/bfs-link-expansion.md) - How WikiGR crawls web content using breadth-first search
