@@ -35,6 +35,7 @@ class KnowledgeGraphAgent:
 
     # --- Extracted constants (avoid magic numbers) ---
     VECTOR_CONFIDENCE_THRESHOLD = 0.6
+    CONTEXT_CONFIDENCE_THRESHOLD = 0.5
     PLAN_CACHE_MAX_SIZE = 128
     MAX_ARTICLE_CHARS = 3000
     PLAN_MAX_TOKENS = 512
@@ -329,6 +330,18 @@ class KnowledgeGraphAgent:
             logger.info(
                 f"Vector retrieval: {len(kg_results.get('sources', []))} sources (max_similarity={max_similarity:.3f})"
             )
+
+            # Confidence gate: skip all pack context injection when similarity is too low
+            if max_similarity < self.CONTEXT_CONFIDENCE_THRESHOLD:
+                return {
+                    "answer": self._synthesize_answer_minimal(question),
+                    "sources": [],
+                    "entities": [],
+                    "facts": [],
+                    "cypher_query": query_plan["cypher"],
+                    "query_type": "confidence_gated_fallback",
+                    "token_usage": dict(self.token_usage),
+                }
         else:
             # Vector search failed entirely — use empty results (hybrid will fill in)
             kg_results = {"sources": [], "entities": [], "facts": [], "raw": []}
@@ -351,9 +364,17 @@ class KnowledgeGraphAgent:
         except Exception as e:
             logger.debug(f"Direct title lookup failed: {e}")
 
-        # ALWAYS augment with hybrid retrieval (no skip for any query type)
+        # ALWAYS augment with hybrid retrieval (no skip for any query type).
+        # Pass precomputed vector results to avoid a duplicate semantic_search call.
+        _precomputed = (
+            [{"title": r["title"], "similarity": r["score"]} for r in kg_results.get("raw", [])]
+            if vector_kg_results is not None
+            else None
+        )
         try:
-            hybrid_results = self._hybrid_retrieve(question, max_results)
+            hybrid_results = self._hybrid_retrieve(
+                question, max_results, _precomputed_vector=_precomputed
+            )
             # Merge hybrid sources into KG results (deduplicated)
             existing_sources = set(kg_results.get("sources", []))
             for src in hybrid_results.get("sources", []):
@@ -992,11 +1013,12 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         # Extract entities - handle flexible column names (name, e.name, entity, etc.)
         name_cols = [c for c in df.columns if "name" in c.lower() or "entity" in c.lower()]
         if name_cols:
+            type_cols = [c for c in df.columns if "type" in c.lower()]
+            type_col = type_cols[0] if type_cols else None
             for _, row in df.iterrows():
                 name = row.get(name_cols[0])
                 if name and isinstance(name, str):
-                    type_cols = [c for c in df.columns if "type" in c.lower()]
-                    entity_type = row.get(type_cols[0], "unknown") if type_cols else "unknown"
+                    entity_type = row.get(type_col, "unknown") if type_col else "unknown"
                     structured["entities"].append({"name": name, "type": entity_type})
 
         # Extract facts from content, fact, or relation columns
@@ -1147,6 +1169,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         vector_weight: float = 0.5,
         graph_weight: float = 0.3,
         keyword_weight: float = 0.2,
+        _precomputed_vector: list[dict] | None = None,
     ) -> dict[str, Any]:
         """Combine vector, graph, and keyword retrieval for richer results.
 
@@ -1156,21 +1179,28 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             vector_weight: Weight for vector similarity signal (0-1).
             graph_weight: Weight for graph proximity signal (0-1).
             keyword_weight: Weight for keyword match signal (0-1).
+            _precomputed_vector: Pre-computed semantic_search results to avoid a
+                duplicate DB call when the caller already ran vector retrieval.
+                Pass None to let this method run its own search.
 
         Returns:
             KG results dict with sources, entities, facts, raw.
         """
         scored: dict[str, float] = {}
 
-        # Signal 1: Vector search (semantic similarity via existing semantic_search)
-        try:
-            vector_results = self.semantic_search(question, top_k=max_results)
-            for r in vector_results:
-                title = r.get("article", r.get("title", ""))
-                if title:
-                    scored[title] = scored.get(title, 0) + vector_weight * r.get("similarity", 0.5)
-        except Exception as e:
-            logger.warning(f"Vector search failed in hybrid retrieve: {e}")
+        # Signal 1: Vector search — reuse caller's results when available
+        if _precomputed_vector is not None:
+            vector_results = _precomputed_vector
+        else:
+            try:
+                vector_results = self.semantic_search(question, top_k=max_results)
+            except Exception as e:
+                logger.warning(f"Vector search failed in hybrid retrieve: {e}")
+                vector_results = []
+        for r in vector_results:
+            title = r.get("article", r.get("title", ""))
+            if title:
+                scored[title] = scored.get(title, 0) + vector_weight * r.get("similarity", 0.5)
 
         # Signal 2: Graph traversal (follow LINKS_TO from vector hits)
         seed_titles = list(scored.keys())[:3]
@@ -1182,8 +1212,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 log_context=f"hybrid graph traversal for '{seed}'",
             )
             if df is not None:
-                for _, row in df.iterrows():
-                    title = row["title"]
+                for title in df["title"].tolist():
                     if title:
                         scored[title] = scored.get(title, 0) + graph_weight * 0.5
 
@@ -1197,8 +1226,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 log_context=f"hybrid keyword search for '{kw}'",
             )
             if df is not None:
-                for _, row in df.iterrows():
-                    title = row["title"]
+                for title in df["title"].tolist():
                     if title:
                         scored[title] = scored.get(title, 0) + keyword_weight * 0.7
 
@@ -1249,14 +1277,12 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             log_context="fetch source sections",
         )
         if df is not None:
+            from wikigr.packs.content_cleaner import clean_content
+
             # Group sections by article, concatenate content
             by_article: dict[str, list[str]] = {}
-            for _, row in df.iterrows():
-                title = row.get("title", "")
-                sect_content = row.get("content", "")
+            for title, sect_content in zip(df["title"].tolist(), df["content"].tolist()):
                 if title and sect_content:
-                    from wikigr.packs.content_cleaner import clean_content
-
                     by_article.setdefault(title, []).append(clean_content(sect_content))
 
             for title in titles:
@@ -1277,9 +1303,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 log_context="fetch source article content fallback",
             )
             if df is not None:
-                for _, row in df.iterrows():
-                    title = row.get("title", "")
-                    content = row.get("content", "")
+                for title, content in zip(df["title"].tolist(), df["content"].tolist()):
                     if title and content:
                         truncated = content[: self.MAX_ARTICLE_CHARS] + (
                             "..." if len(content) > self.MAX_ARTICLE_CHARS else ""
@@ -1359,6 +1383,29 @@ Retrieved Knowledge Graph Content:
 {context}
 
 Provide a clear, accurate, comprehensive answer. Cite source articles when you use retrieved content."""
+
+    def _synthesize_answer_minimal(self, question: str) -> str:
+        """Synthesize answer using Claude's own knowledge when pack has no relevant content."""
+        prompt = (
+            "The knowledge pack for this query contained no relevant content. "
+            "Answer the following question using your own expertise:\n\n"
+            f"Question: {question}"
+        )
+        try:
+            response = self.claude.messages.create(
+                model=self.synthesis_model,
+                max_tokens=self.SYNTHESIS_MAX_TOKENS,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            self._track_response(response)
+        except Exception as e:
+            logger.warning(f"Claude API error in _synthesize_answer_minimal: {e}")
+            return "Unable to answer: API error."
+
+        if not response.content:
+            return "Unable to synthesize answer: empty response from Claude."
+
+        return response.content[0].text
 
     def _synthesize_answer(
         self,
@@ -1561,13 +1608,12 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
         if df.empty:
             return []
 
-        # Aggregate by article, keeping best-matching section content
+        # Aggregate by article, keeping best-matching section content.
+        # Iterate column lists directly — faster than df.iterrows() which boxes each row.
         articles = {}
-        for _, row in df.iterrows():
-            node = row["node"]
+        for node, distance in zip(df["node"].tolist(), df["distance"].tolist()):
             section_id = node.get("section_id", "")
             article_title = section_id.split("#")[0]
-            distance = row["distance"]
             content = node.get("content", "")
 
             if article_title not in articles or distance < articles[article_title]["distance"]:

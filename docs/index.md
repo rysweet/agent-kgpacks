@@ -27,6 +27,7 @@ Task-oriented guides for specific problems:
 
 - [Phase 1 Pack Enhancements](./howto/phase1-enhancements.md) - Use retrieval enhancements to improve pack accuracy from 50% to 70-75%
 - [Vector Search as Primary Retrieval](./howto/vector-search-primary-retrieval.md) - Phase 3 retrieval pipeline with vector-first search, sparse graph detection, and A/B testing flags
+- [Confidence-Gated Context Injection](./howto/confidence-gated-context-injection.md) - Skip irrelevant pack context when vector similarity is low, letting Claude answer from its own expertise
 - [Generating Evaluation Questions](./howto/generating-evaluation-questions.md) - Generate Q&A pairs for new packs and run all-packs accuracy evaluation
 - [Improving .NET Pack Content Quality](./howto/dotnet-content-quality.md) - Audit article content, fix hallucinated URLs, set minimum content threshold
 - [How to Configure LLM Extraction](./howto/configure-llm-extraction.md) - Control entity and relationship extraction parameters

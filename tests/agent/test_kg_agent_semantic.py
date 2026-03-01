@@ -311,7 +311,7 @@ class TestVectorPrimaryRetrieval:
         assert result["query_type"] == "vector_search"
 
     def test_query_never_calls_llm_cypher(self, agent):
-        """query() never calls _plan_query — vector-only retrieval (Experiment 2)."""
+        """query() never calls _plan_query; low similarity triggers confidence_gated_fallback."""
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
@@ -319,7 +319,7 @@ class TestVectorPrimaryRetrieval:
                 pd.DataFrame(
                     {
                         "node": [{"section_id": "Unrelated#intro"}],
-                        "distance": [0.9],
+                        "distance": [0.9],  # similarity = 0.1, below CONTEXT_CONFIDENCE_THRESHOLD
                     }
                 )
             ),
@@ -331,15 +331,14 @@ class TestVectorPrimaryRetrieval:
         with (
             patch.object(agent, "_plan_query") as mock_plan_fn,
             patch.object(agent, "_execute_query") as mock_exec_fn,
-            patch.object(agent, "_direct_title_lookup", return_value=[]),
-            patch.object(agent, "_hybrid_retrieve", return_value={"sources": [], "facts": []}),
         ):
             result = agent.query("obscure query")
 
         # LLM Cypher path is completely removed
         mock_plan_fn.assert_not_called()
         mock_exec_fn.assert_not_called()
-        assert result["query_type"] == "vector_search"
+        # Low similarity (0.1 < 0.5) triggers confidence gate — pack context skipped
+        assert result["query_type"] == "confidence_gated_fallback"
 
 
 # --------------------------------------------------------------------------
