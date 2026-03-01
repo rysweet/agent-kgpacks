@@ -12,7 +12,7 @@ import time
 from typing import Any
 
 import kuzu
-from anthropic import Anthropic
+from anthropic import Anthropic, APIConnectionError, APIStatusError, APITimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -35,11 +35,113 @@ class KnowledgeGraphAgent:
 
     # --- Extracted constants (avoid magic numbers) ---
     VECTOR_CONFIDENCE_THRESHOLD = 0.6
+    CONTEXT_CONFIDENCE_THRESHOLD = 0.5
     PLAN_CACHE_MAX_SIZE = 128
     MAX_ARTICLE_CHARS = 3000
     PLAN_MAX_TOKENS = 512
     SYNTHESIS_MAX_TOKENS = 1024
     SEED_EXTRACT_MAX_TOKENS = 256
+
+    # --- Content quality filtering ---
+    CONTENT_QUALITY_THRESHOLD = 0.3
+    STOP_WORDS: frozenset[str] = frozenset(
+        {
+            "a",
+            "an",
+            "the",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "shall",
+            "can",
+            "not",
+            "no",
+            "nor",
+            "so",
+            "yet",
+            "both",
+            "either",
+            "neither",
+            "as",
+            "if",
+            "then",
+            "than",
+            "that",
+            "this",
+            "these",
+            "those",
+            "it",
+            "its",
+            "i",
+            "we",
+            "you",
+            "he",
+            "she",
+            "they",
+            "me",
+            "us",
+            "him",
+            "her",
+            "them",
+            "my",
+            "our",
+            "your",
+            "his",
+            "their",
+            "what",
+            "which",
+            "who",
+            "whom",
+            "when",
+            "where",
+            "why",
+            "how",
+            "all",
+            "any",
+            "each",
+            "few",
+            "more",
+            "most",
+            "other",
+            "some",
+            "such",
+            "up",
+            "out",
+            "about",
+            "into",
+            "through",
+            "after",
+            "before",
+        }
+    )
 
     def __init__(
         self,
@@ -54,6 +156,7 @@ class KnowledgeGraphAgent:
         enable_cross_encoder: bool = False,
         synthesis_model: str | None = None,
         cypher_pack_path: str | None = None,
+        enable_multi_query: bool = False,
     ):
         """
         Initialize agent with database connection and Claude API.
@@ -71,6 +174,9 @@ class KnowledgeGraphAgent:
                 (default False — opt-in; only active when use_enhancements=True)
             synthesis_model: Claude model for all synthesis/planning (default: claude-opus-4-6)
             cypher_pack_path: Path to OpenCypher expert pack examples for RAG-augmented generation
+            enable_multi_query: Generate alternative query phrasings via Claude Haiku to improve recall.
+                **Data notice:** when True, user questions are sent to the Anthropic API for expansion.
+                Keep False for deployments with data-residency, PII, or offline constraints.
         """
         self.db = kuzu.Database(db_path, read_only=read_only)
         self.conn = kuzu.Connection(self.db)
@@ -84,6 +190,7 @@ class KnowledgeGraphAgent:
         self.enable_multidoc = enable_multidoc
         self.enable_fewshot = enable_fewshot
         self.enable_cross_encoder = enable_cross_encoder
+        self.enable_multi_query = enable_multi_query
 
         # Warn if enable_* flags are set but use_enhancements=False (they have no effect)
         if not use_enhancements and any(
@@ -243,6 +350,10 @@ class KnowledgeGraphAgent:
         Use this when the connection is managed externally (e.g., FastAPI dependency
         injection). All attributes are properly initialized, avoiding the fragile
         __new__() pattern.
+
+        **Data notice:** if you set ``agent.enable_multi_query = True`` after construction,
+        user questions will be sent to the Anthropic API for query expansion.  Keep the
+        default (``False``) for deployments with data-residency, PII, or offline constraints.
         """
         agent = cls.__new__(cls)
         agent.db = None
@@ -250,12 +361,13 @@ class KnowledgeGraphAgent:
         agent.claude = claude_client
         agent._embedding_generator = None
         agent._plan_cache = {}
-        agent.use_enhancements = True
+        agent.use_enhancements = False
         agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
         agent.enable_reranker = True
         agent.enable_multidoc = True
         agent.enable_fewshot = True
         agent.enable_cross_encoder = False
+        agent.enable_multi_query = False
         agent.synthesis_model = cls.DEFAULT_MODEL
         agent.reranker = None
         agent.synthesizer = None
@@ -344,6 +456,18 @@ class KnowledgeGraphAgent:
             logger.info(
                 f"Vector retrieval: {len(kg_results.get('sources', []))} sources (max_similarity={max_similarity:.3f})"
             )
+
+            # Confidence gate: skip all pack context injection when similarity is too low
+            if max_similarity < self.CONTEXT_CONFIDENCE_THRESHOLD:
+                return {
+                    "answer": self._synthesize_answer_minimal(question),
+                    "sources": [],
+                    "entities": [],
+                    "facts": [],
+                    "cypher_query": query_plan["cypher"],
+                    "query_type": "confidence_gated_fallback",
+                    "token_usage": dict(self.token_usage),
+                }
         else:
             # Vector search failed entirely — use empty results (hybrid will fill in)
             kg_results = {"sources": [], "entities": [], "facts": [], "raw": []}
@@ -366,9 +490,17 @@ class KnowledgeGraphAgent:
         except Exception as e:
             logger.debug(f"Direct title lookup failed: {e}")
 
-        # ALWAYS augment with hybrid retrieval (no skip for any query type)
+        # ALWAYS augment with hybrid retrieval (no skip for any query type).
+        # Pass precomputed vector results to avoid a duplicate semantic_search call.
+        _precomputed = (
+            [{"title": r["title"], "similarity": r["score"]} for r in kg_results.get("raw", [])]
+            if vector_kg_results is not None
+            else None
+        )
         try:
-            hybrid_results = self._hybrid_retrieve(question, max_results)
+            hybrid_results = self._hybrid_retrieve(
+                question, max_results, _precomputed_vector=_precomputed
+            )
             # Merge hybrid sources into KG results (deduplicated)
             existing_sources = set(kg_results.get("sources", []))
             for src in hybrid_results.get("sources", []):
@@ -1007,11 +1139,12 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         # Extract entities - handle flexible column names (name, e.name, entity, etc.)
         name_cols = [c for c in df.columns if "name" in c.lower() or "entity" in c.lower()]
         if name_cols:
+            type_cols = [c for c in df.columns if "type" in c.lower()]
+            type_col = type_cols[0] if type_cols else None
             for _, row in df.iterrows():
                 name = row.get(name_cols[0])
                 if name and isinstance(name, str):
-                    type_cols = [c for c in df.columns if "type" in c.lower()]
-                    entity_type = row.get(type_cols[0], "unknown") if type_cols else "unknown"
+                    entity_type = row.get(type_col, "unknown") if type_col else "unknown"
                     structured["entities"].append({"name": name, "type": entity_type})
 
         # Extract facts from content, fact, or relation columns
@@ -1117,6 +1250,93 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
 
         return candidates[:3]
 
+    def _multi_query_retrieve(self, question: str, max_results: int = 5) -> list[dict]:
+        """Retrieve results using original question plus 2 alternative phrasings.
+
+        Generates 2 alternative phrasings via Claude Haiku, runs semantic_search
+        for all 3 queries, then deduplicates by title keeping the highest similarity
+        score, and returns results sorted descending by similarity.
+
+        Args:
+            question: Original natural language question.
+            max_results: Maximum results per query (deduplication reduces final count).
+
+        Returns:
+            Deduplicated list of result dicts sorted by similarity descending.
+        """
+        # Clamp max_results to a safe range to prevent silent failure or excessive DB load
+        max_results = max(1, min(max_results, 20))
+
+        # Generate 2 alternative phrasings via Claude Haiku
+        # NOTE: question is truncated before embedding to limit prompt injection surface.
+        # When enable_multi_query=True the (truncated) question is sent to the Anthropic API.
+        question_truncated = question[:500]
+        alternatives: list[str] = []
+        try:
+            expansion_response = self.claude.messages.create(
+                model="claude-haiku-4-5-20251001",
+                max_tokens=256,
+                timeout=10.0,  # fail fast — fall back to original query if expansion is slow
+                messages=[
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Generate exactly 2 alternative phrasings of this question for semantic search. "
+                            f"Return a JSON array of 2 strings and nothing else.\n\nQuestion: {question_truncated}"
+                        ),
+                    }
+                ],
+            )
+            self._track_response(expansion_response)
+            raw = expansion_response.content[0].text.strip() if expansion_response.content else "[]"
+            # Strip markdown code fences if present
+            if "```json" in raw:
+                raw = raw.split("```json")[1].split("```")[0].strip()
+            elif raw.startswith("```"):
+                raw = raw.split("```")[1].split("```")[0].strip()
+            parsed = json.loads(raw)
+            if isinstance(parsed, list):
+                alternatives = [str(p)[:300] for p in parsed[:2]]
+        except APITimeoutError:
+            logger.warning("Multi-query expansion timed out; falling back to original query")
+        except APIConnectionError as e:
+            logger.warning(
+                f"Multi-query expansion connection error: {e}; falling back to original query"
+            )
+        except APIStatusError as e:
+            # 429 = rate-limited (transient); 4xx auth/bad-request errors are permanent
+            if e.status_code == 429:
+                logger.warning("Multi-query expansion rate-limited; falling back to original query")
+            else:
+                logger.warning(
+                    f"Multi-query expansion API error (status={e.status_code}); falling back to original query"
+                )
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning(f"Multi-query expansion returned invalid JSON: {e}")
+
+        # Gather results from all queries (original + alternatives)
+        all_queries = [question] + alternatives
+        merged: dict[str, dict] = {}  # title -> best result dict
+
+        for query in all_queries:
+            try:
+                results = self.semantic_search(query, top_k=max_results)
+                for result in results:
+                    title = result.get("title", "")
+                    if not title:
+                        continue
+                    existing = merged.get(title)
+                    if existing is None or result.get("similarity", 0.0) > existing.get(
+                        "similarity", 0.0
+                    ):
+                        merged[title] = result
+            except Exception as e:
+                logger.warning(
+                    f"Multi-query search failed for query '{query[:100]}{'...' if len(query) > 100 else ''}': {e}"
+                )
+
+        return sorted(merged.values(), key=lambda r: r.get("similarity", 0.0), reverse=True)
+
     def _vector_primary_retrieve(
         self, question: str, max_results: int
     ) -> tuple[dict | None, float]:
@@ -1131,10 +1351,14 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             max_similarity is the highest cosine similarity among results (0.0–1.0).
         """
         try:
+            # Determine candidate count: fetch more if cross-encoder will filter
             candidate_k = (
                 min(max_results * 2, 40) if self.cross_encoder is not None else max_results
             )
-            vector_results = self.semantic_search(question, top_k=candidate_k)
+            if self.enable_multi_query:
+                vector_results = self._multi_query_retrieve(question, max_results=candidate_k)
+            else:
+                vector_results = self.semantic_search(question, top_k=candidate_k)
             if not vector_results:
                 return None, 0.0
 
@@ -1175,6 +1399,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         vector_weight: float = 0.5,
         graph_weight: float = 0.3,
         keyword_weight: float = 0.2,
+        _precomputed_vector: list[dict] | None = None,
     ) -> dict[str, Any]:
         """Combine vector, graph, and keyword retrieval for richer results.
 
@@ -1184,21 +1409,28 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             vector_weight: Weight for vector similarity signal (0-1).
             graph_weight: Weight for graph proximity signal (0-1).
             keyword_weight: Weight for keyword match signal (0-1).
+            _precomputed_vector: Pre-computed semantic_search results to avoid a
+                duplicate DB call when the caller already ran vector retrieval.
+                Pass None to let this method run its own search.
 
         Returns:
             KG results dict with sources, entities, facts, raw.
         """
         scored: dict[str, float] = {}
 
-        # Signal 1: Vector search (semantic similarity via existing semantic_search)
-        try:
-            vector_results = self.semantic_search(question, top_k=max_results)
-            for r in vector_results:
-                title = r.get("article", r.get("title", ""))
-                if title:
-                    scored[title] = scored.get(title, 0) + vector_weight * r.get("similarity", 0.5)
-        except Exception as e:
-            logger.warning(f"Vector search failed in hybrid retrieve: {e}")
+        # Signal 1: Vector search — reuse caller's results when available
+        if _precomputed_vector is not None:
+            vector_results = _precomputed_vector
+        else:
+            try:
+                vector_results = self.semantic_search(question, top_k=max_results)
+            except Exception as e:
+                logger.warning(f"Vector search failed in hybrid retrieve: {e}")
+                vector_results = []
+        for r in vector_results:
+            title = r.get("article", r.get("title", ""))
+            if title:
+                scored[title] = scored.get(title, 0) + vector_weight * r.get("similarity", 0.5)
 
         # Signal 2: Graph traversal (follow LINKS_TO from vector hits)
         seed_titles = list(scored.keys())[:3]
@@ -1210,8 +1442,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 log_context=f"hybrid graph traversal for '{seed}'",
             )
             if df is not None:
-                for _, row in df.iterrows():
-                    title = row["title"]
+                for title in df["title"].tolist():
                     if title:
                         scored[title] = scored.get(title, 0) + graph_weight * 0.5
 
@@ -1225,8 +1456,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 log_context=f"hybrid keyword search for '{kw}'",
             )
             if df is not None:
-                for _, row in df.iterrows():
-                    title = row["title"]
+                for title in df["title"].tolist():
                     if title:
                         scored[title] = scored.get(title, 0) + keyword_weight * 0.7
 
@@ -1234,17 +1464,18 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         ranked = sorted(scored.items(), key=lambda x: x[1], reverse=True)[:max_results]
         source_titles = [title for title, _score in ranked]
 
-        # Fetch facts for top sources
+        # Fetch facts for top sources in a single batched query (vs N per-title queries)
         facts: list[str] = []
-        for title in source_titles[:5]:
+        if source_titles:
             df = self._safe_query(
-                "MATCH (a:Article {title: $title})-[:HAS_FACT]->(f:Fact) "
-                "RETURN f.content AS content LIMIT 3",
-                {"title": title},
-                log_context=f"hybrid facts for '{title}'",
+                "MATCH (a:Article)-[:HAS_FACT]->(f:Fact) "
+                "WHERE a.title IN $titles "
+                "RETURN f.content AS content LIMIT 15",
+                {"titles": source_titles[:5]},
+                log_context="hybrid facts batch",
             )
             if df is not None and "content" in df.columns:
-                facts.extend(df["content"].dropna().tolist())
+                facts = df["content"].dropna().tolist()
 
         return {
             "sources": source_titles,
@@ -1253,12 +1484,63 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             "raw": [{"title": t, "score": s} for t, s in ranked[:10]],
         }
 
-    def _fetch_source_text(self, source_titles: list[str], max_articles: int = 5) -> str:
+    def _score_section_quality(
+        self,
+        content: str,
+        question: str,
+        *,
+        _q_keywords: frozenset[str] | None = None,
+    ) -> float:
+        """Score a section's quality for inclusion in synthesis context.
+
+        Args:
+            content: Section text content.
+            question: User question (used for keyword overlap scoring).
+            _q_keywords: Pre-computed question keywords (frozenset). When
+                supplied by the caller (e.g. from a batch loop), this avoids
+                re-splitting and re-filtering the question on every invocation.
+
+        Returns:
+            Quality score in [0.0, 1.0]. Returns 0.0 for stubs under 20 words.
+        """
+        words = content.split()
+        word_count = len(words)
+        if word_count < 20:
+            return 0.0
+
+        # Length score: maps word_count to [0.2, 0.8]
+        # 200+ words → 0.8; scales linearly below that
+        length_score = min(0.8, 0.2 + (word_count / 200) * 0.6)
+
+        # Keyword overlap: question keywords (excluding stop words) found in content
+        question_keywords = (
+            _q_keywords
+            if _q_keywords is not None
+            else frozenset(lw for w in question.split() if (lw := w.lower()) not in self.STOP_WORDS)
+        )
+        if question_keywords:
+            content_words_lower = {w.lower() for w in words}
+            overlap = len(question_keywords & content_words_lower) / len(question_keywords)
+            keyword_score = overlap * 0.2
+        else:
+            keyword_score = 0.0
+
+        return min(1.0, length_score + keyword_score)
+
+    def _fetch_source_text(
+        self,
+        source_titles: list[str],
+        max_articles: int = 5,
+        question: str | None = None,
+    ) -> str:
         """Fetch section text for source articles (batched, single query).
 
         Retrieves ALL section content for each source article, concatenated,
         providing Claude with rich source text for grounded synthesis.
         Falls back to article-level content if sections aren't available.
+
+        When ``question`` is provided, sections below CONTENT_QUALITY_THRESHOLD
+        are filtered out before inclusion.
         """
         self._check_open()
         titles = source_titles[:max_articles]
@@ -1277,15 +1559,28 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
             log_context="fetch source sections",
         )
         if df is not None:
+            from wikigr.packs.content_cleaner import clean_content
+
+            # Pre-compute question keywords once for all section comparisons
+            # (avoids re-splitting + re-filtering the question string per row)
+            q_keywords: frozenset[str] | None = None
+            if question is not None:
+                q_keywords = frozenset(
+                    lw for w in question.split() if (lw := w.lower()) not in self.STOP_WORDS
+                )
+
             # Group sections by article, concatenate content
             by_article: dict[str, list[str]] = {}
-            for _, row in df.iterrows():
-                title = row.get("title", "")
-                sect_content = row.get("content", "")
+            for title, sect_content in zip(df["title"].tolist(), df["content"].tolist()):
                 if title and sect_content:
-                    from wikigr.packs.content_cleaner import clean_content
-
-                    by_article.setdefault(title, []).append(clean_content(sect_content))
+                    cleaned = clean_content(sect_content)
+                    # Filter low-quality sections when question is provided
+                    if q_keywords is not None and (
+                        self._score_section_quality(cleaned, question, _q_keywords=q_keywords)
+                        < self.CONTENT_QUALITY_THRESHOLD
+                    ):
+                        continue
+                    by_article.setdefault(title, []).append(cleaned)
 
             for title in titles:
                 sections = by_article.get(title, [])
@@ -1305,9 +1600,7 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 log_context="fetch source article content fallback",
             )
             if df is not None:
-                for _, row in df.iterrows():
-                    title = row.get("title", "")
-                    content = row.get("content", "")
+                for title, content in zip(df["title"].tolist(), df["content"].tolist()):
                     if title and content:
                         truncated = content[: self.MAX_ARTICLE_CHARS] + (
                             "..." if len(content) > self.MAX_ARTICLE_CHARS else ""
@@ -1331,8 +1624,8 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         """
         sources = kg_results.get("sources", [])[:5]
 
-        # Fetch original article text for grounded synthesis
-        source_text = self._fetch_source_text(sources)
+        # Fetch original article text for grounded synthesis (with quality filtering)
+        source_text = self._fetch_source_text(sources, question=question)
 
         # Build few-shot examples section if provided
         few_shot_section = ""
@@ -1387,6 +1680,29 @@ Retrieved Knowledge Graph Content:
 {context}
 
 Provide a clear, accurate, comprehensive answer. Cite source articles when you use retrieved content."""
+
+    def _synthesize_answer_minimal(self, question: str) -> str:
+        """Synthesize answer using Claude's own knowledge when pack has no relevant content."""
+        prompt = (
+            "The knowledge pack for this query contained no relevant content. "
+            "Answer the following question using your own expertise:\n\n"
+            f"Question: {question}"
+        )
+        try:
+            response = self.claude.messages.create(
+                model=self.synthesis_model,
+                max_tokens=self.SYNTHESIS_MAX_TOKENS,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            self._track_response(response)
+        except Exception as e:
+            logger.warning(f"Claude API error in _synthesize_answer_minimal: {e}")
+            return "Unable to answer: API error."
+
+        if not response.content:
+            return "Unable to synthesize answer: empty response from Claude."
+
+        return response.content[0].text
 
     def _synthesize_answer(
         self,
@@ -1589,13 +1905,12 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
         if df.empty:
             return []
 
-        # Aggregate by article, keeping best-matching section content
+        # Aggregate by article, keeping best-matching section content.
+        # Iterate column lists directly — faster than df.iterrows() which boxes each row.
         articles = {}
-        for _, row in df.iterrows():
-            node = row["node"]
+        for node, distance in zip(df["node"].tolist(), df["distance"].tolist()):
             section_id = node.get("section_id", "")
             article_title = section_id.split("#")[0]
-            distance = row["distance"]
             content = node.get("content", "")
 
             if article_title not in articles or distance < articles[article_title]["distance"]:

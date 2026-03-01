@@ -5,7 +5,7 @@ Build OpenAI API Expert Knowledge Pack from URLs.
 Reads OpenAI API documentation URLs from urls.txt and builds a complete
 knowledge graph with LLM-based extraction using the web content pipeline.
 
-Expected runtime: 2-4 hours (~38 URLs with LLM extraction)
+Expected runtime: 2-4 hours (45 URLs with LLM extraction)
 Estimated cost: ~$5-10 (Haiku at ~$0.25/1M input tokens)
 
 Usage:
@@ -54,9 +54,11 @@ logger = logging.getLogger(__name__)
 def load_urls(urls_file: Path, limit: int | None = None) -> list[str]:
     with open(urls_file) as f:
         urls = [
-            line.strip()
+            stripped
             for line in f
-            if line.strip() and not line.strip().startswith("#") and line.strip().startswith("http")
+            if (stripped := line.strip())
+            and not stripped.startswith("#")
+            and stripped.startswith("https://")
         ]
     if limit:
         urls = urls[:limit]

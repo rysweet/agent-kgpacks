@@ -8,7 +8,7 @@ Guide to using the improved retrieval pipeline that uses semantic vector search 
 
 **Before (Phase 2)**: LLM-generated Cypher was the primary retrieval. Generated bad Cypher for ~30% of questions.
 
-**After (Phase 3)**: Vector search on `Section.embedding` is primary. LLM Cypher is a fallback only when vector similarity is low (< 0.6).
+**After (Phase 3)**: Vector search on `Section.embedding` is the primary and only retrieval path. When vector search returns results, a confidence gate checks `max_similarity` before injecting pack context. When vector search returns no results, hybrid retrieval fills in.
 
 **Impact**: Reduces the "no relevant articles found" failure rate from ~30% to ~5%.
 
@@ -26,7 +26,8 @@ agent = KnowledgeGraphAgent(
 
 result = agent.query("What is Bernoulli's principle?")
 print(result["answer"])
-print(f"Retrieved via: {result.get('query_type')}")  # "vector_search" or "llm_cypher_fallback"
+# query_type is one of: "vector_search", "confidence_gated_fallback", "vector_fallback"
+print(f"Retrieved via: {result.get('query_type')}")
 ```
 
 ### Sparse Graph Detection (Rust Pack Fix)
@@ -85,17 +86,21 @@ Question
    ▼
 Vector Search (primary)
    │  CALL QUERY_VECTOR_INDEX('Section', 'embedding_idx', $query, K)
-   │  → max_similarity
+   │  → (results, max_similarity)
    │
-   ├─ similarity >= 0.6 → use vector results
+   ├─ results found
+   │    ├─ max_similarity >= 0.5 → inject KG context → full pipeline → answer
+   │    │                          (title lookup + hybrid retrieval + enhancements + synthesis)
+   │    └─ max_similarity < 0.5  → confidence gate → minimal synthesis → answer
+   │                               (Claude answers from own knowledge, no KG sections)
    │
-   └─ similarity < 0.6 → LLM Cypher fallback
+   └─ no results → vector_fallback
          │
          ▼
-     Claude generates Cypher → execute → results
+   Hybrid retrieval fills in (keyword + graph signals)
          │
          ▼
-   Adaptive RRF (if use_enhancements=True)
+   Enhancements (if use_enhancements=True)
    │  ├─ Graph centrality (disabled if avg_links < 2.0)
    │  ├─ Multi-doc expansion
    │  └─ Few-shot examples
@@ -103,6 +108,8 @@ Vector Search (primary)
          ▼
    Claude synthesis → answer
 ```
+
+> **Confidence gate**: Even when vector search returns results, if `max_similarity < 0.5` the agent skips all pack context and calls `_synthesize_answer_minimal()` instead. This prevents low-relevance KG sections from misleading Claude on questions outside the pack's domain. See [Confidence-Gated Context Injection](confidence-gated-context-injection.md).
 
 ## When to Use Which Mode
 
@@ -114,6 +121,7 @@ Vector Search (primary)
 
 ## See Also
 
+- [Confidence-Gated Context Injection](confidence-gated-context-injection.md) — how `CONTEXT_CONFIDENCE_THRESHOLD` prevents low-relevance KG sections from being injected
 - [Phase 1 Enhancements](phase1-enhancements.md) — GraphReranker, MultiDocSynthesizer, FewShotManager
 - [Evaluation Scripts](../reference/evaluation-scripts.md) — how to run evaluations
 - [Pack Content Quality](dotnet-content-quality.md) — improving .NET pack accuracy

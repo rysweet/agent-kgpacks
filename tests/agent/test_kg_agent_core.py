@@ -41,7 +41,6 @@ def _make_agent() -> KnowledgeGraphAgent:
     agent.reranker = None
     agent.synthesizer = None
     agent.few_shot = None
-    agent.cross_encoder = None
     return agent
 
 
@@ -521,67 +520,119 @@ class TestHybridRetrieve:
 
 
 # ===================================================================
-# Security hardening: candidate_k cap in _vector_primary_retrieve
+# 7. Confidence-gated context injection
 # ===================================================================
 
 
-class TestVectorPrimaryRetrieveCandidateCap:
-    """candidate_k is capped at 40 when cross_encoder is active.
+class TestConfidenceGatedContextInjection:
+    """query() skips pack context and uses minimal synthesis when vector similarity < 0.5."""
 
-    Without a hard cap, large max_results values (e.g. 30) double to 60 forward
-    passes through the cross-encoder (~3s of CPU inference — resource-exhaustion
-    risk if the caller controls max_results).
-    """
-
-    def test_candidate_k_capped_at_40_when_max_results_is_large(self) -> None:
-        """With max_results=30 and cross_encoder active, semantic_search gets top_k=40 not 60."""
+    def test_low_similarity_triggers_confidence_gated_fallback(self) -> None:
+        """max_similarity < 0.5 → confidence gate fires, _synthesize_answer_minimal called."""
         agent = _make_agent()
-        # Attach a live (mocked) cross_encoder so the 2x branch activates
-        mock_ce = MagicMock()
-        mock_ce.rerank.side_effect = lambda _query, results, top_k: results[:top_k]
-        agent.cross_encoder = mock_ce
+        agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
 
-        captured_top_k: list[int] = []
+        low_sim_results = {"sources": ["Unrelated"], "entities": [], "facts": [], "raw": []}
 
-        def _fake_semantic_search(question: str, top_k: int = 5):
-            captured_top_k.append(top_k)
-            return [
-                {"title": f"Article {i}", "content": f"Content {i}", "similarity": 0.8}
-                for i in range(top_k)
-            ]
+        with (
+            patch.object(agent, "_vector_primary_retrieve", return_value=(low_sim_results, 0.1)),
+            patch.object(
+                agent, "_synthesize_answer_minimal", return_value="fallback answer"
+            ) as mock_minimal,
+            patch.object(agent, "_synthesize_answer") as mock_synth,
+        ):
+            result = agent.query("What is Python?")
 
-        with patch.object(agent, "semantic_search", side_effect=_fake_semantic_search):
-            # _vector_primary_retrieve is private — call it directly
-            agent._vector_primary_retrieve("test question", max_results=30)
+        assert result["query_type"] == "confidence_gated_fallback"
+        assert result["answer"] == "fallback answer"
+        assert result["sources"] == []
+        assert result["entities"] == []
+        assert result["facts"] == []
+        mock_minimal.assert_called_once_with("What is Python?")
+        mock_synth.assert_not_called()
 
-        assert len(captured_top_k) == 1
-        assert captured_top_k[0] <= 40, (
-            f"semantic_search was called with top_k={captured_top_k[0]}, "
-            "expected <= 40. Add candidate_k = min(max_results * 2, 40) cap "
-            "in _vector_primary_retrieve()."
-        )
-
-    def test_candidate_k_not_capped_when_max_results_is_small(self) -> None:
-        """With max_results=5 and cross_encoder active, semantic_search gets top_k=10 (2x, within cap)."""
+    def test_high_similarity_runs_normal_pipeline(self) -> None:
+        """max_similarity >= 0.5 → normal pipeline, _synthesize_answer called."""
         agent = _make_agent()
-        mock_ce = MagicMock()
-        mock_ce.rerank.side_effect = lambda _query, results, top_k: results[:top_k]
-        agent.cross_encoder = mock_ce
+        agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
 
-        captured_top_k: list[int] = []
+        high_sim_results = {"sources": ["Python"], "entities": [], "facts": [], "raw": []}
 
-        def _fake_semantic_search(question: str, top_k: int = 5):
-            captured_top_k.append(top_k)
-            return [
-                {"title": f"Article {i}", "content": f"Content {i}", "similarity": 0.8}
-                for i in range(top_k)
-            ]
+        with (
+            patch.object(agent, "_vector_primary_retrieve", return_value=(high_sim_results, 0.8)),
+            patch.object(agent, "_direct_title_lookup", return_value=[]),
+            patch.object(agent, "_hybrid_retrieve", return_value={"sources": [], "facts": []}),
+            patch.object(
+                agent, "_synthesize_answer", return_value="synthesized answer"
+            ) as mock_synth,
+            patch.object(agent, "_synthesize_answer_minimal") as mock_minimal,
+        ):
+            result = agent.query("What is Python?")
 
-        with patch.object(agent, "semantic_search", side_effect=_fake_semantic_search):
-            agent._vector_primary_retrieve("test question", max_results=5)
+        assert result["query_type"] == "vector_search"
+        assert result["answer"] == "synthesized answer"
+        mock_synth.assert_called_once()
+        mock_minimal.assert_not_called()
 
-        assert len(captured_top_k) == 1
-        # 5 * 2 = 10, which is within the 40 cap — should be 10
-        assert (
-            captured_top_k[0] == 10
-        ), f"Expected semantic_search called with top_k=10 (5*2), got {captured_top_k[0]}."
+    def test_synthesize_answer_minimal_calls_claude_without_kg_context(self) -> None:
+        """_synthesize_answer_minimal passes only the question to Claude — no KG sections."""
+        agent = _make_agent()
+
+        mock_response = MagicMock()
+        mock_response.content = [MagicMock(text="My own answer")]
+        mock_response.usage = MagicMock(input_tokens=10, output_tokens=5)
+        agent.claude.messages.create.return_value = mock_response
+
+        result = agent._synthesize_answer_minimal("What is recursion?")
+
+        assert result == "My own answer"
+
+        create_call = agent.claude.messages.create.call_args
+        content = create_call.kwargs["messages"][0]["content"]
+        assert "What is recursion?" in content
+        assert "no relevant content" in content
+
+        assert agent.token_usage["api_calls"] == 1
+        assert agent.token_usage["input_tokens"] == 10
+        assert agent.token_usage["output_tokens"] == 5
+
+    def test_synthesize_answer_minimal_api_error_returns_fallback_string(self) -> None:
+        """On API error, _synthesize_answer_minimal returns the fallback string and does not raise."""
+        agent = _make_agent()
+        agent.claude.messages.create.side_effect = Exception("API failure")
+
+        result = agent._synthesize_answer_minimal("What is recursion?")
+
+        assert result == "Unable to answer: API error."
+
+    def test_exact_threshold_similarity_does_not_trigger_gate(self) -> None:
+        """max_similarity == 0.5 is NOT < threshold — gate must not fire."""
+        agent = _make_agent()
+        agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
+
+        boundary_results = {"sources": ["Source"], "entities": [], "facts": [], "raw": []}
+
+        with (
+            patch.object(agent, "_vector_primary_retrieve", return_value=(boundary_results, 0.5)),
+            patch.object(agent, "_direct_title_lookup", return_value=[]),
+            patch.object(agent, "_hybrid_retrieve", return_value={"sources": [], "facts": []}),
+            patch.object(agent, "_synthesize_answer", return_value="normal answer"),
+            patch.object(agent, "_synthesize_answer_minimal") as mock_minimal,
+        ):
+            result = agent.query("What is Python?")
+
+        assert result["query_type"] != "confidence_gated_fallback"
+        mock_minimal.assert_not_called()
+
+    def test_synthesize_answer_minimal_empty_response_returns_fallback_string(self) -> None:
+        """Empty content list from Claude returns the empty-response fallback string."""
+        agent = _make_agent()
+
+        mock_response = MagicMock()
+        mock_response.content = []
+        mock_response.usage = MagicMock(input_tokens=5, output_tokens=0)
+        agent.claude.messages.create.return_value = mock_response
+
+        result = agent._synthesize_answer_minimal("What is entropy?")
+
+        assert result == "Unable to synthesize answer: empty response from Claude."

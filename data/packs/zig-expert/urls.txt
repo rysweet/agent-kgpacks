@@ -1,5 +1,5 @@
 # Zig Expert Knowledge Pack - Source URLs
-# Total: 40 URLs from official Zig documentation and community resources
+# Total: 47 URLs from official Zig documentation and community resources
 # Focus: Zig 0.13+ (comptime, error unions, allocators, build system, safety, interop with C)
 
 # ============================================================================
@@ -75,3 +75,32 @@ https://ziglang.org/download/0.12.0/release-notes.html
 
 https://ziglang.org/documentation/0.13.0/std/
 https://ziglang.org/documentation/0.14.0/std/
+
+# ============================================================================
+# GITHUB REPOSITORY
+# ============================================================================
+
+https://github.com/ziglang/zig
+
+# ============================================================================
+# COMMUNITY RESOURCES
+# ============================================================================
+
+https://ziglearn.org/
+
+# ============================================================================
+# ZIG.GUIDE - Additional Standard Library Sections
+# ============================================================================
+
+https://zig.guide/standard-library/hashmaps/
+https://zig.guide/standard-library/threads/
+https://zig.guide/standard-library/readers-and-writers/
+https://zig.guide/standard-library/json/
+
+# ============================================================================
+# ZIGLANG.ORG - Additional Learning Resources
+# ============================================================================
+
+https://ziglang.org/learn/
+https://ziglang.org/learn/build-system/
+https://ziglang.org/learn/why_zig_rust_d_cpp/
