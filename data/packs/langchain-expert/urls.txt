@@ -53,3 +53,46 @@ https://docs.smith.langchain.com/
 
 # LangChain Hub
 https://smith.langchain.com/hub
+
+# How-To Guides - Additional Sub-Pages
+https://python.langchain.com/docs/how_to/custom_tools/
+https://python.langchain.com/docs/how_to/agent_executor/
+https://python.langchain.com/docs/how_to/multi_vector/
+https://python.langchain.com/docs/how_to/parent_document_retriever/
+https://python.langchain.com/docs/how_to/qa_sources/
+https://python.langchain.com/docs/how_to/qa_per_user/
+https://python.langchain.com/docs/how_to/document_loader_csv/
+https://python.langchain.com/docs/how_to/document_loader_pdf/
+https://python.langchain.com/docs/how_to/recursive_text_splitter/
+https://python.langchain.com/docs/how_to/output_parser_json/
+https://python.langchain.com/docs/how_to/output_parser_xml/
+https://python.langchain.com/docs/how_to/streaming/
+https://python.langchain.com/docs/how_to/callbacks_runtime/
+https://python.langchain.com/docs/how_to/multimodal_inputs/
+https://python.langchain.com/docs/how_to/few_shot_examples/
+https://python.langchain.com/docs/how_to/message_history/
+https://python.langchain.com/docs/how_to/custom_llm/
+
+# Tutorials - Additional Sub-Pages
+https://python.langchain.com/docs/tutorials/extraction/
+https://python.langchain.com/docs/tutorials/qa_chat_history/
+https://python.langchain.com/docs/tutorials/summarization/
+https://python.langchain.com/docs/tutorials/classification/
+https://python.langchain.com/docs/tutorials/sql_qa/
+https://python.langchain.com/docs/tutorials/graph/
+https://python.langchain.com/docs/tutorials/local_rag/
+https://python.langchain.com/docs/tutorials/pdf_qa/
+
+# Integrations - Additional Categories
+https://python.langchain.com/docs/integrations/llms/
+https://python.langchain.com/docs/integrations/document_loaders/
+https://python.langchain.com/docs/integrations/text_embedding/
+https://python.langchain.com/docs/integrations/retrievers/
+https://python.langchain.com/docs/integrations/tools/
+https://python.langchain.com/docs/integrations/memory/
+https://python.langchain.com/docs/integrations/callbacks/
+https://python.langchain.com/docs/integrations/chat/openai/
+https://python.langchain.com/docs/integrations/chat/anthropic/
+https://python.langchain.com/docs/integrations/vectorstores/chroma/
+https://python.langchain.com/docs/integrations/vectorstores/pinecone/
+https://python.langchain.com/docs/integrations/vectorstores/faiss/
