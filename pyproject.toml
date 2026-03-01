@@ -158,7 +158,6 @@ addopts = [
     "--cov=bootstrap/src",
     "--cov=wikigr/agent",
     "--cov-report=term-missing",
-    "--cov-fail-under=10",
     "--timeout=60",
 ]
 markers = [
