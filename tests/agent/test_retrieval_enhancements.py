@@ -14,7 +14,6 @@ from anthropic import APIConnectionError, APIStatusError, APITimeoutError
 
 from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -105,10 +104,7 @@ class TestMultiQueryRetrieve:
         agent.claude.messages.create.return_value = _mock_haiku_response(["alt1", "alt2"])
 
         def mock_search(query, top_k=5):
-            return [
-                {"title": f"T{i}", "similarity": 0.1 * i, "content": "x"}
-                for i in range(1, 4)
-            ]
+            return [{"title": f"T{i}", "similarity": 0.1 * i, "content": "x"} for i in range(1, 4)]
 
         with patch.object(agent, "semantic_search", side_effect=mock_search):
             results = agent._multi_query_retrieve("q", max_results=5)
@@ -144,9 +140,11 @@ class TestMultiQueryRetrieve:
             agent._multi_query_retrieve("question", max_results=5)
 
         call_kwargs = agent.claude.messages.create.call_args
-        assert call_kwargs.kwargs.get("model") == "claude-haiku-4-5-20251001" or (
-            call_kwargs.args and call_kwargs.args[0] == "claude-haiku-4-5-20251001"
-        ) or call_kwargs[1].get("model") == "claude-haiku-4-5-20251001"
+        assert (
+            call_kwargs.kwargs.get("model") == "claude-haiku-4-5-20251001"
+            or (call_kwargs.args and call_kwargs.args[0] == "claude-haiku-4-5-20251001")
+            or call_kwargs[1].get("model") == "claude-haiku-4-5-20251001"
+        )
 
     def test_gracefully_handles_expansion_failure(self) -> None:
         """If Haiku call raises a connection error, falls back to searching only the original query."""
@@ -216,7 +214,9 @@ class TestScoreSectionQuality:
 
         # Same length but contains question keywords
         question = "photosynthesis chlorophyll plant"
-        content_with_overlap = " ".join(base_words[:-3] + ["photosynthesis", "chlorophyll", "plant"])
+        content_with_overlap = " ".join(
+            base_words[:-3] + ["photosynthesis", "chlorophyll", "plant"]
+        )
 
         score_no = agent._score_section_quality(content_no_overlap, question)
         score_yes = agent._score_section_quality(content_with_overlap, question)
@@ -313,9 +313,11 @@ class TestVectorPrimaryRetrieveRouting:
         agent = _make_agent(enable_multi_query=False)
         search_results = [{"title": "T", "similarity": 0.8, "content": "text"}]
 
-        with patch.object(agent, "semantic_search", return_value=search_results) as mock_search:
-            with patch.object(agent, "_multi_query_retrieve") as mock_multi:
-                result, sim = agent._vector_primary_retrieve("q", max_results=5)
+        with (
+            patch.object(agent, "semantic_search", return_value=search_results) as mock_search,
+            patch.object(agent, "_multi_query_retrieve") as mock_multi,
+        ):
+            result, sim = agent._vector_primary_retrieve("q", max_results=5)
 
         mock_search.assert_called_once_with("q", top_k=5)
         mock_multi.assert_not_called()
@@ -329,9 +331,11 @@ class TestVectorPrimaryRetrieveRouting:
             {"title": "T2", "similarity": 0.7, "content": "text2"},
         ]
 
-        with patch.object(agent, "_multi_query_retrieve", return_value=multi_results) as mock_multi:
-            with patch.object(agent, "semantic_search") as mock_search:
-                result, sim = agent._vector_primary_retrieve("q", max_results=5)
+        with (
+            patch.object(agent, "_multi_query_retrieve", return_value=multi_results) as mock_multi,
+            patch.object(agent, "semantic_search") as mock_search,
+        ):
+            result, sim = agent._vector_primary_retrieve("q", max_results=5)
 
         mock_multi.assert_called_once_with("q", max_results=5)
         mock_search.assert_not_called()
@@ -348,7 +352,7 @@ class TestClassLevelConstants:
     """Verify CONTENT_QUALITY_THRESHOLD and STOP_WORDS are class attributes."""
 
     def test_content_quality_threshold_is_0_3(self) -> None:
-        assert KnowledgeGraphAgent.CONTENT_QUALITY_THRESHOLD == pytest.approx(0.3)
+        assert pytest.approx(0.3) == KnowledgeGraphAgent.CONTENT_QUALITY_THRESHOLD
 
     def test_stop_words_is_frozenset(self) -> None:
         assert isinstance(KnowledgeGraphAgent.STOP_WORDS, frozenset)

@@ -12,7 +12,7 @@ import time
 from typing import Any
 
 import kuzu
-from anthropic import APIConnectionError, APIStatusError, APITimeoutError, Anthropic
+from anthropic import Anthropic, APIConnectionError, APIStatusError, APITimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -45,16 +45,100 @@ class KnowledgeGraphAgent:
     CONTENT_QUALITY_THRESHOLD = 0.3
     STOP_WORDS: frozenset[str] = frozenset(
         {
-            "a", "an", "the", "and", "or", "but", "in", "on", "at", "to", "for",
-            "of", "with", "by", "from", "is", "are", "was", "were", "be", "been",
-            "being", "have", "has", "had", "do", "does", "did", "will", "would",
-            "could", "should", "may", "might", "shall", "can", "not", "no", "nor",
-            "so", "yet", "both", "either", "neither", "as", "if", "then", "than",
-            "that", "this", "these", "those", "it", "its", "i", "we", "you", "he",
-            "she", "they", "me", "us", "him", "her", "them", "my", "our", "your",
-            "his", "their", "what", "which", "who", "whom", "when", "where", "why",
-            "how", "all", "any", "each", "few", "more", "most", "other", "some",
-            "such", "up", "out", "about", "into", "through", "after", "before",
+            "a",
+            "an",
+            "the",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+            "from",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "shall",
+            "can",
+            "not",
+            "no",
+            "nor",
+            "so",
+            "yet",
+            "both",
+            "either",
+            "neither",
+            "as",
+            "if",
+            "then",
+            "than",
+            "that",
+            "this",
+            "these",
+            "those",
+            "it",
+            "its",
+            "i",
+            "we",
+            "you",
+            "he",
+            "she",
+            "they",
+            "me",
+            "us",
+            "him",
+            "her",
+            "them",
+            "my",
+            "our",
+            "your",
+            "his",
+            "their",
+            "what",
+            "which",
+            "who",
+            "whom",
+            "when",
+            "where",
+            "why",
+            "how",
+            "all",
+            "any",
+            "each",
+            "few",
+            "more",
+            "most",
+            "other",
+            "some",
+            "such",
+            "up",
+            "out",
+            "about",
+            "into",
+            "through",
+            "after",
+            "before",
         }
     )
 
@@ -1160,8 +1244,8 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                     {
                         "role": "user",
                         "content": (
-                            f'Generate exactly 2 alternative phrasings of this question for semantic search. '
-                            f'Return a JSON array of 2 strings and nothing else.\n\nQuestion: {question_truncated}'
+                            f"Generate exactly 2 alternative phrasings of this question for semantic search. "
+                            f"Return a JSON array of 2 strings and nothing else.\n\nQuestion: {question_truncated}"
                         ),
                     }
                 ],
@@ -1179,7 +1263,9 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         except APITimeoutError:
             logger.warning("Multi-query expansion timed out; falling back to original query")
         except APIConnectionError as e:
-            logger.warning(f"Multi-query expansion connection error: {e}; falling back to original query")
+            logger.warning(
+                f"Multi-query expansion connection error: {e}; falling back to original query"
+            )
         except APIStatusError as e:
             # 429 = rate-limited (transient); 4xx auth/bad-request errors are permanent
             if e.status_code == 429:
@@ -1203,10 +1289,14 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                     if not title:
                         continue
                     existing = merged.get(title)
-                    if existing is None or result.get("similarity", 0.0) > existing.get("similarity", 0.0):
+                    if existing is None or result.get("similarity", 0.0) > existing.get(
+                        "similarity", 0.0
+                    ):
                         merged[title] = result
             except Exception as e:
-                logger.warning(f"Multi-query search failed for query '{query[:100]}{'...' if len(query) > 100 else ''}': {e}")
+                logger.warning(
+                    f"Multi-query search failed for query '{query[:100]}{'...' if len(query) > 100 else ''}': {e}"
+                )
 
         return sorted(merged.values(), key=lambda r: r.get("similarity", 0.0), reverse=True)
 
@@ -1366,8 +1456,10 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
         length_score = min(0.8, 0.2 + (word_count / 200) * 0.6)
 
         # Keyword overlap: question keywords (excluding stop words) found in content
-        question_keywords = _q_keywords if _q_keywords is not None else frozenset(
-            lw for w in question.split() if (lw := w.lower()) not in self.STOP_WORDS
+        question_keywords = (
+            _q_keywords
+            if _q_keywords is not None
+            else frozenset(lw for w in question.split() if (lw := w.lower()) not in self.STOP_WORDS)
         )
         if question_keywords:
             content_words_lower = {w.lower() for w in words}
@@ -1428,9 +1520,11 @@ Use $q as the default parameter name. Return ONLY the JSON, nothing else."""
                 if title and sect_content:
                     cleaned = clean_content(sect_content)
                     # Filter low-quality sections when question is provided
-                    if q_keywords is not None:
-                        if self._score_section_quality(cleaned, question, _q_keywords=q_keywords) < self.CONTENT_QUALITY_THRESHOLD:
-                            continue
+                    if q_keywords is not None and (
+                        self._score_section_quality(cleaned, question, _q_keywords=q_keywords)
+                        < self.CONTENT_QUALITY_THRESHOLD
+                    ):
+                        continue
                     by_article.setdefault(title, []).append(cleaned)
 
             for title in titles:
