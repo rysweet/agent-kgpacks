@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of the Vercel AI SDK for building AI-powered applications in TypeScript, covering generateText, streamText, tool calling, agents, provider integrations, and AI SDK UI.",
   "graph_stats": {
-    "articles": 5,
-    "entities": 25,
-    "relationships": 20,
+    "articles": 43,
+    "entities": 206,
+    "relationships": 189,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://react.dev/reference/react",
     "https://react.dev/reference/rsc/server-components"
   ],
-  "created": "2026-02-28T21:17:17.834100Z",
+  "created": "2026-03-01T16:42:08.113588Z",
   "license": "MIT"
 }
