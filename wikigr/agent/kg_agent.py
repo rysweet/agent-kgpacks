@@ -14,6 +14,13 @@ from typing import Any
 import kuzu
 from anthropic import Anthropic, APIConnectionError, APIStatusError, APITimeoutError
 
+# Pre-compiled regex used in _direct_title_lookup — avoids recompilation on every query() call.
+_QUESTION_PREFIX_RE = re.compile(
+    r"^(what is|what are|explain|describe|define|how does|how do|what does|"
+    r"who is|who was|when was|where is|why is|why does|tell me about)\s+",
+    re.IGNORECASE,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -140,6 +147,17 @@ class KnowledgeGraphAgent:
             "through",
             "after",
             "before",
+            "between",
+            "tell",
+            "find",
+            "explain",
+            "describe",
+            "relationship",
+            "related",
+            "knowledge",
+            "graph",
+            "article",
+            "articles",
         }
     )
 
@@ -802,66 +820,10 @@ class KnowledgeGraphAgent:
         Capitalised multi-word phrases and known stop-word filtering provide a
         reasonable fallback when the LLM is unavailable.
         """
-        stop_words = {
-            "what",
-            "who",
-            "how",
-            "why",
-            "when",
-            "where",
-            "which",
-            "does",
-            "is",
-            "are",
-            "was",
-            "were",
-            "the",
-            "a",
-            "an",
-            "of",
-            "in",
-            "on",
-            "to",
-            "for",
-            "and",
-            "or",
-            "not",
-            "can",
-            "could",
-            "would",
-            "should",
-            "do",
-            "did",
-            "has",
-            "have",
-            "had",
-            "be",
-            "been",
-            "about",
-            "between",
-            "from",
-            "with",
-            "this",
-            "that",
-            "these",
-            "those",
-            "it",
-            "its",
-            "tell",
-            "me",
-            "us",
-            "find",
-            "explain",
-            "describe",
-            "relationship",
-            "related",
-            "knowledge",
-            "graph",
-            "article",
-            "articles",
-        }
         words = question.replace("?", "").replace("!", "").replace(",", "").split()
-        candidates = [w for w in words if w.lower() not in stop_words and len(w) > 2]
+        candidates = [
+            w for w in words if w.lower() not in KnowledgeGraphAgent.STOP_WORDS and len(w) > 2
+        ]
         # Preserve original casing — case-insensitive matching happens in the traversal query
         return candidates[:3] if candidates else ["Artificial intelligence"]
 
@@ -922,13 +884,7 @@ class KnowledgeGraphAgent:
 
         # Extract potential article titles from question
         # Strip common question prefixes
-        cleaned = re.sub(
-            r"^(what is|what are|explain|describe|define|how does|how do|what does|"
-            r"who is|who was|when was|where is|why is|why does|tell me about)\s+",
-            "",
-            question.lower(),
-            flags=re.IGNORECASE,
-        ).rstrip("?. ")
+        cleaned = _QUESTION_PREFIX_RE.sub("", question.lower()).rstrip("?. ")
 
         # Try exact title match first, then partial
         candidates = []

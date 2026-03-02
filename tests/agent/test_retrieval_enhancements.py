@@ -36,6 +36,7 @@ def _make_agent(enable_multi_query: bool = False) -> KnowledgeGraphAgent:
     agent.reranker = None
     agent.synthesizer = None
     agent.few_shot = None
+    agent.cross_encoder = None
     agent.cypher_rag = None
     agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
     return agent
