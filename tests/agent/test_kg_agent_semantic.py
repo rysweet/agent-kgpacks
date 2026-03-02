@@ -287,7 +287,7 @@ class TestVectorPrimaryRetrieval:
         assert max_sim < 0.6
 
     def test_query_skips_llm_when_high_confidence(self, agent):
-        """query() should not call _plan_query when vector similarity >= 0.6."""
+        """query() uses vector_search path when vector similarity >= 0.6."""
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
@@ -309,7 +309,7 @@ class TestVectorPrimaryRetrieval:
         assert result["query_type"] == "vector_search"
 
     def test_query_never_calls_llm_cypher(self, agent):
-        """query() never calls _plan_query; low similarity triggers confidence_gated_fallback."""
+        """query() uses confidence_gated_fallback path when vector similarity is low."""
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
