@@ -22,9 +22,7 @@ EXPECTED_PACK_NAME_PATTERN = re.compile(EXPECTED_PACK_NAME_REGEX)
 
 # Pre-compiled patterns reused across tests — avoids recompilation on every call.
 _NAME_ROW_PATTERN = re.compile(r"\|\s*`name`\s*\|.*?(?=\n\||\Z)", re.DOTALL)
-_PLAN_CACHE_ROW_PATTERN = re.compile(
-    r"\|\s*`?PLAN_CACHE_MAX_SIZE`?\s*\|[^|]*\|\s*`?(\d+)`?\s*\|"
-)
+_PLAN_CACHE_ROW_PATTERN = re.compile(r"\|\s*`?PLAN_CACHE_MAX_SIZE`?\s*\|[^|]*\|\s*`?(\d+)`?\s*\|")
 _CONSTANTS_SECTION_PATTERN = re.compile(
     r"## Class Constants.*?(?=^##|\Z)", re.DOTALL | re.MULTILINE
 )
@@ -41,9 +39,9 @@ def _load_doc(path: Path) -> str:
 
 
 def _assert_any_phrase(text: str, accepted: list, message: str) -> None:
-    assert any(phrase in text for phrase in accepted), (
-        f"{message} Expected one of: {', '.join(repr(p) for p in accepted)}"
-    )
+    assert any(
+        phrase in text for phrase in accepted
+    ), f"{message} Expected one of: {', '.join(repr(p) for p in accepted)}"
 
 
 # ---------------------------------------------------------------------------
@@ -71,9 +69,9 @@ class TestPackManifestNameFieldDoc:
 
     def test_name_field_row_present(self, pack_manifest_text: str):
         """The name field row must be present in the Fields table."""
-        assert "| `name` |" in pack_manifest_text, (
-            "pack-manifest.md must contain a '| `name` |' table row"
-        )
+        assert (
+            "| `name` |" in pack_manifest_text
+        ), "pack-manifest.md must contain a '| `name` |' table row"
 
     def test_verbatim_regex_present(self, pack_manifest_text: str):
         """The verbatim regex must appear in the doc so readers can verify it directly."""
@@ -122,9 +120,9 @@ class TestPackManifestNameFieldDoc:
     def test_doc_does_not_claim_lowercase_only(self, pack_manifest_text: str):
         """Doc must NOT state that only lowercase letters are allowed."""
         name_row_match = _NAME_ROW_PATTERN.search(pack_manifest_text)
-        assert name_row_match is not None, (
-            "Could not locate the `name` table row in pack-manifest.md"
-        )
+        assert (
+            name_row_match is not None
+        ), "Could not locate the `name` table row in pack-manifest.md"
         name_row_lower = name_row_match.group(0).lower()
 
         forbidden = [
@@ -148,12 +146,12 @@ class TestPackManifestNameFieldDoc:
 
     def test_regex_is_anchored(self, pack_manifest_text: str):
         """The documented regex must be anchored (^ at start, $ at end)."""
-        assert "^[a-zA-Z0-9]" in pack_manifest_text, (
-            "Regex in pack-manifest.md must be anchored at start with '^[a-zA-Z0-9]'"
-        )
-        assert "{0,63}$" in pack_manifest_text, (
-            "Regex in pack-manifest.md must be anchored at end with '{0,63}$'"
-        )
+        assert (
+            "^[a-zA-Z0-9]" in pack_manifest_text
+        ), "Regex in pack-manifest.md must be anchored at start with '^[a-zA-Z0-9]'"
+        assert (
+            "{0,63}$" in pack_manifest_text
+        ), "Regex in pack-manifest.md must be anchored at end with '{0,63}$'"
 
     def test_regex_in_doc_matches_valid_pack_names(self, pack_manifest_text: str):
         """The regex extracted from the doc must accept canonical valid names."""
@@ -167,20 +165,19 @@ class TestPackManifestNameFieldDoc:
         ]
         for name in valid_names:
             assert EXPECTED_PACK_NAME_PATTERN.fullmatch(name), (
-                f"Documented regex '{EXPECTED_PACK_NAME_REGEX}' must accept "
-                f"valid name '{name}'"
+                f"Documented regex '{EXPECTED_PACK_NAME_REGEX}' must accept " f"valid name '{name}'"
             )
 
     def test_regex_in_doc_rejects_invalid_pack_names(self, pack_manifest_text: str):
         """The regex extracted from the doc must reject invalid names."""
         invalid_names = [
-            "",                      # empty
-            "-leading-hyphen",       # starts with hyphen
-            "_leading-underscore",   # starts with underscore
-            "x" * 65,               # 65 chars — one over the limit
-            "has space",             # space not in charset
-            "has/slash",             # path separator
-            "has.dot",               # dot not in charset
+            "",  # empty
+            "-leading-hyphen",  # starts with hyphen
+            "_leading-underscore",  # starts with underscore
+            "x" * 65,  # 65 chars — one over the limit
+            "has space",  # space not in charset
+            "has/slash",  # path separator
+            "has.dot",  # dot not in charset
         ]
         for name in invalid_names:
             assert not EXPECTED_PACK_NAME_PATTERN.fullmatch(name), (
@@ -199,9 +196,9 @@ class TestKgAgentApiPlanCacheDoc:
 
     def test_plan_cache_max_size_row_present(self, kg_agent_api_text: str):
         """PLAN_CACHE_MAX_SIZE must still appear in the constants table (not removed)."""
-        assert "PLAN_CACHE_MAX_SIZE" in kg_agent_api_text, (
-            "kg-agent-api.md must contain the PLAN_CACHE_MAX_SIZE constant row"
-        )
+        assert (
+            "PLAN_CACHE_MAX_SIZE" in kg_agent_api_text
+        ), "kg-agent-api.md must contain the PLAN_CACHE_MAX_SIZE constant row"
 
     def test_plan_cache_unbounded_dict_explanation(self, kg_agent_api_text: str):
         """The annotation must explain that _plan_cache is unbounded at runtime."""
@@ -214,24 +211,24 @@ class TestKgAgentApiPlanCacheDoc:
     def test_plan_cache_row_has_correct_default_value(self, kg_agent_api_text: str):
         """The PLAN_CACHE_MAX_SIZE row must document the correct default value of 128."""
         match = _PLAN_CACHE_ROW_PATTERN.search(kg_agent_api_text)
-        assert match is not None, (
-            "Could not find PLAN_CACHE_MAX_SIZE row with a numeric default value"
-        )
-        assert match.group(1) == "128", (
-            f"PLAN_CACHE_MAX_SIZE default must be documented as 128, got '{match.group(1)}'"
-        )
+        assert (
+            match is not None
+        ), "Could not find PLAN_CACHE_MAX_SIZE row with a numeric default value"
+        assert (
+            match.group(1) == "128"
+        ), f"PLAN_CACHE_MAX_SIZE default must be documented as 128, got '{match.group(1)}'"
 
     def test_plan_cache_annotation_is_in_constants_table(self, kg_agent_api_text: str):
         """The PLAN_CACHE_MAX_SIZE annotation must appear in the Class Constants section."""
         constants_section_match = _CONSTANTS_SECTION_PATTERN.search(kg_agent_api_text)
-        assert constants_section_match is not None, (
-            "kg-agent-api.md must have a '## Class Constants' section"
-        )
+        assert (
+            constants_section_match is not None
+        ), "kg-agent-api.md must have a '## Class Constants' section"
         constants_section = constants_section_match.group(0)
 
-        assert "PLAN_CACHE_MAX_SIZE" in constants_section, (
-            "PLAN_CACHE_MAX_SIZE must appear in the '## Class Constants' section"
-        )
+        assert (
+            "PLAN_CACHE_MAX_SIZE" in constants_section
+        ), "PLAN_CACHE_MAX_SIZE must appear in the '## Class Constants' section"
         _assert_any_phrase(
             constants_section,
             ["Not currently enforced", "not currently enforced", "not enforced"],
@@ -249,9 +246,9 @@ class TestKgAgentApiPlanCacheDoc:
             "SYNTHESIS_MAX_TOKENS",
         ]
         for constant in required_constants:
-            assert constant in kg_agent_api_text, (
-                f"kg-agent-api.md must still contain the '{constant}' constant row"
-            )
+            assert (
+                constant in kg_agent_api_text
+            ), f"kg-agent-api.md must still contain the '{constant}' constant row"
 
 
 # ---------------------------------------------------------------------------
@@ -270,13 +267,11 @@ class TestDocumentationConsistency:
             f"in pack-manifest.md, found {count} occurrences"
         )
 
-    def test_neither_doc_was_emptied(
-        self, pack_manifest_text: str, kg_agent_api_text: str
-    ):
+    def test_neither_doc_was_emptied(self, pack_manifest_text: str, kg_agent_api_text: str):
         """Both doc files must have substantial content (not accidentally cleared)."""
-        assert len(pack_manifest_text) > 500, (
-            "pack-manifest.md appears to have been truncated or emptied"
-        )
-        assert len(kg_agent_api_text) > 500, (
-            "kg-agent-api.md appears to have been truncated or emptied"
-        )
+        assert (
+            len(pack_manifest_text) > 500
+        ), "pack-manifest.md appears to have been truncated or emptied"
+        assert (
+            len(kg_agent_api_text) > 500
+        ), "kg-agent-api.md appears to have been truncated or emptied"
