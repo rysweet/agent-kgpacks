@@ -44,7 +44,7 @@ JSON object with the following structure:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | string | Pack identifier. Must match the directory name. Lowercase alphanumeric with hyphens (e.g., `go-expert`, `react-expert`) |
+| `name` | string | Pack identifier. Must match the directory name. Alphanumeric (upper or lower case), hyphens, and underscores; must start with an alphanumeric character; max 64 characters. Regex: `^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$` (e.g., `go-expert`, `React_Expert`) |
 | `version` | string | Semantic version (e.g., `1.0.0`). Follows [SemVer](https://semver.org/) |
 | `description` | string | Human-readable description of the pack's domain coverage |
 | `graph_stats` | object | Statistics about the knowledge graph (see below) |

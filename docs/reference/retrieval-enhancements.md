@@ -253,3 +253,4 @@ agent = KnowledgeGraphAgent(
 - [Retrieval Enhancements Design](../concepts/retrieval-enhancements-design.md) — architecture and rationale
 - [Phase 1 Enhancements API](./phase1-enhancements.md) — GraphReranker, MultiDocSynthesizer, FewShotManager
 - [Test Suite](../../tests/agent/test_retrieval_enhancements.py) — 22 unit tests covering both improvements
+- [Test Infrastructure](./test-infrastructure.md) — `_make_agent` helper and required attribute initialization

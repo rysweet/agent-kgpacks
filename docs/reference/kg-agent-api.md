@@ -141,7 +141,7 @@ print(result["token_usage"])
 | `DEFAULT_MODEL` | `str` | `"claude-opus-4-6"` | Default synthesis model |
 | `VECTOR_CONFIDENCE_THRESHOLD` | `float` | `0.6` | Pre-defined constant for retrieval-layer filtering (not used in `query()` path) |
 | `CONTEXT_CONFIDENCE_THRESHOLD` | `float` | `0.5` | Minimum cosine similarity required before pack content is injected into synthesis |
-| `PLAN_CACHE_MAX_SIZE` | `int` | `128` | Maximum entries in the query plan cache |
+| `PLAN_CACHE_MAX_SIZE` | `int` | `128` | Intended maximum entries in the query plan cache. **Not currently enforced** — `_plan_cache` is an unbounded `dict` at runtime; this constant is defined but not referenced in any size-limiting code path. |
 | `MAX_ARTICLE_CHARS` | `int` | `3000` | Maximum characters per article in synthesis context |
 | `PLAN_MAX_TOKENS` | `int` | `512` | Maximum tokens for query planning |
 | `SYNTHESIS_MAX_TOKENS` | `int` | `1024` | Maximum tokens for answer synthesis |
