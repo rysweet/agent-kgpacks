@@ -14,7 +14,79 @@ from typing import Any
 import kuzu
 from anthropic import Anthropic, APIConnectionError, APIStatusError, APITimeoutError
 
+# Pre-compiled regex used in _direct_title_lookup — avoids recompilation on every query() call.
+_QUESTION_PREFIX_RE = re.compile(
+    r"^(what is|what are|explain|describe|define|how does|how do|what does|"
+    r"who is|who was|when was|where is|why is|why does|tell me about)\s+",
+    re.IGNORECASE,
+)
+
 logger = logging.getLogger(__name__)
+
+# Stop words for _fallback_seed_extraction — includes domain-specific query verbs in
+# addition to linguistic stop words so they are never mistaken for article titles.
+# Module-level (not KnowledgeGraphAgent.STOP_WORDS) because _fallback_seed_extraction
+# is a @staticmethod and cannot reference self or cls constants.
+_FALLBACK_STOP_WORDS: frozenset[str] = frozenset(
+    {
+        "what",
+        "who",
+        "how",
+        "why",
+        "when",
+        "where",
+        "which",
+        "does",
+        "is",
+        "are",
+        "was",
+        "were",
+        "the",
+        "a",
+        "an",
+        "of",
+        "in",
+        "on",
+        "to",
+        "for",
+        "and",
+        "or",
+        "not",
+        "can",
+        "could",
+        "would",
+        "should",
+        "do",
+        "did",
+        "has",
+        "have",
+        "had",
+        "be",
+        "been",
+        "about",
+        "between",
+        "from",
+        "with",
+        "this",
+        "that",
+        "these",
+        "those",
+        "it",
+        "its",
+        "tell",
+        "me",
+        "us",
+        "find",
+        "explain",
+        "describe",
+        "relationship",
+        "related",
+        "knowledge",
+        "graph",
+        "article",
+        "articles",
+    }
+)
 
 
 def _safe_json_loads(value: object) -> dict:
@@ -140,6 +212,17 @@ class KnowledgeGraphAgent:
             "through",
             "after",
             "before",
+            "between",
+            "tell",
+            "find",
+            "explain",
+            "describe",
+            "relationship",
+            "related",
+            "knowledge",
+            "graph",
+            "article",
+            "articles",
         }
     )
 
@@ -288,6 +371,41 @@ class KnowledgeGraphAgent:
             return str(legacy)
 
         return None
+
+    @staticmethod
+    def _validate_cypher(query: str) -> None:
+        """Validate a Cypher query against an allowlist/blocklist.
+
+        Prevents destructive write operations and unbounded variable-length
+        path patterns from reaching the database.
+
+        Args:
+            query: The Cypher query string to validate.
+
+        Raises:
+            ValueError: If the query fails any validation check.
+        """
+        import re
+
+        # Strip string literals to avoid false positives on quoted content.
+        stripped = re.sub(r'"[^"]*"', '""', query)
+        stripped = re.sub(r"'[^']*'", "''", stripped)
+
+        upper = stripped.strip().upper()
+
+        # 1. Prefix check — must start with an allowed read keyword.
+        if not (upper.startswith("MATCH") or upper.startswith("CALL")):
+            raise ValueError("Cypher query must start with MATCH or CALL")
+
+        # 2. Block dangerous write/DDL keywords.
+        _BLOCKED = frozenset({"CREATE", "DELETE", "DROP", "SET", "MERGE", "REMOVE", "DETACH"})
+        for token in re.findall(r"\b[A-Za-z]+\b", stripped):
+            if token.upper() in _BLOCKED:
+                raise ValueError(f"Write operation rejected: {token.upper()}")
+
+        # 3. Block unbounded variable-length paths (e.g. [:REL*]).
+        if re.search(r"\[[\w:]*\*[^\]]*\]", query):
+            raise ValueError("Unbounded variable-length path detected in query")
 
     def _init_cypher_rag(self, cypher_pack_path: str | None) -> Any:
         """Initialize CypherRAG if a Cypher pattern pack path is provided.
@@ -802,66 +920,8 @@ class KnowledgeGraphAgent:
         Capitalised multi-word phrases and known stop-word filtering provide a
         reasonable fallback when the LLM is unavailable.
         """
-        stop_words = {
-            "what",
-            "who",
-            "how",
-            "why",
-            "when",
-            "where",
-            "which",
-            "does",
-            "is",
-            "are",
-            "was",
-            "were",
-            "the",
-            "a",
-            "an",
-            "of",
-            "in",
-            "on",
-            "to",
-            "for",
-            "and",
-            "or",
-            "not",
-            "can",
-            "could",
-            "would",
-            "should",
-            "do",
-            "did",
-            "has",
-            "have",
-            "had",
-            "be",
-            "been",
-            "about",
-            "between",
-            "from",
-            "with",
-            "this",
-            "that",
-            "these",
-            "those",
-            "it",
-            "its",
-            "tell",
-            "me",
-            "us",
-            "find",
-            "explain",
-            "describe",
-            "relationship",
-            "related",
-            "knowledge",
-            "graph",
-            "article",
-            "articles",
-        }
         words = question.replace("?", "").replace("!", "").replace(",", "").split()
-        candidates = [w for w in words if w.lower() not in stop_words and len(w) > 2]
+        candidates = [w for w in words if w.lower() not in _FALLBACK_STOP_WORDS and len(w) > 2]
         # Preserve original casing — case-insensitive matching happens in the traversal query
         return candidates[:3] if candidates else ["Artificial intelligence"]
 
@@ -922,13 +982,7 @@ class KnowledgeGraphAgent:
 
         # Extract potential article titles from question
         # Strip common question prefixes
-        cleaned = re.sub(
-            r"^(what is|what are|explain|describe|define|how does|how do|what does|"
-            r"who is|who was|when was|where is|why is|why does|tell me about)\s+",
-            "",
-            question.lower(),
-            flags=re.IGNORECASE,
-        ).rstrip("?. ")
+        cleaned = _QUESTION_PREFIX_RE.sub("", question.lower()).rstrip("?. ")
 
         # Try exact title match first, then partial
         candidates = []
@@ -1150,8 +1204,9 @@ class KnowledgeGraphAgent:
                     if title:
                         scored[title] = scored.get(title, 0) + graph_weight * 0.5
 
-        # Signal 3: Keyword match (title contains)
-        keywords = [w for w in question.split() if len(w) > 3]
+        # Signal 3: Keyword match (title contains) — filter stop words to avoid
+        # wasteful DB queries on common words like "what", "from", "with".
+        keywords = [w for w in question.split() if len(w) > 3 and w.lower() not in self.STOP_WORDS]
         for kw in keywords[:3]:
             df = self._safe_query(
                 "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($kw) "
@@ -1496,16 +1551,17 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
         if df is None:
             return []
 
-        paths = []
-        for _, row in df.iterrows():
-            paths.append(
-                {
-                    "source": row["source"],
-                    "target": row["target"],
-                    "hops": row["hops"],
-                    "note": "Full path details require multiple queries in Kuzu",
-                }
+        paths = [
+            {
+                "source": source,
+                "target": target,
+                "hops": hops,
+                "note": "Full path details require multiple queries in Kuzu",
+            }
+            for source, target, hops in zip(
+                df["source"].tolist(), df["target"].tolist(), df["hops"].tolist()
             )
+        ]
 
         return paths
 

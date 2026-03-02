@@ -216,6 +216,16 @@ class WorkQueueManager:
 
     VALID_STATES = {"discovered", "claimed", "loaded", "processed", "failed"}
 
+    # Mapping of target state -> set of legal predecessor states.
+    # Defined at class level to avoid rebuilding the dict on every advance_state call.
+    _VALID_PREDECESSORS: dict[str, set[str]] = {
+        "claimed": {"discovered"},
+        "loaded": {"claimed"},
+        "processed": {"loaded", "claimed"},
+        "failed": {"claimed", "discovered"},
+        "discovered": {"claimed", "failed"},  # retry/reclaim
+    }
+
     def advance_state(self, article_title: str, new_state: str):
         """
         Advance article to new state.
@@ -236,15 +246,7 @@ class WorkQueueManager:
         if new_state not in self.VALID_STATES:
             raise ValueError(f"Invalid state: {new_state}. Must be one of {self.VALID_STATES}")
 
-        # Legal state transitions
-        valid_predecessors = {
-            "claimed": {"discovered"},
-            "loaded": {"claimed"},
-            "processed": {"loaded", "claimed"},
-            "failed": {"claimed", "discovered"},
-            "discovered": {"claimed", "failed"},  # retry/reclaim
-        }
-        predecessors = valid_predecessors.get(new_state, set())
+        predecessors = self._VALID_PREDECESSORS.get(new_state, set())
 
         now = datetime.now(tz=timezone.utc)
 
@@ -386,8 +388,8 @@ class WorkQueueManager:
                 state = row["state"]
                 count = row["count"]
                 if state in stats:
-                    stats[state] = count
-                stats["total"] += count
+                    stats[state] = int(count)
+                stats["total"] += int(count)
 
             return stats
 

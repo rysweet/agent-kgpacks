@@ -5,9 +5,16 @@ Tests are ordered from simple retrieval to complex multi-hop reasoning.
 Each test validates the agent's ability to extract and synthesize knowledge.
 """
 
+import os
+
 import pytest
 
 from wikigr.agent import KnowledgeGraphAgent
+
+pytestmark = pytest.mark.skipif(
+    not os.path.exists("data/wikigr_30k.db"),
+    reason="data/wikigr_30k.db not found — skipping DB-dependent tests",
+)
 
 
 @pytest.fixture(scope="module")
