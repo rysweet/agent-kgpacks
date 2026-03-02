@@ -67,9 +67,8 @@ class TestProcessOneKeywordArgContract:
         orch._process_one(_make_article_info("Python (programming language)", depth=0), worker_conn)
 
         _, kwargs = mock_processor.process_article.call_args
-        assert (
-            "title_or_url" in kwargs
-        ), f"process_article must be called with title_or_url=, but was called with kwargs: {kwargs}"
+        msg = f"process_article must be called with title_or_url=, but was called with kwargs: {kwargs}"
+        assert "title_or_url" in kwargs, msg
 
     def test_process_article_not_called_with_title_keyword(self, orch_with_mocks):
         """The forbidden legacy keyword 'title' must NOT appear in the call."""
@@ -79,9 +78,8 @@ class TestProcessOneKeywordArgContract:
         orch._process_one(_make_article_info("Recursion", depth=0), worker_conn)
 
         _, kwargs = mock_processor.process_article.call_args
-        assert (
-            "title" not in kwargs
-        ), f"process_article must NOT be called with the legacy keyword 'title', but kwargs were: {kwargs}"
+        msg = f"process_article must NOT be called with the legacy keyword 'title', but kwargs were: {kwargs}"
+        assert "title" not in kwargs, msg
 
     def test_title_value_forwarded_correctly(self, orch_with_mocks):
         """The article title string must be the value of title_or_url."""
@@ -204,9 +202,10 @@ class TestProcessArticleSignature:
         from bootstrap.src.expansion.processor import ArticleProcessor
 
         params = list(inspect.signature(ArticleProcessor.process_article).parameters)
-        assert (
-            "title_or_url" in params
-        ), f"ArticleProcessor.process_article must have 'title_or_url' parameter; found: {params}"
+        msg = (
+            f"ArticleProcessor.process_article must have 'title_or_url' parameter; found: {params}"
+        )
+        assert "title_or_url" in params, msg
 
     def test_process_article_does_not_have_title_parameter(self):
         """ArticleProcessor.process_article must NOT have a bare 'title' parameter."""
@@ -215,9 +214,8 @@ class TestProcessArticleSignature:
         from bootstrap.src.expansion.processor import ArticleProcessor
 
         params = list(inspect.signature(ArticleProcessor.process_article).parameters)
-        assert (
-            "title" not in params
-        ), f"ArticleProcessor.process_article must NOT have 'title' parameter; found: {params}"
+        msg = f"ArticleProcessor.process_article must NOT have 'title' parameter; found: {params}"
+        assert "title" not in params, msg
 
     def test_calling_with_title_kwarg_raises_type_error(self):
         """Calling process_article(title=...) must raise TypeError – legacy regression guard."""
