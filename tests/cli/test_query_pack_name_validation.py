@@ -12,6 +12,8 @@ from __future__ import annotations
 import subprocess
 import sys
 
+import pytest
+
 
 def _run_query(*args: str) -> subprocess.CompletedProcess:
     """Run `python -m wikigr.cli query …` and capture output."""
@@ -20,8 +22,19 @@ def _run_query(*args: str) -> subprocess.CompletedProcess:
         capture_output=True,
         text=True,
         timeout=15,
-        cwd=None,  # inherits the test runner's cwd
     )
+
+
+@pytest.fixture(scope="class")
+def result_traversal():
+    """Subprocess result for '../traversal' — cached once per class."""
+    return _run_query("What is X?", "--pack", "../traversal")
+
+
+@pytest.fixture(scope="class")
+def result_spaces():
+    """Subprocess result for 'name with spaces' — cached once per class."""
+    return _run_query("What is X?", "--pack", "name with spaces")
 
 
 class TestQueryPackNameValidation:
@@ -29,39 +42,33 @@ class TestQueryPackNameValidation:
 
     # --- Path traversal regression tests (required by design spec) ---
 
-    def test_traversal_name_exits_1(self):
+    def test_traversal_name_exits_1(self, result_traversal):
         """'../traversal' must cause exit code 1."""
-        result = _run_query("What is X?", "--pack", "../traversal")
-        assert result.returncode == 1
+        assert result_traversal.returncode == 1
 
-    def test_traversal_name_error_on_stderr(self):
+    def test_traversal_name_error_on_stderr(self, result_traversal):
         """'../traversal' must print an error to stderr."""
-        result = _run_query("What is X?", "--pack", "../traversal")
-        assert result.stderr.strip() != "", "Expected error message on stderr"
+        assert result_traversal.stderr.strip() != "", "Expected error message on stderr"
 
-    def test_traversal_name_error_mentions_invalid(self):
+    def test_traversal_name_error_mentions_invalid(self, result_traversal):
         """stderr message for '../traversal' must say 'invalid' or 'Error'."""
-        result = _run_query("What is X?", "--pack", "../traversal")
-        lower = result.stderr.lower()
+        lower = result_traversal.stderr.lower()
         assert "invalid" in lower or "error" in lower
 
-    def test_traversal_name_error_echoes_name(self):
+    def test_traversal_name_error_echoes_name(self, result_traversal):
         """stderr message must include the rejected name for diagnostics."""
-        result = _run_query("What is X?", "--pack", "../traversal")
-        assert "../traversal" in result.stderr
+        assert "../traversal" in result_traversal.stderr
 
     # --- Spaces regression test (required by design spec) ---
 
-    def test_spaces_in_name_exits_1(self):
+    def test_spaces_in_name_exits_1(self, result_spaces):
         """'name with spaces' must cause exit code 1."""
         # argparse may split on spaces; pass as a single positional string
-        result = _run_query("What is X?", "--pack", "name with spaces")
-        assert result.returncode == 1
+        assert result_spaces.returncode == 1
 
-    def test_spaces_in_name_error_on_stderr(self):
+    def test_spaces_in_name_error_on_stderr(self, result_spaces):
         """'name with spaces' must print an error to stderr."""
-        result = _run_query("What is X?", "--pack", "name with spaces")
-        assert result.stderr.strip() != ""
+        assert result_spaces.stderr.strip() != ""
 
     # --- Additional invalid patterns ---
 
@@ -105,8 +112,8 @@ class TestQueryPackNameValidation:
         assert "not found" in lower or "pack database" in lower
 
     def test_valid_hyphenated_name_not_blocked(self):
-        """'go-expert' (valid name) must not be blocked by name validation."""
-        result = _run_query("What is X?", "--pack", "go-expert")
+        """'nonexistent-pack-abc123' (valid name) must not be blocked by name validation."""
+        result = _run_query("What is X?", "--pack", "nonexistent-pack-abc123")
         # Will fail with "not found" (no DB present) but NOT "invalid pack name"
         lower_stderr = result.stderr.lower()
         assert "invalid" not in lower_stderr
@@ -119,13 +126,11 @@ class TestQueryPackNameValidation:
 
     # --- Error message format contract ---
 
-    def test_error_message_contains_pattern_hint(self):
+    def test_error_message_contains_pattern_hint(self, result_traversal):
         """Error message must mention the expected pattern for user guidance."""
-        result = _run_query("What is X?", "--pack", "../traversal")
         # The error should help the user understand valid naming rules
-        assert "alphanumeric" in result.stderr.lower() or "pattern" in result.stderr.lower()
+        assert "alphanumeric" in result_traversal.stderr.lower() or "pattern" in result_traversal.stderr.lower()
 
-    def test_no_stdout_on_invalid_name(self):
+    def test_no_stdout_on_invalid_name(self, result_traversal):
         """No output on stdout when pack name is invalid (errors go to stderr only)."""
-        result = _run_query("What is X?", "--pack", "../traversal")
-        assert result.stdout.strip() == ""
+        assert result_traversal.stdout.strip() == ""
