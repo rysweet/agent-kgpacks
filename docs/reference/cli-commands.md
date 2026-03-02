@@ -13,21 +13,42 @@ wikigr query "<question>" --pack <pack-path> [--max-results N] [--format text|js
 | Parameter | Required | Default | Description |
 |-----------|----------|---------|-------------|
 | `question` | Yes | — | Natural language question |
-| `--pack` | Yes | — | Pack directory path, pack.db path, or pack name (resolves to `data/packs/<name>`) |
+| `--pack` | Yes | — | Pack directory path, `pack.db` path, or pack short name (resolves to `data/packs/<name>/pack.db`) |
 | `--max-results` | No | 10 | Maximum retrieval results |
 | `--format` | No | text | Output format: `text` (answer + sources) or `json` (structured) |
+
+**`--pack` resolution order**
+
+The argument is resolved in this order:
+
+1. **Directory path** — if the value is an existing directory, `pack.db` is looked up inside it. No name validation is applied.
+2. **`pack.db` path** — if the value ends with `pack.db`, it is used directly. No name validation is applied.
+3. **Short name** — otherwise the value is validated against `PACK_NAME_RE` (`^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$`) and resolved to `data/packs/<name>/pack.db`.
+
+**Short-name validation error**
+
+If the short name fails validation the command prints a diagnostic to stderr and exits with code 1:
+
+```
+Error: invalid pack name '../traversal'. Only alphanumeric, hyphens, and underscores allowed
+(pattern: ^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$)
+```
 
 **Examples:**
 
 ```bash
-# Query by pack directory
+# Query by pack directory (no name validation)
 wikigr query "What changed in Go 1.23 iterators?" --pack data/packs/go-expert
 
-# Query by pack name (resolves to data/packs/<name>/pack.db)
+# Query by pack name (validated, then resolves to data/packs/<name>/pack.db)
 wikigr query "How do I configure Bicep modules?" --pack bicep-infrastructure
 
 # JSON output for programmatic use
 wikigr query "What is errdefer?" --pack zig-expert --format json
+
+# Invalid name — exits with code 1
+wikigr query "What is the default shell?" --pack "../../../etc"
+# Error: invalid pack name '../../../etc'. Only alphanumeric, hyphens, and underscores allowed
 ```
 
 ---
@@ -216,18 +237,29 @@ python scripts/generate_eval_questions.py --pack <pack-name> [--count N] [--outp
 Check that all URLs in a pack's `urls.txt` are reachable.
 
 ```bash
-python scripts/validate_pack_urls.py --pack go-expert           # By pack name
-python scripts/validate_pack_urls.py data/packs/go-expert/urls.txt  # By file path
-python scripts/validate_pack_urls.py --all                      # All packs
+python scripts/validate_pack_urls.py --pack go-expert                # By pack name (validated)
+python scripts/validate_pack_urls.py data/packs/go-expert/urls.txt   # By explicit file path
+python scripts/validate_pack_urls.py --all                           # All packs
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `urls-file` | Positional path to a `urls.txt` file |
-| `--pack` | Pack name (resolves to `data/packs/<name>/urls.txt`) |
-| `--all` | Validate all packs in `data/packs/` |
+| `urls-file` | Positional path to a `urls.txt` file (no name validation applied) |
+| `--pack` | Pack short name — validated against `PACK_NAME_RE` before use; resolves to `data/packs/<name>/urls.txt` |
+| `--all` | Validate all packs found under `data/packs/` |
 | `--fix` | Comment out invalid URLs in the file |
 | `--workers` | Concurrent validation workers (default: 10) |
+
+**`--pack` name validation**
+
+When `--pack` is used, the argument is validated against `PACK_NAME_RE` (`^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$`) before the `urls.txt` path is constructed. Invalid names exit immediately with code 1:
+
+```
+Error: invalid pack name 'name with spaces'. Only alphanumeric, hyphens, and underscores allowed
+(pattern: ^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$)
+```
+
+This prevents path traversal via the `--pack` flag. Use the positional `urls-file` argument if you need to point at an arbitrary file path.
 
 ## Build Scripts
 

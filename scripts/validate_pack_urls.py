@@ -109,6 +109,15 @@ def main():
             print(f"\n{'=' * 60}")
             validate_file(urls_file, fix=args.fix, workers=args.workers)
     elif args.pack:
+        from wikigr.packs.manifest import PACK_NAME_RE
+
+        if not PACK_NAME_RE.match(args.pack):
+            print(
+                f"Error: invalid pack name '{args.pack}'. Only alphanumeric, hyphens, and underscores allowed "
+                f"(pattern: {PACK_NAME_RE.pattern})",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         pack_urls = Path("data/packs") / args.pack / "urls.txt"
         if not pack_urls.exists():
             print(f"Error: {pack_urls} not found", file=sys.stderr)

@@ -11,6 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+PACK_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$")
+_SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+(-[\w\.]+)?(\+[\w\.]+)?$")
+
 
 @dataclass
 class GraphStats:
@@ -185,7 +188,6 @@ def validate_manifest(manifest: PackManifest) -> list[str]:
     errors = []
 
     # Validate name — must be non-empty and contain only safe characters (no path traversal)
-    PACK_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$")
     if not manifest.name or not manifest.name.strip():
         errors.append("Pack name cannot be empty")
     elif not PACK_NAME_RE.match(manifest.name):
@@ -195,8 +197,7 @@ def validate_manifest(manifest: PackManifest) -> list[str]:
         )
 
     # Validate version (semantic versioning)
-    semver_pattern = r"^\d+\.\d+\.\d+(-[\w\.]+)?(\+[\w\.]+)?$"
-    if not re.match(semver_pattern, manifest.version):
+    if not _SEMVER_RE.match(manifest.version):
         errors.append(f"Invalid semantic version: {manifest.version}")
 
     # Validate description
