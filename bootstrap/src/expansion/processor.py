@@ -69,6 +69,21 @@ def _sanitize_error(error_msg: str) -> str:
         flags=re.IGNORECASE,
     )
 
+    # Redact JWT tokens (eyJ... base64url-encoded header)
+    sanitized = re.sub(
+        r"eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]*",
+        "***REDACTED_JWT***",
+        sanitized,
+    )
+
+    # Redact URL-embedded credentials (?api_key=VALUE, ?token=VALUE, &secret=VALUE, etc.)
+    sanitized = re.sub(
+        r"([?&](api[_-]?key|token|secret|access[_-]?token|auth)=)[a-zA-Z0-9_%-]{8,128}",
+        r"\1***REDACTED***",
+        sanitized,
+        flags=re.IGNORECASE,
+    )
+
     return sanitized
 
 
@@ -215,9 +230,7 @@ class ArticleProcessor:
 
         except Exception as e:
             error_msg = _sanitize_error(f"Processing error: {str(e)}")
-            logger.error(
-                f"  ✗ Failed to process {title_or_url}: {error_msg}", exc_info=True
-            )
+            logger.error(f"  ✗ Failed to process {title_or_url}: {error_msg}", exc_info=True)
             return (False, [], error_msg)
 
     def _detect_domain(self, categories: list[str]) -> str | None:

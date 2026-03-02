@@ -16,10 +16,10 @@ import pytest
 
 from bootstrap.src.expansion.orchestrator import RyuGraphOrchestrator
 
-
 # ---------------------------------------------------------------------------
 # Helpers / fixtures
 # ---------------------------------------------------------------------------
+
 
 def _make_article_info(title="Python (programming language)", depth=0, category="Technology"):
     return {"title": title, "expansion_depth": depth, "category": category}
@@ -55,6 +55,7 @@ def orch_with_mocks():
 # Unit tests – _process_one keyword argument contract
 # ---------------------------------------------------------------------------
 
+
 class TestProcessOneKeywordArgContract:
     """_process_one must call process_article with title_or_url=, not title=."""
 
@@ -66,9 +67,9 @@ class TestProcessOneKeywordArgContract:
         orch._process_one(_make_article_info("Python (programming language)", depth=0), worker_conn)
 
         _, kwargs = mock_processor.process_article.call_args
-        assert "title_or_url" in kwargs, (
-            f"process_article must be called with title_or_url=, but was called with kwargs: {kwargs}"
-        )
+        assert (
+            "title_or_url" in kwargs
+        ), f"process_article must be called with title_or_url=, but was called with kwargs: {kwargs}"
 
     def test_process_article_not_called_with_title_keyword(self, orch_with_mocks):
         """The forbidden legacy keyword 'title' must NOT appear in the call."""
@@ -78,9 +79,9 @@ class TestProcessOneKeywordArgContract:
         orch._process_one(_make_article_info("Recursion", depth=0), worker_conn)
 
         _, kwargs = mock_processor.process_article.call_args
-        assert "title" not in kwargs, (
-            f"process_article must NOT be called with the legacy keyword 'title', but kwargs were: {kwargs}"
-        )
+        assert (
+            "title" not in kwargs
+        ), f"process_article must NOT be called with the legacy keyword 'title', but kwargs were: {kwargs}"
 
     def test_title_value_forwarded_correctly(self, orch_with_mocks):
         """The article title string must be the value of title_or_url."""
@@ -96,6 +97,7 @@ class TestProcessOneKeywordArgContract:
 # ---------------------------------------------------------------------------
 # Unit tests – _process_one other keyword arguments
 # ---------------------------------------------------------------------------
+
 
 class TestProcessOneOtherArgs:
     """Verify the remaining kwargs passed to process_article are correct."""
@@ -136,6 +138,7 @@ class TestProcessOneOtherArgs:
 # Unit tests – _process_one return value contract
 # ---------------------------------------------------------------------------
 
+
 class TestProcessOneReturnValue:
     """_process_one must return (title, success, error_or_None)."""
 
@@ -161,10 +164,35 @@ class TestProcessOneReturnValue:
         assert success is False
         assert error is not None
 
+    def test_mark_failed_called_on_failure_path(self):
+        """On process_article failure, mark_failed must be called with the article title."""
+        worker_conn = MagicMock()
+        mock_processor = MagicMock()
+        mock_processor.process_article.return_value = (False, [], "fetch error")
+        mock_queue_cls = MagicMock()
+        mock_queue_instance = MagicMock()
+        mock_queue_cls.return_value = mock_queue_instance
+
+        with (
+            patch(
+                "bootstrap.src.expansion.orchestrator.ArticleProcessor", return_value=mock_processor
+            ),
+            patch("bootstrap.src.expansion.orchestrator.WorkQueueManager", mock_queue_cls),
+            patch("bootstrap.src.expansion.orchestrator.LinkDiscovery"),
+            patch("bootstrap.src.expansion.orchestrator.kuzu"),
+        ):
+            orch = object.__new__(RyuGraphOrchestrator)
+            orch.max_depth = 2
+            orch._shared_embedding_generator = MagicMock()
+            orch._process_one(_make_article_info("Failing Article", depth=0), worker_conn)
+
+        mock_queue_instance.mark_failed.assert_called_once_with("Failing Article", "fetch error")
+
 
 # ---------------------------------------------------------------------------
 # Integration-style test – ArticleProcessor.process_article real signature
 # ---------------------------------------------------------------------------
+
 
 class TestProcessArticleSignature:
     """Verify ArticleProcessor.process_article accepts title_or_url= kwarg."""
@@ -172,22 +200,24 @@ class TestProcessArticleSignature:
     def test_process_article_accepts_title_or_url_keyword(self):
         """Calling process_article(title_or_url=...) must not raise TypeError."""
         import inspect
+
         from bootstrap.src.expansion.processor import ArticleProcessor
 
         params = list(inspect.signature(ArticleProcessor.process_article).parameters)
-        assert "title_or_url" in params, (
-            f"ArticleProcessor.process_article must have 'title_or_url' parameter; found: {params}"
-        )
+        assert (
+            "title_or_url" in params
+        ), f"ArticleProcessor.process_article must have 'title_or_url' parameter; found: {params}"
 
     def test_process_article_does_not_have_title_parameter(self):
         """ArticleProcessor.process_article must NOT have a bare 'title' parameter."""
         import inspect
+
         from bootstrap.src.expansion.processor import ArticleProcessor
 
         params = list(inspect.signature(ArticleProcessor.process_article).parameters)
-        assert "title" not in params, (
-            f"ArticleProcessor.process_article must NOT have 'title' parameter; found: {params}"
-        )
+        assert (
+            "title" not in params
+        ), f"ArticleProcessor.process_article must NOT have 'title' parameter; found: {params}"
 
     def test_calling_with_title_kwarg_raises_type_error(self):
         """Calling process_article(title=...) must raise TypeError – legacy regression guard."""
@@ -200,5 +230,5 @@ class TestProcessArticleSignature:
             processor.llm_extractor = None
             processor.content_source = MagicMock()
 
-        with pytest.raises(TypeError, match="unexpected keyword argument"):
-            processor.process_article(title="Python", category="Tech", expansion_depth=0)
+            with pytest.raises(TypeError, match="unexpected keyword argument"):
+                processor.process_article(title="Python", category="Tech", expansion_depth=0)

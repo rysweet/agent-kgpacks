@@ -23,10 +23,10 @@ from ..api_client import (
     WikipediaArticle,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _response(status: int = 200, json_body: dict | None = None) -> MagicMock:
     """Build a minimal requests.Response mock."""
@@ -39,7 +39,9 @@ def _response(status: int = 200, json_body: dict | None = None) -> MagicMock:
     return resp
 
 
-def _parse_response(title: str = "Python", wikitext: str = "text", links=None, categories=None) -> dict:
+def _parse_response(
+    title: str = "Python", wikitext: str = "text", links=None, categories=None
+) -> dict:
     """Wrap a Wikipedia Parse API response body."""
     return {
         "parse": {
@@ -60,6 +62,7 @@ def _error_response(code: str, info: str = "error") -> dict:
 # Successful fetch
 # ---------------------------------------------------------------------------
 
+
 class TestFetchArticleSuccess:
     """Happy-path: correct parsing of a successful API response."""
 
@@ -67,7 +70,9 @@ class TestFetchArticleSuccess:
     def test_returns_wikipedia_article(self, mock_sleep):
         client = WikipediaAPIClient(rate_limit_delay=0)
         client.session.get = MagicMock(
-            return_value=_response(200, _parse_response("Python", "wikitext body", ["AI"], ["Tech"]))
+            return_value=_response(
+                200, _parse_response("Python", "wikitext body", ["AI"], ["Tech"])
+            )
         )
         article = client.fetch_article("Python")
 
@@ -105,6 +110,7 @@ class TestFetchArticleSuccess:
 # ArticleNotFoundError
 # ---------------------------------------------------------------------------
 
+
 class TestArticleNotFound:
     """404 and API-level missingtitle both raise ArticleNotFoundError."""
 
@@ -120,7 +126,9 @@ class TestArticleNotFound:
         """Wikipedia returns 200 but with error.code == 'missingtitle' for missing articles."""
         client = WikipediaAPIClient(rate_limit_delay=0)
         client.session.get = MagicMock(
-            return_value=_response(200, _error_response("missingtitle", "The page you specified doesn't exist"))
+            return_value=_response(
+                200, _error_response("missingtitle", "The page you specified doesn't exist")
+            )
         )
         with pytest.raises(ArticleNotFoundError, match="not found"):
             client.fetch_article("Missing Article")
@@ -147,6 +155,7 @@ class TestArticleNotFound:
 # ---------------------------------------------------------------------------
 # Retry on 429 rate limiting
 # ---------------------------------------------------------------------------
+
 
 class TestRateLimitRetry:
     """429 responses trigger exponential-backoff retry up to max_retries."""
@@ -193,13 +202,14 @@ class TestRateLimitRetry:
         sleep_calls = [c.args[0] for c in mock_sleep.call_args_list]
         # Should see backoff calls for 2^0 * delay and 2^1 * delay
         backoff_calls = [s for s in sleep_calls if s >= delay]
-        assert backoff_calls[0] == pytest.approx(delay * 1, rel=0.1)   # 2^0 * delay
-        assert backoff_calls[1] == pytest.approx(delay * 2, rel=0.1)   # 2^1 * delay
+        assert backoff_calls[0] == pytest.approx(delay * 1, rel=0.1)  # 2^0 * delay
+        assert backoff_calls[1] == pytest.approx(delay * 2, rel=0.1)  # 2^1 * delay
 
 
 # ---------------------------------------------------------------------------
 # Retry on 5xx server errors
 # ---------------------------------------------------------------------------
+
 
 class TestServerErrorRetry:
     """5xx server errors trigger retry with exponential backoff."""
@@ -245,6 +255,7 @@ class TestServerErrorRetry:
 # Retry on timeout
 # ---------------------------------------------------------------------------
 
+
 class TestTimeoutRetry:
     """Request timeouts trigger retry with exponential backoff."""
 
@@ -276,6 +287,7 @@ class TestTimeoutRetry:
 # Generic request exception
 # ---------------------------------------------------------------------------
 
+
 class TestRequestExceptionHandling:
     """Non-retryable request exceptions bubble up immediately."""
 
@@ -283,9 +295,7 @@ class TestRequestExceptionHandling:
     def test_raises_api_error_on_connection_error(self, mock_sleep):
         """ConnectionError should raise WikipediaAPIError immediately."""
         client = WikipediaAPIClient(rate_limit_delay=0)
-        client.session.get = MagicMock(
-            side_effect=requests.ConnectionError("connection refused")
-        )
+        client.session.get = MagicMock(side_effect=requests.ConnectionError("connection refused"))
         with pytest.raises(WikipediaAPIError, match="Request failed"):
             client.fetch_article("Python")
 
@@ -294,6 +304,7 @@ class TestRequestExceptionHandling:
 # Cache behaviour
 # ---------------------------------------------------------------------------
 
+
 class TestCacheBehaviour:
     """Response caching: hits avoid HTTP calls; capacity evicts oldest entry."""
 
@@ -301,9 +312,7 @@ class TestCacheBehaviour:
     def test_cache_hit_avoids_http_call(self, mock_sleep):
         """Second fetch of same title should use cache, not make HTTP call."""
         client = WikipediaAPIClient(rate_limit_delay=0, cache_enabled=True)
-        client.session.get = MagicMock(
-            return_value=_response(200, _parse_response("Python"))
-        )
+        client.session.get = MagicMock(return_value=_response(200, _parse_response("Python")))
         _ = client.fetch_article("Python")
         _ = client.fetch_article("Python")  # cache hit
 
@@ -314,9 +323,9 @@ class TestCacheBehaviour:
         """When cache reaches _CACHE_MAX_SIZE, the oldest entry is evicted."""
         client = WikipediaAPIClient(rate_limit_delay=0, cache_enabled=True)
         client.session.get = MagicMock(
-            side_effect=lambda *a, **kw: _response(200, _parse_response(
-                kw.get("params", {}).get("page", "T")
-            ))
+            side_effect=lambda *_, **kw: _response(
+                200, _parse_response(kw.get("params", {}).get("page", "T"))
+            )
         )
         # Fill cache to capacity
         for i in range(WikipediaAPIClient._CACHE_MAX_SIZE):
@@ -325,9 +334,7 @@ class TestCacheBehaviour:
             )
 
         # Inserting one more should evict the first entry
-        client.session.get = MagicMock(
-            return_value=_response(200, _parse_response("New"))
-        )
+        client.session.get = MagicMock(return_value=_response(200, _parse_response("New")))
         client.fetch_article("New")
 
         assert len(client._cache) == WikipediaAPIClient._CACHE_MAX_SIZE
@@ -337,9 +344,7 @@ class TestCacheBehaviour:
     def test_clear_cache_empties_cache(self, mock_sleep):
         """clear_cache() should remove all cached entries."""
         client = WikipediaAPIClient(rate_limit_delay=0, cache_enabled=True)
-        client.session.get = MagicMock(
-            return_value=_response(200, _parse_response("Python"))
-        )
+        client.session.get = MagicMock(return_value=_response(200, _parse_response("Python")))
         client.fetch_article("Python")
         assert len(client._cache) > 0
 
@@ -350,9 +355,7 @@ class TestCacheBehaviour:
     def test_cache_disabled_always_fetches(self, mock_sleep):
         """When cache is disabled, every call makes an HTTP request."""
         client = WikipediaAPIClient(rate_limit_delay=0, cache_enabled=False)
-        client.session.get = MagicMock(
-            return_value=_response(200, _parse_response("Python"))
-        )
+        client.session.get = MagicMock(return_value=_response(200, _parse_response("Python")))
         client.fetch_article("Python")
         client.fetch_article("Python")
 
@@ -362,6 +365,7 @@ class TestCacheBehaviour:
 # ---------------------------------------------------------------------------
 # Batch fetch
 # ---------------------------------------------------------------------------
+
 
 class TestFetchBatch:
     """fetch_batch processes multiple titles and returns per-title results."""
@@ -416,6 +420,7 @@ class TestFetchBatch:
 # ---------------------------------------------------------------------------
 # Title validation via Query API
 # ---------------------------------------------------------------------------
+
 
 class TestValidateTitles:
     """validate_titles uses the lightweight Query API to check existence."""

@@ -240,7 +240,7 @@ class RyuGraphOrchestrator:
             while True:
                 iteration += 1
 
-                if max_iterations and iteration > max_iterations:
+                if max_iterations is not None and iteration > max_iterations:
                     logger.warning(f"Max iterations ({max_iterations}) reached")
                     break
 
@@ -336,7 +336,9 @@ class RyuGraphOrchestrator:
         for chunk_start in range(0, len(batch), len(worker_conns)):
             chunk = batch[chunk_start : chunk_start + len(worker_conns)]
             futures = {
-                executor.submit(self._process_one, article_info, worker_conns[i]): article_info["title"]
+                executor.submit(self._process_one, article_info, worker_conns[i]): article_info[
+                    "title"
+                ]
                 for i, article_info in enumerate(chunk)
             }
             for future in as_completed(futures):
