@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Workstream launcher - recipe runner execution."""
-
-import logging
 import sys
+import logging
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,7 +20,7 @@ result = run_recipe_by_name(
     "default-workflow",
     adapter=adapter,
     user_context={
-        "task_description": "In tests/agent/test_retrieval_enhancements.py, the _make_agent function does not set agent.cross_encoder = None. This causes _vector_primary_retrieve to raise AttributeError which is silently caught. Fix: add agent.cross_encoder = None to _make_agent around line 38.",
+        "task_description": "docs/reference/pack-manifest.md line 47 says lowercase alphanumeric with hyphens but the regex allows uppercase and underscores. Update the doc to match the actual regex. Also remove the PLAN_CACHE_MAX_SIZE doc entry or add a note that it is not enforced.",
         "repo_path": ".",
     },
 )
