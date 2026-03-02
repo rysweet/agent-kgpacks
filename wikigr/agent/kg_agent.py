@@ -307,6 +307,41 @@ class KnowledgeGraphAgent:
 
         return None
 
+    @staticmethod
+    def _validate_cypher(query: str) -> None:
+        """Validate a Cypher query against an allowlist/blocklist.
+
+        Prevents destructive write operations and unbounded variable-length
+        path patterns from reaching the database.
+
+        Args:
+            query: The Cypher query string to validate.
+
+        Raises:
+            ValueError: If the query fails any validation check.
+        """
+        import re
+
+        # Strip string literals to avoid false positives on quoted content.
+        stripped = re.sub(r'"[^"]*"', '""', query)
+        stripped = re.sub(r"'[^']*'", "''", stripped)
+
+        upper = stripped.strip().upper()
+
+        # 1. Prefix check — must start with an allowed read keyword.
+        if not (upper.startswith("MATCH") or upper.startswith("CALL")):
+            raise ValueError("Cypher query must start with MATCH or CALL")
+
+        # 2. Block dangerous write/DDL keywords.
+        _BLOCKED = frozenset({"CREATE", "DELETE", "DROP", "SET", "MERGE", "REMOVE", "DETACH"})
+        for token in re.findall(r"\b[A-Za-z]+\b", stripped):
+            if token.upper() in _BLOCKED:
+                raise ValueError(f"Write operation rejected: {token.upper()}")
+
+        # 3. Block unbounded variable-length paths (e.g. [:REL*]).
+        if re.search(r"\[[\w:]*\*[^\]]*\]", query):
+            raise ValueError("Unbounded variable-length path detected in query")
+
     def _init_cypher_rag(self, cypher_pack_path: str | None) -> Any:
         """Initialize CypherRAG if a Cypher pattern pack path is provided.
 
