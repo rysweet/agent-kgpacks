@@ -670,12 +670,27 @@ def cmd_query(args: argparse.Namespace) -> None:
     from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
     pack_path = args.pack
-    # Resolve pack.db path
+    # Resolve pack.db path.
+    # NOTE: The directory and pack.db branches intentionally accept arbitrary
+    # filesystem paths without PACK_NAME_RE validation.  This is a deliberate
+    # power-user escape hatch: the invoking user controls their own filesystem,
+    # so path traversal here has the same blast radius as any shell command.
+    # The PACK_NAME_RE guard below applies only to the short-name branch, where
+    # we construct a path ourselves and must prevent traversal into unintended dirs.
     if os.path.isdir(pack_path):
         db_path = os.path.join(pack_path, "pack.db")
     elif pack_path.endswith("pack.db"):
         db_path = pack_path
     else:
+        from wikigr.packs.manifest import PACK_NAME_RE
+
+        if not PACK_NAME_RE.match(pack_path):
+            print(
+                f"Error: invalid pack name '{pack_path}'. Only alphanumeric, hyphens, and underscores allowed "
+                f"(pattern: {PACK_NAME_RE.pattern})",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         db_path = os.path.join("data", "packs", pack_path, "pack.db")
 
     if not os.path.exists(db_path):

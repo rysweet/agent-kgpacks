@@ -38,13 +38,52 @@ JSON object with the following structure:
 }
 ```
 
+## Pack Name Format
+
+Pack names are validated everywhere a short name is accepted — in `wikigr query --pack`, `validate_pack_urls.py --pack`, and `manifest.json` itself.
+
+### Allowed characters
+
+```
+^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$
+```
+
+| Rule | Detail |
+|------|--------|
+| First character | ASCII letter or digit (`a-z`, `A-Z`, `0-9`) |
+| Remaining characters | ASCII letters, digits, hyphens (`-`), or underscores (`_`) |
+| Maximum length | 64 characters total |
+| Case | Case-sensitive; by convention use all-lowercase with hyphens |
+
+**Valid names**
+
+```
+go-expert
+react-expert
+dotnet_core
+My-Pack-2
+```
+
+**Invalid names — rejected with exit code 1**
+
+```
+../traversal      # path traversal attempt
+name with spaces  # spaces not allowed
+-starts-with-dash # must start with alphanumeric
+.hidden           # dot not allowed
+```
+
+The regex is defined in `wikigr/packs/manifest.py` as `PACK_NAME_RE` and shared across all validation sites so the rule is applied consistently.
+
+---
+
 ## Fields
 
 ### Required Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `name` | string | Pack identifier. Must match the directory name. Lowercase alphanumeric with hyphens (e.g., `go-expert`, `react-expert`) |
+| `name` | string | Pack identifier. Must match the directory name and satisfy [Pack Name Format](#pack-name-format) (e.g., `go-expert`, `react-expert`) |
 | `version` | string | Semantic version (e.g., `1.0.0`). Follows [SemVer](https://semver.org/) |
 | `description` | string | Human-readable description of the pack's domain coverage |
 | `graph_stats` | object | Statistics about the knowledge graph (see below) |
@@ -87,7 +126,7 @@ The `wikigr pack validate` command checks:
 
 | Rule | Description |
 |------|-------------|
-| `name` is non-empty | Pack must have a name |
+| `name` matches `PACK_NAME_RE` | Must satisfy `^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$` |
 | `version` is valid SemVer | Must match `X.Y.Z` pattern |
 | `graph_stats.articles` >= 0 | Must be a non-negative integer |
 | `graph_stats.size_mb` >= 0 | Must be a non-negative number |
@@ -190,7 +229,44 @@ wikigr pack validate data/packs/my-pack
 
 | Version | Changes |
 |---------|---------|
-| Current | `eval_scores` and `source_urls` are optional; `author` and `topics` fields added |
+| Current | `eval_scores` and `source_urls` are optional; `author` and `topics` fields added; `PACK_NAME_RE` promoted to shared module-level constant |
 | Original | All fields required; no `author` or `topics` |
 
 The manifest reader supports both `created` and `created_at` field names for backwards compatibility.
+
+---
+
+## API Reference
+
+### `wikigr.packs.manifest.PACK_NAME_RE`
+
+```python
+import re
+PACK_NAME_RE: re.Pattern = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$")
+```
+
+Compiled regular expression for validating pack short names. Exported from `wikigr.packs.manifest` as the single canonical source of truth used by:
+
+- `validate_manifest()` — validates the `name` field inside a manifest
+- `wikigr query --pack <name>` — validates the short-name branch before constructing a filesystem path
+- `scripts/validate_pack_urls.py --pack <name>` — validates the argument before constructing the `urls.txt` path
+
+**Importing the constant**
+
+```python
+from wikigr.packs.manifest import PACK_NAME_RE
+
+if not PACK_NAME_RE.match(name):
+    raise ValueError(f"Invalid pack name: {name!r}")
+```
+
+**Pattern breakdown**
+
+| Segment | Meaning |
+|---------|---------|
+| `^` | Anchored at start |
+| `[a-zA-Z0-9]` | First character: letter or digit |
+| `[a-zA-Z0-9_-]{0,63}` | Up to 63 more: letters, digits, hyphen, underscore |
+| `$` | Anchored at end |
+
+The anchors prevent partial-match bypass. The character set excludes `/`, `\`, `.`, space, and null, which eliminates directory-traversal attacks via the short-name resolution path.
