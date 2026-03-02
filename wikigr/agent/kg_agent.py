@@ -16,6 +16,71 @@ from anthropic import Anthropic, APIConnectionError, APIStatusError, APITimeoutE
 
 logger = logging.getLogger(__name__)
 
+# Stop words for _fallback_seed_extraction — includes domain-specific query verbs in
+# addition to linguistic stop words so they are never mistaken for article titles.
+# Module-level (not KnowledgeGraphAgent.STOP_WORDS) because _fallback_seed_extraction
+# is a @staticmethod and cannot reference self or cls constants.
+_FALLBACK_STOP_WORDS: frozenset[str] = frozenset(
+    {
+        "what",
+        "who",
+        "how",
+        "why",
+        "when",
+        "where",
+        "which",
+        "does",
+        "is",
+        "are",
+        "was",
+        "were",
+        "the",
+        "a",
+        "an",
+        "of",
+        "in",
+        "on",
+        "to",
+        "for",
+        "and",
+        "or",
+        "not",
+        "can",
+        "could",
+        "would",
+        "should",
+        "do",
+        "did",
+        "has",
+        "have",
+        "had",
+        "be",
+        "been",
+        "about",
+        "between",
+        "from",
+        "with",
+        "this",
+        "that",
+        "these",
+        "those",
+        "it",
+        "its",
+        "tell",
+        "me",
+        "us",
+        "find",
+        "explain",
+        "describe",
+        "relationship",
+        "related",
+        "knowledge",
+        "graph",
+        "article",
+        "articles",
+    }
+)
+
 
 def _safe_json_loads(value: object) -> dict:
     """Parse JSON string to dict, returning {} on any failure."""
@@ -802,66 +867,8 @@ class KnowledgeGraphAgent:
         Capitalised multi-word phrases and known stop-word filtering provide a
         reasonable fallback when the LLM is unavailable.
         """
-        stop_words = {
-            "what",
-            "who",
-            "how",
-            "why",
-            "when",
-            "where",
-            "which",
-            "does",
-            "is",
-            "are",
-            "was",
-            "were",
-            "the",
-            "a",
-            "an",
-            "of",
-            "in",
-            "on",
-            "to",
-            "for",
-            "and",
-            "or",
-            "not",
-            "can",
-            "could",
-            "would",
-            "should",
-            "do",
-            "did",
-            "has",
-            "have",
-            "had",
-            "be",
-            "been",
-            "about",
-            "between",
-            "from",
-            "with",
-            "this",
-            "that",
-            "these",
-            "those",
-            "it",
-            "its",
-            "tell",
-            "me",
-            "us",
-            "find",
-            "explain",
-            "describe",
-            "relationship",
-            "related",
-            "knowledge",
-            "graph",
-            "article",
-            "articles",
-        }
         words = question.replace("?", "").replace("!", "").replace(",", "").split()
-        candidates = [w for w in words if w.lower() not in stop_words and len(w) > 2]
+        candidates = [w for w in words if w.lower() not in _FALLBACK_STOP_WORDS and len(w) > 2]
         # Preserve original casing — case-insensitive matching happens in the traversal query
         return candidates[:3] if candidates else ["Artificial intelligence"]
 
@@ -1150,8 +1157,9 @@ class KnowledgeGraphAgent:
                     if title:
                         scored[title] = scored.get(title, 0) + graph_weight * 0.5
 
-        # Signal 3: Keyword match (title contains)
-        keywords = [w for w in question.split() if len(w) > 3]
+        # Signal 3: Keyword match (title contains) — filter stop words to avoid
+        # wasteful DB queries on common words like "what", "from", "with".
+        keywords = [w for w in question.split() if len(w) > 3 and w.lower() not in self.STOP_WORDS]
         for kw in keywords[:3]:
             df = self._safe_query(
                 "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($kw) "
@@ -1496,16 +1504,17 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
         if df is None:
             return []
 
-        paths = []
-        for _, row in df.iterrows():
-            paths.append(
-                {
-                    "source": row["source"],
-                    "target": row["target"],
-                    "hops": row["hops"],
-                    "note": "Full path details require multiple queries in Kuzu",
-                }
+        paths = [
+            {
+                "source": source,
+                "target": target,
+                "hops": hops,
+                "note": "Full path details require multiple queries in Kuzu",
+            }
+            for source, target, hops in zip(
+                df["source"].tolist(), df["target"].tolist(), df["hops"].tolist()
             )
+        ]
 
         return paths
 

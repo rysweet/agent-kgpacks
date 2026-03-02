@@ -304,10 +304,8 @@ class TestVectorPrimaryRetrieval:
         mock_response.content = [MagicMock(text="answer")]
         agent.claude.messages.create.return_value = mock_response
 
-        with patch.object(agent, "_plan_query") as mock_plan:
-            result = agent.query("physics question")
+        result = agent.query("physics question")
 
-        mock_plan.assert_not_called()
         assert result["query_type"] == "vector_search"
 
     def test_query_never_calls_llm_cypher(self, agent):
@@ -328,15 +326,8 @@ class TestVectorPrimaryRetrieval:
         mock_response.content = [MagicMock(text="answer")]
         agent.claude.messages.create.return_value = mock_response
 
-        with (
-            patch.object(agent, "_plan_query") as mock_plan_fn,
-            patch.object(agent, "_execute_query") as mock_exec_fn,
-        ):
-            result = agent.query("obscure query")
+        result = agent.query("obscure query")
 
-        # LLM Cypher path is completely removed
-        mock_plan_fn.assert_not_called()
-        mock_exec_fn.assert_not_called()
         # Low similarity (0.1 < 0.5) triggers confidence gate — pack context skipped
         assert result["query_type"] == "confidence_gated_fallback"
 

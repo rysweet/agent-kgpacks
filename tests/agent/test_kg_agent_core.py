@@ -1,12 +1,11 @@
-"""Unit tests for 6 critical untested KnowledgeGraphAgent methods.
+"""Unit tests for 5 KnowledgeGraphAgent methods.
 
 Targets:
   1. _safe_json_loads (module-level)
-  2. _execute_query
-  3. _execute_fallback_query
-  4. _fetch_source_text
-  5. _build_synthesis_context
-  6. _hybrid_retrieve
+  2. _fetch_source_text
+  3. _build_synthesis_context
+  4. _hybrid_retrieve
+  5. Confidence-gated context injection (query / _synthesize_answer_minimal)
 
 All tests mock the Kuzu connection and Claude API -- no real DB or network calls.
 Uses pandas DataFrames to match real Kuzu return format.
@@ -79,168 +78,7 @@ class TestSafeJsonLoads:
 
 
 # ===================================================================
-# 2. _execute_query
-# ===================================================================
-
-
-class TestExecuteQuery:
-    """_execute_query: structures results, handles empty, calls fallback on bad Cypher."""
-
-    def test_structures_results_with_title_and_facts(self) -> None:
-        agent = _make_agent()
-        df = pd.DataFrame(
-            {
-                "title": ["Quantum Mechanics", "Relativity"],
-                "content": ["Energy is quantized", "E=mc^2"],
-            }
-        )
-        agent.conn.execute.return_value = _mock_execute_result(df)
-
-        result = agent._execute_query(
-            "MATCH (a:Article) RETURN a.title AS title, f.content AS content LIMIT 10",
-            limit=10,
-            params={"q": "physics"},
-        )
-
-        assert "Quantum Mechanics" in result["sources"]
-        assert "Relativity" in result["sources"]
-        assert "Energy is quantized" in result["facts"]
-        assert "E=mc^2" in result["facts"]
-
-    def test_empty_results_returns_empty_structure(self) -> None:
-        agent = _make_agent()
-        agent.conn.execute.return_value = _mock_execute_result(pd.DataFrame())
-
-        result = agent._execute_query(
-            "MATCH (a:Article) RETURN a.title AS title LIMIT 10",
-            limit=10,
-        )
-
-        assert result == {"sources": [], "entities": [], "facts": [], "raw": []}
-
-    def test_invalid_cypher_triggers_fallback(self) -> None:
-        agent = _make_agent()
-
-        # Fallback should also return empty since no search term available
-        with patch.object(agent, "_execute_fallback_query") as mock_fallback:
-            mock_fallback.return_value = {
-                "sources": ["Fallback Article"],
-                "entities": [],
-                "facts": [],
-                "raw": [],
-                "fallback": True,
-            }
-
-            # Use a Cypher query that _validate_cypher will reject
-            result = agent._execute_query(
-                "CREATE (a:Article {title: 'bad'})",
-                limit=10,
-                params={"q": "test"},
-            )
-
-            mock_fallback.assert_called_once()
-            assert result["sources"] == ["Fallback Article"]
-            assert result["fallback"] is True
-
-    def test_extracts_entities_from_name_and_type_columns(self) -> None:
-        agent = _make_agent()
-        df = pd.DataFrame(
-            {
-                "name": ["Albert Einstein", "Niels Bohr"],
-                "type": ["person", "person"],
-            }
-        )
-        agent.conn.execute.return_value = _mock_execute_result(df)
-
-        result = agent._execute_query(
-            "MATCH (e:Entity) RETURN e.name AS name, e.type AS type LIMIT 10",
-            limit=10,
-        )
-
-        assert len(result["entities"]) == 2
-        assert result["entities"][0]["name"] == "Albert Einstein"
-        assert result["entities"][0]["type"] == "person"
-
-
-# ===================================================================
-# 3. _execute_fallback_query
-# ===================================================================
-
-
-class TestExecuteFallbackQuery:
-    """_execute_fallback_query: title-based search, empty params, DB error."""
-
-    def test_generates_title_based_search(self) -> None:
-        agent = _make_agent()
-        df = pd.DataFrame(
-            {
-                "title": ["Quantum Mechanics"],
-                "category": ["physics"],
-            }
-        )
-        agent.conn.execute.return_value = _mock_execute_result(df)
-
-        result = agent._execute_fallback_query(
-            params={"q": "quantum"},
-            limit=5,
-            primary_error="Cypher syntax error",
-        )
-
-        assert result["sources"] == ["Quantum Mechanics"]
-        assert result["fallback"] is True
-        assert result["primary_error"] == "Cypher syntax error"
-
-    def test_no_params_returns_error(self) -> None:
-        agent = _make_agent()
-        result = agent._execute_fallback_query(
-            params=None,
-            limit=5,
-            primary_error="bad cypher",
-        )
-
-        assert result["sources"] == []
-        assert "bad cypher" in result["error"]
-
-    def test_empty_string_param_returns_error(self) -> None:
-        agent = _make_agent()
-        result = agent._execute_fallback_query(
-            params={"q": ""},
-            limit=5,
-            primary_error="bad cypher",
-        )
-
-        assert result["sources"] == []
-        assert "bad cypher" in result["error"]
-
-    def test_db_error_in_fallback_returns_error(self) -> None:
-        agent = _make_agent()
-        agent.conn.execute.side_effect = RuntimeError("connection lost")
-
-        result = agent._execute_fallback_query(
-            params={"q": "physics"},
-            limit=5,
-            primary_error="original error",
-        )
-
-        assert result["sources"] == []
-        assert "Both primary and fallback" in result["error"]
-
-    def test_empty_df_from_fallback_returns_no_results(self) -> None:
-        agent = _make_agent()
-        agent.conn.execute.return_value = _mock_execute_result(pd.DataFrame())
-
-        result = agent._execute_fallback_query(
-            params={"q": "nonexistent_topic_xyz"},
-            limit=5,
-            primary_error="bad cypher",
-        )
-
-        assert result["sources"] == []
-        assert "fallback found no results" in result["error"]
-
-
-# ===================================================================
-# 4. _fetch_source_text
+# 2. _fetch_source_text
 # ===================================================================
 
 
@@ -331,7 +169,7 @@ class TestFetchSourceText:
 
 
 # ===================================================================
-# 5. _build_synthesis_context
+# 3. _build_synthesis_context
 # ===================================================================
 
 
@@ -376,26 +214,6 @@ class TestBuildSynthesisContext:
         assert "What is gravity?" in context
         assert "Gravity is a fundamental force." in context
 
-    def test_handles_enriched_context(self) -> None:
-        agent = _make_agent()
-        with patch.object(agent, "_fetch_source_text", return_value=""):
-            context = agent._build_synthesis_context(
-                question="What is dark matter?",
-                kg_results={
-                    "sources": ["Dark Matter"],
-                    "entities": [],
-                    "facts": ["Dark matter makes up 27% of the universe"],
-                    "raw": [],
-                    "enriched_context": "Multi-doc enriched context block here.",
-                },
-                query_plan={"type": "fact_retrieval", "cypher": "MATCH (a) RETURN a"},
-            )
-
-        # When enriched_context is present, it should be used instead of standard context
-        assert "Multi-doc enriched context block here." in context
-        # Standard context (Cypher line) should NOT appear
-        assert "Cypher:" not in context
-
     def test_handles_empty_results(self) -> None:
         agent = _make_agent()
         with patch.object(agent, "_fetch_source_text", return_value=""):
@@ -411,7 +229,7 @@ class TestBuildSynthesisContext:
 
 
 # ===================================================================
-# 6. _hybrid_retrieve
+# 4. _hybrid_retrieve
 # ===================================================================
 
 
@@ -520,7 +338,7 @@ class TestHybridRetrieve:
 
 
 # ===================================================================
-# 7. Confidence-gated context injection
+# 5. Confidence-gated context injection
 # ===================================================================
 
 

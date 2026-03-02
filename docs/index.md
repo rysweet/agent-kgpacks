@@ -110,3 +110,4 @@ For the full walkthrough, see the **[Tutorial](getting-started/tutorial.md)**.
 - **[KG Agent API](reference/kg-agent-api.md)** — Constructor, query(), response format
 - **[CLI Commands](reference/cli-commands.md)** — All `wikigr` commands
 - **[Pack Manifest](reference/pack-manifest.md)** — manifest.json format
+- **[Test Suite](reference/test-suite.md)** — Test files, expected counts, DB-skip guard, mock strategy
