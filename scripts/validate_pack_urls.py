@@ -96,7 +96,9 @@ def validate_file(urls_path: Path, fix: bool = False, workers: int = 10) -> dict
 def main():
     parser = argparse.ArgumentParser(description="Validate pack URLs")
     parser.add_argument("urls_file", nargs="?", help="Path to urls.txt file")
-    parser.add_argument("--pack", type=str, help="Pack name (resolves to data/packs/<name>/urls.txt)")
+    parser.add_argument(
+        "--pack", type=str, help="Pack name (resolves to data/packs/<name>/urls.txt)"
+    )
     parser.add_argument("--all", action="store_true", help="Validate all packs")
     parser.add_argument("--fix", action="store_true", help="Remove invalid URLs from file")
     parser.add_argument("--workers", type=int, default=10, help="Concurrent workers")

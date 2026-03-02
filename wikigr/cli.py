@@ -1159,7 +1159,9 @@ def cmd_pack_eval(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     # Load questions
-    questions_path = Path(args.questions) if args.questions else pack.path / "eval" / "questions.jsonl"
+    questions_path = (
+        Path(args.questions) if args.questions else pack.path / "eval" / "questions.jsonl"
+    )
 
     if not questions_path.exists():
         print(f"Error: questions file not found: {questions_path}", file=sys.stderr)
