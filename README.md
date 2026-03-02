@@ -1,184 +1,157 @@
 # Agent Knowledge Packs
 
-**Domain-specific knowledge graph databases that make AI coding assistants smarter.**
+**Turn any documentation into an AI agent skill.**
 
-## The Problem: LLMs Have Blind Spots
+Knowledge Packs are self-contained, domain-specific knowledge graphs that install as agent skills in Claude Code. Each pack bundles curated content from documentation into a local graph database with vector search — when the agent needs domain expertise, it retrieves grounded context from the pack instead of relying on training data.
 
-Large language models like Claude are remarkably capable, but they have three fundamental limitations:
+```bash
+# Build a pack from documentation URLs
+echo "y" | uv run python scripts/build_go_pack.py
 
-1. **Training cutoff** — Claude's knowledge has a fixed date. New frameworks, API changes, and version updates after that date are invisible.
-2. **Depth gaps** — While Claude knows the basics of most technologies, it lacks the deep, expert-level detail found in official documentation, tutorials, and API references.
-3. **Hallucination on niche topics** — Without grounding in authoritative sources, Claude may generate plausible-sounding but incorrect details about less common technologies.
+# Package and install as a skill
+cd data/packs && tar -czf go-expert.tar.gz go-expert
+wikigr pack install go-expert.tar.gz
 
-**Knowledge Packs solve all three.** They are curated, domain-specific knowledge graph databases that provide up-to-date, deeply sourced content retrieved at query time. The KG Agent retrieves relevant sections from the pack and synthesizes answers grounded in actual documentation.
+# Now just ask Claude Code about Go — the skill activates automatically
+```
 
-## Evaluation Results — 48 Packs, 2,716 Questions
+## Why Knowledge Packs?
+
+LLMs have three limitations that packs solve:
+
+| Limitation | The Pack Fix |
+|------------|-------------|
+| **Training cutoff** — can't know about new APIs and versions | Packs ingest current documentation |
+| **Depth gaps** — knows basics but misses implementation details | Packs contain full docs with section-level granularity |
+| **Hallucination** — plausible but wrong answers on niche topics | Pack answers trace back to specific source articles |
+
+## Evaluation: 99% Accuracy
+
+48 packs evaluated across 2,716 questions (judged by Claude Opus):
 
 | Metric | Training (Claude alone) | With Knowledge Pack |
 |--------|:-----------------------:|:-------------------:|
 | **Accuracy** | 91.7% | **99%** |
-| **Delta** | — | **+7.3pp** |
 | **Pack wins** | — | **38 of 48 (79%)** |
 
-Packs are most impactful for niche or rapidly-evolving domains: workiq-mcp (+62pp), fabric-graphql (+23pp), claude-agent-sdk (+18pp). See [full results](https://rysweet.github.io/agent-kgpacks/evaluation/results/).
+Biggest gains on niche/rapidly-evolving domains: workiq-mcp (+62pp), fabric-graphql (+23pp), claude-agent-sdk (+18pp).
 
 ---
 
-## Use a Pack with Claude Code
+## The Pack Lifecycle
+
+### 1. Describe — Choose a domain and curate URLs
 
 ```bash
-# Install
-git clone https://github.com/rysweet/agent-kgpacks.git && cd agent-kgpacks
-uv sync
-
-# Build a pack
-echo "y" | uv run python scripts/build_go_pack.py
-
-# Install the pack (registers as a Claude Code skill)
-cd data/packs && tar -czf go-expert.tar.gz go-expert
-wikigr pack install go-expert.tar.gz
+mkdir -p data/packs/my-framework/eval
+cat > data/packs/my-framework/urls.txt << 'EOF'
+https://docs.myframework.dev/getting-started
+https://docs.myframework.dev/api-reference
+https://docs.myframework.dev/tutorials/advanced
+https://github.com/myorg/myframework/blob/main/README.md
+EOF
 ```
 
-Packs install to `~/.wikigr/packs/` and auto-register as Claude Code skills. Once installed, just ask domain questions in Claude Code -- the skill activates automatically:
-
-```
-You: "Explain how Go 1.23 range-over-func iterators work"
-# Claude Code loads the go-expert skill, retrieves from the pack's
-# knowledge graph, and synthesizes a grounded answer with citations
-```
-
-## Use a Pack with GitHub Copilot
-
-Start the pack API server for use with Copilot Chat or any HTTP client:
+### 2. Build — Fetch, extract, embed, store
 
 ```bash
-uv run uvicorn backend.main:app --port 8000
+echo "y" | uv run python scripts/build_my_framework_pack.py
 ```
 
-Query via the REST API:
+The build pipeline fetches each URL, uses Claude Haiku to extract entities/relationships/facts, generates BGE vector embeddings (768-dim), and stores everything in a Kuzu graph database.
+
+### 3. Evaluate — Prove the pack adds value
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question": "How do I use Go generics with type constraints?", "max_results": 10}'
+# Generate eval questions from pack content
+uv run python scripts/generate_eval_questions.py --pack my-framework
+
+# Run the evaluation (Training baseline vs Pack)
+uv run python scripts/eval_single_pack.py my-framework --sample 10
 ```
 
-## Use a Pack with Python
+### 4. Package — Create a distributable archive
+
+```bash
+cd data/packs && tar -czf my-framework.tar.gz my-framework
+```
+
+### 5. Install — Register as an agent skill
+
+```bash
+wikigr pack install my-framework.tar.gz
+```
+
+Packs install to `~/.wikigr/packs/` and auto-register as Claude Code skills via `skill.md`. Once installed, the agent automatically uses the pack when you ask domain questions.
+
+### 6. Query — The skill activates automatically
+
+In Claude Code, just ask a domain question:
+
+```
+You: "How do I configure middleware in MyFramework?"
+# The my-framework skill activates, retrieves from the knowledge graph,
+# and synthesizes a grounded answer with source citations
+```
+
+Or query from the command line:
+
+```bash
+uv run wikigr query "How do I configure middleware?" --pack my-framework
+```
+
+Or from Python:
 
 ```python
 from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
-with KnowledgeGraphAgent(db_path="data/packs/go-expert/pack.db") as agent:
-    result = agent.query("What changed in Go 1.23 iterators?")
+with KnowledgeGraphAgent(db_path="data/packs/my-framework/pack.db") as agent:
+    result = agent.query("How do I configure middleware?")
     print(result["answer"])
     print("Sources:", result["sources"])
 ```
 
 ---
 
-## Build a New Pack
-
-### 1. Curate URLs
-
-Create `data/packs/my-pack/urls.txt` with 50-80 documentation URLs:
-
-```
-# Official documentation
-https://docs.example.com/guide/getting-started
-https://docs.example.com/api/reference
-https://docs.example.com/tutorials/advanced
-
-# GitHub source (for JS-heavy sites that block scrapers)
-https://github.com/example/repo/blob/main/README.md
-https://raw.githubusercontent.com/example/repo/main/docs/guide.md
-```
-
-**Tips:**
-- 50-80 URLs is ideal. More content = better retrieval.
-- Prefer server-rendered pages over JS-heavy SPAs
-- Add GitHub raw URLs as fallback for sites that block automated fetchers
-- Cover: getting started, core concepts, API reference, tutorials, advanced topics
-
-### 2. Build
-
-```bash
-echo "y" | uv run python scripts/build_my_pack.py
-```
-
-Expected runtime: 3-5 hours for 50-80 URLs with LLM extraction.
-
-### 3. Evaluate
-
-```bash
-uv run python scripts/eval_single_pack.py my-pack --sample 10
-```
-
-See the **[full tutorial](https://rysweet.github.io/agent-kgpacks/getting-started/tutorial/)** for a complete walkthrough.
-
----
-
-## When to Build a Knowledge Pack
-
-Build a pack when:
-
-- **The domain changes faster than training** — LangChain, Vercel AI SDK, OpenAI API
-- **Claude's training coverage is thin** — Niche tools, internal frameworks, new projects
-- **Expert-level depth matters** — Precise API signatures, configuration options, patterns
-- **Grounding is critical** — Answers must be traceable to authoritative sources
-
-Do NOT build a pack when:
-
-- **Claude already knows the topic perfectly** — Stable technologies like Go, React, Python
-- **The content is static** — Topics unchanged in years
-- **The domain is too broad** — "All of computer science" is too broad; "Azure Bicep" is right
-
 ## How It Works
 
 ```
-URLs (urls.txt)
-    |
-    v
-[Fetch] ──> Web content scraper (requests/BeautifulSoup)
-    |
-    v
-[Extract] ──> Claude Haiku extracts entities, relationships, facts
-    |
-    v
-[Embed] ──> BGE bge-base-en-v1.5 generates 768-dim vectors
-    |
-    v
-[Store] ──> Kuzu graph database with HNSW vector index
-    |
-    v
-pack.db (distributable knowledge graph)
+URLs ──> Fetch ──> Extract (Claude Haiku) ──> Embed (BGE) ──> Store (Kuzu)
+                                                                   |
+                                                              pack.db + skill.md
+                                                                   |
+Question ──> Vector Search ──> Confidence Gate ──> Rerank ──> Synthesize ──> Answer
 ```
 
-At query time:
+The retrieval pipeline includes:
+- **Confidence gating** — skips the pack when it has nothing useful (prevents noise)
+- **Cross-encoder reranking** — neural pairwise relevance scoring
+- **Multi-query retrieval** — generates reformulated queries for better recall
+- **Content quality scoring** — filters thin/irrelevant sections
+- **Graph reranking** — boosts well-connected articles via degree centrality
 
-```
-Question ──> Vector Search ──> Confidence Gate ──> Cross-Encoder Rerank
-    ──> Hybrid Retrieval ──> Quality Filter ──> Claude Synthesis ──> Answer
-```
+## Pack Management
 
-| Module | What it does |
-|--------|-------------|
-| **Confidence Gating** | Skips pack context when similarity < 0.5 (prevents noise) |
-| **Cross-Encoder Reranking** | Neural pairwise relevance scoring (+10-15% precision) |
-| **Multi-Query Retrieval** | Generates query reformulations (+15-25% recall) |
-| **Content Quality Scoring** | Filters thin/irrelevant sections |
-| **Graph Reranking** | Degree centrality boosts well-connected articles |
-| **Multi-Doc Synthesis** | Follows graph edges for related context |
+```bash
+wikigr pack list                    # List installed packs
+wikigr pack info go-expert          # Show pack details
+wikigr pack eval go-expert          # Run evaluation
+wikigr pack remove go-expert        # Uninstall
+wikigr pack validate data/packs/go-expert  # Check structure
+```
 
 ## Documentation
 
 Full docs: **https://rysweet.github.io/agent-kgpacks/**
 
-- [Getting Started](https://rysweet.github.io/agent-kgpacks/getting-started/overview/) — What packs are and when to use them
-- [Tutorial](https://rysweet.github.io/agent-kgpacks/getting-started/tutorial/) — Build your first pack end-to-end
-- [How to Build a Pack](https://rysweet.github.io/agent-kgpacks/howto/build-a-pack/) — Step-by-step guide
-- [Evaluation Results](https://rysweet.github.io/agent-kgpacks/evaluation/results/) — Full accuracy data for all 48 packs
-- [Evaluation Methodology](https://rysweet.github.io/agent-kgpacks/evaluation/methodology/) — How we measure pack quality
-- [API Reference](https://rysweet.github.io/agent-kgpacks/reference/kg-agent-api/) — KnowledgeGraphAgent API
+| Section | What you'll learn |
+|---------|------------------|
+| **[Overview](https://rysweet.github.io/agent-kgpacks/getting-started/overview/)** | What packs are and when to use them |
+| **[Tutorial](https://rysweet.github.io/agent-kgpacks/getting-started/tutorial/)** | Build your first pack end-to-end |
+| **[Build a Pack](https://rysweet.github.io/agent-kgpacks/howto/build-a-pack/)** | Step-by-step guide |
+| **[Evaluation](https://rysweet.github.io/agent-kgpacks/evaluation/results/)** | Full accuracy data for 48 packs |
+| **[How Packs Work](https://rysweet.github.io/agent-kgpacks/concepts/how-packs-work/)** | Architecture and retrieval pipeline |
+| **[API Reference](https://rysweet.github.io/agent-kgpacks/reference/kg-agent-api/)** | KnowledgeGraphAgent API |
 
 ## License
 
