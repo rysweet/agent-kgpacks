@@ -184,9 +184,15 @@ def validate_manifest(manifest: PackManifest) -> list[str]:
     """
     errors = []
 
-    # Validate name
+    # Validate name — must be non-empty and contain only safe characters (no path traversal)
+    PACK_NAME_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$")
     if not manifest.name or not manifest.name.strip():
         errors.append("Pack name cannot be empty")
+    elif not PACK_NAME_RE.match(manifest.name):
+        errors.append(
+            f"Pack name '{manifest.name}' contains invalid characters. "
+            "Only alphanumeric, hyphens, and underscores are allowed."
+        )
 
     # Validate version (semantic versioning)
     semver_pattern = r"^\d+\.\d+\.\d+(-[\w\.]+)?(\+[\w\.]+)?$"

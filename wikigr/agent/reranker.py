@@ -63,14 +63,14 @@ class GraphReranker:
             logger.warning(f"Graph density check failed: {e}")
             return 0.0
 
-    def calculate_centrality(self, article_ids: list[int]) -> dict[int, float]:
+    def calculate_centrality(self, article_ids: list[str]) -> dict[str, float]:
         """Calculate normalized centrality scores for articles.
 
         Uses degree centrality (in-degree + out-degree) normalized to [0, 1].
         Articles not in the graph receive centrality of 0.0.
 
         Args:
-            article_ids: List of article IDs to calculate centrality for
+            article_ids: List of article titles to calculate centrality for
 
         Returns:
             Dictionary mapping article_id -> centrality score in [0, 1]

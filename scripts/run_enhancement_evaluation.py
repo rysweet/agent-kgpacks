@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 DEFAULT_PACK_DIR = Path("data/packs/physics-expert")
 SAMPLE_SIZE = 10  # Evaluate 10 questions per baseline
 MODEL = "claude-opus-4-6"
-JUDGE_MODEL = "claude-haiku-4-5-20251001"
+JUDGE_MODEL = "claude-opus-4-6"
 
 
 def load_sample_questions(path: Path, n: int) -> list[dict]:

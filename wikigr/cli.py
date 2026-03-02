@@ -1009,9 +1009,8 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
         eval_scores=None,
     )
 
-    manifest_path = output_dir / "manifest.json"
-    save_manifest(manifest, manifest_path)
-    print(f"Manifest created: {manifest_path}")
+    save_manifest(manifest, output_dir)
+    print(f"Manifest created: {output_dir / 'manifest.json'}")
 
     # Generate skill.md
     skill_md_content = generate_skill_md(manifest)
@@ -1032,7 +1031,9 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
     if args.eval_questions and os.path.isfile(args.eval_questions):
         import shutil
 
-        dest_eval = output_dir / "eval_questions.jsonl"
+        eval_dir = output_dir / "eval"
+        eval_dir.mkdir(parents=True, exist_ok=True)
+        dest_eval = eval_dir / "questions.jsonl"
         shutil.copy(args.eval_questions, dest_eval)
         print(f"Eval questions copied: {dest_eval}")
 
@@ -1158,7 +1159,7 @@ def cmd_pack_eval(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     # Load questions
-    questions_path = Path(args.questions) if args.questions else pack.path / "eval_questions.jsonl"
+    questions_path = Path(args.questions) if args.questions else pack.path / "eval" / "questions.jsonl"
 
     if not questions_path.exists():
         print(f"Error: questions file not found: {questions_path}", file=sys.stderr)
