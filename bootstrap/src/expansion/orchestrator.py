@@ -225,12 +225,16 @@ class RyuGraphOrchestrator:
         iteration = 0
         stats = self.work_queue.get_queue_stats()
 
-        # Create per-worker connections for parallel mode.
+        # Create per-worker connections and a shared executor for parallel mode.
         # In single-worker mode we reuse self.conn (no extra connections).
         assert self.db is not None, "Database closed"
+        # The executor is created once and reused across all batches to avoid
+        # repeated OS thread creation/teardown overhead.
         worker_conns: list[kuzu.Connection] = []
+        executor = None
         if self.num_workers > 1:
             worker_conns = [kuzu.Connection(self.db) for _ in range(self.num_workers)]
+            executor = ThreadPoolExecutor(max_workers=self.num_workers)
 
         try:
             while True:
@@ -280,8 +284,8 @@ class RyuGraphOrchestrator:
                 logger.info(f"  Claimed {len(batch)} articles")
 
                 # Process batch: parallel or sequential
-                if self.num_workers > 1 and len(batch) > 1:
-                    self._process_batch_parallel(batch, worker_conns)
+                if executor is not None and len(batch) > 1:
+                    self._process_batch_parallel(batch, worker_conns, executor)
                 else:
                     self._process_batch_sequential(batch)
 
@@ -290,6 +294,10 @@ class RyuGraphOrchestrator:
                 logger.info(f"  Queue: {stats}")
 
         finally:
+            # Shut down executor before clearing connections so in-flight
+            # tasks complete before the connections they hold are released.
+            if executor is not None:
+                executor.shutdown(wait=True)
             # Worker connections are released when they go out of scope;
             # clearing the list makes intent explicit.
             worker_conns.clear()
@@ -312,41 +320,30 @@ class RyuGraphOrchestrator:
             self._process_one(article_info, self.conn)
 
     def _process_batch_parallel(
-        self, batch: list[dict], worker_conns: list[kuzu.Connection]
+        self,
+        batch: list[dict],
+        worker_conns: list[kuzu.Connection],
+        executor: ThreadPoolExecutor,
     ) -> None:
-        """Process a batch of articles in parallel using ThreadPoolExecutor.
+        """Process a batch of articles in parallel using the shared executor.
 
         Each article is submitted to the pool and processed with a dedicated
         Kuzu connection selected round-robin from *worker_conns*.
+        The executor is created once per expansion run and reused across batches.
+        Processes in chunks of num_workers so each connection is held by at
+        most one thread at a time.
         """
-        with ThreadPoolExecutor(max_workers=self.num_workers) as executor:
-            # Process in chunks of num_workers to ensure each connection
-            # is used by at most one thread at a time
-            all_futures: dict = {}
-            for chunk_start in range(0, len(batch), len(worker_conns)):
-                chunk = batch[chunk_start : chunk_start + len(worker_conns)]
-                # Wait for previous chunk to complete before starting next
-                # (ensures connection reuse safety)
-                for future in as_completed(all_futures):
-                    title = all_futures[future]
-                    try:
-                        future.result()
-                    except Exception:
-                        logger.error(f"Worker exception for {title}", exc_info=True)
-                all_futures.clear()
-
-                for i, article_info in enumerate(chunk):
-                    conn = worker_conns[i]
-                    future = executor.submit(self._process_one, article_info, conn)
-                    all_futures[future] = article_info["title"]
-
-            # Process remaining futures from last chunk
-            for future in as_completed(all_futures):
-                title = all_futures[future]
+        for chunk_start in range(0, len(batch), len(worker_conns)):
+            chunk = batch[chunk_start : chunk_start + len(worker_conns)]
+            futures = {
+                executor.submit(self._process_one, article_info, worker_conns[i]): article_info["title"]
+                for i, article_info in enumerate(chunk)
+            }
+            for future in as_completed(futures):
                 try:
                     future.result()
                 except Exception:
-                    logger.error(f"Worker exception for {title}", exc_info=True)
+                    logger.error(f"Worker exception for {futures[future]}", exc_info=True)
 
     def get_status(self) -> dict:
         """Get current expansion status"""

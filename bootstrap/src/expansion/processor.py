@@ -160,8 +160,8 @@ class ArticleProcessor:
                         logger.info(f"  Skipping unfollowable redirect: {title_or_url}")
                         return (True, [], None)
                     except Exception as e:
-                        error_msg = f"Redirect target fetch failed: {e}"
-                        logger.warning(f"  {_sanitize_error(error_msg)}")
+                        error_msg = _sanitize_error(f"Redirect target fetch failed: {e}")
+                        logger.warning(f"  {error_msg}")
                         return (False, [], error_msg)
 
             # Parse sections
@@ -214,9 +214,9 @@ class ArticleProcessor:
             return (True, article.links, None)
 
         except Exception as e:
-            error_msg = f"Processing error: {str(e)}"
+            error_msg = _sanitize_error(f"Processing error: {str(e)}")
             logger.error(
-                f"  ✗ Failed to process {title_or_url}: {_sanitize_error(error_msg)}", exc_info=True
+                f"  ✗ Failed to process {title_or_url}: {error_msg}", exc_info=True
             )
             return (False, [], error_msg)
 
@@ -408,7 +408,7 @@ class ArticleProcessor:
                 logger.info(f"  Created {len(chunks)} chunks for {article.title}")
         except Exception as e:
             # Chunk creation is optional — don't fail article processing
-            logger.debug(f"  Chunk creation skipped: {e}")
+            logger.warning(f"  Chunk creation skipped: {e}")
 
         # Clean up existing IN_CATEGORY relationships before re-creating
         # (prevents duplicate edges on retry/reprocess)
