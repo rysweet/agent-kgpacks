@@ -12,6 +12,7 @@ Tests all 8 pack management commands:
 """
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -90,8 +91,6 @@ Knowledge pack for testing.
 
 def run_cli(*args, env=None):
     """Run wikigr CLI command and return result."""
-    import os
-
     cmd = [sys.executable, "-m", "wikigr.cli"] + list(args)
 
     # Merge custom env with current environment
@@ -108,6 +107,7 @@ def run_cli(*args, env=None):
 class TestPackCreate:
     """Tests for 'wikigr pack create' command."""
 
+    @pytest.mark.skip(reason='Requires Anthropic API key and Wikipedia network access')
     def test_create_basic(self, tmp_path, sample_topics_file, sample_eval_questions):
         """Test basic pack creation."""
         output = tmp_path / "output"
@@ -150,6 +150,7 @@ class TestPackCreate:
         assert result.returncode != 0
         assert "not found" in result.stderr.lower() or "no such file" in result.stderr.lower()
 
+    @pytest.mark.skip(reason='Requires Anthropic API key and Wikipedia network access')
     def test_create_missing_output_dir(self, tmp_path, sample_topics_file):
         """Test create creates output directory if missing."""
         output = tmp_path / "new" / "output"
@@ -329,7 +330,8 @@ class TestPackEval:
             "eval",
             "test-pack",
             "--questions",
-            str(sample_eval_questions, env={"HOME": str(temp_home)}),
+            str(sample_eval_questions),
+            env={"HOME": str(temp_home)},
         )
 
         assert result.returncode == 0
@@ -448,18 +450,18 @@ class TestPackValidate:
         output = result.stdout + result.stderr
         assert "pack.db" in output.lower()
 
-    def test_validate_strict_mode(self, sample_pack_dir):
-        """Test validate with --strict flag."""
+    def test_validate_strict_flag_recognized(self, sample_pack_dir):
+        """Test that --strict flag is recognized (not an unknown-argument error)."""
         result = run_cli("pack", "validate", str(sample_pack_dir), "--strict")
 
-        # Strict mode may have additional requirements
-        # This test documents the behavior
-        assert result.returncode in (0, 1)
+        # Exit 2 means argparse rejected the flag; any other exit means it was accepted
+        assert result.returncode != 2, f"--strict flag not recognized: {result.stderr}"
 
 
 class TestPackIntegration:
     """Integration tests for complete pack workflows."""
 
+    @pytest.mark.skip(reason='Requires Anthropic API key and Wikipedia network access')
     def test_create_install_list_remove_workflow(
         self, temp_home, tmp_path, sample_topics_file, monkeypatch
     ):
