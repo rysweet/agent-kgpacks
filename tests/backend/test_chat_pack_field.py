@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-from pydantic import ValidationError
-
 from backend.models.chat import ChatRequest
 
 

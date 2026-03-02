@@ -17,7 +17,6 @@ from unittest.mock import patch
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helper — run the script as a subprocess for integration-style tests
 # ---------------------------------------------------------------------------
@@ -39,6 +38,7 @@ def _run_script(*args: str) -> subprocess.CompletedProcess:
 # Helper — load the script as a module for unit-style tests
 # ---------------------------------------------------------------------------
 
+
 def _load_module():
     """Load validate_pack_urls as a Python module (avoids import side-effects)."""
     spec = importlib.util.spec_from_file_location("validate_pack_urls", _SCRIPT)
@@ -50,6 +50,7 @@ def _load_module():
 # ---------------------------------------------------------------------------
 # Integration tests via subprocess
 # ---------------------------------------------------------------------------
+
 
 class TestValidatePackUrlsPackFlagIntegration:
     """--pack validation must run before any filesystem operations."""
@@ -158,15 +159,18 @@ class TestValidatePackUrlsPackFlagIntegration:
 # Unit tests — exercise main() directly with mocked sys.argv and sys.exit
 # ---------------------------------------------------------------------------
 
+
 class TestValidatePackUrlsMainUnit:
     """Unit tests for the main() function's --pack validation branch."""
 
     def _call_main_with_pack(self, pack_name: str):
         """Invoke main() with --pack <pack_name>, capturing exit and stderr."""
         mod = _load_module()
-        with patch.object(sys, "argv", ["validate_pack_urls.py", "--pack", pack_name]):
-            with pytest.raises(SystemExit) as exc_info:
-                mod.main()
+        with (
+            patch.object(sys, "argv", ["validate_pack_urls.py", "--pack", pack_name]),
+            pytest.raises(SystemExit) as exc_info,
+        ):
+            mod.main()
         return exc_info.value.code
 
     def test_traversal_raises_systemexit_1(self, capsys):
@@ -193,10 +197,12 @@ class TestValidatePackUrlsMainUnit:
         """
         # This will raise SystemExit(1) because the file doesn't exist,
         # but the error must be about the missing file, not the name.
-        with patch.object(sys, "argv", ["validate_pack_urls.py", "--pack", "valid-pack"]):
-            with pytest.raises(SystemExit) as exc_info:
-                mod = _load_module()
-                mod.main()
+        with (
+            patch.object(sys, "argv", ["validate_pack_urls.py", "--pack", "valid-pack"]),
+            pytest.raises(SystemExit) as exc_info,
+        ):
+            mod = _load_module()
+            mod.main()
         exit_code = exc_info.value.code
         assert exit_code == 1
         captured = capsys.readouterr()
@@ -206,6 +212,7 @@ class TestValidatePackUrlsMainUnit:
 # ---------------------------------------------------------------------------
 # Regression: PACK_NAME_RE imported from manifest, not defined locally
 # ---------------------------------------------------------------------------
+
 
 class TestPackNameReImportedFromManifest:
     """validate_pack_urls.py must use the shared constant, not a local copy."""
