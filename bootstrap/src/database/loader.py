@@ -82,7 +82,7 @@ class ArticleLoader:
             logger.info(f"  Parsed {len(sections)} sections")
 
             # Step 3: Generate embeddings
-            section_texts = [s["content"] for s in sections]
+            section_texts: list[str] = [str(s["content"]) for s in sections]
             embeddings = self.embedding_generator.generate(section_texts, show_progress=False)
 
             logger.info(f"  Generated {len(embeddings)} embeddings")

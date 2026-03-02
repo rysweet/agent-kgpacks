@@ -86,13 +86,20 @@ def chat(
             if not _re.match(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$", request_body.pack):
                 return JSONResponse(
                     status_code=400,
-                    content={"error": {"code": "INVALID_PACK_NAME", "message": "Invalid pack name"}},
+                    content={
+                        "error": {"code": "INVALID_PACK_NAME", "message": "Invalid pack name"}
+                    },
                 )
             pack_db = os.path.join("data", "packs", request_body.pack, "pack.db")
             if not os.path.exists(pack_db):
                 return JSONResponse(
                     status_code=404,
-                    content={"error": {"code": "PACK_NOT_FOUND", "message": "Requested pack was not found"}},
+                    content={
+                        "error": {
+                            "code": "PACK_NOT_FOUND",
+                            "message": "Requested pack was not found",
+                        }
+                    },
                 )
             pack_agent = KnowledgeGraphAgent(pack_db, read_only=True)
             agent = pack_agent

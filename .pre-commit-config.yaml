@@ -28,6 +28,7 @@ repos:
           - "requests>=2.32.0,<3.0.0"
           - "pandas>=2.2.0,<3.0.0"
           - "numpy>=1.26.0,<3.0.0"
+          - "anthropic>=0.40.0,<1.0.0"
 
   # Standard pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks

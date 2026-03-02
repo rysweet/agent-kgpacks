@@ -171,7 +171,7 @@ class RyuGraphOrchestrator:
 
         # Process article
         success, links, error = worker_processor.process_article(
-            title=title,
+            title_or_url=title,
             category=article_info.get("category", "General"),
             expansion_depth=depth,
         )
@@ -227,6 +227,7 @@ class RyuGraphOrchestrator:
 
         # Create per-worker connections for parallel mode.
         # In single-worker mode we reuse self.conn (no extra connections).
+        assert self.db is not None, "Database closed"
         worker_conns: list[kuzu.Connection] = []
         if self.num_workers > 1:
             worker_conns = [kuzu.Connection(self.db) for _ in range(self.num_workers)]
@@ -306,6 +307,7 @@ class RyuGraphOrchestrator:
 
     def _process_batch_sequential(self, batch: list[dict]) -> None:
         """Process a batch of articles sequentially using self.conn."""
+        assert self.conn is not None, "Database closed"
         for article_info in batch:
             self._process_one(article_info, self.conn)
 

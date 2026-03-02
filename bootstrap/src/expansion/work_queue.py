@@ -386,8 +386,8 @@ class WorkQueueManager:
                 state = row["state"]
                 count = row["count"]
                 if state in stats:
-                    stats[state] = count
-                stats["total"] += count
+                    stats[state] = int(count)
+                stats["total"] += int(count)
 
             return stats
 
