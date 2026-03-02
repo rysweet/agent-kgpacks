@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of the Vercel AI SDK for building AI-powered applications in TypeScript, covering generateText, streamText, tool calling, agents, provider integrations, and AI SDK UI.",
   "graph_stats": {
-    "articles": 4,
-    "entities": 22,
-    "relationships": 10,
+    "articles": 23,
+    "entities": 121,
+    "relationships": 97,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://dspy.ai/",
     "https://dspy.ai/learn/programming/modules/"
   ],
-  "created": "2026-02-28T21:16:34.241248Z",
+  "created": "2026-03-01T23:08:24.493511Z",
   "license": "MIT"
 }

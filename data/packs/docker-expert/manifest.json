@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of the Vercel AI SDK for building AI-powered applications in TypeScript, covering generateText, streamText, tool calling, agents, provider integrations, and AI SDK UI.",
   "graph_stats": {
-    "articles": 4,
-    "entities": 21,
-    "relationships": 13,
+    "articles": 38,
+    "entities": 187,
+    "relationships": 151,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://docs.docker.com/reference/dockerfile/",
     "https://docs.docker.com/compose/"
   ],
-  "created": "2026-02-28T21:17:12.570092Z",
+  "created": "2026-03-01T23:09:08.134345Z",
   "license": "MIT"
 }

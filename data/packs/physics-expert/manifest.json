@@ -4,9 +4,9 @@
   "description": "Expert-level physics knowledge covering classical mechanics, quantum mechanics, relativity, thermodynamics, electromagnetism, and modern physics",
   "graph_stats": {
     "articles": 451,
-    "entities": 4607,
-    "relationships": 2714,
-    "size_mb": 2.08
+    "entities": 5094,
+    "relationships": 4104,
+    "size_mb": 43.49
   },
   "eval_scores": {
     "accuracy": 0.0,
@@ -16,6 +16,6 @@
   "source_urls": [
     "https://en.wikipedia.org"
   ],
-  "created": "2026-02-25T04:29:47.007452Z",
+  "created": "2026-03-02T00:58:33.896846Z",
   "license": "CC-BY-SA-4.0"
 }

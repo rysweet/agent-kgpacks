@@ -1,6 +1,6 @@
 # Improving Accuracy
 
-Seven improvements from Issue #211 that collectively raised Pack accuracy from 95.0% to 97.5%. Each addresses a specific failure mode in the retrieval and evaluation pipeline.
+Seven techniques used in the retrieval pipeline to achieve 98% pack accuracy across 44 packs. Each addresses a specific failure mode.
 
 ## Overview
 

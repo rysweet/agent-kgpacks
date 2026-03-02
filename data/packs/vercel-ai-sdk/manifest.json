@@ -4,8 +4,8 @@
   "description": "Expert knowledge of the Vercel AI SDK for building AI-powered applications in TypeScript, covering generateText, streamText, tool calling, agents, provider integrations, and AI SDK UI.",
   "graph_stats": {
     "articles": 29,
-    "entities": 131,
-    "relationships": 127,
+    "entities": 134,
+    "relationships": 126,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://sdk.vercel.ai/docs",
     "https://sdk.vercel.ai/docs/ai-core/generate-text"
   ],
-  "created": "2026-03-01T16:41:17.495556Z",
+  "created": "2026-03-02T01:02:41.126210Z",
   "license": "MIT"
 }

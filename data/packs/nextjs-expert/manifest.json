@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of the Vercel AI SDK for building AI-powered applications in TypeScript, covering generateText, streamText, tool calling, agents, provider integrations, and AI SDK UI.",
   "graph_stats": {
-    "articles": 4,
-    "entities": 23,
-    "relationships": 17,
+    "articles": 36,
+    "entities": 158,
+    "relationships": 152,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://nextjs.org/docs/app",
     "https://nextjs.org/docs/app/api-reference/turbopack"
   ],
-  "created": "2026-02-28T21:17:15.197054Z",
+  "created": "2026-03-01T23:30:53.120040Z",
   "license": "MIT"
 }

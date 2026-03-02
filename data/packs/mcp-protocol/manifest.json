@@ -1,16 +1,22 @@
 {
   "name": "mcp-protocol",
   "version": "1.0.0",
-  "description": "Expert knowledge of the Model Context Protocol (MCP) covering server development, tool definitions, resource handlers, prompt templates, sampling, transport setup (stdio, HTTP), lifecycle management, and SDK usage for Python and TypeScript",
-  "domain": "ai-protocols",
-  "source_type": "web",
-  "article_count": 0,
-  "tags": ["mcp", "model-context-protocol", "anthropic", "ai-tools", "llm-integration", "json-rpc"],
+  "description": "Expert knowledge of the Model Context Protocol (MCP) covering server development, tool definitions, resource handlers, prompt templates, sampling, transport setup, lifecycle management, and SDK usage.",
+  "graph_stats": {
+    "articles": 30,
+    "entities": 144,
+    "relationships": 119,
+    "size_mb": 2.08
+  },
+  "eval_scores": {
+    "accuracy": 0.0,
+    "hallucination_rate": 0.0,
+    "citation_quality": 0.0
+  },
   "source_urls": [
     "https://modelcontextprotocol.io/specification/2025-11-25",
-    "https://modelcontextprotocol.io/docs/learn/architecture",
-    "https://github.com/modelcontextprotocol/python-sdk"
+    "https://modelcontextprotocol.io/docs/learn/architecture"
   ],
-  "created": "2026-02-28T00:00:00Z",
+  "created": "2026-03-01T23:30:04.621444Z",
   "license": "MIT"
 }

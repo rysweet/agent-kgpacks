@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of the Vercel AI SDK for building AI-powered applications in TypeScript, covering generateText, streamText, tool calling, agents, provider integrations, and AI SDK UI.",
   "graph_stats": {
-    "articles": 4,
-    "entities": 21,
-    "relationships": 22,
+    "articles": 38,
+    "entities": 154,
+    "relationships": 164,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://developer.hashicorp.com/terraform/docs",
     "https://developer.hashicorp.com/terraform/language"
   ],
-  "created": "2026-02-28T21:17:18.396754Z",
+  "created": "2026-03-02T01:03:34.100609Z",
   "license": "MIT"
 }

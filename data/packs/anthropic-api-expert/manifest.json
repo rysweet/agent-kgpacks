@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Deep knowledge of the Anthropic Claude API covering Messages API, streaming, tool use, computer use, vision, prompt caching, extended thinking, and batches.",
   "graph_stats": {
-    "articles": 4,
-    "entities": 24,
-    "relationships": 21,
+    "articles": 30,
+    "entities": 156,
+    "relationships": 130,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://docs.anthropic.com/en/api/messages",
     "https://docs.anthropic.com/en/docs/build-with-claude/tool-use"
   ],
-  "created": "2026-02-28T21:16:34.759334Z",
+  "created": "2026-03-01T23:02:40.983514Z",
   "license": "MIT"
 }

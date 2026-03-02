@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of the Vercel AI SDK for building AI-powered applications in TypeScript, covering generateText, streamText, tool calling, agents, provider integrations, and AI SDK UI.",
   "graph_stats": {
-    "articles": 5,
-    "entities": 31,
-    "relationships": 23,
+    "articles": 41,
+    "entities": 242,
+    "relationships": 189,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://code.visualstudio.com/api",
     "https://code.visualstudio.com/api/references/vscode-api"
   ],
-  "created": "2026-02-28T21:17:23.375591Z",
+  "created": "2026-03-02T01:32:24.846412Z",
   "license": "MIT"
 }

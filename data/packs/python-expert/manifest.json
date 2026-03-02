@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Expert Python programming knowledge covering Python 3.12+ features including structural pattern matching, modern typing (PEP 695), asyncio patterns, dataclasses, packaging with pyproject.toml, and essential standard library modules",
   "graph_stats": {
-    "articles": 0,
-    "entities": 0,
-    "relationships": 0,
-    "size_mb": 0
+    "articles": 50,
+    "entities": 333,
+    "relationships": 258,
+    "size_mb": 2.08
   },
   "eval_scores": {
     "accuracy": 0.0,
@@ -18,6 +18,6 @@
     "https://realpython.com/",
     "https://peps.python.org/"
   ],
-  "created": "2026-02-28T00:00:00Z",
+  "created": "2026-03-01T23:38:37.093689Z",
   "license": "MIT"
 }
