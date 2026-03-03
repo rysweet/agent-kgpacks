@@ -178,25 +178,21 @@ python scripts/validate_pack_urls.py --pack langchain-expert
 
 **Checks performed:**
 
-- HTTP GET returns 2xx status
-- `Content-Type` is text-based (HTML, Markdown, plain text, JSON)
-- URL matches allowed-hostname policy (rejects private IPs, localhost)
-- No duplicate URLs within the file
+- URL passes SSRF safety validation (rejects private IPs, localhost, cloud metadata endpoints)
+- HTTP HEAD returns a successful status (non-4xx / non-5xx). 429 (rate-limited) is treated as valid.
+- Retry logic: up to 2 retries on timeout or 429
 
 **Output:**
 
 ```
-Checking 71 URLs for langchain-expert...
-  69 reachable
-   2 unreachable
-   0 duplicates
+Validating 71 URLs from data/packs/langchain-expert/urls.txt...
+  ❌ [404] https://python.langchain.com/docs/how_to/deprecated_example/ (HTTP 404)
+  ❌ [0] https://internal.example.com/ (blocked: private IP)
 
-Unreachable:
-  [404] https://python.langchain.com/docs/how_to/deprecated_example/
-  [403] https://platform.openai.com/docs/internal-only-page
-
-Action required: remove or replace unreachable URLs before rebuilding.
+Results: 69 valid, 2 invalid
 ```
+
+Use `--fix` to automatically comment out invalid URLs in place.
 
 ## Additive Changes Policy
 
@@ -255,3 +251,4 @@ https://docs.smith.langchain.com/
 - [How to Curate and Expand Pack URL Lists](../howto/curate-pack-urls.md)
 - [Pack URL Coverage: Expanded Packs](../knowledge_packs/pack-url-coverage.md)
 - [Web Content Source API Reference](./web-content-source.md)
+- [Pack Utilities API Reference](./pack-utils.md) — `load_urls` function that reads this format

@@ -118,4 +118,5 @@ For the full walkthrough, see the **[Tutorial](getting-started/tutorial.md)**.
 - **[Pack Distribution](reference/pack-distribution.md)** — package_pack / unpackage_pack, archive format, extraction safety
 - **[CLI Commands](reference/cli-commands.md)** — All `wikigr` commands
 - **[Pack Manifest](reference/pack-manifest.md)** — manifest.json format
+- **[Pack Utilities](reference/pack-utils.md)** — `load_urls` and shared helpers for build scripts
 - **[Test Suite](reference/test-suite.md)** — Test files, expected counts, DB-skip guard, mock strategy

@@ -43,6 +43,7 @@ from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
 from bootstrap.src.sources.base import ArticleNotFoundError  # noqa: E402
 from bootstrap.src.sources.web import WebContentSource  # noqa: E402
+from wikigr.packs.utils import load_urls  # noqa: E402
 
 PACK_DIR = Path("data/packs/dotnet-expert")
 URLS_FILE = PACK_DIR / "urls.txt"
@@ -58,31 +59,6 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
-
-
-def load_urls(urls_file: Path, limit: int | None = None) -> list[str]:
-    """Load URLs from urls.txt file.
-
-    Args:
-        urls_file: Path to urls.txt
-        limit: Optional limit on number of URLs (for testing)
-
-    Returns:
-        List of URLs
-    """
-    with open(urls_file) as f:
-        urls = [
-            line.strip()
-            for line in f
-            if line.strip() and not line.strip().startswith("#") and line.strip().startswith("http")
-        ]
-
-    if limit:
-        urls = urls[:limit]
-        logger.info(f"Limited to {limit} URLs for testing")
-
-    logger.info(f"Loaded {len(urls)} URLs from {urls_file}")
-    return urls
 
 
 def process_url(
