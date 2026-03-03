@@ -18,6 +18,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import anthropic
+import httpx
 import pytest
 import requests
 
@@ -187,9 +189,11 @@ def test_discover_sources_success(researcher, mock_anthropic_client, temp_cache_
 def test_discover_sources_api_error(researcher, mock_anthropic_client, temp_cache_dir):
     """Test handling of Anthropic API errors."""
     researcher.cache_dir = temp_cache_dir
-    mock_anthropic_client.messages.create.side_effect = Exception("API Error")
+    mock_anthropic_client.messages.create.side_effect = anthropic.APIConnectionError(
+        request=httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    )
 
-    with pytest.raises(LLMAPIError, match="API Error"):
+    with pytest.raises(LLMAPIError, match="API Error|LLM API failed"):
         researcher.discover_sources("quantum physics")
 
 
@@ -451,7 +455,9 @@ def test_extract_llm_success(researcher, sample_source, mock_anthropic_client):
 
 def test_extract_llm_api_error(researcher, sample_source, mock_anthropic_client):
     """Test LLM extraction handles API errors."""
-    mock_anthropic_client.messages.create.side_effect = Exception("API Error")
+    mock_anthropic_client.messages.create.side_effect = anthropic.APIConnectionError(
+        request=httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    )
 
     with pytest.raises(LLMAPIError):
         researcher._extract_via_llm(sample_source, max_urls=10)
@@ -679,11 +685,12 @@ def test_strategy_cascade(researcher, sample_source, mock_anthropic_client):
 def test_error_retry_exponential_backoff(researcher, mock_anthropic_client, temp_cache_dir):
     """Test exponential backoff retry logic."""
     researcher.cache_dir = temp_cache_dir
+    _req = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
 
     # Fail twice, succeed on third try
     mock_anthropic_client.messages.create.side_effect = [
-        Exception("Rate limit"),
-        Exception("Rate limit"),
+        anthropic.APITimeoutError(request=_req),
+        anthropic.APITimeoutError(request=_req),
         Mock(content=[Mock(text='{"sources": []}')]),
     ]
 

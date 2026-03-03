@@ -290,7 +290,7 @@ class TestCypherRAGNoSafeFallback:
     NEW contract (design/exception-handling.md §A2):
     - _safe_fallback method is removed; it must not exist.
     - ValueError is raised on empty response; json.JSONDecodeError on bad JSON.
-    (The raise behaviour is already tested in test_cypher_rag.py::TestFallbackOnApiError.)
+    (The raise behaviour is already tested in test_cypher_rag.py::TestRaisesOnApiError.)
     """
 
     def test_no_safe_fallback_method_on_cypher_rag(self) -> None:

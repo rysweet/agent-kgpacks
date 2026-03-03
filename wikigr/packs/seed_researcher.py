@@ -253,7 +253,7 @@ Return JSON with this exact structure:
             raise
         except json.JSONDecodeError as e:
             raise LLMAPIError(f"Invalid JSON response from LLM: {e}") from e
-        except Exception as e:
+        except (LLMAPIError, KeyError) as e:
             raise LLMAPIError(f"LLM API error: {e}") from e
 
     def extract_article_urls(
@@ -312,7 +312,12 @@ Return JSON with this exact structure:
                 all_urls.extend(urls)
                 logger.info(f"{strategy} extracted {len(urls)} URLs")
 
-            except Exception as e:
+            except (
+                LLMAPIError,
+                requests.RequestException,
+                ET.ParseError,
+                json.JSONDecodeError,
+            ) as e:
                 logger.warning(f"{strategy} extraction failed: {e}")
                 errors.append(f"{strategy}: {e}")
                 continue
@@ -678,7 +683,7 @@ Return JSON with this exact structure:
 
         except json.JSONDecodeError as e:
             raise LLMAPIError(f"Invalid JSON response from LLM: {e}") from e
-        except Exception as e:
+        except (LLMAPIError, KeyError) as e:
             raise LLMAPIError(f"LLM API error: {e}") from e
 
     # ========================================================================
@@ -739,7 +744,7 @@ Return JSON with this exact structure:
 
             return self._robots_cache[domain].can_fetch(self.user_agent, url)
 
-        except Exception:
+        except (ValueError, OSError, requests.RequestException):
             # If robots.txt check fails, allow by default
             return True
 
@@ -766,7 +771,11 @@ Return JSON with this exact structure:
 
                 return message.content[0].text
 
-            except Exception as e:
+            except (
+                anthropic.APIConnectionError,
+                anthropic.APITimeoutError,
+                anthropic.APIStatusError,
+            ) as e:
                 if attempt < max_retries - 1:
                     # Exponential backoff: 1s, 2s, 4s
                     wait_time = 2**attempt

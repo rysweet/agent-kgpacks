@@ -190,7 +190,7 @@ class TestPromptIncludesPatterns:
 # ===================================================================
 
 
-class TestFallbackOnApiError:
+class TestRaisesOnApiError:
     """CypherRAG raises errors on API failures (no silent fallback)."""
 
     def test_claude_api_error_raises(self) -> None:
