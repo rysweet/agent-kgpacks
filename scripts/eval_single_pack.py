@@ -85,7 +85,9 @@ def judge_score(
             logger.warning("Judge returned no digits: %r", raw_text)
             return 0
         return min(10, int(digits))
-    except Exception:  # intentional: any Anthropic API/network failure returns 0 so eval loop continues
+    except (
+        Exception
+    ):  # intentional: any Anthropic API/network failure returns 0 so eval loop continues
         logger.exception("Judge scoring failed for question: %s", question[:80])
         return 0
 
@@ -144,7 +146,9 @@ def main() -> None:
                 messages=[{"role": "user", "content": question_text}],
             )
             training_answer = response.content[0].text
-        except Exception:  # intentional: API failure falls back to empty answer; eval loop must not abort
+        except (
+            Exception
+        ):  # intentional: API failure falls back to empty answer; eval loop must not abort
             logger.exception("Training baseline failed for: %s", question_text[:80])
             training_answer = ""
 
@@ -152,10 +156,14 @@ def main() -> None:
 
         # Pack: KG Agent answer
         try:
-            with KnowledgeGraphAgent(str(db_path), read_only=True, few_shot_path=str(questions_path)) as agent:
+            with KnowledgeGraphAgent(
+                str(db_path), read_only=True, few_shot_path=str(questions_path)
+            ) as agent:
                 result = agent.query(question_text)
                 pack_answer = result.get("answer", "")
-        except Exception:  # intentional: kuzu/agent failure falls back to empty answer; eval loop must not abort
+        except (
+            Exception
+        ):  # intentional: kuzu/agent failure falls back to empty answer; eval loop must not abort
             logger.exception("KG Agent failed for: %s", question_text[:80])
             pack_answer = ""
 
