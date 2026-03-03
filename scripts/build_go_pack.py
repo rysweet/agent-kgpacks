@@ -183,11 +183,7 @@ def create_manifest(
             "relationships": int(relationships_count),
             "size_mb": round(size_mb, 2),
         },
-        "eval_scores": {
-            "accuracy": 0.0,
-            "hallucination_rate": 0.0,
-            "citation_quality": 0.0,
-        },
+        "eval_scores": None,  # Not yet evaluated — run eval suite to populate
         "source_urls": [
             "https://go.dev/doc/",
             "https://gobyexample.com/",
@@ -264,6 +260,13 @@ def build_pack(test_mode: bool = False) -> None:
         f"Final stats: {articles_count} articles, {entities_count} entities, "
         f"{relationships_count} relationships"
     )
+
+    # H-3: require at least 1 successful article before writing manifest
+    if articles_count == 0:
+        raise RuntimeError(
+            f"Build produced 0 articles ({successful} succeeded, {failed} failed). "
+            "Refusing to write empty manifest. Check URL list and API key."
+        )
 
     create_manifest(DB_PATH, MANIFEST_PATH, articles_count, entities_count, relationships_count)
     logger.info("Go Expert Pack build complete!")

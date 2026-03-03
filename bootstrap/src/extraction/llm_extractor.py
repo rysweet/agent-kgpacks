@@ -172,6 +172,30 @@ _DOMAIN_PROMPTS: dict[str, str] = {
         "demographic facts (population, language, government type), "
         "natural features, and economic/cultural significance."
     ),
+    # H-1: cloud/security domains for new knowledge packs
+    "azure_lighthouse": (
+        "\n\nFocus especially on: delegated resource management (which tenant delegates to which), "
+        "RBAC roles and authorization boundaries, managed services offer types, "
+        "cross-tenant relationships (managing tenant vs customer tenant), "
+        "ARM template structure, Azure Marketplace publishing steps, and security compliance controls."
+    ),
+    "fabric_graphql": (
+        "\n\nFocus especially on: GraphQL schema elements (types, queries, mutations, subscriptions), "
+        "Microsoft Fabric lakehouse/warehouse data sources, authentication and authorization patterns, "
+        "API endpoint structure, query optimization, and integration with Power BI and OneLake."
+    ),
+    "security_copilot": (
+        "\n\nFocus especially on: AI-powered security capabilities (what Security Copilot can analyze/detect), "
+        "plugin integrations (Sentinel, Defender, Intune, Entra), promptbook structure, "
+        "Security Compute Units (SCU) capacity model, embedded experience locations, "
+        "and data privacy/compliance boundaries."
+    ),
+    "microsoft_sentinel": (
+        "\n\nFocus especially on: SIEM/SOAR capabilities (detection, investigation, response), "
+        "data connector types and ingestion methods, KQL query patterns for threat hunting, "
+        "analytics rule types (scheduled, NRT, anomaly), playbook automation triggers, "
+        "MITRE ATT&CK mapping, and workspace/tenant architecture."
+    ),
 }
 
 
@@ -405,6 +429,10 @@ Focus on the most important entities and relationships. Be concise."""
                 messages=[{"role": "user", "content": prompt}],
             )
 
+            # C-1: guard against empty content list (API edge case on certain stop conditions)
+            if not response.content:
+                logger.warning("LLM returned empty content list; treating as empty extraction")
+                raise json.JSONDecodeError("empty content", "", 0)
             content = response.content[0].text
 
             # Extract JSON from markdown code blocks if present
@@ -471,7 +499,11 @@ Focus on the most important entities and relationships. Be concise."""
         except (anthropic.AuthenticationError, anthropic.PermissionDeniedError):
             # Non-retryable: API key wrong or quota exhausted — caller must fix config.
             raise
-        except (json.JSONDecodeError, anthropic.APIConnectionError, anthropic.APIStatusError) as e:
+        except (
+            json.JSONDecodeError,
+            anthropic.APIConnectionError,
+            anthropic.APIStatusError,
+        ) as e:
             logger.error(f"  LLM extraction failed: {e}")
             return ExtractionResult(entities=[], relationships=[], key_facts=[])
 

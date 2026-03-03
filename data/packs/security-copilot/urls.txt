@@ -7,15 +7,11 @@ https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/faq-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/privacy-data-security
 
-# Quickstarts
-https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot
-https://learn.microsoft.com/en-us/copilot/security/prompting-security-copilot
-https://learn.microsoft.com/en-us/copilot/security/using-promptbooks
-
 # Core Concepts
 https://learn.microsoft.com/en-us/copilot/security/experiences-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/sessions
 https://learn.microsoft.com/en-us/copilot/security/investigations
+https://learn.microsoft.com/en-us/copilot/security/prompting-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/prompting-tips
 https://learn.microsoft.com/en-us/copilot/security/upload-file
 
@@ -43,7 +39,6 @@ https://learn.microsoft.com/en-us/copilot/security/create-promptbooks
 https://learn.microsoft.com/en-us/copilot/security/promptbook-library
 
 # Embedded Experiences
-https://learn.microsoft.com/en-us/copilot/security/experiences-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/microsoft-sentinel-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/microsoft-defender-xdr-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/microsoft-intune-security-copilot
@@ -51,14 +46,12 @@ https://learn.microsoft.com/en-us/copilot/security/microsoft-entra-security-copi
 https://learn.microsoft.com/en-us/copilot/security/defender-threat-intelligence-security-copilot
 
 # Administration & Capacity
-https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot#provisioning-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/manage-usage
 https://learn.microsoft.com/en-us/copilot/security/configure-capacity
 https://learn.microsoft.com/en-us/copilot/security/provision-scu
 https://learn.microsoft.com/en-us/copilot/security/manage-roles
 
 # Security & Compliance
-https://learn.microsoft.com/en-us/copilot/security/privacy-data-security
 https://learn.microsoft.com/en-us/copilot/security/responsible-ai-faq-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/security-copilot-multitenant
 
@@ -80,8 +73,6 @@ https://learn.microsoft.com/en-us/copilot/security/release-notes
 
 # Troubleshooting
 https://learn.microsoft.com/en-us/copilot/security/troubleshooting
-https://learn.microsoft.com/en-us/copilot/security/faq-security-copilot
 
 # Audit & Logging
 https://learn.microsoft.com/en-us/copilot/security/audit-logging
-https://learn.microsoft.com/en-us/copilot/security/manage-usage

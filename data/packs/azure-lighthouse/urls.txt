@@ -41,9 +41,6 @@ https://learn.microsoft.com/en-us/azure/lighthouse/how-to/manage-sentinel-worksp
 # Quickstarts & Samples
 https://learn.microsoft.com/en-us/azure/lighthouse/samples/
 https://learn.microsoft.com/en-us/azure/lighthouse/samples/resource-manager-templates
-
-# ARM Templates & Bicep
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/onboard-customer#create-an-azure-resource-manager-template
 https://learn.microsoft.com/en-us/azure/lighthouse/samples/subscription-delegation-template
 
 # Related Concepts
@@ -57,39 +54,24 @@ https://learn.microsoft.com/en-us/azure/lighthouse/faq
 https://learn.microsoft.com/en-us/azure/lighthouse/concepts/azure-built-in-roles
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/partner-earned-credit
 
-# Terraform & SDK Integration
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/onboard-customer#use-terraform
+# REST API & SDK
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/use-rest-api
 
 # Cross-tenant scenarios
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/partner-earned-credit
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/manage-hybrid-infrastructure-arc
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/migration-at-scale
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/deploy-azure-api-management-apis
 
 # Security Operations
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/manage-sentinel-workspaces
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/manage-defender-workspaces
 
 # DevOps Integration
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/azure-devops
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/create-eligible-authorizations
 
 # Managed Applications vs Lighthouse
-https://learn.microsoft.com/en-us/azure/lighthouse/concepts/lighthouse-and-azure-managed-applications
 https://learn.microsoft.com/en-us/azure/managed-applications/overview
-
-# Partner Center Integration
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/partner-earned-credit
 
 # What's New
 https://learn.microsoft.com/en-us/azure/lighthouse/whats-new
-https://learn.microsoft.com/en-us/azure/lighthouse/concepts/azure-delegated-resource-management#how-azure-lighthouse-works
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/view-service-provider-activity
 
 # Troubleshooting
 https://learn.microsoft.com/en-us/azure/lighthouse/troubleshoot
-https://learn.microsoft.com/en-us/azure/lighthouse/concepts/cloud-solution-provider#managing-csp-subscriptions-with-azure-lighthouse
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/policy-at-scale
-https://learn.microsoft.com/en-us/azure/lighthouse/how-to/monitor-at-scale
-https://learn.microsoft.com/en-us/azure/lighthouse/overview#capabilities

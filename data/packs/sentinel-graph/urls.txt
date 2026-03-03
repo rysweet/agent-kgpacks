@@ -27,14 +27,12 @@ https://learn.microsoft.com/en-us/azure/sentinel/connect-common-event-format
 https://learn.microsoft.com/en-us/azure/sentinel/create-custom-connector
 
 # Analytics & Detection
-https://learn.microsoft.com/en-us/azure/sentinel/detect-threats-built-in
 https://learn.microsoft.com/en-us/azure/sentinel/create-analytics-rule-from-content-hub
 https://learn.microsoft.com/en-us/azure/sentinel/create-nrt-rules
 https://learn.microsoft.com/en-us/azure/sentinel/kusto-overview
 https://learn.microsoft.com/en-us/azure/sentinel/create-threat-intelligence-rules
 
 # Incident Management
-https://learn.microsoft.com/en-us/azure/sentinel/investigate-cases
 https://learn.microsoft.com/en-us/azure/sentinel/investigate-with-ueba
 https://learn.microsoft.com/en-us/azure/sentinel/investigate-with-hunting
 https://learn.microsoft.com/en-us/azure/sentinel/incident-investigation
@@ -55,10 +53,8 @@ https://learn.microsoft.com/en-us/azure/sentinel/trigger-automation-from-sentine
 # Threat Intelligence
 https://learn.microsoft.com/en-us/azure/sentinel/understand-threat-intelligence
 https://learn.microsoft.com/en-us/azure/sentinel/import-threat-intelligence
-https://learn.microsoft.com/en-us/azure/sentinel/create-threat-intelligence-rules
 
 # Workbooks & Dashboards
-https://learn.microsoft.com/en-us/azure/sentinel/get-visibility
 https://learn.microsoft.com/en-us/azure/sentinel/monitor-your-data
 
 # Content Hub & Solutions
@@ -75,12 +71,10 @@ https://learn.microsoft.com/en-us/azure/sentinel/multiple-tenants-service-provid
 https://learn.microsoft.com/en-us/azure/sentinel/extend-sentinel-across-workspaces-tenants
 
 # KQL & Queries
-https://learn.microsoft.com/en-us/azure/sentinel/kusto-overview
 https://learn.microsoft.com/en-us/azure/sentinel/sentinel-solutions-query-editor
 https://learn.microsoft.com/en-us/azure/sentinel/sample-queries
 
 # Security Operations
-https://learn.microsoft.com/en-us/azure/sentinel/best-practices
 https://learn.microsoft.com/en-us/azure/sentinel/soc-ml-anomalies
 https://learn.microsoft.com/en-us/azure/sentinel/data-source-schema-reference
 
