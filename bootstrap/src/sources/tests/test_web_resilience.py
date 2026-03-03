@@ -5,14 +5,13 @@ plus exponential-backoff retry on transient HTTP errors.
 """
 
 import time
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests
 
 from ..base import ArticleNotFoundError
 from ..web import WebContentSource
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -33,10 +32,7 @@ def _make_response(status: int, text: str = "", headers: dict | None = None) -> 
 
 
 def _make_html(body: str = "", title: str = "Test Page") -> str:
-    return (
-        f"<html><head><title>{title}</title></head>"
-        f"<body>{'word ' * 250}{body}</body></html>"
-    )
+    return f"<html><head><title>{title}</title></head>" f"<body>{'word ' * 250}{body}</body></html>"
 
 
 # ---------------------------------------------------------------------------
@@ -79,9 +75,11 @@ class TestSSLVerification:
         session = req.Session()
         session.verify = False  # simulate a misconfigured session
 
-        with pytest.raises(RuntimeError, match="SSL verification must not be disabled"):
-            with patch("bootstrap.src.sources.web.requests.Session", return_value=session):
-                WebContentSource()
+        with (
+            pytest.raises(RuntimeError, match="SSL verification must not be disabled"),
+            patch("bootstrap.src.sources.web.requests.Session", return_value=session),
+        ):
+            WebContentSource()
 
 
 # ---------------------------------------------------------------------------
@@ -285,11 +283,11 @@ class TestRetryLogic:
     def test_network_error_propagates(self):
         """requests.RequestException (network failure) should propagate to caller."""
         source = WebContentSource(max_retries=1)
-        with patch.object(
-            source._session, "get", side_effect=requests.ConnectionError("timeout")
+        with (
+            patch.object(source._session, "get", side_effect=requests.ConnectionError("timeout")),
+            pytest.raises(requests.ConnectionError),
         ):
-            with pytest.raises(requests.ConnectionError):
-                source._fetch_with_retry("https://example.com/")
+            source._fetch_with_retry("https://example.com/")
 
 
 # ---------------------------------------------------------------------------
@@ -323,6 +321,8 @@ class TestFetchArticleRetryIntegration:
         source = WebContentSource(max_retries=2, min_content_words=10)
 
         fail = _make_response(503)
-        with patch.object(source._session, "get", return_value=fail):
-            with pytest.raises(ArticleNotFoundError):
-                source.fetch_article("https://example.com/page")
+        with (
+            patch.object(source._session, "get", return_value=fail),
+            pytest.raises(ArticleNotFoundError),
+        ):
+            source.fetch_article("https://example.com/page")

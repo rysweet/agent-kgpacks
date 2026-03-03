@@ -61,7 +61,9 @@ def load_urls(urls_file: Path, limit: int | None = None) -> list[str]:
         urls = [
             stripped
             for line in f
-            if (stripped := line.strip()) and not stripped.startswith("#") and stripped.startswith("https://")
+            if (stripped := line.strip())
+            and not stripped.startswith("#")
+            and stripped.startswith("https://")
         ]
 
     if limit:
@@ -231,7 +233,9 @@ def build_pack(test_mode: bool = False) -> None:
         logger.info("TEST MODE: Building 5-URL pack")
 
     if DB_PATH.exists():
-        if not str(DB_PATH).startswith("data/packs/"):  # SEC-06: prevent deletion outside data/packs/
+        if not str(DB_PATH).startswith(
+            "data/packs/"
+        ):  # SEC-06: prevent deletion outside data/packs/
             raise ValueError(f"Unsafe DB_PATH: {DB_PATH}")
         if test_mode:
             logger.info(f"Auto-deleting existing database (test mode): {DB_PATH}")
@@ -286,9 +290,7 @@ def build_pack(test_mode: bool = False) -> None:
 
 def main():
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Build Microsoft Security Copilot Knowledge Pack"
-    )
+    parser = argparse.ArgumentParser(description="Build Microsoft Security Copilot Knowledge Pack")
     parser.add_argument(
         "--test-mode",
         action="store_true",

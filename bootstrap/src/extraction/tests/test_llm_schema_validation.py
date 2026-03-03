@@ -7,10 +7,7 @@ data is written to the knowledge graph.
 
 from __future__ import annotations
 
-import pytest
-
 from ..llm_extractor import _sanitize_entities, _sanitize_key_facts, _sanitize_relationships
-
 
 # ---------------------------------------------------------------------------
 # _sanitize_entities

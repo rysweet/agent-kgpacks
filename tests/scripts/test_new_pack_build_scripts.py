@@ -178,8 +178,7 @@ def test_all_four_new_scripts_exist() -> None:
     for script_name in _NEW_PACKS:
         script_path = _SCRIPTS_DIR / script_name
         assert script_path.exists(), (
-            f"scripts/{script_name} is missing. "
-            "Expected all 4 new pack scripts to exist."
+            f"scripts/{script_name} is missing. " "Expected all 4 new pack scripts to exist."
         )
         assert script_path.is_file(), f"scripts/{script_name} is not a regular file."
 
@@ -234,8 +233,7 @@ def test_db_path_constant(name: str, path: Path) -> None:
     """DB_PATH must be derived from PACK_DIR and named 'pack.db'."""
     source = path.read_text(encoding="utf-8")
     assert "pack.db" in source, (
-        f"{name}: 'pack.db' not found in source. "
-        "DB_PATH must be set to PACK_DIR / 'pack.db'."
+        f"{name}: 'pack.db' not found in source. " "DB_PATH must be set to PACK_DIR / 'pack.db'."
     )
 
 
@@ -458,8 +456,8 @@ def test_load_urls_filter_is_https_only(name: str, path: Path) -> None:
 
     http_filters = _find_http_filter_strings(load_urls_func)
     assert http_filters, (
-        f"{name}: no startswith(\"http...\") filter found in load_urls(). "
-        "The URL filter must use startswith(\"https://\")."
+        f'{name}: no startswith("http...") filter found in load_urls(). '
+        'The URL filter must use startswith("https://").'
     )
 
     for filter_str in http_filters:
@@ -489,9 +487,9 @@ def test_load_urls_rejects_http_url_in_urls_txt(name: str, path: Path) -> None:
     pattern = re.compile(r'startswith\(["\']https://["\']\)')
     matches = pattern.findall(source)
     assert matches, (
-        f"{name}: load_urls() does not contain startswith(\"https://\"). "
+        f'{name}: load_urls() does not contain startswith("https://"). '
         "An http:// URL in urls.txt would be incorrectly accepted by the current filter. "
-        "SEC-01: change startswith(\"http\") → startswith(\"https://\")."
+        'SEC-01: change startswith("http") → startswith("https://").'
     )
 
 

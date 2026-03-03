@@ -237,9 +237,9 @@ class WebContentSource:
                 try:
                     base_wait = float(response.headers["Retry-After"])
                 except ValueError:
-                    base_wait = 2.0 ** attempt
+                    base_wait = 2.0**attempt
             else:
-                base_wait = 2.0 ** attempt
+                base_wait = 2.0**attempt
 
             # SEC-11: add up to 25% jitter to avoid synchronised bot-detection patterns.
             jitter = random.uniform(0.0, base_wait * 0.25)

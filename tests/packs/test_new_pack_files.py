@@ -419,9 +419,7 @@ def test_eval_questions_json_and_jsonl_count_match(pack_name: str) -> None:
 
     json_count = len(json.loads(json_file.read_text(encoding="utf-8")))
     jsonl_count = sum(
-        1
-        for line in jsonl_file.read_text(encoding="utf-8").splitlines()
-        if line.strip()
+        1 for line in jsonl_file.read_text(encoding="utf-8").splitlines() if line.strip()
     )
     assert json_count == jsonl_count, (
         f"data/packs/{pack_name}: questions.json has {json_count} questions but "
