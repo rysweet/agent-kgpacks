@@ -129,7 +129,10 @@ class TestQueryPackNameValidation:
     def test_error_message_contains_pattern_hint(self, result_traversal):
         """Error message must mention the expected pattern for user guidance."""
         # The error should help the user understand valid naming rules
-        assert "alphanumeric" in result_traversal.stderr.lower() or "pattern" in result_traversal.stderr.lower()
+        assert (
+            "alphanumeric" in result_traversal.stderr.lower()
+            or "pattern" in result_traversal.stderr.lower()
+        )
 
     def test_no_stdout_on_invalid_name(self, result_traversal):
         """No output on stdout when pack name is invalid (errors go to stderr only)."""

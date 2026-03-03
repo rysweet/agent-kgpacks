@@ -21,7 +21,7 @@ result = run_recipe_by_name(
     "default-workflow",
     adapter=adapter,
     user_context={
-        "task_description": "Tests reference methods removed in the dead code cleanup: _validate_cypher, _execute_query, _execute_fallback_query, _plan_query. Fix: Remove tests/agent/test_validate_cypher.py entirely. Remove TestExecuteQuery and TestExecuteFallbackQuery classes from tests/agent/test_kg_agent_core.py. Remove test_handles_enriched_context from test_kg_agent_core.py. Fix test_query_skips_llm_when_high_confidence and test_query_never_calls_llm_cypher in test_kg_agent_semantic.py to not reference _plan_query. Add pytest.mark.skipif for test_kg_agent_queries.py when data/wikigr_30k.db is missing.",
+        "task_description": "CRITICAL: backend/api/v1/chat.py chat_stream endpoint at lines 177-180 calls _plan_query and _execute_query which were deleted in the dead code cleanup. Every SSE stream request raises AttributeError at runtime.\n\nFix: Replace the decomposed private-method calls in the generate function with a single agent.query call. Emit the answer as a token event and sources as a sources event.\n\nAlso fix: wikigr/packs/distribution.py line 142 - add filter='data' to tar.extractall call to prevent Python 3.14 deprecation warning.\n\nRun tests after to verify 0 failures.",
         "repo_path": ".",
     },
 )

@@ -261,27 +261,173 @@ curl "http://localhost:8000/api/v1/hybrid-search?query=Machine+Learning&max_hops
 
 ---
 
-### Chat
+### Chat (blocking)
 
 **POST** `/api/v1/chat`
 
-Ask natural language questions about the knowledge graph. Supports SSE streaming.
-
-**Request Body:**
-```json
-{
-  "messages": [{"role": "user", "content": "What is quantum entanglement?"}],
-  "stream": true
-}
-```
+Ask a natural language question about the knowledge graph.
+Returns a complete JSON response once the agent finishes synthesizing.
 
 **Rate Limit:** 5/minute
 
+**Request Body:**
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `question` | string | Yes | — | Natural language question (1–500 chars) |
+| `pack` | string\|null | No | null | Pack name to query (e.g. `"dotnet-expert"`). Uses default graph when omitted |
+| `max_results` | int | No | 10 | Maximum vector-search results (1–50) |
+
+**Example request:**
+```json
+{
+  "question": "What is goroutine scheduling?",
+  "pack": "go-expert",
+  "max_results": 10
+}
+```
+
+**Response:**
+```json
+{
+  "answer": "Go uses an M:N scheduling model where many goroutines are multiplexed...",
+  "sources": ["runtime_scheduling", "goroutines", "channel_internals"],
+  "query_type": "vector_search",
+  "execution_time_ms": 1240.3
+}
+```
+
+**Response fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `answer` | string | Synthesized natural-language answer |
+| `sources` | string[] | Article titles used as evidence |
+| `query_type` | string | `vector_search` \| `confidence_gated_fallback` \| `vector_fallback` |
+| `execution_time_ms` | float | Total wall-clock time for the request |
+
+**Status Codes:**
+- `200`: Success
+- `400`: Invalid request body (validation error or invalid pack name format)
+- `404`: Requested pack not found (`PACK_NOT_FOUND`)
+- `429`: Rate limit exceeded
+- `500`: Agent error (`AGENT_ERROR`)
+- `503`: `ANTHROPIC_API_KEY` not configured (`AGENT_UNAVAILABLE`)
+
 **Example:**
 ```bash
+# Query the default knowledge graph
 curl -X POST "http://localhost:8000/api/v1/chat" \
   -H "Content-Type: application/json" \
-  -d '{"messages": [{"role": "user", "content": "What is machine learning?"}], "stream": false}'
+  -d '{"question": "What is machine learning?"}'
+
+# Query a specific pack
+curl -X POST "http://localhost:8000/api/v1/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"question": "How do channels work?", "pack": "go-expert", "max_results": 5}'
+```
+
+---
+
+### Chat (streaming)
+
+**GET** `/api/v1/chat/stream`
+
+Stream a chat response via Server-Sent Events (SSE).
+The connection stays open while the agent queries the knowledge graph,
+then delivers events in order: `sources` → `token` → `done` (or `error`).
+
+**Rate Limit:** 5/minute (shared with POST /api/v1/chat)
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `question` | string | Yes | — | Natural language question (1–500 chars) |
+| `max_results` | int | No | 10 | Maximum vector-search results (1–50) |
+
+**SSE Event Types:**
+
+| Event type | `data` field | Description |
+|------------|-------------|-------------|
+| `sources` | JSON array of strings | Article titles used as evidence (sent before the answer) |
+| `token` | Plain text string | Complete answer text (single event, not incremental tokens) |
+| `done` | JSON object | `{"query_type": "...", "execution_time_ms": 1240.3}` |
+| `error` | Exception class name string | Emitted if the agent raises an exception |
+
+**Status Codes:**
+- `200`: SSE stream opened (errors during generation appear as `error` events)
+- `429`: Rate limit exceeded
+- `503`: `ANTHROPIC_API_KEY` not configured
+
+**Example – curl:**
+```bash
+curl -N "http://localhost:8000/api/v1/chat/stream?question=What+is+goroutine+scheduling%3F"
+```
+
+**Example output:**
+```
+event: sources
+data: ["runtime_scheduling","goroutines","channel_internals"]
+
+event: token
+data: Go uses an M:N scheduling model where many goroutines are multiplexed onto a smaller number of OS threads...
+
+event: done
+data: {"query_type": "vector_search", "execution_time_ms": 1240.3}
+```
+
+**Example – JavaScript (EventSource):**
+```javascript
+const url = new URL('http://localhost:8000/api/v1/chat/stream');
+url.searchParams.set('question', 'What is goroutine scheduling?');
+
+const es = new EventSource(url);
+
+es.addEventListener('sources', e => {
+  const sources = JSON.parse(e.data);
+  console.log('Sources:', sources);
+});
+
+es.addEventListener('token', e => {
+  process.stdout.write(e.data);
+});
+
+es.addEventListener('done', e => {
+  const meta = JSON.parse(e.data);
+  console.log('\nDone:', meta);
+  es.close();
+});
+
+es.addEventListener('error', e => {
+  console.error('Agent error:', e.data);
+  es.close();
+});
+```
+
+**Example – Python (sseclient):**
+```python
+import json
+import sseclient
+import requests
+
+url = 'http://localhost:8000/api/v1/chat/stream'
+params = {'question': 'What is goroutine scheduling?', 'max_results': 5}
+
+response = requests.get(url, params=params, stream=True)
+client = sseclient.SSEClient(response)
+
+for event in client.events():
+    if event.event == 'sources':
+        print('Sources:', json.loads(event.data))
+    elif event.event == 'token':
+        print('Answer:', event.data)
+    elif event.event == 'done':
+        print('Meta:', json.loads(event.data))
+        break
+    elif event.event == 'error':
+        print('Error:', event.data)
+        break
 ```
 
 ---
@@ -439,25 +585,30 @@ All errors follow this format:
 
 **Error Codes:**
 
-| Code                  | Status | Description                     |
-| --------------------- | ------ | ------------------------------- |
-| `INVALID_PARAMETER`   | 400    | Parameter validation failed     |
-| `MISSING_PARAMETER`   | 400    | Required parameter missing      |
-| `NOT_FOUND`           | 404    | Article/resource not found      |
-| `INTERNAL_ERROR`      | 500    | Internal server error           |
-| `AGENT_UNAVAILABLE`   | 503    | Chat agent not available        |
+| Code                  | Status | Description                                          |
+| --------------------- | ------ | ---------------------------------------------------- |
+| `INVALID_PARAMETER`   | 400    | Parameter validation failed                          |
+| `MISSING_PARAMETER`   | 400    | Required parameter missing                           |
+| `INVALID_PACK_NAME`   | 400    | Pack name contains illegal characters                |
+| `NOT_FOUND`           | 404    | Article/resource not found                           |
+| `PACK_NOT_FOUND`      | 404    | Requested knowledge pack does not exist on this server |
+| `INTERNAL_ERROR`      | 500    | Internal server error                                |
+| `AGENT_ERROR`         | 500    | KnowledgeGraphAgent raised an exception              |
+| `AGENT_UNAVAILABLE`   | 503    | `ANTHROPIC_API_KEY` not configured                   |
 
 ---
 
 ## CORS
 
-**Allowed origins:**
-- Development: `http://localhost:5173`
-- Production: `https://wikigr.example.com`
+**Allowed origins** (configured in `backend/config.py`, overridable via `WIKIGR_CORS_ORIGINS`):
+- `http://localhost:3000`
+- `http://localhost:5173`
+- `http://127.0.0.1:3000`
+- `http://127.0.0.1:5173`
 
-**Headers:**
+**Headers (when request Origin matches an allowed origin):**
 ```
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: <matched origin>
 Access-Control-Allow-Methods: GET, POST, OPTIONS
 Access-Control-Allow-Headers: Content-Type
 ```
@@ -468,16 +619,17 @@ Access-Control-Allow-Headers: Content-Type
 
 All endpoints are rate-limited per IP address via slowapi:
 
-| Endpoint                | Limit     |
-| ----------------------- | --------- |
-| `/api/v1/search`        | 10/minute |
-| `/api/v1/autocomplete`  | 60/minute |
-| `/api/v1/graph`         | 20/minute |
-| `/api/v1/hybrid-search` | 10/minute |
-| `/api/v1/articles/*`    | 30/minute |
-| `/api/v1/categories`    | 30/minute |
-| `/api/v1/stats`         | 30/minute |
-| `/api/v1/chat`          | 5/minute  |
+| Endpoint                  | Limit     |
+| ------------------------- | --------- |
+| `/api/v1/search`          | 10/minute |
+| `/api/v1/autocomplete`    | 60/minute |
+| `/api/v1/graph`           | 20/minute |
+| `/api/v1/hybrid-search`   | 10/minute |
+| `/api/v1/articles/*`      | 30/minute |
+| `/api/v1/categories`      | 30/minute |
+| `/api/v1/stats`           | 30/minute |
+| `POST /api/v1/chat`       | 5/minute  |
+| `GET /api/v1/chat/stream` | 5/minute  |
 
 Rate limiting can be disabled for testing via `WIKIGR_RATE_LIMIT_ENABLED=false`.
 

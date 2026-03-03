@@ -2,7 +2,9 @@
 
 import json
 import tarfile
+import warnings
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -400,3 +402,191 @@ class TestUnpackagePack:
         assert (result / "eval" / "results" / "test.json").exists()
         content = (result / "eval" / "results" / "test.json").read_text()
         assert "score" in content
+
+
+class TestUnpackageSafeExtract:
+    """
+    TDD specification for the filter='data' fix (PEP 706 compliance).
+
+    Python 3.12+ emits a DeprecationWarning when tar.extractall() is called
+    without an explicit filter.  Python 3.14 will make the 'fully_trusted'
+    filter the hard default which changes extraction semantics.  Using
+    filter='data' opts in explicitly to safe behaviour and silences the warning.
+    """
+
+    def create_minimal_archive(self, archive_path: Path, pack_name: str = "safe-pack") -> None:
+        """Create a minimal valid pack archive for extraction tests."""
+        pack_dir = archive_path.parent / "_tmp_pack"
+        pack_dir.mkdir()
+
+        manifest = PackManifest(
+            name=pack_name,
+            version="1.0.0",
+            description="Safe extract test pack",
+            graph_stats=GraphStats(articles=1, entities=1, relationships=1, size_mb=1),
+            eval_scores=EvalScores(accuracy=0.9, hallucination_rate=0.05, citation_quality=0.95),
+            source_urls=["https://example.com"],
+            created="2026-02-24T10:00:00Z",
+            license="CC-BY-SA-4.0",
+        )
+        save_manifest(manifest, pack_dir)
+        (pack_dir / "pack.db").mkdir()
+        (pack_dir / "skill.md").write_text("# Skill")
+        (pack_dir / "kg_config.json").write_text(json.dumps({"pack_name": pack_name}))
+
+        with tarfile.open(archive_path, "w:gz") as tar:
+            tar.add(pack_dir / "manifest.json", arcname="manifest.json")
+            tar.add(pack_dir / "pack.db", arcname="pack.db")
+            tar.add(pack_dir / "skill.md", arcname="skill.md")
+            tar.add(pack_dir / "kg_config.json", arcname="kg_config.json")
+
+        import shutil
+
+        shutil.rmtree(pack_dir)
+
+    def test_extractall_called_with_data_filter(self, tmp_path: Path):
+        """
+        TDD: tar.extractall must be called with filter='data'.
+
+        This test intercepts the real extractall call and records the keyword
+        arguments so we can assert that filter='data' is passed.  The real
+        method is still executed so that subsequent validation steps succeed.
+        """
+        archive_path = tmp_path / "safe-pack-1.0.0.tar.gz"
+        self.create_minimal_archive(archive_path)
+        install_dir = tmp_path / "installed"
+
+        recorded_calls: list[dict] = []
+        _real_extractall = tarfile.TarFile.extractall
+
+        def _recording_extractall(
+            tar_self, path=".", members=None, *, numeric_owner=False, filter=None
+        ):
+            recorded_calls.append({"path": path, "filter": filter})
+            return _real_extractall(
+                tar_self, path, members, numeric_owner=numeric_owner, filter=filter
+            )
+
+        with patch.object(tarfile.TarFile, "extractall", _recording_extractall):
+            unpackage_pack(archive_path, install_dir)
+
+        assert len(recorded_calls) == 1, "extractall should be called exactly once"
+        assert recorded_calls[0]["filter"] == "data", (
+            f"Expected filter='data', got filter={recorded_calls[0]['filter']!r}. "
+            "The fix requires passing filter='data' to tar.extractall() to comply "
+            "with PEP 706 and suppress the Python 3.12+ DeprecationWarning."
+        )
+
+    def test_no_tarfile_deprecation_warning_on_extract(self, tmp_path: Path):
+        """
+        TDD: unpackage_pack must not raise a DeprecationWarning about extractall filters.
+
+        Without filter='data', Python 3.12+ emits:
+          DeprecationWarning: Python 3.14 will, by default, filter extracted
+          tar archives and reject files or modify their metadata.
+        """
+        archive_path = tmp_path / "safe-pack-1.0.0.tar.gz"
+        self.create_minimal_archive(archive_path)
+        install_dir = tmp_path / "installed"
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            unpackage_pack(archive_path, install_dir)
+
+        tarfile_warnings = [
+            w
+            for w in caught
+            if issubclass(w.category, DeprecationWarning)
+            and "filter" in str(w.message).lower()
+            and "tar" in str(w.message).lower()
+        ]
+        assert tarfile_warnings == [], (
+            "unpackage_pack raised tarfile filter DeprecationWarning(s): "
+            + "; ".join(str(w.message) for w in tarfile_warnings)
+        )
+
+    def test_extraction_still_works_correctly_with_filter(self, tmp_path: Path):
+        """
+        TDD: the filter='data' argument must not break normal valid archive extraction.
+
+        This is a regression guard: adding filter='data' should be transparent
+        to well-formed archives.
+        """
+        archive_path = tmp_path / "safe-pack-1.0.0.tar.gz"
+        self.create_minimal_archive(archive_path)
+        install_dir = tmp_path / "installed"
+
+        result = unpackage_pack(archive_path, install_dir)
+
+        assert result.exists()
+        assert result.name == "safe-pack"
+        assert (result / "manifest.json").exists()
+        assert (result / "pack.db").is_dir()
+        assert (result / "skill.md").exists()
+        assert (result / "kg_config.json").exists()
+
+    def test_absolute_path_members_still_rejected(self, tmp_path: Path):
+        """
+        TDD: the pre-existing absolute-path check must still fire before extractall.
+
+        The filter='data' addition must not accidentally remove the explicit
+        member-path security validation that already exists in unpackage_pack.
+        """
+        archive_path = tmp_path / "evil-pack.tar.gz"
+
+        # Build archive with an absolute-path member (path traversal attempt)
+        with tarfile.open(archive_path, "w:gz") as tar:
+            info = tarfile.TarInfo(name="/etc/passwd")
+            info.size = 0
+            import io
+
+            tar.addfile(info, io.BytesIO(b""))
+
+        install_dir = tmp_path / "installed"
+
+        with pytest.raises(ValueError, match="Invalid archive member path"):
+            unpackage_pack(archive_path, install_dir)
+
+    def test_dotdot_path_members_still_rejected(self, tmp_path: Path):
+        """
+        TDD: the pre-existing '..' path check must still fire before extractall.
+        """
+        archive_path = tmp_path / "dotdot-pack.tar.gz"
+
+        with tarfile.open(archive_path, "w:gz") as tar:
+            info = tarfile.TarInfo(name="../../etc/passwd")
+            info.size = 0
+            import io
+
+            tar.addfile(info, io.BytesIO(b""))
+
+        install_dir = tmp_path / "installed"
+
+        with pytest.raises(ValueError, match="Invalid archive member path"):
+            unpackage_pack(archive_path, install_dir)
+
+    def test_unpackage_rejects_path_traversal_in_manifest_name(self, tmp_path: Path):
+        """
+        R-PT-1: manifest.name that resolves outside install_dir must be rejected.
+
+        The manifest validator already blocks names with slashes/dots today.
+        This test patches load_manifest to inject a traversal name directly,
+        verifying that the containment guard in unpackage_pack fires independently
+        of the validation layer (defense-in-depth).
+        """
+        from unittest.mock import MagicMock, patch
+
+        archive_path = tmp_path / "traversal-pack.tar.gz"
+        self.create_minimal_archive(archive_path, pack_name="safe-pack")
+
+        install_dir = tmp_path / "installed"
+
+        # Inject a traversal name that bypasses the manifest string validator
+        traversal_manifest = MagicMock()
+        traversal_manifest.name = "../../traversal-target"
+
+        with (
+            patch("wikigr.packs.distribution.load_manifest", return_value=traversal_manifest),
+            pytest.raises(ValueError, match="resolves outside installation directory"),
+        ):
+            unpackage_pack(archive_path, install_dir)

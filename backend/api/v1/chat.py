@@ -6,10 +6,13 @@ Uses the shared ConnectionManager (via get_db dependency) instead of opening
 a separate database per request. Supports both blocking and streaming responses.
 """
 
+import concurrent.futures
+import contextlib
 import json
 import logging
 import os
 import time
+from pathlib import Path
 
 import kuzu
 from fastapi import APIRouter, Depends, Query, Request
@@ -20,6 +23,7 @@ from backend.config import settings
 from backend.db import get_db
 from backend.models.chat import ChatRequest, ChatResponse
 from backend.rate_limit import limiter
+from wikigr.packs.manifest import PACK_NAME_RE
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +31,9 @@ router = APIRouter(prefix="/api/v1", tags=["chat"])
 
 # Module-level Anthropic client (created once, reused across requests)
 _anthropic_client = None
+
+# Maximum seconds to wait for agent.query() before emitting a timeout error (R-DOS-1)
+STREAM_TIMEOUT_S = int(os.environ.get("WIKIGR_STREAM_TIMEOUT_S", "60"))
 
 
 def _get_anthropic_client():
@@ -81,16 +88,19 @@ def chat(
         pack_agent = None
         if request_body.pack:
             # Validate pack name to prevent path traversal
-            import re as _re
-
-            if not _re.match(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$", request_body.pack):
+            if not PACK_NAME_RE.match(request_body.pack):
                 return JSONResponse(
                     status_code=400,
                     content={
                         "error": {"code": "INVALID_PACK_NAME", "message": "Invalid pack name"}
                     },
                 )
-            pack_db = os.path.join("data", "packs", request_body.pack, "pack.db")
+            pack_db = str(
+                Path(settings.database_path).resolve().parent
+                / "packs"
+                / request_body.pack
+                / "pack.db"
+            )
             if not os.path.exists(pack_db):
                 return JSONResponse(
                     status_code=404,
@@ -142,7 +152,7 @@ def chat(
 @limiter.limit(settings.chat_rate_limit)
 def chat_stream(
     request: Request,  # noqa: ARG001 - required by slowapi limiter
-    question: str = Query(..., max_length=500),
+    question: str = Query(..., min_length=1, max_length=500),
     max_results: int = Query(10, ge=1, le=50),
 ):
     """
@@ -173,36 +183,27 @@ def chat_stream(
 
             agent = KnowledgeGraphAgent.from_connection(conn, _get_anthropic_client())
 
-            # Step 1: Plan query (fast)
-            query_plan = agent._plan_query(question)
+            # Run agent.query with a timeout to bound SSE connection lifetime (R-DOS-1)
+            pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            future = pool.submit(agent.query, question=question, max_results=max_results)
+            try:
+                result = future.result(timeout=STREAM_TIMEOUT_S)
+            except concurrent.futures.TimeoutError:
+                pool.shutdown(wait=False, cancel_futures=True)
+                yield {"event": "error", "data": "TimeoutError"}
+                return
+            else:
+                pool.shutdown(wait=False)
 
-            # Step 2: Execute query (fast)
-            kg_results = agent._execute_query(
-                query_plan["cypher"], max_results, query_plan.get("cypher_params")
-            )
-
-            # Send sources immediately
-            sources = kg_results.get("sources", [])
-            yield {"event": "sources", "data": json.dumps(sources)}
-
-            # Step 3: Stream synthesis from Claude
-            context = agent._build_synthesis_context(question, kg_results, query_plan)
-            client = agent.claude
-
-            with client.messages.stream(
-                model=agent.synthesis_model,
-                max_tokens=agent.SYNTHESIS_MAX_TOKENS,
-                messages=[{"role": "user", "content": context}],
-            ) as stream:
-                for text in stream.text_stream:
-                    yield {"event": "token", "data": text}
+            yield {"event": "sources", "data": json.dumps(result.get("sources", []))}
+            yield {"event": "token", "data": result.get("answer", "")}
 
             elapsed_ms = (time.perf_counter() - start) * 1000
             yield {
                 "event": "done",
                 "data": json.dumps(
                     {
-                        "query_type": query_plan.get("type", "unknown"),
+                        "query_type": result.get("query_type", "unknown"),
                         "execution_time_ms": round(elapsed_ms, 1),
                     }
                 ),
@@ -212,8 +213,6 @@ def chat_stream(
             logger.error(f"Streaming chat error: {e}", exc_info=True)
             yield {"event": "error", "data": str(type(e).__name__)}
         finally:
-            import contextlib
-
             with contextlib.suppress(Exception):
                 conn.close()
 

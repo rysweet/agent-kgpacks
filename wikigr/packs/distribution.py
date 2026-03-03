@@ -4,12 +4,15 @@ This module provides functions for creating distributable pack archives (.tar.gz
 and extracting them for installation.
 """
 
+import shutil
 import tarfile
 import tempfile
 from pathlib import Path
 
 from wikigr.packs.manifest import load_manifest
 from wikigr.packs.validator import validate_pack_structure
+
+_EXCLUDED_SUFFIXES = frozenset({".tmp", ".cache", ".log", ".pyc"})
 
 
 def _should_exclude(path: Path, base_dir: Path) -> bool:
@@ -44,7 +47,22 @@ def _should_exclude(path: Path, base_dir: Path) -> bool:
             return True
 
     # Check file extensions
-    return path.is_file() and path.suffix in [".tmp", ".cache", ".log", ".pyc"]
+    return path.is_file() and path.suffix in _EXCLUDED_SUFFIXES
+
+
+def _iter_pack_files(directory: Path, base_dir: Path):
+    """Yield non-excluded pack items depth-first, pruning excluded directories.
+
+    Unlike rglob("*"), this avoids descending into excluded directories
+    (e.g. __pycache__, cache/, hidden dirs), skipping entire subtrees
+    rather than visiting and filtering each item individually.
+    """
+    for item in directory.iterdir():
+        if _should_exclude(item, base_dir):
+            continue
+        yield item
+        if item.is_dir():
+            yield from _iter_pack_files(item, base_dir)
 
 
 def package_pack(pack_dir: Path, output_path: Path) -> Path:
@@ -88,16 +106,8 @@ def package_pack(pack_dir: Path, output_path: Path) -> Path:
 
     # Create tar.gz archive
     with tarfile.open(output_path, "w:gz") as tar:
-        # Add all files/directories, filtering out excluded items
-        for item in pack_dir.rglob("*"):
-            if _should_exclude(item, pack_dir):
-                continue
-
-            # Calculate archive name (relative to pack_dir)
-            arcname = str(item.relative_to(pack_dir))
-
-            # Add to archive
-            tar.add(item, arcname=arcname, recursive=False)
+        for item in _iter_pack_files(pack_dir, pack_dir):
+            tar.add(item, arcname=str(item.relative_to(pack_dir)), recursive=False)
 
     return output_path
 
@@ -130,7 +140,8 @@ def unpackage_pack(archive_path: Path, install_dir: Path) -> Path:
         # Extract archive
         with tarfile.open(archive_path, "r:gz") as tar:
             # Security check: ensure no absolute paths, parent refs, or symlinks
-            for member in tar.getmembers():
+            members = tar.getmembers()
+            for member in members:
                 if member.name.startswith("/") or ".." in member.name:
                     raise ValueError(f"Invalid archive member path: {member.name}")
                 if member.issym() or member.islnk():
@@ -138,8 +149,8 @@ def unpackage_pack(archive_path: Path, install_dir: Path) -> Path:
                         f"Symlinks/hardlinks not allowed in pack archives: {member.name}"
                     )
 
-            # Extract all files
-            tar.extractall(temp_path)
+            # Extract all files (reuse already-loaded member list)
+            tar.extractall(temp_path, members=members, filter="data")
 
         # Validate extracted pack structure
         errors = validate_pack_structure(temp_path)
@@ -150,19 +161,14 @@ def unpackage_pack(archive_path: Path, install_dir: Path) -> Path:
         manifest = load_manifest(temp_path)
         pack_name = manifest.name
 
-        # Final installation path
+        # Final installation path – validate containment before use (R-PT-1)
         final_path = install_dir / pack_name
+        if not final_path.resolve().is_relative_to(install_dir.resolve()):
+            raise ValueError(f"Pack name '{pack_name}' resolves outside installation directory")
 
         # Move from temp to final location (atomic operation)
         if final_path.exists():
-            # Remove existing installation
-            import shutil
-
             shutil.rmtree(final_path)
-
-        # Move extracted pack to final location
-        import shutil
-
         shutil.move(str(temp_path), str(final_path))
 
     return final_path
