@@ -20,7 +20,7 @@ from fastapi.responses import JSONResponse
 from sse_starlette.sse import EventSourceResponse
 
 from backend.config import settings
-from backend.db import get_db
+from backend.db import get_connection, get_db
 from backend.models.chat import ChatRequest, ChatResponse
 from backend.rate_limit import limiter
 from wikigr.packs.manifest import PACK_NAME_RE
@@ -179,9 +179,7 @@ def chat_stream(
     def generate():
         start = time.perf_counter()
         # Manage connection inside generator so it stays alive for the full stream
-        from backend.db.connection import _manager
-
-        conn = _manager.get_connection()
+        conn = get_connection()
         try:
             from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
@@ -194,6 +192,9 @@ def chat_stream(
                 result = future.result(timeout=STREAM_TIMEOUT_S)
             except concurrent.futures.TimeoutError:
                 pool.shutdown(wait=False, cancel_futures=True)
+                # Intentionally "TimeoutError" (not "AgentError") so clients can
+                # distinguish a deadline-exceeded condition from a generic agent fault
+                # and apply appropriate retry / back-off logic.
                 yield {"event": "error", "data": "TimeoutError"}
                 return
             else:

@@ -88,6 +88,19 @@ class ConnectionManager:
 _manager = ConnectionManager()
 
 
+def get_connection() -> kuzu.Connection:
+    """
+    Get a new database connection from the shared connection manager.
+
+    Use this when a generator-based dependency (get_db) cannot be used —
+    e.g. inside an SSE generator that must outlive the request lifecycle.
+
+    Returns:
+        Fresh Kuzu Connection instance (caller is responsible for closing it)
+    """
+    return _manager.get_connection()
+
+
 def get_db() -> Generator[kuzu.Connection, None, None]:
     """
     FastAPI dependency for database connection.

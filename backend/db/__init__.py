@@ -1,5 +1,5 @@
 """Database connection management."""
 
-from .connection import ConnectionManager, get_db
+from .connection import ConnectionManager, get_connection, get_db
 
-__all__ = ["get_db", "ConnectionManager"]
+__all__ = ["get_db", "get_connection", "ConnectionManager"]
