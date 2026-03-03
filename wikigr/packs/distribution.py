@@ -139,7 +139,7 @@ def unpackage_pack(archive_path: Path, install_dir: Path) -> Path:
                     )
 
             # Extract all files
-            tar.extractall(temp_path)
+            tar.extractall(temp_path, filter='data')
 
         # Validate extracted pack structure
         errors = validate_pack_structure(temp_path)

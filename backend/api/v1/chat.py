@@ -173,36 +173,17 @@ def chat_stream(
 
             agent = KnowledgeGraphAgent.from_connection(conn, _get_anthropic_client())
 
-            # Step 1: Plan query (fast)
-            query_plan = agent._plan_query(question)
+            result = agent.query(question=question, max_results=max_results)
 
-            # Step 2: Execute query (fast)
-            kg_results = agent._execute_query(
-                query_plan["cypher"], max_results, query_plan.get("cypher_params")
-            )
-
-            # Send sources immediately
-            sources = kg_results.get("sources", [])
-            yield {"event": "sources", "data": json.dumps(sources)}
-
-            # Step 3: Stream synthesis from Claude
-            context = agent._build_synthesis_context(question, kg_results, query_plan)
-            client = agent.claude
-
-            with client.messages.stream(
-                model=agent.synthesis_model,
-                max_tokens=agent.SYNTHESIS_MAX_TOKENS,
-                messages=[{"role": "user", "content": context}],
-            ) as stream:
-                for text in stream.text_stream:
-                    yield {"event": "token", "data": text}
+            yield {"event": "sources", "data": json.dumps(result.get("sources", []))}
+            yield {"event": "token", "data": result.get("answer", "")}
 
             elapsed_ms = (time.perf_counter() - start) * 1000
             yield {
                 "event": "done",
                 "data": json.dumps(
                     {
-                        "query_type": query_plan.get("type", "unknown"),
+                        "query_type": result.get("query_type", "unknown"),
                         "execution_time_ms": round(elapsed_ms, 1),
                     }
                 ),
