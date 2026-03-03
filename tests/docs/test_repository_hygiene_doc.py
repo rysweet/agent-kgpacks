@@ -70,8 +70,7 @@ class TestDocumentExists:
     def test_has_title(self, hygiene_text_lines: list[str]):
         """The guide must have a title heading that mentions 'Repository'."""
         assert any(
-            line.startswith("# ") and "repository" in line.lower()
-            for line in hygiene_text_lines
+            line.startswith("# ") and "repository" in line.lower() for line in hygiene_text_lines
         ), "docs/howto/repository-hygiene.md must have a title heading containing 'Repository'."
 
 
@@ -205,21 +204,21 @@ class TestGitignoreSectionAccuracy:
 
     def test_gitignore_code_block_has_launcher_py(self, hygiene_text: str):
         """The .gitignore code block must show the launcher.py pattern."""
-        assert "launcher.py" in hygiene_text, (
-            "The .gitignore code block in the guide must show the launcher.py pattern."
-        )
+        assert (
+            "launcher.py" in hygiene_text
+        ), "The .gitignore code block in the guide must show the launcher.py pattern."
 
     def test_gitignore_code_block_has_run_sh(self, hygiene_text: str):
         """The .gitignore code block must show the run.sh pattern."""
-        assert "run.sh" in hygiene_text, (
-            "The .gitignore code block in the guide must show the run.sh pattern."
-        )
+        assert (
+            "run.sh" in hygiene_text
+        ), "The .gitignore code block in the guide must show the run.sh pattern."
 
     def test_gitignore_code_block_has_workstreams_glob(self, hygiene_text: str):
         """The .gitignore code block must show the workstreams*.json glob."""
-        assert "workstreams*.json" in hygiene_text, (
-            "The .gitignore code block in the guide must show the workstreams*.json glob."
-        )
+        assert (
+            "workstreams*.json" in hygiene_text
+        ), "The .gitignore code block in the guide must show the workstreams*.json glob."
 
     def test_check_ignore_example_present(self, hygiene_text: str):
         """The guide must include a git check-ignore example command."""
@@ -234,9 +233,9 @@ class TestGitignoreSectionAccuracy:
         git check-ignore -v outputs: .gitignore:LINE:PATTERN<TAB>FILE
         The doc must demonstrate this format correctly.
         """
-        assert ".gitignore:" in hygiene_text, (
-            "The git check-ignore example output must show .gitignore:LINE:PATTERN format."
-        )
+        assert (
+            ".gitignore:" in hygiene_text
+        ), "The git check-ignore example output must show .gitignore:LINE:PATTERN format."
 
     def test_check_ignore_line_numbers_match_actual_gitignore(
         self, hygiene_text: str, gitignore_lines: list[str]
@@ -285,9 +284,11 @@ class TestGitignoreSectionAccuracy:
 
     def test_root_scoped_pattern_explanation(self, hygiene_text_lower: str):
         """The doc must explain that patterns match at repo root only (no leading **/)."""
-        assert ("root" in hygiene_text_lower and "subdirector" in hygiene_text_lower) or (
-            "root only" in hygiene_text_lower
-        ) or ("scoped" in hygiene_text_lower), (
+        assert (
+            ("root" in hygiene_text_lower and "subdirector" in hygiene_text_lower)
+            or ("root only" in hygiene_text_lower)
+            or ("scoped" in hygiene_text_lower)
+        ), (
             "docs/howto/repository-hygiene.md must explain that the gitignore patterns "
             "are scoped to the repo root to avoid false positives in subdirectories."
         )
@@ -303,9 +304,9 @@ class TestSecurityConsiderations:
 
     def test_security_section_present(self, hygiene_text: str):
         """A Security Considerations section must be present."""
-        assert "Security" in hygiene_text, (
-            "docs/howto/repository-hygiene.md must contain a 'Security' section."
-        )
+        assert (
+            "Security" in hygiene_text
+        ), "docs/howto/repository-hygiene.md must contain a 'Security' section."
 
     def test_supply_chain_risk_mentioned(self, hygiene_text_lower: str):
         """Supply chain risk must be identified for launcher.py."""

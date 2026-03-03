@@ -22,6 +22,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 GITIGNORE = REPO_ROOT / ".gitignore"
 
+
 def _amplihack_only_in_comment(text: str) -> bool:
     """Return True if 'amplihack' only appears in comment lines (lines starting with #)."""
     for line in text.splitlines():
@@ -113,10 +114,12 @@ class TestArtifactAbsence:
 
         These are round-trip orchestration tracking files from earlier amplihack sessions.
         """
-        stale_files = list(itertools.chain(
-            REPO_ROOT.glob("round*-workstreams.json"),
-            REPO_ROOT.glob("round*.json"),
-        ))
+        stale_files = list(
+            itertools.chain(
+                REPO_ROOT.glob("round*-workstreams.json"),
+                REPO_ROOT.glob("round*.json"),
+            )
+        )
         assert stale_files == [], (
             f"Found round*-workstreams.json file(s) at repo root that must be removed: "
             f"{[str(f) for f in stale_files]}"
@@ -178,15 +181,15 @@ class TestGitignoreGuards:
 
         # The three patterns must appear within 5 lines of the comment
         guard_block = "\n".join(gitignore_lines[comment_idx : comment_idx + 6])
-        assert "launcher.py" in guard_block, (
-            "launcher.py pattern must appear near the amplihack comment in .gitignore"
-        )
-        assert "run.sh" in guard_block, (
-            "run.sh pattern must appear near the amplihack comment in .gitignore"
-        )
-        assert "workstreams*.json" in guard_block, (
-            "workstreams*.json pattern must appear near the amplihack comment in .gitignore"
-        )
+        assert (
+            "launcher.py" in guard_block
+        ), "launcher.py pattern must appear near the amplihack comment in .gitignore"
+        assert (
+            "run.sh" in guard_block
+        ), "run.sh pattern must appear near the amplihack comment in .gitignore"
+        assert (
+            "workstreams*.json" in guard_block
+        ), "workstreams*.json pattern must appear near the amplihack comment in .gitignore"
 
 
 # ---------------------------------------------------------------------------
@@ -214,9 +217,9 @@ class TestGitCheckIgnore:
             "the pattern may be missing or inactive. "
             f"stdout={result.stdout!r} stderr={result.stderr!r}"
         )
-        assert "launcher.py" in result.stdout, (
-            f"Expected '.gitignore' and 'launcher.py' in git check-ignore output, got: {result.stdout!r}"
-        )
+        assert (
+            "launcher.py" in result.stdout
+        ), f"Expected '.gitignore' and 'launcher.py' in git check-ignore output, got: {result.stdout!r}"
 
     def test_run_sh_is_ignored(self):
         """git check-ignore must confirm run.sh is ignored."""
@@ -225,9 +228,9 @@ class TestGitCheckIgnore:
             "git check-ignore returned non-zero for run.sh — "
             f"stdout={result.stdout!r} stderr={result.stderr!r}"
         )
-        assert "run.sh" in result.stdout, (
-            f"Expected 'run.sh' in git check-ignore output, got: {result.stdout!r}"
-        )
+        assert (
+            "run.sh" in result.stdout
+        ), f"Expected 'run.sh' in git check-ignore output, got: {result.stdout!r}"
 
     def test_workstreams_json_is_ignored(self):
         """git check-ignore must confirm workstreams.json matches the glob."""
@@ -236,9 +239,9 @@ class TestGitCheckIgnore:
             "git check-ignore returned non-zero for workstreams.json — "
             f"stdout={result.stdout!r} stderr={result.stderr!r}"
         )
-        assert "workstreams" in result.stdout, (
-            f"Expected 'workstreams' in git check-ignore output, got: {result.stdout!r}"
-        )
+        assert (
+            "workstreams" in result.stdout
+        ), f"Expected 'workstreams' in git check-ignore output, got: {result.stdout!r}"
 
 
 # ---------------------------------------------------------------------------
