@@ -4,7 +4,9 @@ Reference documentation for `wikigr.packs.utils` — shared helper functions use
 
 ## Overview
 
-`wikigr/packs/utils.py` is the single source of truth for common operations shared across the 47+ build scripts in `scripts/`. It eliminates copy-paste drift between scripts and ensures consistent behaviour for URL loading, filtering, and logging.
+`wikigr/packs/utils.py` is the single source of truth for common operations shared across the 49+ build scripts in `scripts/`. It eliminates copy-paste drift between scripts and ensures consistent behaviour for URL loading, filtering, and logging.
+
+All build scripts import `load_urls` from this module. Local definitions of `load_urls` inside individual scripts are not permitted — use the shared import.
 
 ## `load_urls`
 
@@ -29,7 +31,7 @@ Reads a `urls.txt` file and returns a filtered list of URLs, skipping blank line
 `list[str]` — Filtered list of URL strings. Each entry:
 
 - Has leading and trailing whitespace stripped.
-- Starts with `"http"` (matches both `http://` and `https://`).
+- Starts with `"https://"` — plain `http://` URLs are silently dropped (SEC-01).
 - Is not a `#` comment line.
 - Is not a blank line.
 
@@ -50,23 +52,24 @@ Up to two `logging.INFO` messages are emitted via the module-level logger (`wiki
 | `PermissionError` | `urls_file` cannot be read by the current process. |
 | `OSError` | Any other OS-level I/O failure. |
 
-`load_urls` does **not** validate that URLs are reachable, well-formed, or HTTPS-only. Use [`validate_download_url`](./pack-installer-security.md) or `scripts/validate_pack_urls.py` for those checks.
+`load_urls` does **not** validate that URLs are reachable or well-formed. HTTPS is enforced at load time via the `startswith("https://")` filter. Use [`validate_download_url`](./pack-installer-security.md) or `scripts/validate_pack_urls.py` to check reachability and additional safety constraints (private IPs, cloud metadata endpoints, etc.).
 
 ### Filter Details
 
-The function uses a walrus-operator comprehension to strip and filter in a single pass:
+The function uses a generator expression with `itertools.islice` to strip, filter, and limit in a single pass:
 
 ```python
-urls = [
+candidates = (
     stripped
     for line in f
     if (stripped := line.strip())        # skip blank lines
     and not stripped.startswith("#")      # skip comments
-    and stripped.startswith("http")       # keep only URL lines
-]
+    and stripped.startswith("https://")  # HTTPS-only (SEC-01)
+)
+urls = list(islice(candidates, limit or None))
 ```
 
-The `startswith("http")` filter is intentionally broad. It matches both `http://` and `https://` URLs. Plain `http://` URLs are not blocked at load time; they are blocked downstream by `validate_download_url` when a network request is about to be made.
+The `startswith("https://")` filter enforces HTTPS at parse time (SEC-01). Plain `http://` lines in `urls.txt` are silently dropped before they reach any network layer. This provides defence-in-depth alongside the SSRF guard in `WebContentSource` and `validate_download_url`, which re-validate each URL at fetch time.
 
 ---
 
@@ -99,7 +102,7 @@ parser.add_argument("--test-mode", action="store_true")
 args = parser.parse_args()
 
 urls_file = Path("data/packs/my-pack/urls.txt")
-limit = 3 if args.test_mode else None
+limit = 5 if args.test_mode else None
 urls = load_urls(urls_file, limit=limit)
 ```
 
@@ -189,7 +192,7 @@ def main() -> None:
     parser.add_argument("--test-mode", action="store_true")
     args = parser.parse_args()
 
-    limit = 3 if args.test_mode else None
+    limit = 5 if args.test_mode else None
     urls = load_urls(URLS_FILE, limit=limit)
 
     for url in urls:

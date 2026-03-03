@@ -14,20 +14,18 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import re
 import sys
 from pathlib import Path
 
 from anthropic import Anthropic
+
+from wikigr.packs.manifest import PACK_NAME_RE
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 ANSWER_MODEL = "claude-opus-4-6"
 JUDGE_MODEL = "claude-opus-4-6"
-
-# Match pack names: lowercase alphanumeric and hyphens, no path traversal
-PACK_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]+$")
 
 
 def load_questions(path: Path, limit: int = 0) -> list[dict]:

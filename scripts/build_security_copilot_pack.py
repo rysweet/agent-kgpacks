@@ -38,6 +38,7 @@ from bootstrap.schema.ryugraph_schema import create_schema  # noqa: E402
 from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
 from bootstrap.src.sources.web import WebContentSource  # noqa: E402
+from wikigr.packs.utils import load_urls  # noqa: E402
 
 PACK_DIR = Path("data/packs/security-copilot")
 URLS_FILE = PACK_DIR / "urls.txt"
@@ -57,25 +58,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def load_urls(urls_file: Path, limit: int | None = None) -> list[str]:
-    """Load URLs from urls.txt file, skipping comments and blank lines."""
-    with open(urls_file) as f:
-        urls = [
-            stripped
-            for line in f
-            if (stripped := line.strip())
-            and not stripped.startswith("#")
-            and stripped.startswith("https://")
-        ]
-
-    if limit:
-        urls = urls[:limit]
-        logger.info(f"Limited to {limit} URLs for testing")
-
-    logger.info(f"Loaded {len(urls)} URLs from {urls_file}")
-    return urls
-
-
 def process_url(
     url: str,
     conn: kuzu.Connection,
@@ -93,7 +75,7 @@ def process_url(
         title = article.title
 
         result = conn.execute(
-            "MATCH (a:Article {title: $title}) RETURN a.title AS title",
+            "MATCH (a:Article {title: $title}) RETURN a.title AS title LIMIT 1",
             {"title": title},
         )
         if not result.get_as_df().empty:
@@ -183,11 +165,6 @@ def process_url(
     except (requests.RequestException, json.JSONDecodeError) as e:
         logger.error(f"Failed to process {url}: {e}")
         return False
-    except Exception as e:
-        # C-2: catch kuzu RuntimeError/QueryError and any other unexpected exceptions
-        # so a single bad URL doesn't abort the entire build.
-        logger.error(f"Unexpected error processing {url}: {e}", exc_info=True)
-        return False
 
 
 def create_manifest(
@@ -240,10 +217,9 @@ def build_pack(test_mode: bool = False) -> None:
         logger.info("TEST MODE: Building 5-URL pack")
 
     if DB_PATH.exists():
-        # SEC-06: prevent deletion outside data/packs/ (M-3: use resolved absolute path)
-        resolved = DB_PATH.resolve()
-        if "data/packs/" not in str(resolved):
-            raise ValueError(f"Unsafe DB_PATH: {resolved}")
+        # SEC-06: prevent deletion outside data/packs/
+        if not str(DB_PATH).startswith("data/packs/"):
+            raise ValueError(f"Unsafe DB_PATH: {DB_PATH}")
         if test_mode:
             logger.info(f"Auto-deleting existing database (test mode): {DB_PATH}")
         else:

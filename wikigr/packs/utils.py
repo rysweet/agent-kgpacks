@@ -24,7 +24,7 @@ def load_urls(urls_file: Path, limit: int | None = None) -> list[str]:
             for line in f
             if (stripped := line.strip())
             and not stripped.startswith("#")
-            and stripped.startswith("http")
+            and stripped.startswith("https://")
         )
         urls = list(islice(candidates, limit or None))
 

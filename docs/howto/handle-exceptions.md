@@ -12,6 +12,7 @@ and the build scripts, and shows how to catch them correctly.
 | `CypherRAG` | `generate_cypher()` | `APIConnectionError`, `APIStatusError`, `APITimeoutError`, `ValueError`, `json.JSONDecodeError` |
 | `LLMSeedResearcher` | URL fetch loop | `requests.RequestException` |
 | Build scripts | `process_url()` | `requests.RequestException`, `json.JSONDecodeError` |
+| Build scripts | `build_pack()` DB_PATH guard | `ValueError` (misconfigured `DB_PATH`) |
 
 Programming bugs (`AttributeError`, `TypeError`, `KeyError`) are **not caught** — they propagate
 directly. Fix the bug; do not add a broad `except Exception` around these calls.
@@ -164,6 +165,32 @@ This is intentional: a corrupt partial database write is worse than a build that
 If a build aborts with a Kuzu `RuntimeError`, the database may be in a partial state. Delete
 the `pack.db` file and re-run the build from scratch.
 
+### DB_PATH Safety Guard
+
+Before `shutil.rmtree()` is called on the existing database, every build script checks that
+`DB_PATH` is inside the expected `data/packs/` tree:
+
+```python
+if not str(DB_PATH).startswith("data/packs/"):
+    raise ValueError(f"Unsafe DB_PATH: {DB_PATH}")
+```
+
+This `ValueError` is **not caught** by `process_url()`. It propagates to `main()`, which logs
+it and exits with a non-zero status code. The build does not proceed if `DB_PATH` is
+misconfigured.
+
+The guard relies on relative paths. All build scripts set `DB_PATH` as:
+
+```python
+PACK_DIR = Path("data/packs/<pack-name>")
+DB_PATH = PACK_DIR / "pack.db"
+```
+
+Because these are relative `Path` objects, `str(DB_PATH)` begins with `"data/packs/"` exactly.
+If you run a build script from a directory other than the repository root, the guard will raise
+`ValueError` — which is the correct behaviour, since the relative path assumption would be
+violated.
+
 ---
 
 ## What You Should NOT Do
@@ -213,6 +240,7 @@ Exception domains, plus programming bugs that propagate unhandled:
 | Embedding / ML | `RuntimeError`, `OSError` | Vector ops, model loading, pipeline init |
 | Seed researcher | `requests.RequestException` | HTTP fetch, DNS, timeout |
 | Build scripts (JSON) | `json.JSONDecodeError` | Malformed API response in URL loop |
+| Build scripts (path guard) | `ValueError` | `DB_PATH` outside `data/packs/` before `shutil.rmtree` |
 | Programming bugs | `AttributeError`, `TypeError`, `KeyError` | Always — fix the bug, do not catch |
 
 ---

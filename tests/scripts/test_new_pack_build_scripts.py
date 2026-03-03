@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import ast
 import re
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -73,10 +74,16 @@ _NEW_SCRIPT_PATHS = [(name, _SCRIPTS_DIR / name) for name in _NEW_PACKS]
 # ---------------------------------------------------------------------------
 
 
+@cache
+def _read_source(script_path: Path) -> str:
+    """Return source text for a script (cached — each script is read once)."""
+    return script_path.read_text(encoding="utf-8")
+
+
+@cache
 def _parse(script_path: Path) -> ast.Module:
     """Return the AST for a script, raising SyntaxError on invalid code."""
-    source = script_path.read_text(encoding="utf-8")
-    return ast.parse(source, filename=str(script_path))
+    return ast.parse(_read_source(script_path), filename=str(script_path))
 
 
 def _get_function(tree: ast.Module, name: str) -> ast.FunctionDef | None:
@@ -194,9 +201,8 @@ def test_script_syntax_valid(name: str, path: Path) -> None:
 
     ast.parse() raises SyntaxError on malformed scripts.
     """
-    source = path.read_text(encoding="utf-8")
     try:
-        ast.parse(source, filename=str(path))
+        _parse(path)
     except SyntaxError as exc:
         pytest.fail(f"{name}: SyntaxError — {exc}")
 
@@ -204,7 +210,7 @@ def test_script_syntax_valid(name: str, path: Path) -> None:
 @pytest.mark.parametrize("name,path", _NEW_SCRIPT_PATHS, ids=[n for n, _ in _NEW_SCRIPT_PATHS])
 def test_shebang_line(name: str, path: Path) -> None:
     """Each script must begin with the standard Python shebang."""
-    first_line = path.read_text(encoding="utf-8").splitlines()[0]
+    first_line = _read_source(path).splitlines()[0]
     assert (
         first_line == "#!/usr/bin/env python3"
     ), f"{name}: missing or wrong shebang. Expected '#!/usr/bin/env python3', got {first_line!r}"
@@ -230,7 +236,7 @@ def test_pack_dir_constant(name: str, path: Path) -> None:
 @pytest.mark.parametrize("name,path", _NEW_SCRIPT_PATHS, ids=[n for n, _ in _NEW_SCRIPT_PATHS])
 def test_db_path_constant(name: str, path: Path) -> None:
     """DB_PATH must be derived from PACK_DIR and named 'pack.db'."""
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
     assert (
         "pack.db" in source
     ), f"{name}: 'pack.db' not found in source. DB_PATH must be set to PACK_DIR / 'pack.db'."
@@ -239,7 +245,7 @@ def test_db_path_constant(name: str, path: Path) -> None:
 @pytest.mark.parametrize("name,path", _NEW_SCRIPT_PATHS, ids=[n for n, _ in _NEW_SCRIPT_PATHS])
 def test_manifest_path_constant(name: str, path: Path) -> None:
     """MANIFEST_PATH must be set to PACK_DIR / 'manifest.json'."""
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
     assert "manifest.json" in source, (
         f"{name}: 'manifest.json' not found in source. "
         "MANIFEST_PATH must be set to PACK_DIR / 'manifest.json'."
@@ -253,7 +259,7 @@ def test_log_file_name_matches_script(name: str, path: Path) -> None:
     Convention: build_FOO_pack.py → logs/build_FOO_pack.log
     """
     expected_log = _NEW_PACKS[name]["log_file"]
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
     assert expected_log in source, (
         f"{name}: expected log file path '{expected_log}' not found in source. "
         "The FileHandler log path must match the script name."
@@ -265,7 +271,7 @@ def test_log_file_name_matches_script(name: str, path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-_REQUIRED_FUNCTIONS = ["load_urls", "process_url", "create_manifest", "build_pack", "main"]
+_REQUIRED_FUNCTIONS = ["process_url", "create_manifest", "build_pack", "main"]
 
 
 @pytest.mark.parametrize("name,path", _NEW_SCRIPT_PATHS, ids=[n for n, _ in _NEW_SCRIPT_PATHS])
@@ -295,7 +301,7 @@ def test_domain_string_in_extractor_call(name: str, path: Path) -> None:
     targets the right knowledge domain.
     """
     expected_domain = _NEW_PACKS[name]["domain"]
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
     # Look for domain="<value>" or domain='<value>' assignment
     pattern = re.compile(r'domain\s*=\s*["\']([^"\']+)["\']')
     matches = pattern.findall(source)
@@ -315,7 +321,7 @@ def test_domain_string_in_extractor_call(name: str, path: Path) -> None:
 def test_manifest_pack_name(name: str, path: Path) -> None:
     """The manifest 'name' key must match the pack directory name."""
     expected_name = _NEW_PACKS[name]["manifest_name"]
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
     # The name appears in the manifest dict literal as "name": "pack-name"
     assert f'"name": "{expected_name}"' in source or f"'name': '{expected_name}'" in source, (
         f"{name}: manifest name '{expected_name}' not found in create_manifest(). "
@@ -327,7 +333,7 @@ def test_manifest_pack_name(name: str, path: Path) -> None:
 def test_manifest_category(name: str, path: Path) -> None:
     """The 'category' passed to Article creation must match the pack spec."""
     expected_category = _NEW_PACKS[name]["category"]
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
     assert expected_category in source, (
         f"{name}: category '{expected_category}' not found in source. "
         "The category string is used in the Cypher CREATE statement for Article nodes."
@@ -400,7 +406,7 @@ def test_exception_catches_json_decode_error(name: str, path: Path) -> None:
 @pytest.mark.parametrize("name,path", _NEW_SCRIPT_PATHS, ids=[n for n, _ in _NEW_SCRIPT_PATHS])
 def test_test_mode_limit_is_five(name: str, path: Path) -> None:
     """build_pack() must set limit=5 in test_mode to cap processing at 5 URLs."""
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
     # Pattern: limit = 5 if test_mode else None
     assert "5 if test_mode" in source or "limit=5" in source, (
         f"{name}: test_mode URL limit of 5 not found. "
@@ -424,7 +430,7 @@ def test_build_pack_has_test_mode_parameter(name: str, path: Path) -> None:
 @pytest.mark.parametrize("name,path", _NEW_SCRIPT_PATHS, ids=[n for n, _ in _NEW_SCRIPT_PATHS])
 def test_main_creates_logs_directory(name: str, path: Path) -> None:
     """main() must create the logs/ directory before FileHandler is activated."""
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
     # The main() function should call Path("logs").mkdir(exist_ok=True)
     assert 'Path("logs").mkdir(exist_ok=True)' in source, (
         f"{name}: main() does not create logs/ directory. "
@@ -451,7 +457,9 @@ def test_load_urls_filter_is_https_only(name: str, path: Path) -> None:
     """
     tree = _parse(path)
     load_urls_func = _get_function(tree, "load_urls")
-    assert load_urls_func is not None, f"{name}: load_urls() function not found"
+    if load_urls_func is None:
+        # load_urls is imported from wikigr.packs.utils — filter check delegated to utils tests
+        pytest.skip(f"{name}: load_urls() is imported, not locally defined — skipping filter check")
 
     http_filters = _find_http_filter_strings(load_urls_func)
     assert http_filters, (
@@ -474,13 +482,14 @@ def test_load_urls_rejects_http_url_in_urls_txt(name: str, path: Path) -> None:
     This is a behavioral specification test. It checks the source filter string
     rather than executing the function (which requires kuzu/embeddings imports).
 
-    The filter logic must exclude URLs that do NOT start with "https://".
-    A filter of startswith("http") incorrectly includes http:// URLs.
-    A filter of startswith("https://") correctly excludes http:// URLs.
-
-    All 4 scripts correctly use startswith("https://") so this test passes.
+    If the script imports load_urls from wikigr.packs.utils, the filter is
+    defined there — skip this check (covered by test_load_urls_utils.py).
     """
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
+    if "from wikigr.packs.utils import load_urls" in source:
+        pytest.skip(
+            f"{name}: load_urls() is imported from wikigr.packs.utils — filter check delegated to utils tests"
+        )
     # The filter must use "https://" not just "http"
     # Check via regex: find startswith("http...") in a comprehension context
     pattern = re.compile(r'startswith\(["\']https://["\']\)')
@@ -511,7 +520,7 @@ def test_build_pack_has_db_path_safety_guard(name: str, path: Path) -> None:
 
     The guard must appear in the source before any shutil.rmtree call.
     """
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
 
     # Check that shutil.rmtree is present (the guard must precede a real rmtree)
     assert "shutil.rmtree" in source, (
@@ -542,7 +551,7 @@ def test_db_path_assertion_precedes_rmtree_in_source(name: str, path: Path) -> N
 
     All 4 scripts have the guard before rmtree so this test passes.
     """
-    source = path.read_text(encoding="utf-8")
+    source = _read_source(path)
     rmtree_pos = source.find("shutil.rmtree")
     if rmtree_pos == -1:
         pytest.skip(f"{name}: no shutil.rmtree found (skipping ordering check)")

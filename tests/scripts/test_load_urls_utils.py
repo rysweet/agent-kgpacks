@@ -11,9 +11,9 @@ load_urls(urls_file, limit=None) -> list[str]
 - Strips leading/trailing whitespace from each line (walrus-operator style)
 - Skips blank lines (empty after strip)
 - Skips comment lines (stripped line starts with '#')
-- Skips lines that do NOT start with 'http' (case-sensitive)
-  — accepts both 'http://' and 'https://'
-  — rejects 'ftp://', 'file://', plain text, etc.
+- Skips lines that do NOT start with 'https://' (case-sensitive, HTTPS-only per SEC-01)
+  — accepts only 'https://'
+  — rejects 'http://', 'ftp://', 'file://', plain text, etc.
 - When limit is a positive int, truncates result to that many URLs
   and logs "Limited to N URLs for testing" at INFO
 - limit=0 is falsy and treated as no limit (loads all URLs)
@@ -66,8 +66,9 @@ class TestBasicUrlLoading:
         assert load_urls(f) == ["https://example.com"]
 
     def test_single_http_url(self, tmp_path):
+        """SEC-01: plain http:// URLs must be rejected (HTTPS-only)."""
         f = _write(tmp_path, "http://example.com\n")
-        assert load_urls(f) == ["http://example.com"]
+        assert load_urls(f) == []
 
     def test_multiple_urls_preserves_order(self, tmp_path):
         content = "https://first.com\nhttps://second.com\nhttps://third.com\n"
@@ -185,34 +186,35 @@ class TestCommentLineFiltering:
     def test_inline_comment_not_stripped(self, tmp_path):
         """A URL with a trailing inline comment is NOT supported.
 
-        The entire stripped line must start with 'http' — if a URL has
-        trailing text after a space it will fail the startswith('http') check
-        only if the stripped line does NOT start with http (it does here).
-        This test confirms the URL-with-trailing-text still begins 'http' so
+        The entire stripped line must start with 'https://' — if a URL has
+        trailing text after a space it will fail the startswith('https://') check
+        only if the stripped line does NOT start with https:// (it does here).
+        This test confirms the URL-with-trailing-text still begins 'https://' so
         it is included as-is (no inline comment stripping).
         """
         url = "https://example.com/page  # inline comment"
         f = _write(tmp_path, url + "\n")
         # Stripped line is 'https://example.com/page  # inline comment'
-        # Still starts with 'http' → included verbatim
+        # Still starts with 'https://' → included verbatim
         assert load_urls(f) == [url.strip()]
 
 
 # ---------------------------------------------------------------------------
-# 5. Protocol filtering — only 'http' prefix passes
+# 5. Protocol filtering — only 'https://' prefix passes
 # ---------------------------------------------------------------------------
 
 
 class TestProtocolFiltering:
-    """Only lines whose stripped form starts with 'http' are included."""
+    """Only lines whose stripped form starts with 'https://' are included (SEC-01)."""
 
     def test_https_included(self, tmp_path):
         f = _write(tmp_path, "https://example.com\n")
         assert load_urls(f) == ["https://example.com"]
 
-    def test_http_included(self, tmp_path):
+    def test_http_excluded(self, tmp_path):
+        """SEC-01: plain http:// URLs must be rejected (HTTPS-only)."""
         f = _write(tmp_path, "http://example.com\n")
-        assert load_urls(f) == ["http://example.com"]
+        assert load_urls(f) == []
 
     def test_ftp_excluded(self, tmp_path):
         f = _write(tmp_path, "ftp://example.com\n")
@@ -230,7 +232,8 @@ class TestProtocolFiltering:
         f = _write(tmp_path, "/relative/path\n")
         assert load_urls(f) == []
 
-    def test_mixed_protocols_only_http_variants_returned(self, tmp_path):
+    def test_mixed_protocols_only_https_returned(self, tmp_path):
+        """SEC-01: only https:// URLs are accepted; http:// is also rejected."""
         content = (
             "https://good.com\n"
             "ftp://bad.com\n"
@@ -240,20 +243,18 @@ class TestProtocolFiltering:
             "\n"
         )
         f = _write(tmp_path, content)
-        assert load_urls(f) == ["https://good.com", "http://also-good.com"]
+        assert load_urls(f) == ["https://good.com"]
 
     def test_http_prefix_case_sensitive(self, tmp_path):
         """Filter is case-sensitive: 'HTTP://' (uppercase) does not match."""
         f = _write(tmp_path, "HTTP://EXAMPLE.COM\n")
         assert load_urls(f) == []
 
-    def test_partial_http_prefix_included(self, tmp_path):
-        """Line starting with 'httpx' is included because the filter uses
-        startswith('http'), which is a prefix check, not an exact protocol match.
-        """
+    def test_partial_http_prefix_excluded(self, tmp_path):
+        """SEC-01: 'httpx://' does not start with 'https://' and must be rejected."""
         f = _write(tmp_path, "httpx://custom.com\n")
-        # starts with 'http' → included
-        assert load_urls(f) == ["httpx://custom.com"]
+        # does not start with 'https://' → excluded
+        assert load_urls(f) == []
 
 
 # ---------------------------------------------------------------------------

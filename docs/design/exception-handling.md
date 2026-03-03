@@ -5,7 +5,7 @@
 Eliminate silent fallbacks and broad `except Exception` blocks across
 `wikigr/agent/`, `wikigr/packs/`, and `scripts/build_*_pack.py`.
 
-**Outcome:** 1121 passed, 45 skipped, 0 failed.
+**Outcome:** 1421 passed, 53 skipped, 0 failed.
 
 ---
 
@@ -16,7 +16,8 @@ Eliminate silent fallbacks and broad `except Exception` blocks across
 | `wikigr/agent/kg_agent.py` | 13 `except Exception` blocks narrowed; 2 fallback methods removed; 2 internal stage names corrected |
 | `wikigr/agent/cypher_rag.py` | `_safe_fallback` removed; `generate_cypher` now raises on bad response |
 | `wikigr/packs/seed_researcher.py` | `except (RequestException, Exception)` → `except RequestException` |
-| `scripts/build_*_pack.py` (45 files) | `process_url()` narrowed to `(requests.RequestException, json.JSONDecodeError)` |
+| `scripts/build_*_pack.py` (49 files) | `process_url()` narrowed to `(requests.RequestException, json.JSONDecodeError)` |
+| `scripts/build_*_pack.py` (4 new files) | `load_urls` imported from `wikigr.packs.utils` (not defined locally); DB_PATH safety guard added before `shutil.rmtree` |
 
 ---
 
@@ -33,6 +34,29 @@ Four distinct domains; each has its own exception set:
 
 Programming bugs (`AttributeError`, `TypeError`, `KeyError`) propagate
 unhandled — they indicate incorrect code and must not be swallowed.
+
+---
+
+## Security Guards Added in New Build Scripts
+
+The four new build scripts (`build_azure_lighthouse_pack.py`, `build_fabric_graphql_expert_pack.py`, `build_security_copilot_pack.py`, `build_sentinel_graph_pack.py`) introduced two additional security controls alongside exception narrowing:
+
+### SEC-01: HTTPS-Only URL Filter
+
+`load_urls()` in `wikigr/packs/utils.py` now uses `startswith("https://")` instead of `startswith("http")`. Any `http://` line in a `urls.txt` file is silently dropped before reaching the HTTP client layer.
+
+This provides defence-in-depth: the SSRF guard in `WebContentSource` re-validates URLs at fetch time, but the parse-time filter prevents plaintext HTTP URLs from ever entering the processing pipeline.
+
+### SEC-06: DB_PATH Path Guard
+
+Every `build_pack()` function raises `ValueError` if `DB_PATH` does not begin with `"data/packs/"`:
+
+```python
+if not str(DB_PATH).startswith("data/packs/"):
+    raise ValueError(f"Unsafe DB_PATH: {DB_PATH}")
+```
+
+This guard fires before `shutil.rmtree()` and prevents accidental deletion of data outside the expected pack directory tree if `DB_PATH` is ever misconfigured.
 
 ---
 
@@ -171,7 +195,7 @@ explicitly a write path.
 |---|---|---|---|
 | **SSRF via LLM-suggested URLs** (`_extract_via_llm`) | Low | `seed_researcher.py` | LLM-returned URLs are not checked for private/metadata IP ranges (e.g. `169.254.169.254`). Acceptable for a local CLI tool; document if ever exposed as a service. |
 | **`except Exception` in strategy loop** | Low | `seed_researcher.py:310` | Broad handler wraps per-strategy failures (`sitemap`, `rss`, `crawl`, `llm`). Could mask SSRF-related `ConnectionError`. Risk is low (the loop is building a URL list, not executing user queries) but flagged for completeness. |
-| **URL scheme not validated in build scripts** | Low | `scripts/build_*_pack.py` `load_urls()` | URLs read from `urls.txt` are passed to `WebContentSource.fetch_article()` without a prior scheme check. Mitigation: `urls.txt` files are committed to the repo and reviewed before use. |
+| **URL scheme not validated in build scripts** | **Resolved (SEC-01)** | `wikigr/packs/utils.py` `load_urls()` | `load_urls()` now uses `startswith("https://")` — plain `http://` lines are silently dropped at parse time before reaching `WebContentSource.fetch_article()`. |
 
 ---
 
@@ -224,9 +248,10 @@ injection.
    (question text). Avoid f-strings that embed full question text at `INFO`
    level in production deployments.
 
-4. **Treat `urls.txt` as a trusted-input surface.** Because `load_urls()` in
-   build scripts does not validate URL schemes, review these files in code
-   review the same way you would review SQL query strings.
+4. **Treat `urls.txt` as a trusted-input surface.** `load_urls()` enforces
+   HTTPS at parse time (SEC-01), but does not validate URL structure or
+   hostname beyond the scheme prefix. Review `urls.txt` files in code review
+   the same way you would review SQL query strings.
 
 5. **Do not cache LLM API keys** in process-visible memory longer than
    necessary. The current pattern (instantiating `Anthropic(api_key=...)` once

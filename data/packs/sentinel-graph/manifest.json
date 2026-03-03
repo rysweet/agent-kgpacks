@@ -4,8 +4,8 @@
   "description": "Expert knowledge of Microsoft Sentinel covering SIEM and SOAR capabilities, data connectors, analytics rules, threat hunting with KQL, incident investigation, UEBA, threat intelligence, playbook automation, workbooks, content hub solutions, and multi-tenant MSSP deployments.",
   "graph_stats": {
     "articles": 5,
-    "entities": 32,
-    "relationships": 23,
+    "entities": 55,
+    "relationships": 36,
     "size_mb": 2.08
   },
   "eval_scores": null,
@@ -13,6 +13,6 @@
     "https://learn.microsoft.com/en-us/azure/sentinel/overview",
     "https://learn.microsoft.com/en-us/azure/sentinel/detect-threats-built-in"
   ],
-  "created": "2026-03-03T06:54:29.196551Z",
+  "created": "2026-03-03T08:17:23.202663Z",
   "license": "MIT"
 }
