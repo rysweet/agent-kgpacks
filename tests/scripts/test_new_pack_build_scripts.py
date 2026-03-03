@@ -510,13 +510,16 @@ def test_load_urls_rejects_http_url_in_urls_txt(name: str, path: Path) -> None:
 def test_build_pack_has_db_path_safety_guard(name: str, path: Path) -> None:
     """build_pack() must guard DB_PATH is inside data/packs/ before shutil.rmtree.
 
-    SEC-06 [MANDATORY, APPLIED]:
-    All 4 scripts use:
-        if not str(DB_PATH).startswith("data/packs/"):
+    SEC-06 [MANDATORY]:
+    Scripts must use a path-safe guard before shutil.rmtree.  Acceptable forms:
+
+        # Preferred (H-01 fix): resolve() handles symlinks and path traversal
+        if not DB_PATH.resolve().is_relative_to(Path("data/packs").resolve()):
             raise ValueError(...)
 
-    This prevents accidental broad deletion if DB_PATH is misconfigured or
-    incorrectly derived from user input or an environment variable.
+        # Legacy (still acceptable for hardcoded DB_PATH):
+        if not str(DB_PATH).startswith("data/packs/"):
+            raise ValueError(...)
 
     The guard must appear in the source before any shutil.rmtree call.
     """
@@ -528,15 +531,17 @@ def test_build_pack_has_db_path_safety_guard(name: str, path: Path) -> None:
         "build_pack() should use shutil.rmtree to delete the existing database."
     )
 
-    # Check for the safety guard in any form (raise ValueError, not assert, so it survives -O)
+    # Check for the safety guard in any acceptable form (raise ValueError, not assert)
     has_guard = (
         'str(DB_PATH).startswith("data/packs/")' in source
         or "str(DB_PATH).startswith('data/packs/')" in source
+        or "DB_PATH.resolve().is_relative_to(Path(" in source
+        or 'DB_PATH.resolve().is_relative_to(Path("data/packs")' in source
     )
     assert has_guard, (
         f"{name}: missing DB_PATH safety guard before shutil.rmtree. "
-        "SEC-06 requires:\n"
-        '    if not str(DB_PATH).startswith("data/packs/"):\n'
+        "SEC-06 requires one of:\n"
+        "    if not DB_PATH.resolve().is_relative_to(Path('data/packs').resolve()):\n"
         '        raise ValueError(f"Unsafe DB_PATH: {DB_PATH}")\n'
         "before every shutil.rmtree call in build_pack().\n"
         "This prevents accidental deletion of data outside data/packs/."
@@ -556,8 +561,10 @@ def test_db_path_assertion_precedes_rmtree_in_source(name: str, path: Path) -> N
     if rmtree_pos == -1:
         pytest.skip(f"{name}: no shutil.rmtree found (skipping ordering check)")
 
-    # Find the safety guard (raise ValueError pattern)
-    guard_pos = source.find('str(DB_PATH).startswith("data/packs/")')
+    # Find the safety guard — accept resolve()-based or legacy startswith() pattern
+    guard_pos = source.find("DB_PATH.resolve().is_relative_to(Path(")
+    if guard_pos == -1:
+        guard_pos = source.find('str(DB_PATH).startswith("data/packs/")')
     if guard_pos == -1:
         guard_pos = source.find("str(DB_PATH).startswith('data/packs/')")
 

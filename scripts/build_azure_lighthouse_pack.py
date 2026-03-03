@@ -161,7 +161,7 @@ def process_url(
         logger.info(f"Processed {url!r} -> {title!r}")
         return True
 
-    except (requests.RequestException, json.JSONDecodeError) as e:
+    except (requests.RequestException, json.JSONDecodeError, RuntimeError) as e:
         logger.error(f"Failed to process {url}: {e}")
         return False
 
@@ -215,8 +215,8 @@ def build_pack(test_mode: bool = False) -> None:
         logger.info("TEST MODE: Building 5-URL pack")
 
     if DB_PATH.exists():
-        # SEC-06: prevent deletion outside data/packs/
-        if not str(DB_PATH).startswith("data/packs/"):
+        # SEC-06: prevent deletion outside data/packs/ (resolve handles symlinks & traversal)
+        if not DB_PATH.resolve().is_relative_to(Path("data/packs").resolve()):
             raise ValueError(f"Unsafe DB_PATH: {DB_PATH}")
         if test_mode:
             logger.info(f"Auto-deleting existing database (test mode): {DB_PATH}")
