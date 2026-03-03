@@ -7,6 +7,7 @@ enabling knowledge graph construction from any documentation site
 
 import ipaddress
 import logging
+import random
 import re
 import socket
 import time
@@ -97,13 +98,14 @@ def _html_to_markdown(html_content: str) -> str:
 def _extract_links(html: str, base_url: str) -> list[str]:
     """Extract absolute URLs from HTML anchor tags."""
     links = []
+    base_netloc = urlparse(base_url).netloc
     for match in re.finditer(r'<a[^>]+href="([^"]*)"', html):
         href = match.group(1)
         if href.startswith("#") or href.startswith("javascript:"):
             continue
         absolute = urljoin(base_url, href)
         # Only include links from the same domain
-        if urlparse(absolute).netloc == urlparse(base_url).netloc:
+        if urlparse(absolute).netloc == base_netloc:
             links.append(absolute)
     return list(dict.fromkeys(links))  # Dedupe preserving order
 
@@ -188,19 +190,71 @@ class WebContentSource:
     sites like Microsoft Learn, MDN, ReadTheDocs, etc.
     """
 
+    #: HTTP status codes that warrant a retry (transient server errors + rate limiting).
+    _RETRY_STATUSES: frozenset[int] = frozenset({429, 500, 502, 503, 504})
+
     def __init__(
         self,
         user_agent: str = "WikiGR/1.0 (Knowledge Graph Builder)",
         timeout: int = 30,
         rate_limit_delay: float = 0.5,
         min_content_words: int = 200,
+        max_retries: int = 3,
     ):
         self._session = requests.Session()
         self._session.headers["User-Agent"] = user_agent
+        self._session.max_redirects = 5  # SEC-07: cap redirects to prevent redirect loops
+        if self._session.verify is False:  # SEC-02: SSL verification must never be disabled
+            raise RuntimeError(
+                "SSL verification must not be disabled — set REQUESTS_CA_BUNDLE instead"
+            )
         self._timeout = timeout
         self._rate_limit_delay = rate_limit_delay
         self._last_request_time = 0.0
         self._min_content_words = min_content_words
+        self._max_retries = max_retries
+
+    def _fetch_with_retry(self, url: str) -> requests.Response:
+        """GET a URL with retry on transient HTTP errors.
+
+        Retries on 429 (rate-limited) and 5xx server errors with exponential
+        backoff and jitter.  Client errors (4xx except 429) are returned
+        immediately — callers decide whether they are fatal.
+
+        Raises:
+            requests.RequestException: On network-level failure after all retries.
+        """
+        last_response: requests.Response | None = None
+        for attempt in range(1, self._max_retries + 1):
+            response = self._session.get(url, timeout=self._timeout, allow_redirects=True)
+            last_response = response
+
+            if response.status_code not in self._RETRY_STATUSES or attempt == self._max_retries:
+                return response
+
+            # Determine base wait from Retry-After header (429) or exponential backoff (5xx).
+            if response.status_code == 429 and "Retry-After" in response.headers:
+                try:
+                    base_wait = float(response.headers["Retry-After"])
+                except ValueError:
+                    base_wait = 2.0 ** attempt
+            else:
+                base_wait = 2.0 ** attempt
+
+            # SEC-11: add up to 25% jitter to avoid synchronised bot-detection patterns.
+            jitter = random.uniform(0.0, base_wait * 0.25)
+            total_wait = base_wait + jitter
+            logger.warning(
+                "HTTP %d on attempt %d/%d, retrying in %.1fs: %s",
+                response.status_code,
+                attempt,
+                self._max_retries,
+                total_wait,
+                url,
+            )
+            time.sleep(total_wait)
+
+        return last_response  # type: ignore[return-value]  # loop guarantees assignment
 
     def fetch_article(self, title_or_url: str) -> Article:
         """Fetch a web page by URL.
@@ -218,17 +272,19 @@ class WebContentSource:
         # Validate URL to prevent SSRF attacks (initial check)
         _validate_url(title_or_url)
 
-        # Rate limiting
+        # Rate limiting with ±10% jitter (SEC-11) to avoid bot-detection fingerprinting.
         elapsed = time.time() - self._last_request_time
-        if elapsed < self._rate_limit_delay:
-            time.sleep(self._rate_limit_delay - elapsed)
+        jitter = random.uniform(-0.1, 0.1) * self._rate_limit_delay
+        delay_needed = self._rate_limit_delay + jitter - elapsed
+        if delay_needed > 0:
+            time.sleep(delay_needed)
 
         try:
             # Re-validate URL immediately before request to prevent DNS rebinding attacks
             # (DNS may have changed since initial validation)
             _validate_url(title_or_url)
 
-            response = self._session.get(title_or_url, timeout=self._timeout, allow_redirects=True)
+            response = self._fetch_with_retry(title_or_url)
             self._last_request_time = time.time()
 
             if response.status_code == 404:
@@ -255,10 +311,12 @@ class WebContentSource:
                 f"Thin content: {title_or_url} has {word_count} words (minimum: {self._min_content_words})"
             )
 
-        logger.info(f"Fetched web page: {title} ({len(markdown)} chars, {len(links)} links)")
+        # SEC-09: strip control characters from externally-sourced title before storing or logging
+        safe_title = title.replace("\n", " ").replace("\r", " ")
+        logger.info(f"Fetched web page: {safe_title} ({len(markdown)} chars, {len(links)} links)")
 
         return Article(
-            title=title,
+            title=safe_title,
             content=markdown,
             links=links,
             categories=categories,
