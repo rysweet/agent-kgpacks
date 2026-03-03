@@ -34,6 +34,7 @@ import requests
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from wikigr.packs._url_validation import validate_download_url  # noqa: E402
+from wikigr.packs.utils import load_urls  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -101,23 +102,6 @@ def save_cache(pack_dir: Path, cache: dict) -> None:
     with open(cache_path, "w") as f:
         json.dump(cache, f, indent=2)
         f.write("\n")
-
-
-# ---------------------------------------------------------------------------
-# URL loading (reuses convention from existing build scripts)
-# ---------------------------------------------------------------------------
-
-
-def load_urls(urls_file: Path) -> list[str]:
-    """Load URLs from a pack's urls.txt, skipping comments and blanks."""
-    if not urls_file.exists():
-        return []
-    with open(urls_file) as f:
-        return [
-            line.strip()
-            for line in f
-            if line.strip() and not line.strip().startswith("#") and line.strip().startswith("http")
-        ]
 
 
 # ---------------------------------------------------------------------------
@@ -274,17 +258,6 @@ def check_url(
                 error=str(e)[:80],
             )
 
-    # Should not reach here, but be safe
-    return URLStatus(
-        url=url,
-        status_code=0,
-        etag=None,
-        last_modified=None,
-        content_hash=None,
-        changed=False,
-        error="max_retries",
-    )
-
 
 def _is_changed(
     cached: dict,
@@ -331,7 +304,7 @@ def check_pack_freshness(
     """Check all URLs in a pack and return a freshness report."""
     pack_name = pack_dir.name
     urls_file = pack_dir / "urls.txt"
-    urls = load_urls(urls_file)
+    urls = load_urls(urls_file) if urls_file.exists() else []
 
     if not urls:
         return PackFreshnessReport(
@@ -363,6 +336,7 @@ def check_pack_freshness(
             results.append(future.result())
 
     # Update cache with fresh data
+    now_str = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     for r in results:
         if r.error is None and r.status_code < 400:
             entry: dict = {}
@@ -372,7 +346,7 @@ def check_pack_freshness(
                 entry["last_modified"] = r.last_modified
             if r.content_hash:
                 entry["content_hash"] = r.content_hash
-            entry["checked_at"] = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+            entry["checked_at"] = now_str
             cache[r.url] = entry
 
     save_cache(pack_dir, cache)
@@ -391,7 +365,7 @@ def check_pack_freshness(
         errored_urls=errored,
         change_ratio=round(change_ratio, 4),
         needs_rebuild=change_ratio >= threshold,
-        checked_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        checked_at=now_str,
         details=results,
     )
 
@@ -435,7 +409,13 @@ def main() -> int:
     parser.add_argument("--all", action="store_true", help="Check all packs under data/packs/")
     parser.add_argument("--json", action="store_true", help="Output JSON report")
     parser.add_argument("--content-hash", action="store_true", help="Use content hashing (slower)")
-    parser.add_argument("--workers", type=int, default=DEFAULT_WORKERS, help="Concurrent workers")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=DEFAULT_WORKERS,
+        metavar="N",
+        help="Concurrent workers (1-50, default: %(default)s)",
+    )
     parser.add_argument(
         "--threshold",
         type=float,
@@ -443,6 +423,9 @@ def main() -> int:
         help=f"Change ratio to trigger rebuild (default: {CHANGE_THRESHOLD})",
     )
     args = parser.parse_args()
+
+    if args.workers < 1 or args.workers > 50:
+        parser.error(f"--workers must be between 1 and 50, got {args.workers}")
 
     if not args.all and not args.pack_dir:
         parser.print_help()

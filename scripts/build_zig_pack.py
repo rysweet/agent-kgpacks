@@ -36,6 +36,7 @@ from bootstrap.schema.ryugraph_schema import create_schema  # noqa: E402
 from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
 from bootstrap.src.sources.web import WebContentSource  # noqa: E402
+from wikigr.packs.utils import load_urls  # noqa: E402
 
 PACK_DIR = Path("data/packs/zig-expert")
 URLS_FILE = PACK_DIR / "urls.txt"
@@ -51,25 +52,6 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
-
-
-def load_urls(urls_file: Path, limit: int | None = None) -> list[str]:
-    """Load URLs from urls.txt file, skipping comments and blank lines."""
-    with open(urls_file) as f:
-        urls = [
-            stripped
-            for line in f
-            if (stripped := line.strip())
-            and not stripped.startswith("#")
-            and stripped.startswith("https://")
-        ]
-
-    if limit:
-        urls = urls[:limit]
-        logger.info(f"Limited to {limit} URLs for testing")
-
-    logger.info(f"Loaded {len(urls)} URLs from {urls_file}")
-    return urls
 
 
 def process_url(

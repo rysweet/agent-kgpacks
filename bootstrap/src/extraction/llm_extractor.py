@@ -172,6 +172,30 @@ _DOMAIN_PROMPTS: dict[str, str] = {
         "demographic facts (population, language, government type), "
         "natural features, and economic/cultural significance."
     ),
+    # H-1: cloud/security domains for new knowledge packs
+    "azure_lighthouse": (
+        "\n\nFocus especially on: delegated resource management (which tenant delegates to which), "
+        "RBAC roles and authorization boundaries, managed services offer types, "
+        "cross-tenant relationships (managing tenant vs customer tenant), "
+        "ARM template structure, Azure Marketplace publishing steps, and security compliance controls."
+    ),
+    "fabric_graphql": (
+        "\n\nFocus especially on: GraphQL schema elements (types, queries, mutations, subscriptions), "
+        "Microsoft Fabric lakehouse/warehouse data sources, authentication and authorization patterns, "
+        "API endpoint structure, query optimization, and integration with Power BI and OneLake."
+    ),
+    "security_copilot": (
+        "\n\nFocus especially on: AI-powered security capabilities (what Security Copilot can analyze/detect), "
+        "plugin integrations (Sentinel, Defender, Intune, Entra), promptbook structure, "
+        "Security Compute Units (SCU) capacity model, embedded experience locations, "
+        "and data privacy/compliance boundaries."
+    ),
+    "microsoft_sentinel": (
+        "\n\nFocus especially on: SIEM/SOAR capabilities (detection, investigation, response), "
+        "data connector types and ingestion methods, KQL query patterns for threat hunting, "
+        "analytics rule types (scheduled, NRT, anomaly), playbook automation triggers, "
+        "MITRE ATT&CK mapping, and workspace/tenant architecture."
+    ),
 }
 
 
@@ -195,6 +219,82 @@ def detect_domain(categories: list[str]) -> str | None:
             best_score = score
             best_domain = domain
     return best_domain if best_score >= 2 else None
+
+
+def _sanitize_entities(raw: object) -> list[dict]:
+    """Validate and filter entity list from LLM response (SEC-08).
+
+    Drops entries with missing/empty name or type. Truncates name > 256 chars.
+    Defaults missing type to 'concept'. Returns an empty list if raw is not a list.
+    """
+    if not isinstance(raw, list):
+        logger.warning("LLM response 'entities' is not a list; treating as empty")
+        return []
+    valid: list[dict] = []
+    for i, entity in enumerate(raw):
+        if not isinstance(entity, dict):
+            continue
+        name = entity.get("name")
+        etype = entity.get("type")
+        if not isinstance(name, str) or not name.strip():
+            logger.warning("Entity %d: 'name' missing or empty; skipping", i)
+            continue
+        if len(name) > 256:
+            logger.warning("Entity %d: 'name' truncated from %d to 256 chars", i, len(name))
+            entity = dict(entity, name=name[:256])
+        if not isinstance(etype, str) or not etype.strip():
+            logger.warning("Entity %d: 'type' missing or empty; defaulting to 'concept'", i)
+            entity = dict(entity, type="concept")
+        valid.append(entity)
+    return valid
+
+
+def _sanitize_relationships(raw: object) -> list[dict]:
+    """Validate and filter relationship list from LLM response (SEC-08).
+
+    Drops entries where source, target, or relation is missing/empty.
+    Returns an empty list if raw is not a list.
+    """
+    if not isinstance(raw, list):
+        logger.warning("LLM response 'relationships' is not a list; treating as empty")
+        return []
+    valid: list[dict] = []
+    for i, rel in enumerate(raw):
+        if not isinstance(rel, dict):
+            continue
+        skip = False
+        for field in ("source", "target", "relation"):
+            val = rel.get(field)
+            if not isinstance(val, str) or not val.strip():
+                logger.warning("Relationship %d: '%s' missing or empty; skipping", i, field)
+                skip = True
+                break
+        if not skip:
+            valid.append(rel)
+    return valid
+
+
+def _sanitize_key_facts(raw: object) -> list[str]:
+    """Validate and filter key_facts list from LLM response (SEC-08).
+
+    Drops non-string elements, whitespace-only strings, and truncates to 1024 chars.
+    Returns an empty list if raw is not a list.
+    """
+    if not isinstance(raw, list):
+        logger.warning("LLM response 'key_facts' is not a list; treating as empty")
+        return []
+    valid: list[str] = []
+    for fact in raw:
+        if not isinstance(fact, str):
+            logger.debug("Dropping non-string key_fact element: %r", fact)
+            continue
+        fact = fact.strip()
+        if not fact:
+            continue
+        if len(fact) > 1024:
+            fact = fact[:1024]
+        valid.append(fact)
+    return valid
 
 
 def normalize_relation(relation: str) -> str:
@@ -320,6 +420,8 @@ Focus on the most important entities and relationships. Be concise."""
         if domain_suffix:
             prompt += domain_suffix
 
+        # Let auth/status errors propagate — these indicate configuration or quota
+        # problems that the caller must handle, not transient failures.
         try:
             response = self.client.messages.create(
                 model=self.model,
@@ -327,6 +429,10 @@ Focus on the most important entities and relationships. Be concise."""
                 messages=[{"role": "user", "content": prompt}],
             )
 
+            # C-1: guard against empty content list (API edge case on certain stop conditions)
+            if not response.content:
+                logger.warning("LLM returned empty content list; treating as empty extraction")
+                raise json.JSONDecodeError("empty content", "", 0)
             content = response.content[0].text
 
             # Extract JSON from markdown code blocks if present
@@ -355,13 +461,17 @@ Focus on the most important entities and relationships. Be concise."""
                 logger.debug(f"  Content snippet: {content[max(0, je.pos - 50) : je.pos + 50]}")
                 raise
 
+            # SEC-08: validate and sanitize LLM response schema before graph write
+            entities_raw = _sanitize_entities(data.get("entities", []))
+            relationships_raw = _sanitize_relationships(data.get("relationships", []))
+
             entities = [
                 Entity(
                     name=e["name"],
                     type=e.get("type", "concept"),
                     properties=e.get("properties", {}),
                 )
-                for e in data.get("entities", [])
+                for e in entities_raw
             ]
 
             relationships = [
@@ -371,10 +481,11 @@ Focus on the most important entities and relationships. Be concise."""
                     target=r["target"],
                     context=r.get("context", ""),
                 )
-                for r in data.get("relationships", [])
+                for r in relationships_raw
             ]
 
-            key_facts = data.get("key_facts", [])
+            # SEC-08: validate and sanitize key_facts before graph write
+            key_facts = _sanitize_key_facts(data.get("key_facts", []))
 
             logger.info(
                 f"  Extracted: {len(entities)} entities, "
@@ -385,9 +496,15 @@ Focus on the most important entities and relationships. Be concise."""
                 entities=entities, relationships=relationships, key_facts=key_facts
             )
 
-        except Exception as e:
+        except (anthropic.AuthenticationError, anthropic.PermissionDeniedError):
+            # Non-retryable: API key wrong or quota exhausted — caller must fix config.
+            raise
+        except (
+            json.JSONDecodeError,
+            anthropic.APIConnectionError,
+            anthropic.APIStatusError,
+        ) as e:
             logger.error(f"  LLM extraction failed: {e}")
-            # Return empty result on failure
             return ExtractionResult(entities=[], relationships=[], key_facts=[])
 
 

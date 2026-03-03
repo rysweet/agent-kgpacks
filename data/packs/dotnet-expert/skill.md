@@ -146,7 +146,7 @@ Responses include:
 
 ## Related Packs
 
-- **fabric-graph-gql-expert**: Microsoft Fabric and GraphQL
+- **fabric-graphql-expert**: Microsoft Fabric and GraphQL
 - **azure-lighthouse**: Azure management and governance
 - **security-copilot**: Security best practices
 

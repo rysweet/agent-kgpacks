@@ -69,13 +69,7 @@ def judge_score(
     Returns:
         Integer score 0-10 (capped). Returns 0 on any failure.
     """
-    prompt = (
-        f"Score 0-10.\n"
-        f"Q: {question}\n"
-        f"Expected: {expected}\n"
-        f"Actual: {actual}\n"
-        f"Number only."
-    )
+    prompt = f"Score 0-10.\nQ: {question}\nExpected: {expected}\nActual: {actual}\nNumber only."
     try:
         response = client.messages.create(
             model=JUDGE_MODEL,

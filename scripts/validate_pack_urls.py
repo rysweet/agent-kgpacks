@@ -9,9 +9,15 @@ Usage:
 import argparse
 import concurrent.futures
 import sys
+import time
 from pathlib import Path
 
 import requests
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from wikigr.packs._url_validation import validate_download_url  # noqa: E402
+from wikigr.packs.utils import load_urls  # noqa: E402
 
 
 def check_url(url: str, timeout: int = 10, retries: int = 2) -> tuple[str, int, str]:
@@ -20,7 +26,10 @@ def check_url(url: str, timeout: int = 10, retries: int = 2) -> tuple[str, int, 
     Retries on 429 (rate limit) with exponential backoff.
     Treats 429 as VALID (the URL exists, just rate-limited).
     """
-    import time as _time
+    try:
+        validate_download_url(url)
+    except ValueError as exc:
+        return (url, 0, f"blocked: {exc}")
 
     for attempt in range(retries + 1):
         try:
@@ -28,7 +37,7 @@ def check_url(url: str, timeout: int = 10, retries: int = 2) -> tuple[str, int, 
             if r.status_code == 429:
                 # Rate limited - URL is valid, just throttled
                 if attempt < retries:
-                    _time.sleep(2**attempt)
+                    time.sleep(2**attempt)
                     continue
                 return (url, 200, "ok (rate-limited but valid)")
             return (url, r.status_code, "ok" if r.status_code < 400 else f"HTTP {r.status_code}")
@@ -36,23 +45,11 @@ def check_url(url: str, timeout: int = 10, retries: int = 2) -> tuple[str, int, 
             return (url, 0, "connection_error")
         except requests.Timeout:
             if attempt < retries:
-                _time.sleep(1)
+                time.sleep(1)
                 continue
             return (url, 0, "timeout")
         except Exception as e:
             return (url, 0, str(e)[:60])
-    return (url, 0, "max_retries")
-
-
-def load_urls(path: Path) -> list[str]:
-    with open(path) as f:
-        return [
-            stripped
-            for line in f
-            if (stripped := line.strip())
-            and not stripped.startswith("#")
-            and stripped.startswith("https://")
-        ]
 
 
 def validate_file(urls_path: Path, fix: bool = False, workers: int = 10) -> dict:
@@ -64,7 +61,7 @@ def validate_file(urls_path: Path, fix: bool = False, workers: int = 10) -> dict
         futures = {pool.submit(check_url, url): url for url in urls}
         for i, future in enumerate(concurrent.futures.as_completed(futures), 1):
             url, status, reason = future.result()
-            if status < 400 and status > 0:
+            if 0 < status < 400:
                 results["valid"].append(url)
             else:
                 results["invalid"].append((url, status, reason))
@@ -101,8 +98,17 @@ def main():
     )
     parser.add_argument("--all", action="store_true", help="Validate all packs")
     parser.add_argument("--fix", action="store_true", help="Remove invalid URLs from file")
-    parser.add_argument("--workers", type=int, default=10, help="Concurrent workers")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=10,
+        metavar="N",
+        help="Concurrent workers (1-50, default: 10)",
+    )
     args = parser.parse_args()
+
+    if args.workers < 1 or args.workers > 50:
+        parser.error(f"--workers must be between 1 and 50, got {args.workers}")
 
     if args.all:
         for urls_file in sorted(Path("data/packs").glob("*/urls.txt")):

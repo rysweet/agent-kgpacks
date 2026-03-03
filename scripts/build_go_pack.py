@@ -36,6 +36,7 @@ from bootstrap.schema.ryugraph_schema import create_schema  # noqa: E402
 from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
 from bootstrap.src.sources.web import WebContentSource  # noqa: E402
+from wikigr.packs.utils import load_urls  # noqa: E402
 
 PACK_DIR = Path("data/packs/go-expert")
 URLS_FILE = PACK_DIR / "urls.txt"
@@ -51,23 +52,6 @@ logging.basicConfig(
     ],
 )
 logger = logging.getLogger(__name__)
-
-
-def load_urls(urls_file: Path, limit: int | None = None) -> list[str]:
-    """Load URLs from urls.txt file."""
-    with open(urls_file) as f:
-        urls = [
-            line.strip()
-            for line in f
-            if line.strip() and not line.strip().startswith("#") and line.strip().startswith("http")
-        ]
-
-    if limit:
-        urls = urls[:limit]
-        logger.info(f"Limited to {limit} URLs for testing")
-
-    logger.info(f"Loaded {len(urls)} URLs from {urls_file}")
-    return urls
 
 
 def process_url(
@@ -199,11 +183,7 @@ def create_manifest(
             "relationships": int(relationships_count),
             "size_mb": round(size_mb, 2),
         },
-        "eval_scores": {
-            "accuracy": 0.0,
-            "hallucination_rate": 0.0,
-            "citation_quality": 0.0,
-        },
+        "eval_scores": None,  # Not yet evaluated — run eval suite to populate
         "source_urls": [
             "https://go.dev/doc/",
             "https://gobyexample.com/",
@@ -280,6 +260,13 @@ def build_pack(test_mode: bool = False) -> None:
         f"Final stats: {articles_count} articles, {entities_count} entities, "
         f"{relationships_count} relationships"
     )
+
+    # H-3: require at least 1 successful article before writing manifest
+    if articles_count == 0:
+        raise RuntimeError(
+            f"Build produced 0 articles ({successful} succeeded, {failed} failed). "
+            "Refusing to write empty manifest. Check URL list and API key."
+        )
 
     create_manifest(DB_PATH, MANIFEST_PATH, articles_count, entities_count, relationships_count)
     logger.info("Go Expert Pack build complete!")

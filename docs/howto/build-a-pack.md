@@ -77,6 +77,27 @@ Edit the copy to point to your pack's `urls.txt` and output directory. Key varia
 - `URLS_FILE`: Path to your `urls.txt`
 - `OUTPUT_DIR`: Path to `data/packs/${PACK_NAME}`
 
+### Shared `load_urls` Utility
+
+All build scripts import `load_urls` from the shared utility module rather than defining it locally:
+
+```python
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from wikigr.packs.utils import load_urls  # noqa: E402
+```
+
+`load_urls` strips blank lines and `#` comments from `urls.txt` and returns a plain list of URL strings. Pass `limit=3` for test mode:
+
+```python
+limit = 3 if args.test_mode else None
+urls = load_urls(URLS_FILE, limit=limit)
+```
+
+Do **not** define a local `def load_urls(...)` in new scripts — use the shared import.
+
+See [Pack Utilities API Reference](../reference/pack-utils.md) for full details.
+
 ## Step 4: Build the Pack
 
 ### Test Build (Subset of URLs)

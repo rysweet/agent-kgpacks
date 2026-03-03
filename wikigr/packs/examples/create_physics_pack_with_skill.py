@@ -102,7 +102,7 @@ def create_physics_pack_with_skill(packs_dir: Path) -> None:
     print("✓ Generated skill.md")
 
     # 7. Create optional README
-    readme_content = f"""# {manifest.name.replace('-', ' ').title()}
+    readme_content = f"""# {manifest.name.replace("-", " ").title()}
 
 {manifest.description}
 
@@ -121,7 +121,7 @@ def create_physics_pack_with_skill(packs_dir: Path) -> None:
 
 ## Sources
 
-{chr(10).join(f'- {url}' for url in manifest.source_urls)}
+{chr(10).join(f"- {url}" for url in manifest.source_urls)}
 
 ## License
 

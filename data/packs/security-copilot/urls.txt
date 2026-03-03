@@ -1,0 +1,78 @@
+# Microsoft Security Copilot Documentation
+# AI-powered security analysis, threat intelligence, and incident response
+
+# Overview & Introduction
+https://learn.microsoft.com/en-us/copilot/security/microsoft-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/faq-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/privacy-data-security
+
+# Core Concepts
+https://learn.microsoft.com/en-us/copilot/security/experiences-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/sessions
+https://learn.microsoft.com/en-us/copilot/security/investigations
+https://learn.microsoft.com/en-us/copilot/security/prompting-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/prompting-tips
+https://learn.microsoft.com/en-us/copilot/security/upload-file
+
+# Plugins & Integrations
+https://learn.microsoft.com/en-us/copilot/security/manage-plugins
+https://learn.microsoft.com/en-us/copilot/security/plugin-overview
+https://learn.microsoft.com/en-us/copilot/security/plugin-defender-xdr
+https://learn.microsoft.com/en-us/copilot/security/plugin-sentinel
+https://learn.microsoft.com/en-us/copilot/security/plugin-intune
+https://learn.microsoft.com/en-us/copilot/security/plugin-entra
+https://learn.microsoft.com/en-us/copilot/security/plugin-purview
+https://learn.microsoft.com/en-us/copilot/security/plugin-defender-ti
+https://learn.microsoft.com/en-us/copilot/security/plugin-easm
+https://learn.microsoft.com/en-us/copilot/security/plugin-network-analyzer
+
+# Custom Plugins
+https://learn.microsoft.com/en-us/copilot/security/custom-plugins
+https://learn.microsoft.com/en-us/copilot/security/plugin-api
+https://learn.microsoft.com/en-us/copilot/security/plugin-gpt
+https://learn.microsoft.com/en-us/copilot/security/plugin-kql
+
+# Promptbooks
+https://learn.microsoft.com/en-us/copilot/security/using-promptbooks
+https://learn.microsoft.com/en-us/copilot/security/create-promptbooks
+https://learn.microsoft.com/en-us/copilot/security/promptbook-library
+
+# Embedded Experiences
+https://learn.microsoft.com/en-us/copilot/security/microsoft-sentinel-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/microsoft-defender-xdr-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/microsoft-intune-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/microsoft-entra-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/defender-threat-intelligence-security-copilot
+
+# Administration & Capacity
+https://learn.microsoft.com/en-us/copilot/security/manage-usage
+https://learn.microsoft.com/en-us/copilot/security/configure-capacity
+https://learn.microsoft.com/en-us/copilot/security/provision-scu
+https://learn.microsoft.com/en-us/copilot/security/manage-roles
+
+# Security & Compliance
+https://learn.microsoft.com/en-us/copilot/security/responsible-ai-faq-security-copilot
+https://learn.microsoft.com/en-us/copilot/security/security-copilot-multitenant
+
+# Use Cases & Scenarios
+https://learn.microsoft.com/en-us/copilot/security/triage-alert-with-enriched-threat-intel
+https://learn.microsoft.com/en-us/copilot/security/investigate-incident
+https://learn.microsoft.com/en-us/copilot/security/threat-intelligence-reports
+https://learn.microsoft.com/en-us/copilot/security/summarize-incidents
+https://learn.microsoft.com/en-us/copilot/security/analyze-scripts-files
+
+# API & Automation
+https://learn.microsoft.com/en-us/copilot/security/api-overview
+https://learn.microsoft.com/en-us/copilot/security/api-promptbook
+https://learn.microsoft.com/en-us/copilot/security/api-session
+
+# What's New
+https://learn.microsoft.com/en-us/copilot/security/whats-new
+https://learn.microsoft.com/en-us/copilot/security/release-notes
+
+# Troubleshooting
+https://learn.microsoft.com/en-us/copilot/security/troubleshooting
+
+# Audit & Logging
+https://learn.microsoft.com/en-us/copilot/security/audit-logging
