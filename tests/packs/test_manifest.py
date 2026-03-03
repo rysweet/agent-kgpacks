@@ -327,3 +327,50 @@ class TestValidateManifest:
         )
         errors = validate_manifest(manifest)
         assert any("source_urls" in e.lower() and "empty" in e.lower() for e in errors)
+
+    # --- TDD: GAP 4 — HTTPS scheme enforcement for source_urls entries ---
+
+    def test_validate_manifest_rejects_http_source_url(self):
+        """validate_manifest() must error when source_urls contains an HTTP entry (GAP 4)."""
+        manifest = PackManifest(
+            name="test-pack",
+            version="1.0.0",
+            description="Test pack",
+            graph_stats=GraphStats(articles=100, entities=200, relationships=300, size_mb=10),
+            license="CC-BY-SA-4.0",
+            source_urls=["http://insecure.example.com/data"],
+        )
+        errors = validate_manifest(manifest)
+        assert any(
+            "source_url" in e.lower() and "https" in e.lower() for e in errors
+        ), f"Expected HTTPS-enforcement error for HTTP source_url, got: {errors}"
+
+    def test_validate_manifest_rejects_ftp_source_url(self):
+        """validate_manifest() must error when source_urls contains an FTP entry (GAP 4)."""
+        manifest = PackManifest(
+            name="test-pack",
+            version="1.0.0",
+            description="Test pack",
+            graph_stats=GraphStats(articles=100, entities=200, relationships=300, size_mb=10),
+            license="CC-BY-SA-4.0",
+            source_urls=["https://ok.example.com", "ftp://bad.example.com"],
+        )
+        errors = validate_manifest(manifest)
+        assert any(
+            "source_url" in e.lower() and "https" in e.lower() for e in errors
+        ), f"Expected HTTPS-enforcement error for FTP source_url, got: {errors}"
+
+    def test_validate_manifest_allows_https_source_urls(self):
+        """validate_manifest() should not produce HTTPS errors when all source_urls use HTTPS."""
+        manifest = PackManifest(
+            name="test-pack",
+            version="1.0.0",
+            description="Test pack",
+            graph_stats=GraphStats(articles=100, entities=200, relationships=300, size_mb=10),
+            license="CC-BY-SA-4.0",
+            source_urls=["https://one.example.com", "https://two.example.com"],
+        )
+        errors = validate_manifest(manifest)
+        assert not any(
+            "source_url" in e.lower() and "https" in e.lower() for e in errors
+        ), f"Unexpected HTTPS error for valid source_urls: {errors}"

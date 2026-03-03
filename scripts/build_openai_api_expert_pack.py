@@ -17,7 +17,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -160,7 +160,7 @@ def create_manifest(db_path, manifest_path, articles, entities, relationships):
             "https://platform.openai.com/docs/api-reference/chat",
             "https://platform.openai.com/docs/guides/function-calling",
         ],
-        "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "created": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "license": "MIT",
     }
     with open(manifest_path, "w") as f:

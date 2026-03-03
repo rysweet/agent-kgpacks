@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -205,7 +205,7 @@ def create_manifest(
             "https://www.postgresql.org/docs/current/wal.html",
             "https://pganalyze.com/docs/explain/basics-of-postgres-query-planning",
         ],
-        "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "created": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "license": "MIT",
     }
 

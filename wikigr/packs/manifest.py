@@ -7,7 +7,7 @@ saving, and validating pack manifests.
 import json
 import re
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -85,7 +85,7 @@ class PackManifest:
                 self.created_at = self.created
             else:
                 # Default to current timestamp if neither is provided
-                self.created_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+                self.created_at = datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
     def to_dict(self) -> dict[str, Any]:
         """Convert manifest to dictionary."""
@@ -223,9 +223,17 @@ def validate_manifest(manifest: PackManifest) -> list[str]:
         if not (0.0 <= manifest.eval_scores.citation_quality <= 1.0):
             errors.append("Eval score citation_quality must be between 0 and 1")
 
-    # Validate source_urls - optional but cannot be empty list
-    if manifest.source_urls is not None and len(manifest.source_urls) == 0:
-        errors.append("source_urls list cannot be empty (use None if not applicable)")
+    # Validate source_urls - optional but cannot be empty list; entries must use HTTPS
+    if manifest.source_urls is not None:
+        if not manifest.source_urls:
+            errors.append("source_urls list cannot be empty (use None if not applicable)")
+        else:
+            for entry_url in manifest.source_urls:
+                if not entry_url.startswith("https://"):
+                    errors.append(
+                        f"source_url '{entry_url}' must use HTTPS scheme. "
+                        "Only HTTPS source_urls are allowed."
+                    )
 
     # Validate created_at timestamp (ISO 8601)
     try:

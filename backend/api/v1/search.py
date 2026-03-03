@@ -5,7 +5,7 @@ Provides semantic search and autocomplete functionality.
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import kuzu
 from fastapi import APIRouter, Depends, Query, Request, Response
@@ -71,7 +71,7 @@ def search(
                         "code": "NOT_FOUND",
                         "message": error_msg,
                     },
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             )
         else:
@@ -82,7 +82,7 @@ def search(
                         "code": "INVALID_PARAMETER",
                         "message": error_msg,
                     },
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             )
 
@@ -95,7 +95,7 @@ def search(
                     "code": "INTERNAL_ERROR",
                     "message": "An unexpected error occurred",
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -142,7 +142,7 @@ def autocomplete(
                     "code": "INVALID_PARAMETER",
                     "message": str(e),
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -155,6 +155,6 @@ def autocomplete(
                     "code": "INTERNAL_ERROR",
                     "message": "An unexpected error occurred",
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )

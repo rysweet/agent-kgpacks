@@ -25,6 +25,7 @@ import os
 import re
 import sys
 import time
+from datetime import UTC
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -841,7 +842,7 @@ def cmd_research_sources(args: argparse.Namespace) -> int:
 
 def cmd_pack_create(args: argparse.Namespace) -> None:
     """Execute 'pack create' subcommand."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from wikigr.agent.seed_agent import SeedAgent
     from wikigr.packs.manifest import GraphStats, PackManifest, save_manifest
@@ -1011,7 +1012,7 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
         description=f"Knowledge pack for {', '.join(topics)}",
         author=os.environ.get("USER", "unknown"),
         license="MIT",
-        created_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        created_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         topics=topics,
         graph_stats=GraphStats(
             articles=int(article_count),

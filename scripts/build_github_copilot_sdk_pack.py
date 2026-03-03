@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Disable tokenizers parallelism warnings
@@ -210,7 +210,7 @@ def create_manifest(
             "https://docs.github.com/en/copilot/building-copilot-extensions/about-building-copilot-extensions",
             "https://code.visualstudio.com/docs/copilot/overview",
         ],
-        "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "created": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "license": "MIT",
     }
 

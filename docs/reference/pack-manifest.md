@@ -58,7 +58,7 @@ JSON object with the following structure:
 | `author` | string | Pack author name or organization |
 | `topics` | list[string] | List of topic areas covered by the pack |
 | `eval_scores` | object | Evaluation results (see below) |
-| `source_urls` | list[string] | Representative source URLs used to build the pack |
+| `source_urls` | list[string] | Representative source URLs used to build the pack. Every entry must use the `https://` scheme. |
 | `created_at` | string | Alternative name for `created` (backwards compatibility) |
 
 ### graph_stats Object
@@ -88,11 +88,24 @@ The `wikigr pack validate` command checks:
 | Rule | Description |
 |------|-------------|
 | `name` is non-empty | Pack must have a name |
+| `name` matches `PACK_NAME_RE` | Only alphanumeric, hyphens, and underscores; starts with alphanumeric; max 64 chars |
 | `version` is valid SemVer | Must match `X.Y.Z` pattern |
+| `description` is non-empty | Pack must have a description |
 | `graph_stats.articles` >= 0 | Must be a non-negative integer |
+| `graph_stats.entities` >= 0 | Must be a non-negative integer |
+| `graph_stats.relationships` >= 0 | Must be a non-negative integer |
 | `graph_stats.size_mb` >= 0 | Must be a non-negative number |
-| `created` is valid ISO 8601 | Must be a parseable timestamp |
+| `eval_scores.*` in [0.0, 1.0] | Each score must be between 0 and 1 (when `eval_scores` is present) |
+| `source_urls` not empty list | Must be `null`/omitted or a non-empty list |
+| `source_urls[*]` uses HTTPS | Every entry must start with `https://`; HTTP or other schemes are rejected |
+| `created` / `created_at` is valid ISO 8601 | Must be a parseable timestamp (the validator reads `created_at`, which is populated from `created` when only the older field is present) |
 | `license` is non-empty | Pack must specify a license |
+
+!!! note "source_urls HTTPS requirement"
+    The `source_urls` field records the provenance of the content used to build the pack.
+    All entries must use `https://` to ensure that recorded provenance is auditable and
+    was retrieved over an encrypted channel. Plain `http://` URLs are rejected at
+    validation time.
 
 ## Example Manifests
 

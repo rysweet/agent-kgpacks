@@ -11,6 +11,7 @@ Integrates all modules to process a single article:
 """
 
 import logging
+from datetime import UTC
 
 import kuzu
 import numpy as np
@@ -258,7 +259,7 @@ class ArticleProcessor:
         BEGIN TRANSACTION would conflict with work queue writes on
         the same connection (write-write conflict).
         """
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         self._do_insert_article_with_sections(
             article,
@@ -266,7 +267,7 @@ class ArticleProcessor:
             embeddings,
             category,
             expansion_depth,
-            datetime.now(tz=timezone.utc),
+            datetime.now(tz=UTC),
             extraction_result,
         )
 

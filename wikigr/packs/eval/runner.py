@@ -10,7 +10,7 @@ This module orchestrates the evaluation process:
 import json
 import logging
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from tqdm import tqdm
@@ -126,7 +126,7 @@ class EvalRunner:
         # Create result (web_search_baseline set to None for backwards compatibility)
         result = EvalResult(
             pack_name=pack_name,
-            timestamp=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            timestamp=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             training_baseline=training_metrics,
             web_search_baseline=None,
             knowledge_pack=pack_metrics,

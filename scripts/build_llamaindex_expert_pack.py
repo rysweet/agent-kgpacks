@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Disable tokenizers parallelism warnings
@@ -212,7 +212,7 @@ def create_manifest(
             "https://developers.llamaindex.ai/python/framework/getting_started/",
             "https://github.com/run-llama/llama_index",
         ],
-        "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "created": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "license": "MIT",
     }
 

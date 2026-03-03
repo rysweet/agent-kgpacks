@@ -21,7 +21,7 @@ result = run_recipe_by_name(
     "default-workflow",
     adapter=adapter,
     user_context={
-        "task_description": "CRITICAL: backend/api/v1/chat.py chat_stream endpoint at lines 177-180 calls _plan_query and _execute_query which were deleted in the dead code cleanup. Every SSE stream request raises AttributeError at runtime.\n\nFix: Replace the decomposed private-method calls in the generate function with a single agent.query call. Emit the answer as a token event and sources as a sources event.\n\nAlso fix: wikigr/packs/distribution.py line 142 - add filter='data' to tar.extractall call to prevent Python 3.14 deprecation warning.\n\nRun tests after to verify 0 failures.",
+        "task_description": "Add PACK_NAME_RE validation to wikigr/packs/installer.py uninstall and update methods. Import PACK_NAME_RE from wikigr.packs.manifest and validate pack_name at the start of both methods. Raise ValueError if the name fails validation. Run tests after.",
         "repo_path": ".",
     },
 )

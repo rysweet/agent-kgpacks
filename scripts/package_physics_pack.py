@@ -16,7 +16,7 @@ import logging
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add project root to path
@@ -102,7 +102,7 @@ def create_tarball(pack_dir: Path, output_dir: Path) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate tarball name with timestamp
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     tarball_name = f"{pack_name}-{version}-{timestamp}.tar.gz"
     tarball_path = output_dir / tarball_name
 

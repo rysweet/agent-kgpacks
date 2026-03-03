@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "wikigr"
-version = "0.3.0"
+version = "0.3.1"
 description = "Wikipedia Knowledge Graph with semantic search and graph traversal"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 authors = [
     { name = "WikiGR Contributors" }
 ]
@@ -27,9 +27,8 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Database",
 ]
@@ -96,7 +95,7 @@ packages = ["bootstrap", "wikigr"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = [
@@ -144,12 +143,12 @@ reportMissingImports = true
 reportMissingTypeStubs = false
 reportAttributeAccessIssue = "warning"
 reportOptionalMemberAccess = "warning"
-pythonVersion = "3.10"
+pythonVersion = "3.12"
 pythonPlatform = "Linux"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["bootstrap/src/embeddings/tests", "bootstrap/src/expansion/tests", "bootstrap/src/wikipedia/tests", "bootstrap/src/database/tests", "bootstrap/src/query/tests", "bootstrap/tests", "tests/agent", "tests/packs/eval"]
+testpaths = ["bootstrap/src/embeddings/tests", "bootstrap/src/expansion/tests", "bootstrap/src/wikipedia/tests", "bootstrap/src/database/tests", "bootstrap/src/query/tests", "bootstrap/tests", "tests/agent", "tests/packs"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
