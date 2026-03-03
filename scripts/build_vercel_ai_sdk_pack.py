@@ -125,6 +125,9 @@ def process_url(url, conn, web_source, embedder, extractor) -> bool:
     except (requests.RequestException, json.JSONDecodeError) as e:
         logger.error(f"Failed to process {url}: {e}")
         return False
+    except Exception as e:
+        logger.warning(f"Skipping {url}: {e}")
+        return False
 
 
 def create_manifest(db_path, manifest_path, articles, entities, relationships):
