@@ -6,7 +6,7 @@ FastAPI application providing RESTful API for Wikipedia knowledge graph queries.
 
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import kuzu
 from fastapi import Depends, FastAPI, Request, Response
@@ -119,7 +119,7 @@ def health_check(
         status=status,
         version=settings.api_version,
         database=db_status,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
     if status == "unhealthy":
@@ -158,7 +158,7 @@ async def validation_exception_handler(_request: Request, exc: RequestValidation
                 "code": code,
                 "message": error_msg,
             },
-            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         },
     )
 
@@ -177,7 +177,7 @@ async def global_exception_handler(_request, exc):
                 "code": "INTERNAL_ERROR",
                 "message": "An unexpected error occurred",
             },
-            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         },
     )
 

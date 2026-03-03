@@ -8,7 +8,7 @@ with the expansion pipeline.
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from anthropic import Anthropic
 
@@ -80,7 +80,7 @@ class SeedAgent:
                 "categories": len(categories),
                 "topics": topics,
                 "purpose": f"Generated from {len(topics)} topics",
-                "created_date": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),
+                "created_date": datetime.now(tz=UTC).strftime("%Y-%m-%d"),
             },
             "seeds": all_seeds,
         }
@@ -119,7 +119,7 @@ class SeedAgent:
                     "categories": len(categories),
                     "topics": [topic],
                     "purpose": f"Generated for topic: {topic}",
-                    "created_date": datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),
+                    "created_date": datetime.now(tz=UTC).strftime("%Y-%m-%d"),
                 },
                 "seeds": [
                     {

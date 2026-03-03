@@ -5,7 +5,7 @@ Combines semantic similarity with graph proximity for richer search results.
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import kuzu
 from fastapi import APIRouter, Depends, Query, Request, Response
@@ -88,14 +88,14 @@ def hybrid_search(
                 status_code=404,
                 content={
                     "error": {"code": "NOT_FOUND", "message": "Article not found"},
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             )
         return JSONResponse(
             status_code=400,
             content={
                 "error": {"code": "INVALID_PARAMETER", "message": error_msg},
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -105,6 +105,6 @@ def hybrid_search(
             status_code=500,
             content={
                 "error": {"code": "INTERNAL_ERROR", "message": "An unexpected error occurred"},
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )

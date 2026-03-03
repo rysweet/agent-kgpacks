@@ -14,7 +14,7 @@ Run:
 
 import json
 import shutil
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from wikigr.packs import (
@@ -55,7 +55,7 @@ def create_physics_pack_with_skill(packs_dir: Path) -> None:
             "https://en.wikipedia.org/wiki/Portal:Physics",
             "https://arxiv.org/archive/physics",
         ],
-        created=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        created=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         license="CC-BY-SA-4.0",
     )
 

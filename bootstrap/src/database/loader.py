@@ -6,7 +6,7 @@ to load articles into Kuzu database.
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import kuzu
 import numpy as np
@@ -139,7 +139,7 @@ class ArticleLoader:
                 "word_count": word_count,
                 "expansion_state": expansion_state,
                 "expansion_depth": expansion_depth,
-                "now": datetime.now(tz=timezone.utc),
+                "now": datetime.now(tz=UTC),
             },
         )
 

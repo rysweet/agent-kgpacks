@@ -1,6 +1,6 @@
 """Common models used across the API."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -19,7 +19,7 @@ class ErrorResponse(BaseModel):
 
     error: ErrorDetail = Field(..., description="Error information")
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc), description="Error timestamp"
+        default_factory=lambda: datetime.now(UTC), description="Error timestamp"
     )
 
 
@@ -30,5 +30,5 @@ class HealthResponse(BaseModel):
     version: str = Field(..., description="API version")
     database: str = Field(..., description="Database connection status")
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc), description="Check timestamp"
+        default_factory=lambda: datetime.now(UTC), description="Check timestamp"
     )

@@ -24,7 +24,7 @@ import logging
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 logging.basicConfig(
@@ -88,7 +88,7 @@ def create_urls_file(pack_dir: Path, urls: list[str], pack_name: str) -> Path:
     urls_path = pack_dir / "urls.txt"
     with open(urls_path, "w") as f:
         f.write(f"# {pack_name} - Source URLs\n")
-        f.write(f"# Generated {datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}\n\n")
+        f.write(f"# Generated {datetime.now(UTC).isoformat().replace('+00:00', 'Z')}\n\n")
         for url in urls:
             f.write(f"{url}\n")
     logger.info(f"Created {urls_path} with {len(urls)} URLs")

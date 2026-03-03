@@ -5,7 +5,7 @@ Provides endpoints for graph traversal and visualization data.
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import kuzu
 from fastapi import APIRouter, Depends, Query, Request, Response
@@ -71,7 +71,7 @@ def get_graph(
                         "code": "NOT_FOUND",
                         "message": error_msg,
                     },
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             )
         else:
@@ -82,7 +82,7 @@ def get_graph(
                         "code": "INVALID_PARAMETER",
                         "message": error_msg,
                     },
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             )
 
@@ -95,6 +95,6 @@ def get_graph(
                     "code": "INTERNAL_ERROR",
                     "message": "An unexpected error occurred",
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )

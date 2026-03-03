@@ -6,7 +6,7 @@ Handles article details, categories, and statistics.
 
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import kuzu
@@ -125,7 +125,7 @@ class ArticleService:
         )
 
         # Use current timestamp as last_updated
-        last_updated = datetime.now(timezone.utc)
+        last_updated = datetime.now(UTC)
 
         return ArticleDetail(
             title=title,
@@ -284,7 +284,7 @@ class ArticleService:
 
         database = {
             "size_mb": round(db_size_mb, 2),
-            "last_updated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "last_updated": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         }
 
         result = StatsResponse(

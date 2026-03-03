@@ -5,7 +5,7 @@ Provides article details, categories, and statistics.
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import kuzu
 from fastapi import APIRouter, Depends, Path, Request, Response
@@ -58,7 +58,7 @@ def get_article(
                     "code": "NOT_FOUND",
                     "message": str(e),
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -71,7 +71,7 @@ def get_article(
                     "code": "INTERNAL_ERROR",
                     "message": "An unexpected error occurred",
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -107,7 +107,7 @@ def get_categories(
                     "code": "INTERNAL_ERROR",
                     "message": "An unexpected error occurred",
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -143,6 +143,6 @@ def get_stats(
                     "code": "INTERNAL_ERROR",
                     "message": "An unexpected error occurred",
                 },
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )

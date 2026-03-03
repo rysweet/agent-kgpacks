@@ -6,7 +6,7 @@ Implements the expansion state machine for coordinating work across workers.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import kuzu
 
@@ -63,7 +63,7 @@ class WorkQueueManager:
             >>> for article in articles:
             ...     print(f"Claimed: {article['title']} at depth {article['expansion_depth']}")
         """
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
 
         # Find and claim articles in discovered state
         # Order by depth ASC to process seeds (depth=0) first
@@ -135,7 +135,7 @@ class WorkQueueManager:
         Example:
             >>> manager.update_heartbeat("Python (programming language)")
         """
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
 
         try:
             self.conn.execute(
@@ -168,7 +168,7 @@ class WorkQueueManager:
             >>> reclaimed = manager.reclaim_stale(timeout_seconds=300)
             >>> print(f"Reclaimed {reclaimed} stale articles")
         """
-        cutoff = datetime.now(tz=timezone.utc) - timedelta(seconds=timeout_seconds)
+        cutoff = datetime.now(tz=UTC) - timedelta(seconds=timeout_seconds)
 
         try:
             # Find stale claims
@@ -248,7 +248,7 @@ class WorkQueueManager:
 
         predecessors = self._VALID_PREDECESSORS.get(new_state, set())
 
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
 
         try:
             # Guard: only transition from legal predecessor states (parameterized)
@@ -325,7 +325,7 @@ class WorkQueueManager:
                     {
                         "title": article_title,
                         "new_retry_count": new_retry_count,
-                        "now": datetime.now(tz=timezone.utc),
+                        "now": datetime.now(tz=UTC),
                     },
                 )
                 logger.error(

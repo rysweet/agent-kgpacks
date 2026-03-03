@@ -25,7 +25,7 @@ import json
 import sys
 import time
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import requests
@@ -343,7 +343,7 @@ def check_pack_freshness(
             errored_urls=[],
             change_ratio=0.0,
             needs_rebuild=False,
-            checked_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            checked_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         )
 
     cache = load_cache(pack_dir)
@@ -372,7 +372,7 @@ def check_pack_freshness(
                 entry["last_modified"] = r.last_modified
             if r.content_hash:
                 entry["content_hash"] = r.content_hash
-            entry["checked_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            entry["checked_at"] = datetime.now(UTC).isoformat().replace("+00:00", "Z")
             cache[r.url] = entry
 
     save_cache(pack_dir, cache)
@@ -391,7 +391,7 @@ def check_pack_freshness(
         errored_urls=errored,
         change_ratio=round(change_ratio, 4),
         needs_rebuild=change_ratio >= threshold,
-        checked_at=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        checked_at=datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         details=results,
     )
 

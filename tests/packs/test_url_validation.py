@@ -79,3 +79,43 @@ class TestValidateDownloadUrl:
         ):
             # Should not raise — DNS failure is handled gracefully
             validate_download_url("https://nonexistent.example.com/pack.tar.gz")
+
+    # --- TDD: GAP 1 — validate_download_url must return the resolved IP ---
+
+    def test_validate_download_url_returns_resolved_ip(self) -> None:
+        """validate_download_url() must return the resolved IPv4Address on success (GAP 1).
+
+        The caller (install_from_url) uses the returned IP to open a direct connection,
+        eliminating the TOCTOU window between validation and download (DNS rebinding).
+        """
+        import ipaddress
+
+        with patch(
+            "wikigr.packs._url_validation.socket.gethostbyname", return_value="93.184.216.34"
+        ):
+            result = validate_download_url("https://registry.wikigr.com/packs/test-1.0.tar.gz")
+
+        assert result is not None, (
+            "validate_download_url() should return the resolved IP address, got None. "
+            "Required for DNS-bind: caller connects directly to the IP."
+        )
+        assert isinstance(
+            result, ipaddress.IPv4Address | ipaddress.IPv6Address
+        ), f"Expected IPv4Address or IPv6Address, got {type(result)}"
+        assert str(result) == "93.184.216.34"
+
+    def test_validate_download_url_returns_none_on_dns_failure(self) -> None:
+        """validate_download_url() must return None when DNS resolution fails (GAP 1).
+
+        Returning None signals to the caller that the IP could not be pre-resolved.
+        The caller converts None to a ValueError before any download is attempted.
+        """
+        import socket as _socket
+
+        with patch(
+            "wikigr.packs._url_validation.socket.gethostbyname",
+            side_effect=_socket.gaierror("Name resolution failed"),
+        ):
+            result = validate_download_url("https://nonexistent.example.com/pack.tar.gz")
+
+        assert result is None, f"Expected None on DNS resolution failure, got {result!r}"

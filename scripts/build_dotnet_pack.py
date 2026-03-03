@@ -24,7 +24,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Disable tokenizers parallelism warnings
@@ -288,7 +288,7 @@ def create_manifest(
             "https://learn.microsoft.com/en-us/dotnet/core/",
             "https://learn.microsoft.com/en-us/dotnet/architecture/",
         ],
-        "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "created": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "license": "MIT",
     }
 

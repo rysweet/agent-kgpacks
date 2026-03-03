@@ -21,7 +21,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -205,7 +205,7 @@ def create_manifest(
             "https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/modules",
             "https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/deployment-stacks",
         ],
-        "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "created": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "license": "MIT",
     }
 

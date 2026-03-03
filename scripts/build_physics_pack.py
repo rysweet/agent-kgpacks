@@ -20,7 +20,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Disable tokenizers parallelism warnings
@@ -250,7 +250,7 @@ def create_manifest(
             "citation_quality": 0.0,
         },
         "source_urls": ["https://en.wikipedia.org"],
-        "created": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "created": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "license": "CC-BY-SA-4.0",
     }
 
