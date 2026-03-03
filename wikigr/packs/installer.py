@@ -63,7 +63,8 @@ class PackInstaller:
         if not PACK_NAME_RE.match(pack_name):
             raise ValueError(
                 f"Pack name '{pack_name}' contains invalid characters. "
-                "Only alphanumeric, hyphens, and underscores are allowed."
+                "Pack names must start with an alphanumeric character and contain "
+                "only alphanumeric characters, hyphens, and underscores."
             )
 
     def install_from_file(self, archive_path: Path) -> PackInfo:
