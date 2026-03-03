@@ -36,9 +36,9 @@ os.environ["LOKY_MAX_CPU_COUNT"] = "1"
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import kuzu  # noqa: E402
+import real_ladybug as kuzu  # noqa: E402
 
-from bootstrap.schema.ryugraph_schema import create_schema  # noqa: E402
+from bootstrap.schema.ryugraph_schema import create_schema, load_extensions  # noqa: E402
 from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
 from bootstrap.src.sources.base import ArticleNotFoundError  # noqa: E402
@@ -311,6 +311,7 @@ def build_pack(test_mode: bool = False) -> None:
     create_schema(str(DB_PATH), drop_existing=True)
     db = kuzu.Database(str(DB_PATH))
     conn = kuzu.Connection(db)
+    load_extensions(conn)
 
     # Initialize components
     web_source = WebContentSource()

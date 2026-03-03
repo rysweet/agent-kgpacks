@@ -89,7 +89,7 @@ def stream_client(tmp_path_factory):
     causes a "bound to a different event loop" RuntimeError.  By keeping
     one client for the whole module we stay on one loop throughout.
     """
-    import kuzu
+    import real_ladybug as kuzu
 
     tmp_path = tmp_path_factory.mktemp("stream_db")
     db_path = str(tmp_path / "stream_test.db")

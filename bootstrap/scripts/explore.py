@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Launch Kuzu Explorer for interactive graph visualization.
+"""Launch LadybugDB Explorer for interactive graph visualization.
 
-Kuzu Explorer is a browser-based UI for exploring graph databases.
-It runs as a Docker container (kuzudb/explorer) and mounts the local
+LadybugDB Explorer is a browser-based UI for exploring graph databases.
+It runs as a Docker container (ladybugdb/explorer) and mounts the local
 database directory as a volume.
 
 Usage:
@@ -18,7 +18,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-DOCKER_IMAGE = "kuzudb/explorer:latest"
+DOCKER_IMAGE = "ladybugdb/explorer:latest"
 
 
 def _check_docker() -> str:

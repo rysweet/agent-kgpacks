@@ -7,7 +7,7 @@ Wraps existing semantic search functionality from bootstrap.
 import logging
 import time
 
-import kuzu
+import real_ladybug as kuzu
 
 from backend.models.search import (
     AutocompleteResponse,

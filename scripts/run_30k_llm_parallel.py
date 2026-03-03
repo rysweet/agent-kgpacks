@@ -24,7 +24,7 @@ os.environ["LOKY_MAX_CPU_COUNT"] = "1"
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import kuzu  # noqa: E402
+import real_ladybug as kuzu  # noqa: E402
 
 from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
 from bootstrap.src.expansion.link_discovery import LinkDiscovery  # noqa: E402

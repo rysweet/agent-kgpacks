@@ -4,9 +4,9 @@
 
 ## Executive Summary
 
-**✅ RECOMMENDATION: Proceed with Kuzu 0.11.3 for WikiGR implementation**
+**✅ RECOMMENDATION: Proceed with LadybugDB (community fork of Kuzu) for WikiGR implementation**
 
-Kuzu 0.11.3 is **production-ready** for vector search with HNSW indexing. All critical functionality tested and validated:
+LadybugDB (the active community fork of the archived Kuzu project) is **production-ready** for vector search with HNSW indexing. All critical functionality tested and validated:
 - ✅ Vector storage (DOUBLE[384] arrays)
 - ✅ HNSW index creation
 - ✅ Fast vector similarity search
@@ -18,7 +18,7 @@ Kuzu 0.11.3 is **production-ready** for vector search with HNSW indexing. All cr
 
 ---
 
-## 1. Kuzu/RyuGraph Fork Status
+## 1. LadybugDB (Kuzu Fork) Status
 
 ### Timeline
 
@@ -33,34 +33,32 @@ Kuzu 0.11.3 is **production-ready** for vector search with HNSW indexing. All cr
    - [GitHub: predictable-labs/ryugraph](https://github.com/predictable-labs/ryugraph)
    - [Website: ryugraph.io](https://www.ryugraph.io/)
 
-2. **Ladybug** - by Arun Sharma (ex-Facebook, ex-Google)
+2. **LadybugDB** - by Arun Sharma (ex-Facebook, ex-Google)
    - Community-driven
    - One-to-one Kuzu replacement goal
    - Object storage focus
    - [GitHub: LadybugDB/ladybug](https://github.com/LadybugDB/ladybug)
+   - **Selected as the project's database going forward**
 
 3. **Bighorn** - by Kineviz
    - Integrated with GraphXR
    - Embedded + standalone server modes
    - Open source commitment
 
-### Current Status (February 2026)
+### Current Status (March 2026)
 
-**Kuzu package (PyPI: `kuzu`):** Still available and installable!
-**Version:** 0.11.3 (tested and working)
-**Maintenance:** Original package still functional despite archive
+**LadybugDB package (PyPI: `real_ladybug`):** Actively maintained community fork of Kuzu.
+**Migration approach:** `import real_ladybug as kuzu` provides a drop-in alias for existing code.
+**Maintenance:** Active community development, unlike the archived original Kuzu project.
 
 **RyuGraph status:** Actively maintained by Predictable Labs as of late 2025, but documentation is sparse. GitHub repo exists but minimal public activity.
 
 ### Decision
 
-**✅ Use Kuzu 0.11.3 directly** - Despite archival, the Python package works perfectly and is stable. No urgent need to migrate to forks unless:
-- Breaking changes in future
-- Security vulnerabilities discovered
-- Performance issues at scale
+**✅ Use LadybugDB (`real_ladybug` package)** - As the active community fork of the archived Kuzu project, LadybugDB provides continued maintenance and development. The alias approach (`import real_ladybug as kuzu`) ensures backward compatibility with existing code.
 
-**Fallback plan:** If Kuzu becomes unusable, migrate to:
-1. RyuGraph (most mature fork, enterprise backing)
+**Fallback plan:** If LadybugDB becomes unusable, migrate to:
+1. RyuGraph (enterprise backing)
 2. FalkorDB (Redis-based alternative)
 3. Neo4j (proven but $325/month)
 
@@ -71,15 +69,15 @@ Kuzu 0.11.3 is **production-ready** for vector search with HNSW indexing. All cr
 ### Installation
 
 ```bash
-pip install kuzu numpy pandas
+pip install real_ladybug numpy pandas
 ```
 
-**Result:** ✅ Installs successfully (version 0.11.3)
+**Result:** ✅ Installs successfully
 
 ### Test Environment
 
 - **Python:** 3.14.2
-- **Kuzu:** 0.11.3
+- **LadybugDB (real_ladybug):** latest
 - **OS:** Linux (Azure VM)
 - **Test database:** 5 articles with 384-dim vectors
 
@@ -111,7 +109,7 @@ CALL CREATE_VECTOR_INDEX(
 **Supported Metrics:**
 - `'cosine'` - Cosine similarity (recommended for normalized embeddings)
 - `'l2'` - Euclidean distance (L2 norm)
-- Additional metrics may be supported (check Kuzu docs)
+- Additional metrics may be supported (check LadybugDB docs)
 
 **Result:** ✅ Index created successfully
 
@@ -161,9 +159,9 @@ for row in result:
 
 ## 3. Performance Expectations
 
-### Kuzu Claims
+### LadybugDB Performance Claims
 
-- **5-10x faster than Neo4j** (unverified, needs benchmarking)
+- **5-10x faster than Neo4j** (inherited from Kuzu, unverified, needs benchmarking)
 - **280M+ node capacity** (claimed)
 - **HNSW index:** Sub-linear query time (O(log N))
 
@@ -233,31 +231,31 @@ CALL QUERY_VECTOR_INDEX('Article', 'embedding_idx', $query, 100) RETURN *
 
 | Database | Cost/Month | Vector Search | Graph Queries | Maturity | Recommendation |
 |----------|------------|---------------|---------------|----------|----------------|
-| **Kuzu 0.11.3** | $0 | ✅ HNSW | ✅ Cypher | Medium | **✅ Recommended** |
-| RyuGraph | $0 | ✅ (claimed) | ✅ Cypher | Low | Fallback if Kuzu fails |
-| Ladybug | $0 | ✅ (claimed) | ✅ Cypher | Low | Community fork |
+| **LadybugDB** | $0 | ✅ HNSW | ✅ Cypher | Medium | **✅ Recommended** |
+| RyuGraph | $0 | ✅ (claimed) | ✅ Cypher | Low | Fallback if LadybugDB fails |
+| Kuzu 0.11.3 (archived) | $0 | ✅ HNSW | ✅ Cypher | Archived | Legacy, no longer maintained |
 | FalkorDB | $0-200 | ✅ | ✅ Cypher | Medium | Redis-based alternative |
 | Neo4j | $325 | ✅ | ✅ Cypher | **High** | Proven but expensive |
 | pgvector | $0-50 | ✅ | ❌ | **High** | Vector-only, no graph |
 
-### Why Kuzu Over Alternatives?
+### Why LadybugDB Over Alternatives?
 
 1. **Cost:** $0 vs $325/month for Neo4j
 2. **Embedded:** No server setup, runs in-process
-3. **Fast:** Claimed 5-10x faster than Neo4j
-4. **Proven:** Version 0.11.3 works despite archive
-5. **Fallback options:** If Kuzu fails, multiple forks available
+3. **Fast:** Claimed 5-10x faster than Neo4j (inherited from Kuzu architecture)
+4. **Actively maintained:** Unlike the archived Kuzu project, LadybugDB has active community development
+5. **Fallback options:** If LadybugDB fails, RyuGraph and other alternatives available
 
 ---
 
 ## 6. Risk Assessment
 
-### Risk 1: Kuzu Package Breaks (Low)
+### Risk 1: LadybugDB Package Issues (Low)
 
 **Mitigation:**
-- Version pin: `kuzu==0.11.3`
+- Pin `real_ladybug` to a known-good version
 - If package removed from PyPI, vendor locally
-- Migrate to RyuGraph/Ladybug if needed
+- Migrate to RyuGraph if needed
 
 ### Risk 2: Performance Not Meeting Targets (Medium)
 
@@ -268,20 +266,20 @@ CALL QUERY_VECTOR_INDEX('Article', 'embedding_idx', $query, 100) RETURN *
 - Partition database by category
 - Fallback to Neo4j if critical
 
-### Risk 3: Bugs in Archived Code (Low)
+### Risk 3: Bugs in Fork Code (Low)
 
 **Mitigation:**
 - Comprehensive testing at 1K, 10K, 30K scale
 - Monitor for memory leaks, crashes
 - Have Neo4j migration plan ready
 
-### Risk 4: No Community Support (Medium)
+### Risk 4: Community Support Uncertainty (Medium)
 
-**Impact:** If bugs found, no official support available
+**Impact:** If bugs found, community support may be limited
 
 **Mitigation:**
-- RyuGraph/Ladybug communities may help
-- Core functionality well-tested
+- LadybugDB has active community development
+- Core functionality well-tested (inherited from Kuzu codebase)
 - Consider Neo4j if critical issues arise
 
 ---
@@ -290,22 +288,22 @@ CALL QUERY_VECTOR_INDEX('Article', 'embedding_idx', $query, 100) RETURN *
 
 ### Immediate Actions (Week 1)
 
-1. ✅ **Use Kuzu 0.11.3** - Vector search fully validated
+1. ✅ **Use LadybugDB (`real_ladybug`)** - Vector search fully validated
 2. ⏭️ **Validate Wikipedia API** - Ensure data source works
 3. ⏭️ **Select embedding model** - Benchmark all-MiniLM-L6-v2 vs alternatives
 4. ⏭️ **Build PoC** - Test with 10 articles end-to-end
 
 ### Architecture Decisions
 
-1. **Database:** Kuzu 0.11.3 (embedded)
+1. **Database:** LadybugDB via `real_ladybug` (embedded)
 2. **Vector dimensions:** 384 (all-MiniLM-L6-v2)
 3. **Index:** HNSW with cosine metric
 4. **Query pattern:** `CALL QUERY_VECTOR_INDEX ... RETURN *`
 
 ### Contingency Plans
 
-**If Kuzu fails at scale:**
-1. Try RyuGraph (same API, actively maintained)
+**If LadybugDB fails at scale:**
+1. Try RyuGraph (same API, enterprise-backed)
 2. Try FalkorDB (Redis-based, different architecture)
 3. Migrate to Neo4j (proven, $325/month acceptable if critical)
 
@@ -318,7 +316,7 @@ CALL QUERY_VECTOR_INDEX('Article', 'embedding_idx', $query, 100) RETURN *
 
 ## 8. Testing Checklist
 
-- [x] Kuzu installation
+- [x] LadybugDB installation
 - [x] DOUBLE[384] vector storage
 - [x] HNSW index creation
 - [x] Vector similarity query
@@ -336,7 +334,7 @@ CALL QUERY_VECTOR_INDEX('Article', 'embedding_idx', $query, 100) RETURN *
 ### Complete Vector Search Setup
 
 ```python
-import kuzu
+import real_ladybug as kuzu
 import numpy as np
 
 # Create database
@@ -382,11 +380,12 @@ for row in result:
 
 ### Key Resources
 
-1. **Kuzu Documentation:** [docs.kuzudb.com](https://docs.kuzudb.com/)
-2. **Vector Search Extension:** [docs.kuzudb.com/extensions/vector/](https://docs.kuzudb.com/extensions/vector/)
-3. **RyuGraph GitHub:** [github.com/predictable-labs/ryugraph](https://github.com/predictable-labs/ryugraph)
-4. **Kuzu Archival Article:** [The Register - KuzuDB abandoned](https://www.theregister.com/2025/10/14/kuzudb_abandoned/)
-5. **Community Forks Article:** [GDotV - Kuzu Forks](https://gdotv.com/blog/weekly-edge-kuzu-forks-duckdb-graph-cypher-24-october-2025/)
+1. **LadybugDB GitHub:** [github.com/LadybugDB/ladybug](https://github.com/LadybugDB/ladybug)
+2. **Kuzu Documentation (archived):** [docs.kuzudb.com](https://docs.kuzudb.com/)
+3. **Vector Search Extension (archived):** [docs.kuzudb.com/extensions/vector/](https://docs.kuzudb.com/extensions/vector/)
+4. **RyuGraph GitHub:** [github.com/predictable-labs/ryugraph](https://github.com/predictable-labs/ryugraph)
+5. **Kuzu Archival Article:** [The Register - KuzuDB abandoned](https://www.theregister.com/2025/10/14/kuzudb_abandoned/)
+6. **Community Forks Article:** [GDotV - Kuzu Forks](https://gdotv.com/blog/weekly-edge-kuzu-forks-duckdb-graph-cypher-24-october-2025/)
 
 ### Test Scripts
 

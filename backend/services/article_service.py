@@ -9,7 +9,7 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
-import kuzu
+import real_ladybug as kuzu
 
 from backend.models.article import (
     ArticleDetail,

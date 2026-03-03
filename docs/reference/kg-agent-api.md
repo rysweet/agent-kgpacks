@@ -31,7 +31,7 @@ KnowledgeGraphAgent(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `db_path` | `str` | (required) | Path to the Kuzu database directory (e.g., `data/packs/go-expert/pack.db`) |
+| `db_path` | `str` | (required) | Path to the LadybugDB database directory (e.g., `data/packs/go-expert/pack.db`) |
 | `anthropic_api_key` | `str \| None` | `None` | Anthropic API key. If `None`, reads from `ANTHROPIC_API_KEY` environment variable |
 | `read_only` | `bool` | `True` | Open database in read-only mode. Enables concurrent access during expansion |
 | `use_enhancements` | `bool` | `True` | Master switch for Phase 1 enhancements (reranking, multi-doc, few-shot). When `False`, all `enable_*` flags are ignored |
@@ -155,7 +155,7 @@ print(result["token_usage"])
 ```python
 from wikigr.agent.reranker import GraphReranker
 
-reranker = GraphReranker(kuzu_conn: kuzu.Connection)
+reranker = GraphReranker(conn: kuzu.Connection)
 
 # Calculate degree centrality for specific articles
 centrality = reranker.calculate_centrality(
@@ -175,7 +175,7 @@ reranked = reranker.rerank(
 ```python
 from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
 
-synthesizer = MultiDocSynthesizer(kuzu_conn: kuzu.Connection)
+synthesizer = MultiDocSynthesizer(conn: kuzu.Connection)
 
 # Expand seed articles by traversing LINKS_TO edges (BFS)
 expanded = synthesizer.expand_to_related_articles(
@@ -256,7 +256,7 @@ Only intentional degradation paths produce a result dict rather than an exceptio
 | `anthropic.APIConnectionError` | Network failure reaching Anthropic API | Yes — transient |
 | `anthropic.APITimeoutError` | Anthropic API call timed out | Yes — transient |
 | `anthropic.APIStatusError` | HTTP 4xx/5xx from Anthropic API | Depends on `status_code` |
-| `RuntimeError` | Kuzu database error | No — check pack integrity |
+| `RuntimeError` | LadybugDB database error | No — check pack integrity |
 | `RuntimeError` or `OSError` | Embedding model or vector index failure | No — check installation |
 
 ### Intentional degradation (no exception)

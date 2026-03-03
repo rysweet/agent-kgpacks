@@ -12,7 +12,7 @@ Demonstrates complete workflow of work queue management:
 import time
 from datetime import datetime
 
-import kuzu
+import real_ladybug as kuzu
 
 
 def demo_work_queue():

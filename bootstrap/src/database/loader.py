@@ -8,7 +8,7 @@ to load articles into Kuzu database.
 import logging
 from datetime import UTC, datetime
 
-import kuzu
+import real_ladybug as kuzu
 import numpy as np
 
 from ..embeddings import EmbeddingGenerator
@@ -37,11 +37,23 @@ class ArticleLoader:
         """
         self.db = kuzu.Database(db_path)
         self.conn = kuzu.Connection(self.db)
+        self._load_extensions()
 
         self.wikipedia_client = wikipedia_client or WikipediaAPIClient()
         self.embedding_generator = embedding_generator or EmbeddingGenerator()
 
         logger.info(f"ArticleLoader initialized with database: {db_path}")
+
+    def _load_extensions(self):
+        """Load required LadybugDB extensions."""
+        for ext in ("VECTOR", "FTS"):
+            try:
+                self.conn.execute(f"LOAD EXTENSION {ext};")
+            except Exception:
+                try:
+                    self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+                except Exception:
+                    pass
 
     def load_article(
         self,

@@ -37,7 +37,7 @@ def __init__(
 
 **Parameters:**
 
-- `conn` (kuzu.Connection, required): Kuzu database connection
+- `conn` (kuzu.Connection, required): LadybugDB database connection
 - `use_llm` (bool, default: True): Use LLM extraction (True) or heuristic extraction (False)
 - `max_entities` (int, default: 50): Maximum entities to extract per article
 - `extract_relationships` (bool, default: True): Extract relationships between entities
@@ -45,7 +45,7 @@ def __init__(
 **Example:**
 
 ```python
-import kuzu
+import real_ladybug as kuzu
 
 db = kuzu.Database("knowledge.db")
 conn = kuzu.Connection(db)
@@ -516,7 +516,7 @@ except openai.error.RateLimitError:
 # Database error
 try:
     processor.create_entity_node(entity, url)
-except kuzu.Exception as e:
+except kuzu.Exception as e:  # kuzu aliased from real_ladybug
     print(f"Database error: {e}")
 ```
 
@@ -541,7 +541,7 @@ def call_llm(prompt: str) -> str:
 ```python
 from backend.sources.web_content_source import WebContentSource
 from backend.kg_construction.article_processor import ArticleProcessor
-import kuzu
+import real_ladybug as kuzu
 
 # Setup
 db = kuzu.Database("azure_docs.db")

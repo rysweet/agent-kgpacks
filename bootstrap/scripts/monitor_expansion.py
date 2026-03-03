@@ -18,7 +18,7 @@ import sys
 import time
 from datetime import datetime
 
-import kuzu
+import real_ladybug as kuzu
 
 
 class ExpansionMonitor:

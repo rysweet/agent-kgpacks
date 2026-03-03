@@ -6,7 +6,7 @@ Provides semantic search, graph traversal, and hybrid queries.
 
 import logging
 
-import kuzu
+import real_ladybug as kuzu
 
 logger = logging.getLogger(__name__)
 
@@ -293,11 +293,19 @@ def hybrid_query(
 
 def main():
     """Test query functions"""
-    import kuzu
+    import real_ladybug as kuzu
 
     db_path = "data/test_loader.db"
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
+    for ext in ("VECTOR", "FTS"):
+        try:
+            conn.execute(f"LOAD EXTENSION {ext};")
+        except Exception:
+            try:
+                conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+            except Exception:
+                pass
 
     print("\n" + "=" * 60)
     print("Testing Semantic Search")

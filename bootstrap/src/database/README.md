@@ -1,6 +1,6 @@
 # Database Module
 
-Loads Wikipedia articles into the Kuzu graph database.
+Loads Wikipedia articles into the LadybugDB graph database.
 
 ## Public Interface
 
@@ -19,4 +19,4 @@ success, error = loader.load_article("Python (programming language)")
 
 - `bootstrap.src.wikipedia` (fetch and parse)
 - `bootstrap.src.embeddings` (generate vectors)
-- `kuzu` (database)
+- `real_ladybug` (aliased as `kuzu`) for LadybugDB database

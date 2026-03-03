@@ -25,7 +25,7 @@ Design Philosophy:
 import logging
 from typing import Any
 
-import kuzu
+import real_ladybug as kuzu
 
 logger = logging.getLogger(__name__)
 

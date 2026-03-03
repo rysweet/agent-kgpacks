@@ -1,87 +1,86 @@
 # OpenCypher Expert Knowledge Pack - Source URLs
-# Expert knowledge for writing efficient OpenCypher/Kuzu graph queries
+# Expert knowledge for writing efficient OpenCypher/LadybugDB graph queries
 # Total: 80+ URLs from official documentation, tutorials, and best practices
 
 # ============================================================================
-# KUZU DATABASE - OFFICIAL DOCUMENTATION (kuzudb.github.io/docs/)
-# Primary target: Kuzu-specific Cypher implementation
-# Note: docs.kuzudb.com is offline; using GitHub Pages mirror
+# LADYBUGDB - OFFICIAL DOCUMENTATION (docs.ladybugdb.com)
+# Primary target: LadybugDB-specific Cypher implementation (fork of Kuzu)
 # ============================================================================
 
-# Kuzu Cypher Overview & Getting Started
-https://kuzudb.github.io/docs/cypher/
-https://kuzudb.github.io/docs/get-started/
-https://kuzudb.github.io/docs/get-started/cypher-intro/
-https://kuzudb.github.io/docs/get-started/prepared-statements/
-https://kuzudb.github.io/docs/cypher/syntax/
+# LadybugDB Cypher Overview & Getting Started
+https://docs.ladybugdb.com/cypher/
+https://docs.ladybugdb.com/get-started/
+https://docs.ladybugdb.com/get-started/cypher-intro/
+https://docs.ladybugdb.com/get-started/prepared-statements/
+https://docs.ladybugdb.com/cypher/syntax/
 
-# Kuzu Tutorials
-https://kuzudb.github.io/docs/tutorials/cypher/
-https://kuzudb.github.io/docs/tutorials/python/
-https://kuzudb.github.io/docs/tutorials/example-database/
+# LadybugDB Tutorials
+https://docs.ladybugdb.com/tutorials/cypher/
+https://docs.ladybugdb.com/tutorials/python/
+https://docs.ladybugdb.com/tutorials/example-database/
 
-# Kuzu Query Clauses (Core)
-https://kuzudb.github.io/docs/cypher/query-clauses/
-https://kuzudb.github.io/docs/cypher/query-clauses/match/
-https://kuzudb.github.io/docs/cypher/query-clauses/optional-match/
-https://kuzudb.github.io/docs/cypher/query-clauses/example-database/
-https://kuzudb.github.io/docs/cypher/query-clauses/order-by/
-https://kuzudb.github.io/docs/cypher/query-clauses/skip/
-https://kuzudb.github.io/docs/cypher/query-clauses/limit/
-https://kuzudb.github.io/docs/cypher/query-clauses/union/
-https://kuzudb.github.io/docs/cypher/query-clauses/unwind/
+# LadybugDB Query Clauses (Core)
+https://docs.ladybugdb.com/cypher/query-clauses/
+https://docs.ladybugdb.com/cypher/query-clauses/match/
+https://docs.ladybugdb.com/cypher/query-clauses/optional-match/
+https://docs.ladybugdb.com/cypher/query-clauses/example-database/
+https://docs.ladybugdb.com/cypher/query-clauses/order-by/
+https://docs.ladybugdb.com/cypher/query-clauses/skip/
+https://docs.ladybugdb.com/cypher/query-clauses/limit/
+https://docs.ladybugdb.com/cypher/query-clauses/union/
+https://docs.ladybugdb.com/cypher/query-clauses/unwind/
 
-# Kuzu Data Definition (DDL)
-https://kuzudb.github.io/docs/cypher/data-definition/
-https://kuzudb.github.io/docs/cypher/data-definition/create-table/
+# LadybugDB Data Definition (DDL)
+https://docs.ladybugdb.com/cypher/data-definition/
+https://docs.ladybugdb.com/cypher/data-definition/create-table/
 
-# Kuzu Data Manipulation (DML)
-https://kuzudb.github.io/docs/cypher/data-manipulation-clauses/create/
-https://kuzudb.github.io/docs/cypher/data-manipulation-clauses/merge/
-https://kuzudb.github.io/docs/cypher/data-manipulation-clauses/set/
-https://kuzudb.github.io/docs/cypher/data-manipulation-clauses/delete/
+# LadybugDB Data Manipulation (DML)
+https://docs.ladybugdb.com/cypher/data-manipulation-clauses/create/
+https://docs.ladybugdb.com/cypher/data-manipulation-clauses/merge/
+https://docs.ladybugdb.com/cypher/data-manipulation-clauses/set/
+https://docs.ladybugdb.com/cypher/data-manipulation-clauses/delete/
 
-# Kuzu Data Types
-https://kuzudb.github.io/docs/cypher/data-types/
-https://kuzudb.github.io/docs/cypher/data-types/list-and-array/
+# LadybugDB Data Types
+https://docs.ladybugdb.com/cypher/data-types/
+https://docs.ladybugdb.com/cypher/data-types/list-and-array/
 
-# Kuzu Functions & Expressions
-https://kuzudb.github.io/docs/cypher/expressions/
-https://kuzudb.github.io/docs/cypher/expressions/text-functions/
-https://kuzudb.github.io/docs/cypher/expressions/pattern-matching/
-https://kuzudb.github.io/docs/cypher/expressions/list-functions/
-https://kuzudb.github.io/docs/cypher/expressions/array-functions/
-https://kuzudb.github.io/docs/cypher/expressions/utility-functions/
-https://kuzudb.github.io/docs/cypher/expressions/aggregate-functions/
-https://kuzudb.github.io/docs/cypher/expressions/node-rel-functions/
+# LadybugDB Functions & Expressions
+https://docs.ladybugdb.com/cypher/expressions/
+https://docs.ladybugdb.com/cypher/expressions/text-functions/
+https://docs.ladybugdb.com/cypher/expressions/pattern-matching/
+https://docs.ladybugdb.com/cypher/expressions/list-functions/
+https://docs.ladybugdb.com/cypher/expressions/array-functions/
+https://docs.ladybugdb.com/cypher/expressions/utility-functions/
+https://docs.ladybugdb.com/cypher/expressions/aggregate-functions/
+https://docs.ladybugdb.com/cypher/expressions/node-rel-functions/
 
-# Kuzu Subqueries
-https://kuzudb.github.io/docs/cypher/subquery/
+# LadybugDB Subqueries
+https://docs.ladybugdb.com/cypher/subquery/
 
-# Kuzu Import/Export
-https://kuzudb.github.io/docs/import/
-https://kuzudb.github.io/docs/import/csv/
-https://kuzudb.github.io/docs/import/parquet/
-https://kuzudb.github.io/docs/import/copy-from-subquery/
-https://kuzudb.github.io/docs/export/csv/
-https://kuzudb.github.io/docs/export/parquet/
-https://kuzudb.github.io/docs/migrate/
+# LadybugDB Import/Export
+https://docs.ladybugdb.com/import/
+https://docs.ladybugdb.com/import/csv/
+https://docs.ladybugdb.com/import/parquet/
+https://docs.ladybugdb.com/import/copy-from-subquery/
+https://docs.ladybugdb.com/export/csv/
+https://docs.ladybugdb.com/export/parquet/
+https://docs.ladybugdb.com/migrate/
 
-# Kuzu Extensions (Vector, FTS, Algorithms)
-https://kuzudb.github.io/docs/extensions/
-https://kuzudb.github.io/docs/extensions/vector/
-https://kuzudb.github.io/docs/extensions/full-text-search/
-https://kuzudb.github.io/docs/extensions/algo/
-https://kuzudb.github.io/docs/get-started/graph-algorithms/
+# LadybugDB Extensions (Vector, FTS, Algorithms)
+https://docs.ladybugdb.com/extensions/
+https://docs.ladybugdb.com/extensions/vector/
+https://docs.ladybugdb.com/extensions/full-text-search/
+https://docs.ladybugdb.com/extensions/algo/
+https://docs.ladybugdb.com/get-started/graph-algorithms/
 
-# Kuzu Attach External Databases
-https://kuzudb.github.io/docs/cypher/attach/
+# LadybugDB Attach External Databases
+https://docs.ladybugdb.com/cypher/attach/
 
-# Kuzu Client APIs
-https://kuzudb.github.io/docs/client-apis/python/
+# LadybugDB Client APIs
+https://docs.ladybugdb.com/client-apis/python/
 
-# Kuzu API Reference
-https://kuzudb.github.io/api-docs/python/kuzu.html
+# LadybugDB API Reference
+https://docs.ladybugdb.com/api-docs/python/
 
 # ============================================================================
 # OPENCYPHER SPECIFICATION (opencypher.org)
@@ -148,5 +147,5 @@ https://moldstud.com/articles/p-how-to-write-efficient-cypher-queries-in-graph-d
 # GraphAcademy
 https://graphacademy.neo4j.com/courses/cypher-aggregation/
 
-# Kuzu GitHub Demo Repository
-https://github.com/kuzudb/graphdb-demo
+# LadybugDB GitHub Repository
+https://github.com/LadybugDB/ladybug

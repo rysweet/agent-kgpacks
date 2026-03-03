@@ -16,7 +16,7 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import kuzu
+import real_ladybug as kuzu
 
 from .link_discovery import LinkDiscovery
 from .processor import ArticleProcessor
@@ -55,6 +55,7 @@ class RyuGraphOrchestrator:
         # Initialize database connection
         self.db = kuzu.Database(db_path)
         self.conn = kuzu.Connection(self.db)
+        self._load_extensions()
 
         # Initialize components (used for seeds, stats, and single-worker mode)
         self.work_queue = WorkQueueManager(self.conn)
@@ -69,6 +70,17 @@ class RyuGraphOrchestrator:
         logger.info(f"  Max depth: {max_depth}")
         logger.info(f"  Batch size: {batch_size}")
         logger.info(f"  Workers: {self.num_workers}")
+
+    def _load_extensions(self):
+        """Load required LadybugDB extensions."""
+        for ext in ("VECTOR", "FTS"):
+            try:
+                self.conn.execute(f"LOAD EXTENSION {ext};")
+            except Exception:
+                try:
+                    self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+                except Exception:
+                    pass
 
     def close(self):
         """Release database resources."""
