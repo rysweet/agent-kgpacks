@@ -298,6 +298,14 @@ def main():
     db_path = "data/test_loader.db"
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
+    for ext in ("VECTOR", "FTS"):
+        try:
+            conn.execute(f"LOAD EXTENSION {ext};")
+        except Exception:
+            try:
+                conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+            except Exception:
+                pass
 
     print("\n" + "=" * 60)
     print("Testing Semantic Search")

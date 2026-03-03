@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 """
-Build WebAssembly Components Knowledge Pack from URLs.
+Build LadybugDB Expert Knowledge Pack from URLs.
 
-This script reads WASM Component Model documentation URLs from urls.txt
-and builds a complete knowledge graph with LLM-based extraction using the
-web content pipeline.
+Reads LadybugDB documentation URLs from urls.txt and builds a complete
+knowledge graph with LLM-based extraction using the web content pipeline.
 
-Expected runtime: 2-4 hours (45 URLs with LLM extraction)
+LadybugDB is the active community fork of the archived Kuzu graph database.
+This pack covers: Python SDK, Cypher dialect, vector search, extensions,
+import/export, graph algorithms, and migration from Kuzu.
+
+Expected runtime: 2-4 hours (~65 URLs with LLM extraction)
 Estimated cost: ~$5-10 (Haiku at ~$0.25/1M input tokens)
 
 Usage:
-    python scripts/build_wasm_components_pack.py [--test-mode]
+    python scripts/build_ladybugdb_expert_pack.py [--test-mode]
 
-Options:
-    --test-mode     Build a small 5-URL pack for testing (5-10 minutes)
+Note:
+    This script follows the same pattern as build_anthropic_api_expert_pack.py
+    and uses WebContentSource for fetching documentation from docs.ladybugdb.com.
 """
 
 import argparse
@@ -39,81 +43,64 @@ from bootstrap.src.extraction.llm_extractor import get_extractor  # noqa: E402
 from bootstrap.src.sources.web import WebContentSource  # noqa: E402
 from wikigr.packs.utils import load_urls  # noqa: E402
 
-PACK_DIR = Path("data/packs/wasm-components")
+PACK_NAME = "ladybugdb-expert"
+PACK_DIR = Path(f"data/packs/{PACK_NAME}")
 URLS_FILE = PACK_DIR / "urls.txt"
 DB_PATH = PACK_DIR / "pack.db"
 MANIFEST_PATH = PACK_DIR / "manifest.json"
+CATEGORY = "LadybugDB"
+DOMAIN = "ladybugdb"
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("logs/build_wasm_components_pack.log"),
+        logging.FileHandler(f"logs/build_{PACK_NAME.replace('-', '_')}_pack.log"),
     ],
 )
 logger = logging.getLogger(__name__)
 
 
-def process_url(
-    url: str,
-    conn: kuzu.Connection,
-    web_source: WebContentSource,
-    embedder: EmbeddingGenerator,
-    extractor,
-) -> bool:
-    """Process a single URL: fetch, extract knowledge, store in graph."""
+def process_url(url, conn, web_source, embedder, extractor) -> bool:
     try:
         article = web_source.fetch_article(url)
         if not article or not article.content:
             logger.warning(f"No content for {url}")
             return False
-
         title = article.title
-
         result = conn.execute(
-            "MATCH (a:Article {title: $title}) RETURN a.title AS title",
-            {"title": title},
+            "MATCH (a:Article {title: $title}) RETURN a.title AS title", {"title": title}
         )
         if not result.get_as_df().empty:
             logger.info(f"Skipping {title!r} (already exists)")
             return True
-
         sections = web_source.parse_sections(article.content)
         if not sections:
             sections = [{"title": "Overview", "content": article.content, "level": 1}]
-
         extraction = extractor.extract_from_article(
-            title=title,
-            sections=sections,
-            max_sections=5,
-            domain="wasm_components",
+            title=title, sections=sections, max_sections=5, domain=DOMAIN
         )
-
         word_count = sum(len(s["content"].split()) for s in sections)
         conn.execute(
             "CREATE (a:Article {title: $title, category: $category, word_count: $wc})",
-            {"title": title, "category": "WebAssembly Components", "wc": word_count},
+            {"title": title, "category": CATEGORY, "wc": word_count},
         )
-
         for entity in extraction.entities:
             conn.execute(
-                "MERGE (e:Entity {entity_id: $entity_id}) "
-                "ON CREATE SET e.name = $name, e.type = $type",
-                {"entity_id": entity.name, "name": entity.name, "type": entity.type},
+                "MERGE (e:Entity {entity_id: $eid}) ON CREATE SET e.name = $name, e.type = $type",
+                {"eid": entity.name, "name": entity.name, "type": entity.type},
             )
             conn.execute(
-                "MATCH (a:Article {title: $title}), (e:Entity {entity_id: $entity_id}) "
+                "MATCH (a:Article {title: $title}), (e:Entity {entity_id: $eid}) "
                 "MERGE (a)-[:HAS_ENTITY]->(e)",
-                {"title": title, "entity_id": entity.name},
+                {"title": title, "eid": entity.name},
             )
-
         for rel in extraction.relationships:
-            for entity_id in (rel.source, rel.target):
+            for eid in (rel.source, rel.target):
                 conn.execute(
-                    "MERGE (e:Entity {entity_id: $entity_id}) "
-                    "ON CREATE SET e.name = $entity_id, e.type = 'concept'",
-                    {"entity_id": entity_id},
+                    "MERGE (e:Entity {entity_id: $eid}) ON CREATE SET e.name = $eid, e.type = 'concept'",
+                    {"eid": eid},
                 )
             conn.execute(
                 "MATCH (s:Entity {entity_id: $source}), (t:Entity {entity_id: $target}) "
@@ -125,96 +112,80 @@ def process_url(
                     "ctx": rel.context,
                 },
             )
-
         for idx, fact in enumerate(extraction.key_facts):
-            fact_id = f"{title}:fact:{idx}"
             conn.execute(
                 "MATCH (a:Article {title: $title}) "
-                "CREATE (a)-[:HAS_FACT]->(f:Fact {fact_id: $fact_id, content: $content})",
-                {"title": title, "fact_id": fact_id, "content": fact},
+                "CREATE (a)-[:HAS_FACT]->(f:Fact {fact_id: $fid, content: $content})",
+                {"title": title, "fid": f"{title}:fact:{idx}", "content": fact},
             )
-
         for idx, section in enumerate(sections[:3]):
-            section_id = f"{title}#{idx}"
+            sid = f"{title}#{idx}"
             content = section["content"]
             embedding = embedder.generate([content])[0].tolist()
             conn.execute(
                 "MATCH (a:Article {title: $title}) "
                 "CREATE (a)-[:HAS_SECTION {section_index: $idx}]->"
                 "(s:Section {section_id: $sid, content: $content, embedding: $emb})",
-                {
-                    "title": title,
-                    "idx": idx,
-                    "sid": section_id,
-                    "content": content,
-                    "emb": embedding,
-                },
+                {"title": title, "idx": idx, "sid": sid, "content": content, "emb": embedding},
             )
-
         logger.info(f"Processed {url!r} -> {title!r}")
         return True
-
     except (requests.RequestException, json.JSONDecodeError) as e:
         logger.error(f"Failed to process {url}: {e}")
         return False
+    except Exception as e:
+        logger.warning(f"Skipping {url}: {e}")
+        return False
 
 
-def create_manifest(
-    db_path: Path,
-    manifest_path: Path,
-    articles_count: int,
-    entities_count: int,
-    relationships_count: int,
-) -> None:
-    """Create pack manifest JSON file."""
+def create_manifest(db_path, manifest_path, articles, entities, relationships):
     size_mb = db_path.stat().st_size / (1024 * 1024) if db_path.exists() else 0
-
     manifest = {
-        "name": "wasm-components",
+        "name": PACK_NAME,
         "version": "1.0.0",
         "description": (
-            "Expert knowledge of the WebAssembly Component Model, WASI P2, "
-            "WIT interface definitions, wit-bindgen, guest/host interfaces, "
-            "and wasmtime runtime embedding."
+            "Comprehensive knowledge of LadybugDB, the active community fork of the archived "
+            "Kuzu graph database. Covers the Python SDK (real_ladybug package), Cypher query "
+            "language, vector search extensions, full-text search, graph algorithms, "
+            "import/export, and migration from Kuzu."
         ),
         "graph_stats": {
-            "articles": int(articles_count),
-            "entities": int(entities_count),
-            "relationships": int(relationships_count),
+            "articles": int(articles),
+            "entities": int(entities),
+            "relationships": int(relationships),
             "size_mb": round(size_mb, 2),
         },
-        "eval_scores": {
-            "accuracy": 0.0,
-            "hallucination_rate": 0.0,
-            "citation_quality": 0.0,
-        },
+        "eval_scores": {"accuracy": 0.0, "hallucination_rate": 0.0, "citation_quality": 0.0},
+        "tags": [
+            "ladybugdb",
+            "graph-database",
+            "cypher",
+            "vector-search",
+            "python-sdk",
+            "embedded-database",
+        ],
         "source_urls": [
-            "https://component-model.bytecodealliance.org/",
-            "https://docs.wasmtime.dev/examples-wasip2.html",
-            "https://github.com/bytecodealliance/wit-bindgen",
+            "https://docs.ladybugdb.com/",
+            "https://docs.ladybugdb.com/client-apis/python/",
+            "https://docs.ladybugdb.com/extensions/vector/",
+            "https://github.com/LadybugDB/ladybug",
         ],
         "created": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "license": "MIT",
     }
-
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
         f.write("\n")
-
     logger.info(f"Manifest saved to {manifest_path}")
 
 
-def build_pack(test_mode: bool = False) -> None:
-    """Build the WebAssembly Components knowledge pack."""
+def build_pack(test_mode=False):
     limit = 5 if test_mode else None
     urls = load_urls(URLS_FILE, limit=limit)
-
     if test_mode:
         logger.info("TEST MODE: Building 5-URL pack")
-
     if DB_PATH.exists():
         if test_mode:
-            logger.info(f"Auto-deleting existing database (test mode): {DB_PATH}")
             import shutil
 
             shutil.rmtree(DB_PATH) if DB_PATH.is_dir() else DB_PATH.unlink()
@@ -222,70 +193,45 @@ def build_pack(test_mode: bool = False) -> None:
             logger.warning(f"Database already exists: {DB_PATH}")
             response = input("Delete and rebuild? (y/N): ")
             if response.lower() != "y":
-                logger.info("Aborted")
                 return
             import shutil
 
             shutil.rmtree(DB_PATH) if DB_PATH.is_dir() else DB_PATH.unlink()
-
-    logger.info(f"Creating database: {DB_PATH}")
     create_schema(str(DB_PATH), drop_existing=True)
     db = kuzu.Database(str(DB_PATH))
     conn = kuzu.Connection(db)
     load_extensions(conn)
-
     web_source = WebContentSource()
     embedder = EmbeddingGenerator()
     extractor = get_extractor()
-
-    successful = 0
-    failed = 0
-
+    successful, failed = 0, 0
     for i, url in enumerate(urls, 1):
         logger.info(f"Processing {i}/{len(urls)}: {url}")
         if process_url(url, conn, web_source, embedder, extractor):
             successful += 1
         else:
             failed += 1
-
-    articles_count = (
-        conn.execute("MATCH (a:Article) RETURN count(a) AS count").get_as_df().iloc[0]["count"]
-    )
-    entities_count = (
-        conn.execute("MATCH (e:Entity) RETURN count(e) AS count").get_as_df().iloc[0]["count"]
-    )
-    relationships_count = (
-        conn.execute("MATCH ()-[r:ENTITY_RELATION]->() RETURN count(r) AS count")
+    a = conn.execute("MATCH (a:Article) RETURN count(a) AS c").get_as_df().iloc[0]["c"]
+    e = conn.execute("MATCH (e:Entity) RETURN count(e) AS c").get_as_df().iloc[0]["c"]
+    r = (
+        conn.execute("MATCH ()-[r:ENTITY_RELATION]->() RETURN count(r) AS c")
         .get_as_df()
-        .iloc[0]["count"]
+        .iloc[0]["c"]
     )
-
     logger.info(f"Build complete: {successful} successful, {failed} failed")
-    logger.info(
-        f"Final stats: {articles_count} articles, {entities_count} entities, "
-        f"{relationships_count} relationships"
-    )
-
-    create_manifest(DB_PATH, MANIFEST_PATH, articles_count, entities_count, relationships_count)
-    logger.info("WebAssembly Components Pack build complete!")
+    logger.info(f"Final stats: {a} articles, {e} entities, {r} relationships")
+    create_manifest(DB_PATH, MANIFEST_PATH, a, e, r)
 
 
 def main():
-    """Main entry point."""
-    parser = argparse.ArgumentParser(description="Build WebAssembly Components Knowledge Pack")
-    parser.add_argument(
-        "--test-mode",
-        action="store_true",
-        help="Build a small 5-URL pack for testing",
-    )
+    parser = argparse.ArgumentParser(description=f"Build {PACK_NAME} Knowledge Pack")
+    parser.add_argument("--test-mode", action="store_true", help="Build 5-URL pack for testing")
     args = parser.parse_args()
-
     Path("logs").mkdir(exist_ok=True)
-
     try:
         build_pack(test_mode=args.test_mode)
     except KeyboardInterrupt:
-        logger.info("Build interrupted by user")
+        logger.info("Build interrupted")
         sys.exit(1)
     except Exception as e:
         logger.error(f"Build failed: {e}", exc_info=True)

@@ -216,6 +216,7 @@ class KnowledgeGraphAgent:
         """
         self.db = kuzu.Database(db_path, read_only=read_only)
         self.conn = kuzu.Connection(self.db)
+        self._load_extensions()
         self.claude = Anthropic(api_key=anthropic_api_key)
         self.synthesis_model = synthesis_model or self.DEFAULT_MODEL
         self._embedding_generator = None
@@ -292,6 +293,17 @@ class KnowledgeGraphAgent:
         logger.info(
             f"KnowledgeGraphAgent initialized with db: {db_path} (read_only={read_only}, use_enhancements={use_enhancements})"
         )
+
+    def _load_extensions(self):
+        """Load required LadybugDB extensions."""
+        for ext in ("VECTOR", "FTS"):
+            try:
+                self.conn.execute(f"LOAD EXTENSION {ext};")
+            except Exception:
+                try:
+                    self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+                except Exception:
+                    pass
 
     @staticmethod
     def _resolve_few_shot_path(few_shot_path: str | None, db_path: str) -> str | None:

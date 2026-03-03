@@ -1,0 +1,112 @@
+# LadybugDB Expert Knowledge Pack - Source URLs
+# Comprehensive knowledge of LadybugDB (community fork of Kuzu)
+# Covers: Python SDK, Cypher dialect, vector search, extensions, migration from Kuzu
+
+# ============================================================================
+# LADYBUGDB DOCUMENTATION - GETTING STARTED (docs.ladybugdb.com)
+# ============================================================================
+
+# Getting Started
+https://docs.ladybugdb.com/get-started/
+https://docs.ladybugdb.com/get-started/cypher-intro/
+https://docs.ladybugdb.com/get-started/prepared-statements/
+https://docs.ladybugdb.com/get-started/scan/
+https://docs.ladybugdb.com/get-started/graph-algorithms/
+
+# ============================================================================
+# CYPHER MANUAL - Query Language Reference
+# ============================================================================
+
+# Cypher Overview & Syntax
+https://docs.ladybugdb.com/cypher/
+https://docs.ladybugdb.com/cypher/syntax/
+
+# Data Types
+https://docs.ladybugdb.com/cypher/data-types/
+https://docs.ladybugdb.com/cypher/data-types/list-and-array/
+
+# Query Clauses
+https://docs.ladybugdb.com/cypher/query-clauses/
+https://docs.ladybugdb.com/cypher/query-clauses/match/
+https://docs.ladybugdb.com/cypher/query-clauses/optional-match/
+https://docs.ladybugdb.com/cypher/query-clauses/example-database/
+https://docs.ladybugdb.com/cypher/query-clauses/order-by/
+https://docs.ladybugdb.com/cypher/query-clauses/skip/
+https://docs.ladybugdb.com/cypher/query-clauses/limit/
+https://docs.ladybugdb.com/cypher/query-clauses/union/
+https://docs.ladybugdb.com/cypher/query-clauses/unwind/
+
+# Data Definition (DDL)
+https://docs.ladybugdb.com/cypher/data-definition/
+https://docs.ladybugdb.com/cypher/data-definition/create-table/
+
+# Data Manipulation (DML)
+https://docs.ladybugdb.com/cypher/data-manipulation-clauses/create/
+https://docs.ladybugdb.com/cypher/data-manipulation-clauses/merge/
+https://docs.ladybugdb.com/cypher/data-manipulation-clauses/set/
+https://docs.ladybugdb.com/cypher/data-manipulation-clauses/delete/
+
+# Functions & Expressions
+https://docs.ladybugdb.com/cypher/expressions/
+https://docs.ladybugdb.com/cypher/expressions/text-functions/
+https://docs.ladybugdb.com/cypher/expressions/pattern-matching/
+https://docs.ladybugdb.com/cypher/expressions/list-functions/
+https://docs.ladybugdb.com/cypher/expressions/array-functions/
+https://docs.ladybugdb.com/cypher/expressions/utility-functions/
+https://docs.ladybugdb.com/cypher/expressions/aggregate-functions/
+https://docs.ladybugdb.com/cypher/expressions/node-rel-functions/
+
+# Subqueries
+https://docs.ladybugdb.com/cypher/subquery/
+
+# Attach External Databases
+https://docs.ladybugdb.com/cypher/attach/
+
+# ============================================================================
+# CLIENT APIs - Python SDK (primary)
+# ============================================================================
+
+https://docs.ladybugdb.com/client-apis/python/
+https://docs.ladybugdb.com/client-apis/nodejs/
+https://docs.ladybugdb.com/client-apis/java/
+https://docs.ladybugdb.com/client-apis/rust/
+
+# ============================================================================
+# IMPORT / EXPORT
+# ============================================================================
+
+https://docs.ladybugdb.com/import/
+https://docs.ladybugdb.com/import/csv/
+https://docs.ladybugdb.com/import/parquet/
+https://docs.ladybugdb.com/import/copy-from-subquery/
+https://docs.ladybugdb.com/export/
+https://docs.ladybugdb.com/export/csv/
+https://docs.ladybugdb.com/export/parquet/
+https://docs.ladybugdb.com/migrate/
+
+# ============================================================================
+# EXTENSIONS - Vector Search, FTS, Graph Algorithms
+# ============================================================================
+
+https://docs.ladybugdb.com/extensions/
+https://docs.ladybugdb.com/extensions/vector/
+https://docs.ladybugdb.com/extensions/full-text-search/
+https://docs.ladybugdb.com/extensions/algo/
+https://docs.ladybugdb.com/extensions/algo/pagerank/
+https://docs.ladybugdb.com/extensions/algo/path/
+
+# ============================================================================
+# TUTORIALS
+# ============================================================================
+
+https://docs.ladybugdb.com/tutorials/
+https://docs.ladybugdb.com/tutorials/cypher/
+https://docs.ladybugdb.com/tutorials/python/
+https://docs.ladybugdb.com/tutorials/example-database/
+
+# ============================================================================
+# GITHUB - Source Code & Release Notes
+# ============================================================================
+
+https://github.com/LadybugDB/ladybug
+https://github.com/LadybugDB/ladybug/releases

@@ -2,7 +2,7 @@
 """
 WikiGR Database Schema
 
-Creates the complete Kuzu schema for Wikipedia knowledge graph:
+Creates the complete LadybugDB schema for Wikipedia knowledge graph:
 - Article nodes
 - Section nodes
 - Category nodes
@@ -20,12 +20,24 @@ from pathlib import Path
 import real_ladybug as kuzu
 
 
+def load_extensions(conn) -> None:
+    """Load required LadybugDB extensions (vector, fts) on a connection."""
+    for ext in ("VECTOR", "FTS"):
+        try:
+            conn.execute(f"LOAD EXTENSION {ext};")
+        except Exception:
+            try:
+                conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+            except Exception:
+                pass
+
+
 def create_schema(db_path: str, drop_existing: bool = False):
     """
-    Create complete Kuzu schema for WikiGR
+    Create complete LadybugDB schema for WikiGR
 
     Args:
-        db_path: Path to Kuzu database
+        db_path: Path to LadybugDB database
         drop_existing: If True, drop existing tables first
     """
     print("=" * 60)
@@ -275,6 +287,19 @@ def create_schema(db_path: str, drop_existing: bool = False):
     except Exception as e:
         print(f"   ❌ Failed to create HAS_CHUNK relationship: {e}")
         sys.exit(1)
+
+    # Install and load required extensions (needed for LadybugDB 0.15+)
+    print("\n6i. Loading extensions (vector, fts)...")
+    try:
+        conn.execute("INSTALL VECTOR; LOAD EXTENSION VECTOR;")
+        print("   ✅ VECTOR extension loaded")
+    except Exception as e:
+        print(f"   ⚠️  VECTOR extension load: {e}")
+    try:
+        conn.execute("INSTALL FTS; LOAD EXTENSION FTS;")
+        print("   ✅ FTS extension loaded")
+    except Exception as e:
+        print(f"   ⚠️  FTS extension load: {e}")
 
     # Create vector index
     print("\n7. Creating HNSW vector index on Section.embedding...")

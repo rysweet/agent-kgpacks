@@ -31,6 +31,18 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
+def _load_db_extensions(conn) -> None:
+    """Load required LadybugDB extensions (vector, fts) on a connection."""
+    for ext in ("VECTOR", "FTS"):
+        try:
+            conn.execute(f"LOAD EXTENSION {ext};")
+        except Exception:
+            try:
+                conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+            except Exception:
+                pass
+
+
 def parse_topics_file(path: str) -> list[str]:
     """Parse a topics file into a list of topic strings.
 
@@ -176,6 +188,7 @@ def _create_from_urls(args: argparse.Namespace) -> None:
 
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
+    _load_db_extensions(conn)
 
     # Initialize LLM extractor if ANTHROPIC_API_KEY is set
     llm_extractor = None
@@ -349,6 +362,7 @@ def _update_from_urls(args: argparse.Namespace) -> None:
 
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
+    _load_db_extensions(conn)
 
     # Initialize LLM extractor if ANTHROPIC_API_KEY is set
     llm_extractor = None
@@ -461,6 +475,7 @@ def _get_db_stats(db_path: str) -> dict:
 
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
+    _load_db_extensions(conn)
 
     # Article counts by expansion state
     result = conn.execute("""
@@ -543,6 +558,7 @@ def cmd_update(args: argparse.Namespace) -> None:
 
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
+    _load_db_extensions(conn)
     result = conn.execute("MATCH (a:Article) WHERE a.word_count > 0 RETURN COUNT(a) AS count")
     current = int(result.get_as_df().iloc[0]["count"])
 
@@ -916,6 +932,7 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
         wiki_client = WikipediaAPIClient()
         db = kuzu.Database(str(db_path))
         conn = kuzu.Connection(db)
+        _load_db_extensions(conn)
 
         # Get all articles without entities
         result = conn.execute("MATCH (a:Article) RETURN a.title AS title")
@@ -990,6 +1007,7 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
 
     db_for_stats = kuzu.Database(str(db_path))
     conn_stats = kuzu.Connection(db_for_stats)
+    _load_db_extensions(conn_stats)
 
     article_count = (
         conn_stats.execute("MATCH (a:Article) RETURN count(a) AS count")

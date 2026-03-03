@@ -1,5 +1,5 @@
 """
-Kuzu database connection management.
+LadybugDB database connection management.
 
 Provides singleton connection manager with dependency injection for FastAPI.
 """
@@ -68,20 +68,34 @@ class ConnectionManager:
 
     def get_connection(self) -> kuzu.Connection:
         """
-        Create a new Kuzu connection for each request.
+        Create a new LadybugDB connection for each request.
 
         Returns:
-            Fresh Kuzu Connection instance
+            Fresh LadybugDB Connection instance with extensions loaded
         """
         database = self._get_database()
-        logger.debug("Creating new Kuzu connection for request")
-        return kuzu.Connection(database)
+        logger.debug("Creating new LadybugDB connection for request")
+        conn = kuzu.Connection(database)
+        _load_extensions(conn)
+        return conn
 
     def close(self):
         """Close database (release Database instance)."""
         if self._database is not None:
             self._database = None
             logger.info("Closed Kuzu database")
+
+
+def _load_extensions(conn: kuzu.Connection) -> None:
+    """Load required LadybugDB extensions (vector, fts) on a connection."""
+    for ext in ("VECTOR", "FTS"):
+        try:
+            conn.execute(f"LOAD EXTENSION {ext};")
+        except Exception:
+            try:
+                conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+            except Exception:
+                pass
 
 
 # Global connection manager instance
