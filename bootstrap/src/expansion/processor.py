@@ -13,7 +13,7 @@ Integrates all modules to process a single article:
 import logging
 from datetime import UTC
 
-import kuzu
+import real_ladybug as kuzu
 import numpy as np
 
 from ..embeddings import EmbeddingGenerator

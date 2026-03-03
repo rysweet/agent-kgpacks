@@ -158,7 +158,7 @@ def _create_from_urls(args: argparse.Namespace) -> None:
 
     print(f"Building knowledge graph from {len(urls)} seed URLs...")
 
-    import kuzu
+    import real_ladybug as kuzu
 
     from bootstrap.src.expansion.processor import ArticleProcessor
     from bootstrap.src.sources.web import WebContentSource
@@ -335,7 +335,7 @@ def _update_from_urls(args: argparse.Namespace) -> None:
 
     print(f"Updating database with {len(urls)} seed URLs...")
 
-    import kuzu
+    import real_ladybug as kuzu
 
     from bootstrap.src.expansion.processor import ArticleProcessor
     from bootstrap.src.sources.web import WebContentSource
@@ -457,7 +457,7 @@ def _get_db_stats(db_path: str) -> dict:
     Returns a dict with keys: loaded, discovered, claimed, processed,
     failed, total_articles, sections, edges.
     """
-    import kuzu
+    import real_ladybug as kuzu
 
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
@@ -539,7 +539,7 @@ def cmd_update(args: argparse.Namespace) -> None:
         return
 
     # Wikipedia source mode (original logic)
-    import kuzu
+    import real_ladybug as kuzu
 
     db = kuzu.Database(db_path)
     conn = kuzu.Connection(db)
@@ -906,7 +906,7 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
     # Run LLM extraction if API key is available
     if os.getenv("ANTHROPIC_API_KEY"):
         print("\nRunning LLM knowledge extraction...")
-        import kuzu
+        import real_ladybug as kuzu
 
         from bootstrap.src.extraction.llm_extractor import get_extractor
         from bootstrap.src.wikipedia.api_client import WikipediaAPIClient
@@ -986,7 +986,7 @@ def cmd_pack_create(args: argparse.Namespace) -> None:
         print("\nSkipping LLM extraction (ANTHROPIC_API_KEY not set)")
 
     # Get database stats (now accurate with entities/relationships)
-    import kuzu
+    import real_ladybug as kuzu
 
     db_for_stats = kuzu.Database(str(db_path))
     conn_stats = kuzu.Connection(db_for_stats)

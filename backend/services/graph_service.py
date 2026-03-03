@@ -7,7 +7,7 @@ Handles graph traversal and node/edge construction.
 import logging
 import time
 
-import kuzu
+import real_ladybug as kuzu
 
 from backend.models.graph import Edge, GraphResponse, Node
 from backend.services.summary_utils import get_article_summaries

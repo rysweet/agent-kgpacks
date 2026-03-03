@@ -36,7 +36,7 @@ KnowledgeGraphAgent(
 ```
 
 **Parameters**:
-- `db_path` (str): Path to Kuzu database file
+- `db_path` (str): Path to LadybugDB database file
 - `anthropic_api_key` (str, optional): Anthropic API key (or from `ANTHROPIC_API_KEY` env var)
 - `read_only` (bool): Open database in read-only mode (default: `True`)
 - `use_enhancements` (bool): Master switch — enables all Phase 1 enhancement modules (default: `True`)
@@ -117,7 +117,7 @@ reranker = GraphReranker(
 ```
 
 **Parameters**:
-- `conn` (kuzu.Connection): Kuzu database connection
+- `conn` (kuzu.Connection): LadybugDB database connection
 - `alpha` (float): Weight for vector similarity score (default: 0.7)
 - `beta` (float): Weight for PageRank score (default: 0.3)
 - `cache_ttl` (int): PageRank cache TTL in seconds (default: 3600)
@@ -188,7 +188,7 @@ pagerank = reranker.compute_pagerank()
 ```
 
 **Implementation Details**:
-- Uses LINKS_TO edges from Kuzu graph
+- Uses LINKS_TO edges from LadybugDB graph
 - PageRank cached after first computation (cache cleared every `cache_ttl` seconds)
 - Cypher query: `MATCH (a:Article)-[:LINKS_TO]->(b:Article) RETURN a.title, b.title`
 
@@ -210,7 +210,7 @@ synthesizer = MultiDocSynthesizer(
 ```
 
 **Parameters**:
-- `conn` (kuzu.Connection): Kuzu database connection
+- `conn` (kuzu.Connection): LadybugDB database connection
 - `num_docs` (int): Number of articles to retrieve (default: 5)
 - `max_sections` (int): Max sections per article (default: 3)
 - `min_relevance` (float): Minimum similarity threshold (default: 0.7)
@@ -654,7 +654,7 @@ manager = FewShotManager(pack_dir="nonexistent/")
 reranker = GraphReranker(conn, alpha=0.5, beta=0.6)
 # ValueError: alpha + beta must equal 1.0
 
-# RuntimeError (Kuzu errors)
+# RuntimeError (LadybugDB errors)
 context = synthesizer.retrieve(question="test", embedding_generator=None)
 # RuntimeError: Connection error or query execution failure
 ```
@@ -680,7 +680,7 @@ Test each enhancement module independently:
 from wikigr.agent.reranker import GraphReranker
 
 def test_reranker():
-    conn = kuzu.Connection(kuzu.Database("test.db"))
+    conn = kuzu.Connection(kuzu.Database("test.db"))  # kuzu aliased from real_ladybug
     reranker = GraphReranker(conn)
 
     results = [
@@ -696,7 +696,7 @@ def test_reranker():
 from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
 
 def test_synthesizer():
-    conn = kuzu.Connection(kuzu.Database("test.db"))
+    conn = kuzu.Connection(kuzu.Database("test.db"))  # kuzu aliased from real_ladybug
     synthesizer = MultiDocSynthesizer(conn, num_docs=3)
 
     gen = EmbeddingGenerator()

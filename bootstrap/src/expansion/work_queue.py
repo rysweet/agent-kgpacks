@@ -8,7 +8,7 @@ Implements the expansion state machine for coordinating work across workers.
 import logging
 from datetime import UTC, datetime, timedelta
 
-import kuzu
+import real_ladybug as kuzu
 
 logger = logging.getLogger(__name__)
 

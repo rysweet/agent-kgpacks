@@ -535,7 +535,7 @@ def sample_db_context(db_path: Path, max_articles: int = 20) -> str:
         Formatted context string with article titles and snippets, or empty string on failure
     """
     try:
-        import kuzu
+        import real_ladybug as kuzu
 
         db = kuzu.Database(str(db_path))
         conn = kuzu.Connection(db)

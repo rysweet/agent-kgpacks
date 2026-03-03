@@ -21,7 +21,7 @@ uv sync
 Or with pip:
 
 ```bash
-pip install kuzu anthropic beautifulsoup4 requests lxml sentence-transformers
+pip install real_ladybug anthropic beautifulsoup4 requests lxml sentence-transformers
 ```
 
 ### Environment Variables
@@ -108,7 +108,7 @@ Each URL goes through six stages:
 
 ### Stage 5: Embedding & Graph Write
 - Generates 768-dim embeddings with `BAAI/bge-base-en-v1.5` for the first 3 sections
-- Writes `Article`, `Entity`, `Fact`, `Section` nodes to KuzuDB
+- Writes `Article`, `Entity`, `Fact`, `Section` nodes to LadybugDB
 - Creates `HAS_ENTITY`, `ENTITY_RELATION`, `HAS_FACT`, `HAS_SECTION` edges
 
 ### Stage 6: Manifest (`create_manifest`)
@@ -120,7 +120,7 @@ Each URL goes through six stages:
 
 ```
 data/packs/azure-lighthouse/
-├── pack.db/            # KuzuDB graph database (directory)
+├── pack.db/            # LadybugDB graph database (directory)
 ├── manifest.json       # Pack metadata and graph stats
 ├── urls.txt            # Source URLs (57 entries)
 ├── BUILD.md            # This file
@@ -179,7 +179,7 @@ Expected values:
 ### Query the Database
 
 ```python
-import kuzu
+import real_ladybug as kuzu
 
 db = kuzu.Database("data/packs/azure-lighthouse/pack.db")
 conn = kuzu.Connection(db)
@@ -235,7 +235,7 @@ Pages that return a non-200 status or empty body are logged as warnings and coun
 
 ### Out of disk space
 
-The KuzuDB directory can grow to 100+ MB for this pack. Ensure at least 2 GB free before building.
+The LadybugDB directory can grow to 100+ MB for this pack. Ensure at least 2 GB free before building.
 
 ### Partial build recovery
 

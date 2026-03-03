@@ -11,7 +11,7 @@ knowledge-graph expansion pipeline.
 
 ## ArticleProcessor
 
-Fetches, parses, embeds, and loads a single article into the Kuzu knowledge graph, then returns
+Fetches, parses, embeds, and loads a single article into the LadybugDB knowledge graph, then returns
 outbound links for further expansion.
 
 ### Class Definition
@@ -37,7 +37,7 @@ def __init__(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `conn` | `kuzu.Connection` | required | Kuzu database connection |
+| `conn` | `kuzu.Connection` | required | LadybugDB database connection |
 | `content_source` | `ContentSource \| None` | `None` | Content source implementation. Defaults to `WikipediaContentSource` when `None` |
 | `wikipedia_client` | any | `None` | **Deprecated.** Legacy Wikipedia client; wraps into `WikipediaContentSource` automatically |
 | `embedding_generator` | `EmbeddingGenerator \| None` | `None` | Embedding generator; a default instance is created when `None` |
@@ -46,7 +46,7 @@ def __init__(
 **Example:**
 
 ```python
-import kuzu
+import real_ladybug as kuzu
 from bootstrap.src.expansion.processor import ArticleProcessor
 
 db = kuzu.Database("knowledge.db")
@@ -116,7 +116,7 @@ else:
 3. Parse article into sections via `ContentSource.parse_sections()`
 4. Generate vector embeddings for each section
 5. Run optional LLM extraction for entities, facts, and relationships (skipped on failure, never blocks success)
-6. Upsert article node, section nodes, chunks, categories, and any LLM-extracted data in Kuzu
+6. Upsert article node, section nodes, chunks, categories, and any LLM-extracted data in LadybugDB
 7. Return `(True, article.links, None)` on success
 
 **Edge cases:**
@@ -180,7 +180,7 @@ RyuGraphOrchestrator
 ```
 
 Each worker thread creates its own `ArticleProcessor` instance backed by an independent
-`kuzu.Connection` — Kuzu connections are not thread-safe and must not be shared across threads.
+`kuzu.Connection` — LadybugDB connections are not thread-safe and must not be shared across threads.
 
 ```python
 # Worker creates its own processor — do NOT share across threads

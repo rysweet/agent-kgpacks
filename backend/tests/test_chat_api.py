@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 def chat_client(tmp_path):
     """Create test client with a temporary empty database."""
     # Create a minimal Kuzu database so the app can start
-    import kuzu
+    import real_ladybug as kuzu
 
     db_path = str(tmp_path / "chat_test.db")
     db = kuzu.Database(db_path)

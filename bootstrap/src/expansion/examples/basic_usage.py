@@ -9,7 +9,7 @@ by discovering and inserting linked articles.
 import sys
 from pathlib import Path
 
-import kuzu
+import real_ladybug as kuzu
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 

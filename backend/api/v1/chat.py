@@ -14,7 +14,7 @@ import os
 import time
 from pathlib import Path
 
-import kuzu
+import real_ladybug as kuzu
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from sse_starlette.sse import EventSourceResponse

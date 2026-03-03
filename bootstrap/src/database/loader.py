@@ -8,7 +8,7 @@ to load articles into Kuzu database.
 import logging
 from datetime import UTC, datetime
 
-import kuzu
+import real_ladybug as kuzu
 import numpy as np
 
 from ..embeddings import EmbeddingGenerator

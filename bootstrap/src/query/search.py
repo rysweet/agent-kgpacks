@@ -6,7 +6,7 @@ Provides semantic search, graph traversal, and hybrid queries.
 
 import logging
 
-import kuzu
+import real_ladybug as kuzu
 
 logger = logging.getLogger(__name__)
 
@@ -293,7 +293,7 @@ def hybrid_query(
 
 def main():
     """Test query functions"""
-    import kuzu
+    import real_ladybug as kuzu
 
     db_path = "data/test_loader.db"
     db = kuzu.Database(db_path)

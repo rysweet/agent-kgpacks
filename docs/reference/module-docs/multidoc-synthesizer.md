@@ -42,7 +42,7 @@ Performance:
 Example:
     >>> from wikigr.agent.enhancements.multidoc_synthesizer import MultiDocSynthesizer
     >>> from bootstrap.src.embeddings.generator import EmbeddingGenerator
-    >>> import kuzu
+    >>> import real_ladybug as kuzu
     >>>
     >>> conn = kuzu.Connection(kuzu.Database("physics.db"))
     >>> synthesizer = MultiDocSynthesizer(conn, num_docs=5)
@@ -56,7 +56,7 @@ Example:
      'Quantum_teleportation', 'Bell_test_experiments']
 
 Dependencies:
-    - kuzu: Graph database connection
+    - real_ladybug (aliased as kuzu): LadybugDB graph database connection
     - bootstrap.src.embeddings.generator: Embedding generation
 
 See Also:
@@ -77,7 +77,7 @@ class MultiDocSynthesizer:
     comprehensive context for answer synthesis.
 
     Attributes:
-        conn (kuzu.Connection): Kuzu database connection
+        conn (kuzu.Connection): LadybugDB database connection
         num_docs (int): Number of articles to retrieve (default: 5)
         max_sections (int): Max sections per article (default: 3)
         min_relevance (float): Minimum similarity threshold (default: 0.7)
@@ -104,7 +104,7 @@ def __init__(
     Initialize MultiDocSynthesizer with retrieval parameters.
 
     Args:
-        conn: Kuzu database connection
+        conn: LadybugDB database connection
         num_docs: Number of articles to retrieve (range: 1-10, default: 5)
         max_sections: Max sections per article (range: 1-10, default: 3)
         min_relevance: Minimum similarity threshold (range: 0.0-1.0, default: 0.7)
@@ -153,7 +153,7 @@ def retrieve(
         - facts: List of extracted facts from all sections
 
     Raises:
-        RuntimeError: If Kuzu query fails or database connection lost
+        RuntimeError: If LadybugDB query fails or database connection lost
         ValueError: If question is empty or embedding generation fails
 
     Example:
@@ -310,7 +310,7 @@ def _extract_facts(
 ```python
 from wikigr.agent.enhancements.multidoc_synthesizer import MultiDocSynthesizer
 from bootstrap.src.embeddings.generator import EmbeddingGenerator
-import kuzu
+import real_ladybug as kuzu
 
 # Initialize
 conn = kuzu.Connection(kuzu.Database("physics.db"))
@@ -534,7 +534,7 @@ from wikigr.agent.enhancements.multidoc_synthesizer import MultiDocSynthesizer
 
 def test_retrieve_multiple_articles():
     """Test that multiple articles are retrieved."""
-    conn = kuzu.Connection(kuzu.Database("test.db"))
+    conn = kuzu.Connection(kuzu.Database("test.db"))  # kuzu aliased from real_ladybug
     synthesizer = MultiDocSynthesizer(conn, num_docs=5)
     gen = EmbeddingGenerator()
 
@@ -546,7 +546,7 @@ def test_retrieve_multiple_articles():
 
 def test_relevance_threshold():
     """Test that min_relevance filters low-scoring sections."""
-    conn = kuzu.Connection(kuzu.Database("test.db"))
+    conn = kuzu.Connection(kuzu.Database("test.db"))  # kuzu aliased from real_ladybug
     synthesizer = MultiDocSynthesizer(conn, num_docs=5, min_relevance=0.9)
     gen = EmbeddingGenerator()
 

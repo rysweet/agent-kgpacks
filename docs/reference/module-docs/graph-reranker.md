@@ -34,7 +34,7 @@ Performance:
 
 Example:
     >>> from wikigr.agent.enhancements.graph_reranker import GraphReranker
-    >>> import kuzu
+    >>> import real_ladybug as kuzu
     >>>
     >>> conn = kuzu.Connection(kuzu.Database("physics.db"))
     >>> reranker = GraphReranker(conn, alpha=0.7, beta=0.3)
@@ -49,7 +49,7 @@ Example:
     'Quantum_mechanics'  # Promoted due to high PageRank
 
 Dependencies:
-    - kuzu: Graph database connection
+    - real_ladybug (aliased as kuzu): LadybugDB graph database connection
     - numpy: PageRank computation (optional, falls back to pure Python)
 
 See Also:
@@ -70,7 +70,7 @@ class GraphReranker:
     PageRank scores are cached to avoid recomputation on every query.
 
     Attributes:
-        conn (kuzu.Connection): Kuzu database connection
+        conn (kuzu.Connection): LadybugDB database connection
         alpha (float): Weight for vector similarity (default: 0.7)
         beta (float): Weight for PageRank score (default: 0.3)
         cache_ttl (int): PageRank cache TTL in seconds (default: 3600)
@@ -97,7 +97,7 @@ def __init__(
     Initialize GraphReranker with connection and weights.
 
     Args:
-        conn: Kuzu database connection
+        conn: LadybugDB database connection
         alpha: Weight for vector similarity (must be 0 < alpha <= 1)
         beta: Weight for PageRank score (must be 0 < beta <= 1)
         cache_ttl: PageRank cache TTL in seconds (default: 1 hour)
@@ -180,7 +180,7 @@ def compute_pagerank(
         Dictionary mapping article titles to normalized PageRank scores
 
     Raises:
-        RuntimeError: If Kuzu query fails or graph is empty
+        RuntimeError: If LadybugDB query fails or graph is empty
         ValueError: If damping not in (0, 1)
 
     Example:
@@ -248,7 +248,7 @@ def _normalize_scores(
 
 ```python
 from wikigr.agent.enhancements.graph_reranker import GraphReranker
-import kuzu
+import real_ladybug as kuzu
 
 # Initialize
 conn = kuzu.Connection(kuzu.Database("physics.db"))
@@ -367,7 +367,7 @@ from wikigr.agent.enhancements.graph_reranker import GraphReranker
 
 def test_rerank_promotes_high_pagerank():
     """Test that articles with high PageRank are promoted."""
-    conn = kuzu.Connection(kuzu.Database("test.db"))
+    conn = kuzu.Connection(kuzu.Database("test.db"))  # kuzu aliased from real_ladybug
     reranker = GraphReranker(conn)
 
     results = [
@@ -382,7 +382,7 @@ def test_rerank_promotes_high_pagerank():
 
 def test_pagerank_computation():
     """Test PageRank computation returns valid scores."""
-    conn = kuzu.Connection(kuzu.Database("test.db"))
+    conn = kuzu.Connection(kuzu.Database("test.db"))  # kuzu aliased from real_ladybug
     reranker = GraphReranker(conn)
 
     pagerank = reranker.compute_pagerank()
@@ -393,7 +393,7 @@ def test_pagerank_computation():
 
 def test_cache_invalidation():
     """Test PageRank cache expires correctly."""
-    conn = kuzu.Connection(kuzu.Database("test.db"))
+    conn = kuzu.Connection(kuzu.Database("test.db"))  # kuzu aliased from real_ladybug
     reranker = GraphReranker(conn, cache_ttl=1)  # 1 second TTL
 
     # First computation

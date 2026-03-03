@@ -11,7 +11,7 @@ LOG="logs/expansion_30k_auto.log"
 while true; do
     # Check current progress
     PROCESSED=$(python3.10 -c "
-import kuzu
+import real_ladybug as kuzu
 db = kuzu.Database('$DB_PATH')
 conn = kuzu.Connection(db)
 conn.execute(\"MATCH (a:Article) WHERE a.expansion_state = 'claimed' SET a.expansion_state = 'discovered', a.claimed_at = NULL\")

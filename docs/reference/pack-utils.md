@@ -178,7 +178,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import kuzu  # noqa: E402
+import real_ladybug as kuzu  # noqa: E402
 
 import wikigr.bootstrap  # noqa: E402
 from wikigr.packs.utils import load_urls  # noqa: E402

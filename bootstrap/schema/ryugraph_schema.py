@@ -17,7 +17,7 @@ import argparse
 import sys
 from pathlib import Path
 
-import kuzu
+import real_ladybug as kuzu
 
 
 def create_schema(db_path: str, drop_existing: bool = False):

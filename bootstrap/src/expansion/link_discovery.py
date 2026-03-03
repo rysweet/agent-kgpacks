@@ -7,7 +7,7 @@ expansion depth and creating LINKS_TO relationships.
 
 import logging
 
-import kuzu
+import real_ladybug as kuzu
 
 logger = logging.getLogger(__name__)
 

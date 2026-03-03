@@ -16,7 +16,7 @@ Options:
 
 Note:
     This script follows the same pattern as build_fabric_pack.py and uses WebContentSource
-    for fetching documentation from kuzudb.github.io, opencypher.org, and neo4j.com.
+    for fetching documentation from docs.ladybugdb.com, opencypher.org, and neo4j.com.
 """
 
 import argparse
@@ -36,7 +36,7 @@ os.environ["LOKY_MAX_CPU_COUNT"] = "1"
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import kuzu  # noqa: E402
+import real_ladybug as kuzu  # noqa: E402
 
 from bootstrap.schema.ryugraph_schema import create_schema  # noqa: E402
 from bootstrap.src.embeddings.generator import EmbeddingGenerator  # noqa: E402
@@ -228,9 +228,9 @@ def create_manifest(
             "hallucination_rate": 0.0,
             "citation_quality": 0.0,
         },
-        "tags": ["cypher", "kuzu", "graph-database", "query-language", "opencypher"],
+        "tags": ["cypher", "ladybugdb", "graph-database", "query-language", "opencypher"],
         "source_urls": [
-            "https://kuzudb.github.io/docs/cypher/",
+            "https://docs.ladybugdb.com/cypher/",
             "https://opencypher.org/",
             "https://neo4j.com/docs/cypher-manual/current/introduction/",
         ],

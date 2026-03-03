@@ -7,7 +7,7 @@ Provides article details, categories, and statistics.
 import logging
 from datetime import UTC, datetime
 
-import kuzu
+import real_ladybug as kuzu
 from fastapi import APIRouter, Depends, Path, Request, Response
 from fastapi.responses import JSONResponse
 

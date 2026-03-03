@@ -12,7 +12,7 @@ pytest tests/agent/ -v
 # 44 passed, 27 skipped
 ```
 
-All unit tests run offline — no Kuzu database, no Anthropic API calls. The 27 skipped tests require an optional integration database (`data/wikigr_30k.db`) and are silently skipped when it is absent.
+All unit tests run offline — no LadybugDB database, no Anthropic API calls. The 27 skipped tests require an optional integration database (`data/wikigr_30k.db`) and are silently skipped when it is absent.
 
 ---
 
@@ -20,7 +20,7 @@ All unit tests run offline — no Kuzu database, no Anthropic API calls. The 27 
 
 ### `test_kg_agent_core.py` — Core method unit tests
 
-Tests five `KnowledgeGraphAgent` methods using fully mocked Kuzu connections and Claude API. No real database or network I/O.
+Tests five `KnowledgeGraphAgent` methods using fully mocked LadybugDB connections and Claude API. No real database or network I/O.
 
 > **Note:** The module docstring at the top of this file still lists `_execute_query` and `_execute_fallback_query` as targets — this is stale comment-only technical debt from a dead code cleanup. Those methods no longer exist in production; see [Removed test targets](#removed-test-targets) below.
 
@@ -50,13 +50,13 @@ def _make_agent() -> KnowledgeGraphAgent:
     return agent
 ```
 
-The `_make_agent()` helper bypasses `__init__` using `__new__`, then manually assigns mock attributes. This avoids Kuzu import-time side effects and keeps tests deterministic.
+The `_make_agent()` helper bypasses `__init__` using `__new__`, then manually assigns mock attributes. This avoids LadybugDB import-time side effects and keeps tests deterministic.
 
 ---
 
 ### `test_kg_agent_semantic.py` — Semantic search and retrieval pipeline tests
 
-Tests `semantic_search`, `_vector_primary_retrieve`, and the `query()` retrieval pipeline. Uses the pytest `agent` fixture which patches `kuzu` and `Anthropic` at import time.
+Tests `semantic_search`, `_vector_primary_retrieve`, and the `query()` retrieval pipeline. Uses the pytest `agent` fixture which patches `real_ladybug` and `Anthropic` at import time.
 
 **Test classes:**
 
@@ -101,7 +101,7 @@ pytestmark = pytest.mark.skipif(
 )
 ```
 
-All tests in this file skip automatically when `data/wikigr_30k.db` is absent. This prevents `kuzu.Error` and `FileNotFoundError` in CI environments where the database is not available.
+All tests in this file skip automatically when `data/wikigr_30k.db` is absent. This prevents `kuzu.Error` (via `real_ladybug`) and `FileNotFoundError` in CI environments where the database is not available.
 
 **Test levels:**
 
@@ -174,12 +174,12 @@ These test classes and files were removed when their production targets were del
 
 Unit tests in `test_kg_agent_core.py` use `KnowledgeGraphAgent.__new__` to bypass `__init__` and assign mock attributes directly. This is intentional:
 
-- Avoids Kuzu database file requirements
+- Avoids LadybugDB database file requirements
 - Eliminates Anthropic API key requirements
 - Keeps tests fast (no I/O)
 - Tests individual methods in full isolation
 
-Tests in `test_kg_agent_semantic.py` use the `agent` pytest fixture, which patches `kuzu` and `Anthropic` at module level during construction. This tests the constructor path and the interaction between `__init__` and the mocked dependencies.
+Tests in `test_kg_agent_semantic.py` use the `agent` pytest fixture, which patches `real_ladybug` and `Anthropic` at module level during construction. This tests the constructor path and the interaction between `__init__` and the mocked dependencies.
 
 ### Security
 

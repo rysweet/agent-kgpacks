@@ -5,7 +5,7 @@ Provides a batch query helper used by both GraphService and SearchService
 to avoid duplicated summary-fetching logic.
 """
 
-import kuzu
+import real_ladybug as kuzu
 
 
 def get_article_summaries(

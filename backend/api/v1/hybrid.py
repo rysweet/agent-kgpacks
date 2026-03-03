@@ -7,7 +7,7 @@ Combines semantic similarity with graph proximity for richer search results.
 import logging
 from datetime import UTC, datetime
 
-import kuzu
+import real_ladybug as kuzu
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
 

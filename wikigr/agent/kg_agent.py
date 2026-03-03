@@ -11,7 +11,7 @@ import re
 import time
 from typing import Any
 
-import kuzu
+import real_ladybug as kuzu
 from anthropic import Anthropic, APIConnectionError, APIStatusError, APITimeoutError
 
 # Pre-compiled regex used in _direct_title_lookup — avoids recompilation on every query() call.

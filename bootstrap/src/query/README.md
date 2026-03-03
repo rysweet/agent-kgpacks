@@ -20,5 +20,5 @@ combined = hybrid_query(conn, "Machine Learning", max_hops=2, top_k=10)
 
 ## Dependencies
 
-- `kuzu` (database queries)
+- `real_ladybug` (aliased as `kuzu`) for LadybugDB database queries
 - HNSW vector index on Section.embedding

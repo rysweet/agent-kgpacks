@@ -58,7 +58,7 @@ def main():
             os.remove(f)
 
     logger.info("Creating fresh database and schema...")
-    import kuzu
+    import real_ladybug as kuzu
 
     db = kuzu.Database(DB_PATH)
     conn = kuzu.Connection(db)

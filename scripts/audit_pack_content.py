@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import kuzu  # noqa: E402
+import real_ladybug as kuzu  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

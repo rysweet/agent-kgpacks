@@ -12,7 +12,7 @@ This document describes how to build the .NET Expert Knowledge Pack from source.
 
 ### Python Dependencies
 ```bash
-pip install kuzu openai anthropic beautifulsoup4 requests lxml
+pip install real_ladybug openai anthropic beautifulsoup4 requests lxml
 ```
 
 ### Environment Variables
@@ -66,7 +66,7 @@ from bootstrap.src.expansion.processor import ArticleProcessor
 from bootstrap.schema.ryugraph_schema import create_schema
 from bootstrap.src.extraction.llm_extractor import get_extractor
 from bootstrap.src.embeddings.generator import EmbeddingGenerator
-import kuzu
+import real_ladybug as kuzu
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -191,11 +191,11 @@ python scripts/build_dotnet_pack.py
 ### Stage 4: Embedding Generation
 - Generates vector embeddings for text chunks
 - Uses text-embedding-3-small by default
-- Stores in Kuzu vector index
+- Stores in LadybugDB vector index
 - Enables semantic search
 
 ### Stage 5: Database Creation
-- Inserts articles, entities, relationships into Kuzu
+- Inserts articles, entities, relationships into LadybugDB
 - Creates indexes for performance
 - Validates graph structure
 - Compacts database
@@ -248,7 +248,7 @@ Increase system RAM or use swap
 ```bash
 # Check database exists and has content
 python -c "
-import kuzu
+import real_ladybug as kuzu
 db = kuzu.Database('data/packs/dotnet-expert/pack.db')
 conn = kuzu.Connection(db)
 result = conn.execute('MATCH (a:Article) RETURN count(a)')

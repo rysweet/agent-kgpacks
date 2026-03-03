@@ -29,9 +29,9 @@ Discovers new articles from links in existing articles, managing expansion depth
 
 ```python
 from expansion import LinkDiscovery
-import kuzu
+import real_ladybug as kuzu
 
-# Initialize with Kuzu connection
+# Initialize with LadybugDB connection
 conn = kuzu.Connection(kuzu.Database("path/to/db"))
 discovery = LinkDiscovery(conn)
 
@@ -175,7 +175,7 @@ The WorkQueueManager implements the expansion state machine for coordinating wor
 ### Basic Usage
 
 ```python
-import kuzu
+import real_ladybug as kuzu
 from src.expansion import WorkQueueManager
 
 # Initialize
@@ -250,7 +250,7 @@ def worker_loop(manager, timeout_seconds=300):
 Initialize work queue manager.
 
 **Args:**
-- `conn`: Kuzu database connection
+- `conn`: LadybugDB database connection
 - `max_retries`: Maximum retry attempts before marking as failed (default: 3)
 
 #### `claim_work(batch_size=10, timeout_seconds=300) -> list[dict]`

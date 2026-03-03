@@ -8,7 +8,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
-import kuzu
+import real_ladybug as kuzu
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware

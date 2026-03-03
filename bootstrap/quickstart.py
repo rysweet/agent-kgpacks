@@ -27,7 +27,7 @@ print("\n1. Checking dependencies...")
 
 missing_deps = []
 required_packages = {
-    "kuzu": "kuzu",
+    "real_ladybug": "real_ladybug",
     "sentence_transformers": "sentence-transformers",
     "requests": "requests",
     "pandas": "pandas",
@@ -53,7 +53,7 @@ print("   ✅ All dependencies installed")
 # Import after validation
 import re  # noqa: E402
 
-import kuzu  # noqa: E402
+import real_ladybug as kuzu  # noqa: E402
 import requests  # noqa: E402
 from sentence_transformers import SentenceTransformer  # noqa: E402
 

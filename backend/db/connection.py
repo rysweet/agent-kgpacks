@@ -9,7 +9,7 @@ import threading
 from collections.abc import Generator
 from pathlib import Path
 
-import kuzu
+import real_ladybug as kuzu
 
 from backend.config import settings
 

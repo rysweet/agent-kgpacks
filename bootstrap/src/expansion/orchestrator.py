@@ -16,7 +16,7 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import kuzu
+import real_ladybug as kuzu
 
 from .link_discovery import LinkDiscovery
 from .processor import ArticleProcessor
