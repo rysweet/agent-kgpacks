@@ -346,10 +346,9 @@ class TestDocGitignoreConsistency:
     def test_all_three_patterns_mentioned_in_doc(self, hygiene_text: str):
         """All three guard patterns must be mentioned in the documentation."""
         for pattern in ["launcher.py", "run.sh", "workstreams*.json"]:
-            assert pattern in hygiene_text, (
-                f"docs/howto/repository-hygiene.md must mention the '{pattern}' "
-                f"gitignore pattern."
-            )
+            assert (
+                pattern in hygiene_text
+            ), f"docs/howto/repository-hygiene.md must mention the '{pattern}' gitignore pattern."
 
     def test_doc_section_count(self, hygiene_text_lines: list[str]):
         """The doc must have multiple sections (not just a title)."""

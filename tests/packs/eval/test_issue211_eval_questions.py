@@ -105,7 +105,7 @@ def test_required_fields_present(pack: str):
     records = load_records(pack)
     for r in records:
         missing = REQUIRED_FIELDS - set(r.keys())
-        assert not missing, f"{pack} id={r.get('id','?')}: missing fields {missing}"
+        assert not missing, f"{pack} id={r.get('id', '?')}: missing fields {missing}"
 
 
 @pytest.mark.parametrize("pack", ALL_PACKS)
@@ -117,7 +117,7 @@ def test_no_empty_field_values(pack: str):
             val = r.get(field, "")
             assert (
                 val and str(val).strip()
-            ), f"{pack} id={r.get('id','?')}: field '{field}' is empty"
+            ), f"{pack} id={r.get('id', '?')}: field '{field}' is empty"
 
 
 @pytest.mark.parametrize("pack", ALL_PACKS)
@@ -575,10 +575,9 @@ def test_vercel_maxsteps_is_primary_param(va_records: dict[str, dict[str, Any]])
     assert VA_MAXSTEPS_ID in va_records, f"vercel-ai-sdk: {VA_MAXSTEPS_ID} not found"
     r = va_records[VA_MAXSTEPS_ID]
     gt = r["ground_truth"]
-    assert "maxSteps" in gt, (
-        f"vercel-ai-sdk va_007: 'maxSteps' not found in ground_truth.\n"
-        f"  ground_truth: {gt[:200]}"
-    )
+    assert (
+        "maxSteps" in gt
+    ), f"vercel-ai-sdk va_007: 'maxSteps' not found in ground_truth.\n  ground_truth: {gt[:200]}"
 
 
 def test_vercel_ai_data_stream_protocol_mentioned(va_records: dict[str, dict[str, Any]]):
@@ -650,9 +649,9 @@ def test_bicep_bi011_mentions_bicepparam(bi_records: dict[str, dict[str, Any]]):
     """bi_011 question must reference .bicepparam files (not ARM template parameter files)."""
     r = bi_records[BI_TARGET_ID]
     q = r["question"]
-    assert ".bicepparam" in q or "bicepparam" in q.lower(), (
-        f"bicep-infrastructure bi_011: '.bicepparam' not in question.\n" f"  question: {q[:200]}"
-    )
+    assert (
+        ".bicepparam" in q or "bicepparam" in q.lower()
+    ), f"bicep-infrastructure bi_011: '.bicepparam' not in question.\n  question: {q[:200]}"
 
 
 # ---------------------------------------------------------------------------
@@ -741,7 +740,7 @@ def test_no_real_credentials_or_secrets(pack: str):
             if match:
                 pytest.fail(
                     f"{pack} id={r['id']}: potential credential/secret pattern "
-                    f"'{pattern.pattern}' found near: '{combined[max(0,match.start()-20):match.start()+40]}'"
+                    f"'{pattern.pattern}' found near: '{combined[max(0, match.start() - 20) : match.start() + 40]}'"
                 )
 
 
