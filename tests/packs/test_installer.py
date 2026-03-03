@@ -198,16 +198,15 @@ class TestPackInstaller:
         """Test uninstalling with invalid pack name raises ValueError."""
         installer = PackInstaller(install_dir=tmp_path / "installed")
 
-        with pytest.raises(ValueError, match="invalid name!"):
+        with pytest.raises(ValueError, match="contains invalid characters"):
             installer.uninstall("invalid name!")
 
     def test_update_invalid_pack_name(self, tmp_path: Path):
         """Test updating with invalid pack name raises ValueError."""
-        archive_path = self.create_test_pack_archive(tmp_path)
         installer = PackInstaller(install_dir=tmp_path / "installed")
 
-        with pytest.raises(ValueError, match="invalid name!"):
-            installer.update("invalid name!", archive_path)
+        with pytest.raises(ValueError, match="contains invalid characters"):
+            installer.update("invalid name!", tmp_path / "nonexistent.tar.gz")
 
     def test_update_nonexistent_pack(self, tmp_path: Path):
         """Test updating nonexistent pack raises error."""

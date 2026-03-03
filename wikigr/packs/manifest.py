@@ -193,7 +193,8 @@ def validate_manifest(manifest: PackManifest) -> list[str]:
     elif not PACK_NAME_RE.match(manifest.name):
         errors.append(
             f"Pack name '{manifest.name}' contains invalid characters. "
-            "Only alphanumeric, hyphens, and underscores are allowed."
+            "Pack names must start with an alphanumeric character and contain "
+            "only alphanumeric characters, hyphens, and underscores."
         )
 
     # Validate version (semantic versioning)
