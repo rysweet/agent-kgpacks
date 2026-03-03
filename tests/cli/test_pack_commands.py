@@ -107,7 +107,7 @@ def run_cli(*args, env=None):
 class TestPackCreate:
     """Tests for 'wikigr pack create' command."""
 
-    @pytest.mark.skip(reason='Requires Anthropic API key and Wikipedia network access')
+    @pytest.mark.skip(reason="Requires Anthropic API key and Wikipedia network access")
     def test_create_basic(self, tmp_path, sample_topics_file, sample_eval_questions):
         """Test basic pack creation."""
         output = tmp_path / "output"
@@ -150,7 +150,7 @@ class TestPackCreate:
         assert result.returncode != 0
         assert "not found" in result.stderr.lower() or "no such file" in result.stderr.lower()
 
-    @pytest.mark.skip(reason='Requires Anthropic API key and Wikipedia network access')
+    @pytest.mark.skip(reason="Requires Anthropic API key and Wikipedia network access")
     def test_create_missing_output_dir(self, tmp_path, sample_topics_file):
         """Test create creates output directory if missing."""
         output = tmp_path / "new" / "output"
@@ -461,7 +461,7 @@ class TestPackValidate:
 class TestPackIntegration:
     """Integration tests for complete pack workflows."""
 
-    @pytest.mark.skip(reason='Requires Anthropic API key and Wikipedia network access')
+    @pytest.mark.skip(reason="Requires Anthropic API key and Wikipedia network access")
     def test_create_install_list_remove_workflow(
         self, temp_home, tmp_path, sample_topics_file, monkeypatch
     ):
