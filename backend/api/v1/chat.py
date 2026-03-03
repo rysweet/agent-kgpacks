@@ -95,12 +95,16 @@ def chat(
                         "error": {"code": "INVALID_PACK_NAME", "message": "Invalid pack name"}
                     },
                 )
-            pack_db = str(
-                Path(settings.database_path).resolve().parent
-                / "packs"
-                / request_body.pack
-                / "pack.db"
-            )
+            packs_base = Path(settings.database_path).resolve().parent / "packs"
+            pack_db_path = (packs_base / request_body.pack / "pack.db").resolve()
+            if not pack_db_path.is_relative_to(packs_base):
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "error": {"code": "INVALID_PACK_NAME", "message": "Invalid pack name"}
+                    },
+                )
+            pack_db = str(pack_db_path)
             if not os.path.exists(pack_db):
                 return JSONResponse(
                     status_code=404,
@@ -139,7 +143,7 @@ def chat(
             content={
                 "error": {
                     "code": "AGENT_ERROR",
-                    "message": f"Agent encountered an error: {type(e).__name__}",
+                    "message": "Agent encountered an error",
                 }
             },
         )
@@ -211,7 +215,7 @@ def chat_stream(
 
         except Exception as e:
             logger.error(f"Streaming chat error: {e}", exc_info=True)
-            yield {"event": "error", "data": str(type(e).__name__)}
+            yield {"event": "error", "data": "AgentError"}
         finally:
             with contextlib.suppress(Exception):
                 conn.close()

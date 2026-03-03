@@ -105,6 +105,7 @@ For the full walkthrough, see the **[Tutorial](getting-started/tutorial.md)**.
 - **[Run Evaluations](howto/run-evaluations.md)** — Single-pack and cross-pack evaluation
 - **[Configure the Retrieval Pipeline](howto/configure-enhancements.md)** — Tuning retrieval modules
 - **[Handle Exceptions](howto/handle-exceptions.md)** — Catching API, DB, and network errors from WikiGR components
+- **[Repository Hygiene](howto/repository-hygiene.md)** — Which files must not be committed and how `.gitignore` guards prevent accidental staging
 
 ### Design
 

@@ -94,7 +94,7 @@ def hybrid_search(
         return JSONResponse(
             status_code=400,
             content={
-                "error": {"code": "INVALID_PARAMETER", "message": error_msg},
+                "error": {"code": "INVALID_PARAMETER", "message": "Invalid parameter"},
                 "timestamp": datetime.now(UTC).isoformat(),
             },
         )
