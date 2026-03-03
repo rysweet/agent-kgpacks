@@ -56,16 +56,26 @@ https://learn.microsoft.com/en-us/azure/lighthouse/how-to/partner-earned-credit
 
 # REST API & SDK
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/use-rest-api
+https://learn.microsoft.com/en-us/rest/api/managedservices/
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/use-rest-api#list-delegations
+
+# ARM Templates & Bicep
+https://learn.microsoft.com/en-us/azure/lighthouse/samples/resource-manager-templates#onboard-subscriptions
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/onboard-customer#create-an-azure-resource-manager-template
 
 # Cross-tenant scenarios
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/migration-at-scale
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/deploy-azure-api-management-apis
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/manage-hybrid-infrastructure-arc
+https://learn.microsoft.com/en-us/azure/lighthouse/concepts/enterprise#multiple-msps-managing-a-single-customer
 
 # Security Operations
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/manage-defender-workspaces
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/manage-sentinel-workspaces
 
 # DevOps Integration
 https://learn.microsoft.com/en-us/azure/lighthouse/how-to/azure-devops
+https://learn.microsoft.com/en-us/azure/lighthouse/how-to/create-eligible-authorizations
 
 # Managed Applications vs Lighthouse
 https://learn.microsoft.com/en-us/azure/managed-applications/overview
