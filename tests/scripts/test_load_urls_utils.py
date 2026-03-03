@@ -535,35 +535,35 @@ class TestNoLocalDefLoadUrlsInScripts:
             for p in self._collect_build_scripts()
             if self._calls_load_urls(p) and not self._has_shared_import(p)
         ]
-        assert missing == [], (
-            f"These scripts call load_urls but don't import from wikigr.packs.utils: {missing}"
-        )
+        assert (
+            missing == []
+        ), f"These scripts call load_urls but don't import from wikigr.packs.utils: {missing}"
 
     def test_check_pack_freshness_imports_from_shared_utils(self):
         """check_pack_freshness.py must use the shared import."""
         p = self.SCRIPTS_DIR / "check_pack_freshness.py"
-        assert self._has_shared_import(p), (
-            "check_pack_freshness.py is missing 'from wikigr.packs.utils import load_urls'"
-        )
+        assert self._has_shared_import(
+            p
+        ), "check_pack_freshness.py is missing 'from wikigr.packs.utils import load_urls'"
 
     def test_validate_pack_urls_imports_from_shared_utils(self):
         """validate_pack_urls.py must use the shared import."""
         p = self.SCRIPTS_DIR / "validate_pack_urls.py"
-        assert self._has_shared_import(p), (
-            "validate_pack_urls.py is missing 'from wikigr.packs.utils import load_urls'"
-        )
+        assert self._has_shared_import(
+            p
+        ), "validate_pack_urls.py is missing 'from wikigr.packs.utils import load_urls'"
 
     def test_no_local_def_in_check_pack_freshness(self):
         p = self.SCRIPTS_DIR / "check_pack_freshness.py"
-        assert not self._has_local_load_urls_def(p), (
-            "check_pack_freshness.py must not define its own load_urls"
-        )
+        assert not self._has_local_load_urls_def(
+            p
+        ), "check_pack_freshness.py must not define its own load_urls"
 
     def test_no_local_def_in_validate_pack_urls(self):
         p = self.SCRIPTS_DIR / "validate_pack_urls.py"
-        assert not self._has_local_load_urls_def(p), (
-            "validate_pack_urls.py must not define its own load_urls"
-        )
+        assert not self._has_local_load_urls_def(
+            p
+        ), "validate_pack_urls.py must not define its own load_urls"
 
 
 # ---------------------------------------------------------------------------

@@ -184,9 +184,9 @@ def test_all_four_new_scripts_exist() -> None:
     """
     for script_name in _NEW_PACKS:
         script_path = _SCRIPTS_DIR / script_name
-        assert script_path.exists(), (
-            f"scripts/{script_name} is missing. Expected all 4 new pack scripts to exist."
-        )
+        assert (
+            script_path.exists()
+        ), f"scripts/{script_name} is missing. Expected all 4 new pack scripts to exist."
         assert script_path.is_file(), f"scripts/{script_name} is not a regular file."
 
 
@@ -211,9 +211,9 @@ def test_script_syntax_valid(name: str, path: Path) -> None:
 def test_shebang_line(name: str, path: Path) -> None:
     """Each script must begin with the standard Python shebang."""
     first_line = _read_source(path).splitlines()[0]
-    assert first_line == "#!/usr/bin/env python3", (
-        f"{name}: missing or wrong shebang. Expected '#!/usr/bin/env python3', got {first_line!r}"
-    )
+    assert (
+        first_line == "#!/usr/bin/env python3"
+    ), f"{name}: missing or wrong shebang. Expected '#!/usr/bin/env python3', got {first_line!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -237,9 +237,9 @@ def test_pack_dir_constant(name: str, path: Path) -> None:
 def test_db_path_constant(name: str, path: Path) -> None:
     """DB_PATH must be derived from PACK_DIR and named 'pack.db'."""
     source = _read_source(path)
-    assert "pack.db" in source, (
-        f"{name}: 'pack.db' not found in source. DB_PATH must be set to PACK_DIR / 'pack.db'."
-    )
+    assert (
+        "pack.db" in source
+    ), f"{name}: 'pack.db' not found in source. DB_PATH must be set to PACK_DIR / 'pack.db'."
 
 
 @pytest.mark.parametrize("name,path", _NEW_SCRIPT_PATHS, ids=[n for n, _ in _NEW_SCRIPT_PATHS])
