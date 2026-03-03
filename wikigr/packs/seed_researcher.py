@@ -13,6 +13,7 @@ import logging
 import os
 import time
 import xml.etree.ElementTree as ET
+from collections import deque
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -155,7 +156,11 @@ class LLMSeedResearcher:
         self.cache_ttl = int(os.environ.get("WIKIGR_CACHE_TTL", 7))
 
         # Ensure cache directory exists
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.cache_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+
+        # Per-domain robots.txt cache — avoids re-fetching robots.txt for every URL
+        # on the same domain during crawls (one HTTP request per domain, not per URL).
+        self._robots_cache: dict[str, RobotFileParser] = {}
 
     def discover_sources(self, domain: str, max_sources: int = 10) -> list[DiscoveredSource]:
         """Discover authoritative sources for a domain using LLM.
@@ -541,13 +546,13 @@ Return JSON with this exact structure:
             List of ExtractedURL objects from crawling
         """
         visited = set()
-        to_visit = [(base_url, 0)]  # (url, depth)
+        to_visit: deque[tuple[str, int]] = deque([(base_url, 0)])  # (url, depth)
         all_urls = []
 
         base_domain = urlparse(base_url).netloc
 
         while to_visit and len(all_urls) < max_urls:
-            current_url, depth = to_visit.pop(0)
+            current_url, depth = to_visit.popleft()
 
             if current_url in visited or depth > max_depth:
                 continue
@@ -604,7 +609,7 @@ Return JSON with this exact structure:
                     if len(all_urls) >= max_urls:
                         break
 
-            except (requests.RequestException, Exception):
+            except requests.RequestException:
                 continue
 
         return all_urls[:max_urls]
@@ -711,6 +716,10 @@ Return JSON with this exact structure:
     def _check_robots_txt(self, url: str) -> bool:
         """Check if URL is allowed by robots.txt.
 
+        Results are cached per domain so the robots.txt file is fetched at most
+        once per domain per researcher instance (avoids repeated HTTP requests
+        during crawls that visit many pages on the same site).
+
         Args:
             url: URL to check
 
@@ -719,13 +728,16 @@ Return JSON with this exact structure:
         """
         try:
             parsed = urlparse(url)
-            robots_url = f"{parsed.scheme}://{parsed.netloc}/robots.txt"
+            domain = parsed.netloc
 
-            rp = RobotFileParser()
-            rp.set_url(robots_url)
-            rp.read()
+            if domain not in self._robots_cache:
+                robots_url = f"{parsed.scheme}://{domain}/robots.txt"
+                rp = RobotFileParser()
+                rp.set_url(robots_url)
+                rp.read()
+                self._robots_cache[domain] = rp
 
-            return rp.can_fetch(self.user_agent, url)
+            return self._robots_cache[domain].can_fetch(self.user_agent, url)
 
         except Exception:
             # If robots.txt check fails, allow by default

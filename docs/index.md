@@ -104,10 +104,16 @@ For the full walkthrough, see the **[Tutorial](getting-started/tutorial.md)**.
 - **[Build a Pack](howto/build-a-pack.md)** — Step-by-step from URLs to installed skill
 - **[Run Evaluations](howto/run-evaluations.md)** — Single-pack and cross-pack evaluation
 - **[Configure the Retrieval Pipeline](howto/configure-enhancements.md)** — Tuning retrieval modules
+- **[Handle Exceptions](howto/handle-exceptions.md)** — Catching API, DB, and network errors from WikiGR components
+
+### Design
+
+- **[Exception Handling](design/exception-handling.md)** — Error domain contracts, removed fallbacks, renamed pipeline stages, security requirements, and known gap inventory
 
 ### Reference
 
 - **[KG Agent API](reference/kg-agent-api.md)** — Constructor, query(), response format
+- **[Exception Types](reference/exception-types.md)** — All exception types raised by WikiGR components
 - **[Chat API](reference/chat-api.md)** — POST /chat and GET /chat/stream endpoints, SSE event types, examples
 - **[Pack Distribution](reference/pack-distribution.md)** — package_pack / unpackage_pack, archive format, extraction safety
 - **[CLI Commands](reference/cli-commands.md)** — All `wikigr` commands

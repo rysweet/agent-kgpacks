@@ -64,7 +64,7 @@ def build_schema_string(conn: Any) -> str:
             ttype = row.get("type", "")
             parts.append(f"- {name} ({ttype})")
         return "\n".join(parts) if parts else "(schema unavailable)"
-    except Exception as e:
+    except RuntimeError as e:
         logger.warning("Schema extraction failed: %s", e)
         return "(schema unavailable)"
 
@@ -108,7 +108,7 @@ class CypherRAG:
         # Retrieve relevant patterns
         try:
             examples = self.patterns.find_similar_examples(question, k=k_patterns)
-        except Exception as e:
+        except (RuntimeError, OSError) as e:
             logger.debug("Pattern retrieval failed: %s", e)
             examples = []
 
@@ -123,39 +123,31 @@ class CypherRAG:
         )
 
         # Call Claude
-        try:
-            response = self.claude.messages.create(
-                model=self.model,
-                max_tokens=max_tokens,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            if not response.content:
-                return self._safe_fallback(question)
+        response = self.claude.messages.create(
+            model=self.model,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        if not response.content:
+            raise ValueError("Empty response from Claude API in generate_cypher")
 
-            text = response.content[0].text.strip()
-            # Parse JSON from response (strip markdown fences if present)
-            if "```json" in text:
-                text = text.split("```json")[1].split("```")[0].strip()
-            elif "```" in text:
-                text = text.split("```")[1].split("```")[0].strip()
+        text = response.content[0].text.strip()
+        # Parse JSON from response (strip markdown fences if present)
+        if "```json" in text:
+            text = text.split("```json")[1].split("```")[0].strip()
+        elif "```" in text:
+            text = text.split("```")[1].split("```")[0].strip()
 
-            parsed = json.loads(text)
+        parsed = json.loads(text)
 
-            # Ensure cypher_params always has "q"
-            if "cypher_params" not in parsed:
-                parsed["cypher_params"] = {"q": question}
-            elif "q" not in parsed["cypher_params"]:
-                parsed["cypher_params"]["q"] = question
+        # Ensure cypher_params always has "q"
+        if "cypher_params" not in parsed:
+            parsed["cypher_params"] = {"q": question}
+        elif "q" not in parsed["cypher_params"]:
+            parsed["cypher_params"]["q"] = question
 
-            parsed["patterns_used"] = len(examples)
-            return parsed
-
-        except (json.JSONDecodeError, TypeError) as e:
-            logger.warning("CypherRAG parse error: %s", e)
-            return self._safe_fallback(question)
-        except Exception as e:
-            logger.warning("CypherRAG API error: %s", e)
-            return self._safe_fallback(question)
+        parsed["patterns_used"] = len(examples)
+        return parsed
 
     def _format_patterns(self, examples: list[dict]) -> str:
         """Format retrieved examples into prompt-ready pattern text.
@@ -174,44 +166,3 @@ class CypherRAG:
             a = ex.get("answer", ex.get("ground_truth", ""))
             parts.append(f"### Pattern {i}\nQuestion: {q}\nCypher: {a}")
         return "\n\n".join(parts)
-
-    @staticmethod
-    def _safe_fallback(question: str) -> dict:
-        """Return a safe entity-search fallback when generation fails.
-
-        Extracts meaningful search terms from the question, filtering
-        out common stop words.
-
-        Args:
-            question: Original natural language question.
-
-        Returns:
-            Dict with a simple title-search Cypher plan.
-        """
-        stop_words = {
-            "what",
-            "which",
-            "where",
-            "when",
-            "does",
-            "about",
-            "between",
-            "from",
-            "that",
-            "this",
-            "with",
-            "have",
-            "their",
-        }
-        words = question.split()
-        search_term = (
-            " ".join(w for w in words if len(w) > 3 and w.lower() not in stop_words)[:50]
-            or question[:50]
-        )
-        return {
-            "type": "entity_search",
-            "cypher": "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($q) RETURN a.title AS title LIMIT 10",
-            "cypher_params": {"q": search_term},
-            "explanation": "Safe fallback: simple title search",
-            "patterns_used": 0,
-        }

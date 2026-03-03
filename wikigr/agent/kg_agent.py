@@ -21,72 +21,16 @@ _QUESTION_PREFIX_RE = re.compile(
     re.IGNORECASE,
 )
 
-logger = logging.getLogger(__name__)
-
-# Stop words for _fallback_seed_extraction — includes domain-specific query verbs in
-# addition to linguistic stop words so they are never mistaken for article titles.
-# Module-level (not KnowledgeGraphAgent.STOP_WORDS) because _fallback_seed_extraction
-# is a @staticmethod and cannot reference self or cls constants.
-_FALLBACK_STOP_WORDS: frozenset[str] = frozenset(
-    {
-        "what",
-        "who",
-        "how",
-        "why",
-        "when",
-        "where",
-        "which",
-        "does",
-        "is",
-        "are",
-        "was",
-        "were",
-        "the",
-        "a",
-        "an",
-        "of",
-        "in",
-        "on",
-        "to",
-        "for",
-        "and",
-        "or",
-        "not",
-        "can",
-        "could",
-        "would",
-        "should",
-        "do",
-        "did",
-        "has",
-        "have",
-        "had",
-        "be",
-        "been",
-        "about",
-        "between",
-        "from",
-        "with",
-        "this",
-        "that",
-        "these",
-        "those",
-        "it",
-        "its",
-        "tell",
-        "me",
-        "us",
-        "find",
-        "explain",
-        "describe",
-        "relationship",
-        "related",
-        "knowledge",
-        "graph",
-        "article",
-        "articles",
-    }
+# Pre-compiled constants for _validate_cypher — avoids recreating on every call.
+_CYPHER_BLOCKED_OPS: frozenset[str] = frozenset(
+    {"CREATE", "DELETE", "DROP", "SET", "MERGE", "REMOVE", "DETACH"}
 )
+_CYPHER_STRIP_DQ = re.compile(r'"[^"]*"')
+_CYPHER_STRIP_SQ = re.compile(r"'[^']*'")
+_CYPHER_TOKENS_RE = re.compile(r"\b[A-Za-z]+\b")
+_CYPHER_UNBOUNDED_PATH_RE = re.compile(r"\[[\w:]*\*[^\]]*\]")
+
+logger = logging.getLogger(__name__)
 
 
 def _safe_json_loads(value: object) -> dict:
@@ -97,6 +41,15 @@ def _safe_json_loads(value: object) -> dict:
         return json.loads(value)
     except (json.JSONDecodeError, TypeError):
         return {}
+
+
+def _strip_markdown_fences(text: str) -> str:
+    """Strip ```json or ``` fences from LLM response text."""
+    if "```json" in text:
+        return text.split("```json")[1].split("```")[0].strip()
+    if "```" in text:
+        return text.split("```")[1].split("```")[0].strip()
+    return text
 
 
 class KnowledgeGraphAgent:
@@ -385,11 +338,9 @@ class KnowledgeGraphAgent:
         Raises:
             ValueError: If the query fails any validation check.
         """
-        import re
-
         # Strip string literals to avoid false positives on quoted content.
-        stripped = re.sub(r'"[^"]*"', '""', query)
-        stripped = re.sub(r"'[^']*'", "''", stripped)
+        stripped = _CYPHER_STRIP_DQ.sub('""', query)
+        stripped = _CYPHER_STRIP_SQ.sub("''", stripped)
 
         upper = stripped.strip().upper()
 
@@ -398,13 +349,12 @@ class KnowledgeGraphAgent:
             raise ValueError("Cypher query must start with MATCH or CALL")
 
         # 2. Block dangerous write/DDL keywords.
-        _BLOCKED = frozenset({"CREATE", "DELETE", "DROP", "SET", "MERGE", "REMOVE", "DETACH"})
-        for token in re.findall(r"\b[A-Za-z]+\b", stripped):
-            if token.upper() in _BLOCKED:
+        for token in _CYPHER_TOKENS_RE.findall(stripped):
+            if token.upper() in _CYPHER_BLOCKED_OPS:
                 raise ValueError(f"Write operation rejected: {token.upper()}")
 
         # 3. Block unbounded variable-length paths (e.g. [:REL*]).
-        if re.search(r"\[[\w:]*\*[^\]]*\]", query):
+        if _CYPHER_UNBOUNDED_PATH_RE.search(query):
             raise ValueError("Unbounded variable-length path detected in query")
 
     def _init_cypher_rag(self, cypher_pack_path: str | None) -> Any:
@@ -446,7 +396,7 @@ class KnowledgeGraphAgent:
                 len(pattern_manager.examples),
             )
             return rag
-        except Exception as e:
+        except (RuntimeError, ImportError) as e:
             logger.warning("CypherRAG initialization failed: %s", e)
             return None
 
@@ -521,7 +471,7 @@ class KnowledgeGraphAgent:
             result = self.conn.execute(cypher, params or {})
             df = result.get_as_df()
             return df if not df.empty else None
-        except Exception as e:
+        except RuntimeError as e:
             logger.debug("Query failed%s: %s", f" ({log_context})" if log_context else "", e)
             return None
 
@@ -583,13 +533,13 @@ class KnowledgeGraphAgent:
                     "entities": [],
                     "facts": [],
                     "cypher_query": query_plan["cypher"],
-                    "query_type": "confidence_gated_fallback",
+                    "query_type": "training_only_response",
                     "token_usage": dict(self.token_usage),
                 }
         else:
             # Vector search failed entirely — use empty results (hybrid will fill in)
             kg_results = {"sources": [], "entities": [], "facts": [], "raw": []}
-            query_plan = {"type": "vector_fallback", "cypher": "N/A", "cypher_params": {}}
+            query_plan = {"type": "vector_search", "cypher": "N/A", "cypher_params": {}}
             logger.warning("Vector search returned no results")
 
         t_plan = time.perf_counter() - t_plan_start
@@ -605,7 +555,7 @@ class KnowledgeGraphAgent:
                 if src not in existing_sources:
                     kg_results.setdefault("sources", []).insert(0, src)  # Prepend direct matches
                     existing_sources.add(src)
-        except Exception as e:
+        except RuntimeError as e:
             logger.debug(f"Direct title lookup failed: {e}")
 
         # ALWAYS augment with hybrid retrieval (no skip for any query type).
@@ -630,7 +580,7 @@ class KnowledgeGraphAgent:
             for fact in hybrid_results.get("facts", []):
                 if fact not in existing_facts:
                     kg_results.setdefault("facts", []).append(fact)
-        except Exception as e:
+        except RuntimeError as e:
             logger.debug(f"Hybrid retrieval augmentation failed: {e}")
 
         t_exec = time.perf_counter() - t_exec_start
@@ -664,7 +614,7 @@ class KnowledgeGraphAgent:
                             )
                             for rank, (src, _score) in enumerate(sorted_by_centrality):
                                 rrf_scores[src] = rrf_scores.get(src, 0) + 0.5 / (rrf_k + rank)
-                        except Exception as e:
+                        except RuntimeError as e:
                             logger.debug(f"Centrality calculation failed: {e}")
 
                     # Sort by fused score, but PRESERVE original top result
@@ -702,7 +652,7 @@ class KnowledgeGraphAgent:
 
                 t_enhance = time.perf_counter() - t_enhance_start
                 logger.info(f"Adaptive enhancements applied in {t_enhance:.2f}s")
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.warning(f"Enhancement pipeline failed, using standard retrieval: {e}")
                 few_shot_examples = []
 
@@ -716,9 +666,9 @@ class KnowledgeGraphAgent:
         t_total = time.perf_counter() - t_start
 
         # Structured monitoring log
-        logger.info(
+        logger.debug(
             "query_monitor: type=%s total=%.2fs plan=%.2fs exec=%.2fs synth=%.2fs "
-            "sources=%d entities=%d facts=%d fallback=%s question=%r",
+            "sources=%d entities=%d facts=%d question=%r",
             query_plan.get("type", "unknown"),
             t_total,
             t_plan,
@@ -727,7 +677,6 @@ class KnowledgeGraphAgent:
             len(kg_results.get("sources", [])),
             len(kg_results.get("entities", [])),
             len(kg_results.get("facts", [])),
-            kg_results.get("fallback", False),
             question[:80],
         )
 
@@ -852,7 +801,7 @@ class KnowledgeGraphAgent:
         answer = self._synthesize_graph_rag_answer(question, combined_context, unique_titles)
 
         t_total = time.perf_counter() - t_start
-        logger.info(
+        logger.debug(
             "graph_query_monitor: total=%.2fs hops=%d seeds=%d articles=%d question=%r",
             t_total,
             max_hops,
@@ -872,7 +821,8 @@ class KnowledgeGraphAgent:
     def _identify_seed_articles(self, question: str) -> list[str]:
         """Use Claude to extract likely Wikipedia article titles from a question.
 
-        Falls back to simple keyword extraction if the API call fails.
+        Raises APIConnectionError, APIStatusError, or APITimeoutError on Claude API failure.
+        Raises ValueError if the API returns an empty or unparseable response.
         """
         prompt = (
             "You are an assistant that identifies Wikipedia article titles "
@@ -891,39 +841,23 @@ class KnowledgeGraphAgent:
                 messages=[{"role": "user", "content": prompt}],
             )
             self._track_response(response)
-        except Exception as e:
-            logger.warning(f"Claude API error in _identify_seed_articles: {e}")
-            return self._fallback_seed_extraction(question)
+        except (APIConnectionError, APIStatusError, APITimeoutError):
+            logger.warning("Claude API error in _identify_seed_articles")
+            raise
 
         if not response.content:
-            return self._fallback_seed_extraction(question)
+            raise ValueError("Empty response from Claude API in _identify_seed_articles")
 
-        text = response.content[0].text.strip()
-        # Strip markdown fences if present
-        if "```" in text:
-            text = text.split("```")[1] if "```json" not in text else text.split("```json")[1]
-            text = text.split("```")[0].strip()
+        text = _strip_markdown_fences(response.content[0].text.strip())
 
         try:
             titles = json.loads(text)
             if isinstance(titles, list) and all(isinstance(t, str) for t in titles):
                 return titles[:3]
-        except (json.JSONDecodeError, TypeError):
-            logger.warning(f"Failed to parse seed titles JSON: {text[:200]}")
+        except (json.JSONDecodeError, TypeError) as e:
+            raise ValueError(f"Failed to parse seed titles JSON: {text[:200]}") from e
 
-        return self._fallback_seed_extraction(question)
-
-    @staticmethod
-    def _fallback_seed_extraction(question: str) -> list[str]:
-        """Extract candidate article titles from question using simple heuristics.
-
-        Capitalised multi-word phrases and known stop-word filtering provide a
-        reasonable fallback when the LLM is unavailable.
-        """
-        words = question.replace("?", "").replace("!", "").replace(",", "").split()
-        candidates = [w for w in words if w.lower() not in _FALLBACK_STOP_WORDS and len(w) > 2]
-        # Preserve original casing — case-insensitive matching happens in the traversal query
-        return candidates[:3] if candidates else ["Artificial intelligence"]
+        raise ValueError(f"Unexpected response format from _identify_seed_articles: {text[:200]}")
 
     def _synthesize_graph_rag_answer(self, question: str, context: str, sources: list[str]) -> str:
         """Synthesize an answer from multi-hop graph context.
@@ -953,7 +887,7 @@ class KnowledgeGraphAgent:
                 messages=[{"role": "user", "content": prompt}],
             )
             self._track_response(response)
-        except Exception as e:
+        except (APIConnectionError, APIStatusError, APITimeoutError) as e:
             logger.warning(f"Claude API error in _synthesize_graph_rag_answer: {e}")
             return (
                 f"Found {len(sources)} related articles: {', '.join(sources[:5])}"
@@ -1046,12 +980,9 @@ class KnowledgeGraphAgent:
                 ],
             )
             self._track_response(expansion_response)
-            raw = expansion_response.content[0].text.strip() if expansion_response.content else "[]"
-            # Strip markdown code fences if present
-            if "```json" in raw:
-                raw = raw.split("```json")[1].split("```")[0].strip()
-            elif raw.startswith("```"):
-                raw = raw.split("```")[1].split("```")[0].strip()
+            raw = _strip_markdown_fences(
+                expansion_response.content[0].text.strip() if expansion_response.content else "[]"
+            )
             parsed = json.loads(raw)
             if isinstance(parsed, list):
                 alternatives = [str(p)[:300] for p in parsed[:2]]
@@ -1088,7 +1019,7 @@ class KnowledgeGraphAgent:
                         "similarity", 0.0
                     ):
                         merged[title] = result
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.warning(
                     f"Multi-query search failed for query '{query[:100]}{'...' if len(query) > 100 else ''}': {e}"
                 )
@@ -1146,7 +1077,7 @@ class KnowledgeGraphAgent:
                     {"title": r["title"], "score": r.get("similarity", 0.0)} for r in vector_results
                 ],
             }, max_similarity
-        except Exception as e:
+        except (RuntimeError, OSError) as e:
             logger.warning(f"Vector primary retrieve failed: {e}")
             return None, 0.0
 
@@ -1182,7 +1113,7 @@ class KnowledgeGraphAgent:
         else:
             try:
                 vector_results = self.semantic_search(question, top_k=max_results)
-            except Exception as e:
+            except (RuntimeError, OSError) as e:
                 logger.warning(f"Vector search failed in hybrid retrieve: {e}")
                 vector_results = []
         for r in vector_results:
@@ -1441,7 +1372,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
                 messages=[{"role": "user", "content": prompt}],
             )
             self._track_response(response)
-        except Exception as e:
+        except (APIConnectionError, APIStatusError, APITimeoutError) as e:
             logger.warning(f"Claude API error in _synthesize_answer_minimal: {e}")
             return "Unable to answer: API error."
 
@@ -1473,7 +1404,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
                 messages=[{"role": "user", "content": prompt}],
             )
             self._track_response(response)
-        except Exception as e:
+        except (APIConnectionError, APIStatusError, APITimeoutError) as e:
             logger.warning(f"Claude API error in _synthesize_answer: {e}")
             sources = ", ".join(kg_results.get("sources", [])[:5])
             return f"Found relevant sources: {sources}" if sources else "No results found."

@@ -20,6 +20,8 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+import requests
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["LOKY_MAX_CPU_COUNT"] = "1"
 
@@ -133,7 +135,7 @@ def process_url(url, conn, web_source, embedder, extractor) -> bool:
             )
         logger.info(f"Processed {url!r} -> {title!r}")
         return True
-    except Exception as e:
+    except (requests.RequestException, json.JSONDecodeError) as e:
         logger.error(f"Failed to process {url}: {e}")
         return False
 

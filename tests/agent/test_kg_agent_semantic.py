@@ -262,8 +262,8 @@ class TestVectorPrimaryRetrieval:
         assert max_sim == 0.0
 
     def test_exception_returns_none(self, agent):
-        """If vector search raises, returns (None, 0.0) gracefully."""
-        agent.conn.execute.side_effect = Exception("DB error")
+        """If vector search raises RuntimeError, returns (None, 0.0) gracefully."""
+        agent.conn.execute.side_effect = RuntimeError("DB error")
         results, max_sim = agent._vector_primary_retrieve("test", 10)
         assert results is None
         assert max_sim == 0.0
@@ -309,7 +309,7 @@ class TestVectorPrimaryRetrieval:
         assert result["query_type"] == "vector_search"
 
     def test_query_never_calls_llm_cypher(self, agent):
-        """query() uses confidence_gated_fallback path when vector similarity is low."""
+        """query() uses training_only_response path when vector similarity is low."""
         fake_emb = [0.1] * 384
         agent.conn.execute.side_effect = [
             _make_execute_result(pd.DataFrame({"embedding": [fake_emb]})),
@@ -329,7 +329,7 @@ class TestVectorPrimaryRetrieval:
         result = agent.query("obscure query")
 
         # Low similarity (0.1 < 0.5) triggers confidence gate — pack context skipped
-        assert result["query_type"] == "confidence_gated_fallback"
+        assert result["query_type"] == "training_only_response"
 
 
 # --------------------------------------------------------------------------
