@@ -490,9 +490,9 @@ class TestPipelineStageNames:
         import wikigr.agent.kg_agent as module
 
         source = inspect.getsource(module)
-        assert "vector_fallback" not in source, (
-            "'vector_fallback' was renamed to 'vector_search'; " "it must not appear in kg_agent.py"
-        )
+        assert (
+            "vector_fallback" not in source
+        ), "'vector_fallback' was renamed to 'vector_search'; it must not appear in kg_agent.py"
 
     def test_training_only_response_returned_on_low_similarity(self) -> None:
         """query_type 'training_only_response' is returned when max_similarity < 0.5."""

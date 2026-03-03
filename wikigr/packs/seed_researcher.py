@@ -780,7 +780,7 @@ Return JSON with this exact structure:
                     # Exponential backoff: 1s, 2s, 4s
                     wait_time = 2**attempt
                     logger.warning(
-                        f"LLM API error (attempt {attempt+1}), retrying in {wait_time}s: {e}"
+                        f"LLM API error (attempt {attempt + 1}), retrying in {wait_time}s: {e}"
                     )
                     time.sleep(wait_time)
                 else:

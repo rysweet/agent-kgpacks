@@ -43,6 +43,8 @@ URLS_FILE = PACK_DIR / "urls.txt"
 DB_PATH = PACK_DIR / "pack.db"
 MANIFEST_PATH = PACK_DIR / "manifest.json"
 
+# C-3: mkdir must run before FileHandler is created (module level), not inside main()
+Path("logs").mkdir(exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
@@ -180,6 +182,11 @@ def process_url(
     except (requests.RequestException, json.JSONDecodeError) as e:
         logger.error(f"Failed to process {url}: {e}")
         return False
+    except Exception as e:
+        # C-2: catch kuzu RuntimeError/QueryError and any other unexpected exceptions
+        # so a single bad URL doesn't abort the entire build.
+        logger.error(f"Unexpected error processing {url}: {e}", exc_info=True)
+        return False
 
 
 def create_manifest(
@@ -231,9 +238,10 @@ def build_pack(test_mode: bool = False) -> None:
         logger.info("TEST MODE: Building 5-URL pack")
 
     if DB_PATH.exists():
-        # SEC-06: prevent deletion outside data/packs/
-        if not str(DB_PATH).startswith("data/packs/"):
-            raise ValueError(f"Unsafe DB_PATH: {DB_PATH}")
+        # SEC-06: prevent deletion outside data/packs/ (M-3: use resolved absolute path)
+        resolved = DB_PATH.resolve()
+        if "data/packs/" not in str(resolved):
+            raise ValueError(f"Unsafe DB_PATH: {resolved}")
         if test_mode:
             logger.info(f"Auto-deleting existing database (test mode): {DB_PATH}")
         else:
@@ -281,6 +289,13 @@ def build_pack(test_mode: bool = False) -> None:
         f"{relationships_count} relationships"
     )
 
+    # H-3: require at least 1 successful article before writing manifest
+    if articles_count == 0:
+        raise RuntimeError(
+            f"Build produced 0 articles ({successful} succeeded, {failed} failed). "
+            "Refusing to write empty manifest. Check URL list and API key."
+        )
+
     create_manifest(DB_PATH, MANIFEST_PATH, articles_count, entities_count, relationships_count)
     logger.info("Azure Lighthouse Pack build complete!")
 
@@ -294,8 +309,6 @@ def main():
         help="Build a small 5-URL pack for testing",
     )
     args = parser.parse_args()
-
-    Path("logs").mkdir(exist_ok=True)
 
     try:
         build_pack(test_mode=args.test_mode)

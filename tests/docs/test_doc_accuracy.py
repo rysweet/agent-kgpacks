@@ -164,9 +164,9 @@ class TestPackManifestNameFieldDoc:
             "x" * 64,  # max length
         ]
         for name in valid_names:
-            assert EXPECTED_PACK_NAME_PATTERN.fullmatch(name), (
-                f"Documented regex '{EXPECTED_PACK_NAME_REGEX}' must accept " f"valid name '{name}'"
-            )
+            assert EXPECTED_PACK_NAME_PATTERN.fullmatch(
+                name
+            ), f"Documented regex '{EXPECTED_PACK_NAME_REGEX}' must accept valid name '{name}'"
 
     def test_regex_in_doc_rejects_invalid_pack_names(self, pack_manifest_text: str):
         """The regex extracted from the doc must reject invalid names."""
@@ -180,10 +180,9 @@ class TestPackManifestNameFieldDoc:
             "has.dot",  # dot not in charset
         ]
         for name in invalid_names:
-            assert not EXPECTED_PACK_NAME_PATTERN.fullmatch(name), (
-                f"Documented regex '{EXPECTED_PACK_NAME_REGEX}' must reject "
-                f"invalid name '{name!r}'"
-            )
+            assert not EXPECTED_PACK_NAME_PATTERN.fullmatch(
+                name
+            ), f"Documented regex '{EXPECTED_PACK_NAME_REGEX}' must reject invalid name '{name!r}'"
 
 
 # ---------------------------------------------------------------------------

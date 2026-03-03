@@ -311,8 +311,9 @@ class WebContentSource:
                 f"Thin content: {title_or_url} has {word_count} words (minimum: {self._min_content_words})"
             )
 
-        # SEC-09: strip control characters from externally-sourced title before storing or logging
-        safe_title = title.replace("\n", " ").replace("\r", " ")
+        # SEC-09: strip all control characters (U+0000–U+001F, U+007F) from
+        # externally-sourced title before storing or logging (M-2: covers full range)
+        safe_title = re.sub(r"[\x00-\x1f\x7f]", " ", title)
         logger.info(f"Fetched web page: {safe_title} ({len(markdown)} chars, {len(links)} links)")
 
         return Article(
