@@ -87,16 +87,51 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from wikigr.packs.utils import load_urls  # noqa: E402
 ```
 
-`load_urls` strips blank lines and `#` comments from `urls.txt` and returns a plain list of URL strings. Pass `limit=3` for test mode:
+`load_urls` strips blank lines and `#` comments from `urls.txt`, enforces HTTPS-only filtering, and returns a plain list of URL strings. Pass `limit=5` for test mode (the standard test-mode limit):
 
 ```python
-limit = 3 if args.test_mode else None
+limit = 5 if test_mode else None
 urls = load_urls(URLS_FILE, limit=limit)
 ```
 
 Do **not** define a local `def load_urls(...)` in new scripts — use the shared import.
 
 See [Pack Utilities API Reference](../reference/pack-utils.md) for full details.
+
+### Exception Narrowing in `process_url()`
+
+The `process_url()` function in every build script must catch only specific, recoverable exceptions. Broad `except Exception` handlers are not permitted.
+
+**Required handler:**
+
+```python
+except (requests.RequestException, json.JSONDecodeError) as e:
+    logger.error(f"Failed to process {url}: {e}")
+    return False
+```
+
+- `requests.RequestException` — network timeouts, DNS failures, connection resets
+- `json.JSONDecodeError` — malformed JSON in LLM extraction responses
+
+All other exceptions (Kuzu `RuntimeError`, embedding `OSError`, programming bugs like `AttributeError` or `TypeError`) are **not caught** in `process_url()`. They propagate to `build_pack()` and abort the build with a visible traceback. A corrupt partial database write is worse than a fast failure.
+
+See [Handle Exceptions from WikiGR Components](./handle-exceptions.md) for the full exception contract.
+
+### DB_PATH Safety Guard (Required)
+
+Every build script's `build_pack()` function must include a safety guard before any `shutil.rmtree()` call. This prevents accidental deletion of data outside the `data/packs/` directory if `DB_PATH` is ever misconfigured:
+
+```python
+if DB_PATH.exists():
+    # SEC-06: prevent deletion outside data/packs/
+    if not str(DB_PATH).startswith("data/packs/"):
+        raise ValueError(f"Unsafe DB_PATH: {DB_PATH}")
+    shutil.rmtree(DB_PATH) if DB_PATH.is_dir() else DB_PATH.unlink()
+```
+
+The guard uses a string prefix check (`str(DB_PATH).startswith("data/packs/")`) rather than `resolve()`, which ensures it works correctly with relative paths as used throughout the build scripts.
+
+**Important:** The guard must appear *before* the `shutil.rmtree` call, not after. Build scripts in which the guard follows `rmtree` fail the `test_db_path_assertion_precedes_rmtree_in_source` test.
 
 ## Step 4: Build the Pack
 

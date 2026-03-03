@@ -43,7 +43,7 @@ https://example.com/docs/api/
 
 **Required:**
 
-- Must begin with `https://` (HTTP is rejected)
+- Must begin with `https://` — plain `http://` lines are silently dropped by `load_urls()` at parse time (SEC-01) and rejected by `validate_download_url()` at fetch time
 - Must be a public URL reachable without authentication
 - Must not contain private IP ranges or cloud metadata endpoints
 

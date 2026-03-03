@@ -4,8 +4,8 @@
   "description": "Expert knowledge of Microsoft Fabric GraphQL API covering API creation, authentication, schema design, queries, mutations, pagination, filtering, performance, monitoring, security, and integration with Fabric data sources including Lakehouse, Warehouse, and SQL databases.",
   "graph_stats": {
     "articles": 5,
-    "entities": 35,
-    "relationships": 22,
+    "entities": 39,
+    "relationships": 32,
     "size_mb": 2.08
   },
   "eval_scores": null,
@@ -13,6 +13,6 @@
     "https://learn.microsoft.com/en-us/fabric/data-engineering/api-graphql-overview",
     "https://learn.microsoft.com/en-us/fabric/data-engineering/get-started-api-graphql"
   ],
-  "created": "2026-03-03T06:54:20.117665Z",
+  "created": "2026-03-03T08:15:29.415610Z",
   "license": "MIT"
 }
