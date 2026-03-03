@@ -103,3 +103,8 @@ site/
 backups/
 STATUS_REPORT.md
 data/packs/*/eval/results.json
+
+# Amplihack workstream orchestration files (not wikigr project artifacts)
+launcher.py
+run.sh
+workstreams*.json
