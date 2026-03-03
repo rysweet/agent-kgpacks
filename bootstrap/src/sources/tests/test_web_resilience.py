@@ -32,7 +32,7 @@ def _make_response(status: int, text: str = "", headers: dict | None = None) -> 
 
 
 def _make_html(body: str = "", title: str = "Test Page") -> str:
-    return f"<html><head><title>{title}</title></head>" f"<body>{'word ' * 250}{body}</body></html>"
+    return f"<html><head><title>{title}</title></head><body>{'word ' * 250}{body}</body></html>"
 
 
 # ---------------------------------------------------------------------------
