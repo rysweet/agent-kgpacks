@@ -9,6 +9,7 @@ import json
 from unittest.mock import MagicMock
 
 import pandas as pd
+import pytest
 
 from wikigr.agent.cypher_rag import CypherRAG, build_schema_string
 
@@ -185,48 +186,41 @@ class TestPromptIncludesPatterns:
 
 
 # ===================================================================
-# test_fallback_on_api_error
+# test_error_propagation_on_api_error
 # ===================================================================
 
 
-class TestFallbackOnApiError:
-    """CypherRAG falls back gracefully on API errors."""
+class TestRaisesOnApiError:
+    """CypherRAG raises errors on API failures (no silent fallback)."""
 
-    def test_claude_api_error_returns_fallback(self) -> None:
-        """An exception from Claude returns a safe fallback plan."""
+    def test_claude_api_error_raises(self) -> None:
+        """An exception from Claude propagates to the caller."""
         client = MagicMock()
         client.messages.create.side_effect = RuntimeError("API timeout")
         rag = _make_cypher_rag(claude_client=client)
 
-        result = rag.generate_cypher("What are black holes?")
+        with pytest.raises(RuntimeError):
+            rag.generate_cypher("What are black holes?")
 
-        assert result["type"] == "entity_search"
-        assert result["patterns_used"] == 0
-        assert "fallback" in result["explanation"].lower()
-
-    def test_empty_response_returns_fallback(self) -> None:
-        """An empty Claude response returns a safe fallback."""
+    def test_empty_response_raises_value_error(self) -> None:
+        """An empty Claude response raises ValueError."""
         response = MagicMock()
         response.content = []
         client = MagicMock()
         client.messages.create.return_value = response
         rag = _make_cypher_rag(claude_client=client)
 
-        result = rag.generate_cypher("What is dark matter?")
+        with pytest.raises(ValueError, match="Empty response"):
+            rag.generate_cypher("What is dark matter?")
 
-        assert result["type"] == "entity_search"
-        assert result["patterns_used"] == 0
-
-    def test_invalid_json_returns_fallback(self) -> None:
-        """Non-JSON Claude response returns a safe fallback."""
+    def test_invalid_json_raises_json_decode_error(self) -> None:
+        """Non-JSON Claude response raises json.JSONDecodeError."""
         client = MagicMock()
         client.messages.create.return_value = _make_claude_response("This is not JSON at all")
         rag = _make_cypher_rag(claude_client=client)
 
-        result = rag.generate_cypher("Explain quantum mechanics")
-
-        assert result["type"] == "entity_search"
-        assert result["patterns_used"] == 0
+        with pytest.raises(json.JSONDecodeError):
+            rag.generate_cypher("Explain quantum mechanics")
 
     def test_pattern_retrieval_failure_continues(self) -> None:
         """Pattern retrieval failure does not prevent query generation."""
@@ -313,49 +307,6 @@ class TestCypherParamsAlwaysHasQ:
         result = rag.generate_cypher("Tell me about Einstein")
 
         assert result["cypher_params"]["q"] == "Einstein"
-
-
-# ===================================================================
-# test_safe_fallback_extracts_search_term
-# ===================================================================
-
-
-class TestSafeFallback:
-    """_safe_fallback extracts meaningful search terms from questions."""
-
-    def test_filters_stop_words(self) -> None:
-        """Stop words are excluded from the search term."""
-        result = CypherRAG._safe_fallback("What does this have about gravity")
-
-        # "What", "does", "this", "have", "about" are stop words or too short
-        assert "gravity" in result["cypher_params"]["q"]
-        assert "what" not in result["cypher_params"]["q"].lower().split()
-        assert "does" not in result["cypher_params"]["q"].lower().split()
-        assert "about" not in result["cypher_params"]["q"].lower().split()
-
-    def test_truncates_long_terms(self) -> None:
-        """Search term is truncated to 50 characters."""
-        long_question = "Tell me everything about " + "supercalifragilistic " * 10
-        result = CypherRAG._safe_fallback(long_question)
-
-        assert len(result["cypher_params"]["q"]) <= 50
-
-    def test_uses_question_prefix_when_all_stop_words(self) -> None:
-        """If all words are filtered, falls back to question prefix."""
-        # All words <= 3 chars so they get filtered by length
-        result = CypherRAG._safe_fallback("Who is it?")
-
-        assert result["cypher_params"]["q"] == "Who is it?"[:50]
-
-    def test_fallback_structure(self) -> None:
-        """Fallback returns expected keys and values."""
-        result = CypherRAG._safe_fallback("test question")
-
-        assert result["type"] == "entity_search"
-        assert "MATCH" in result["cypher"]
-        assert "$q" in result["cypher"]
-        assert result["patterns_used"] == 0
-        assert "fallback" in result["explanation"].lower()
 
 
 # ===================================================================

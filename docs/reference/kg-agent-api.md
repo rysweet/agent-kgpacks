@@ -99,7 +99,7 @@ A dictionary with the following structure:
     "entities": list[dict], # Entities mentioned in the answer
     "facts": list[str],     # Key facts from retrieved content
     "cypher_query": str,    # The vector search query executed
-    "query_type": str,      # "vector_search" | "confidence_gated_fallback" | "vector_fallback"
+    "query_type": str,      # "vector_search" | "training_only_response"
     "token_usage": {
         "input_tokens": int,
         "output_tokens": int,
@@ -112,9 +112,8 @@ A dictionary with the following structure:
 
 | Value | Meaning |
 |-------|---------|
-| `"vector_search"` | Normal path -- pack content retrieved and used for synthesis |
-| `"confidence_gated_fallback"` | Confidence gate fired -- Claude answered without pack context (similarity below threshold) |
-| `"vector_fallback"` | Vector search returned no results at all |
+| `"vector_search"` | Normal path — pack content retrieved and used for synthesis. Also used when the vector index returns no results (the answer is synthesised from the model's training knowledge only). |
+| `"training_only_response"` | Confidence gate fired — pack content was retrieved but similarity was below `CONTEXT_CONFIDENCE_THRESHOLD`. Claude answered using training knowledge only, without injecting pack context. |
 
 #### Example
 
@@ -128,7 +127,7 @@ print(result["sources"])
 # ["runtime_scheduling", "goroutines"]
 
 print(result["query_type"])
-# "vector_search"
+# "vector_search"  or "training_only_response" if confidence gate fired
 
 print(result["token_usage"])
 # {"input_tokens": 2847, "output_tokens": 312, "api_calls": 2}
@@ -247,11 +246,44 @@ print(result2["token_usage"])
 
 ## Error Handling
 
-The agent handles errors gracefully:
+`query()` raises exceptions for infrastructure failures and lets programming bugs propagate.
+Only intentional degradation paths produce a result dict rather than an exception.
 
-- **API connection errors**: Returns `"Unable to answer: API error."` instead of raising
-- **Empty vector results**: Falls back to `query_type: "vector_fallback"`
-- **Low confidence**: Falls back to `query_type: "confidence_gated_fallback"`
-- **Cross-encoder load failure**: Becomes passthrough (no `ce_score` in results)
-- **Multi-query Haiku failure**: Proceeds with original query only
-- **All sections filtered**: Falls back to raw article content
+### Exceptions raised by `query()`
+
+| Exception | Trigger | Retry? |
+|-----------|---------|--------|
+| `anthropic.APIConnectionError` | Network failure reaching Anthropic API | Yes — transient |
+| `anthropic.APITimeoutError` | Anthropic API call timed out | Yes — transient |
+| `anthropic.APIStatusError` | HTTP 4xx/5xx from Anthropic API | Depends on `status_code` |
+| `RuntimeError` | Kuzu database error | No — check pack integrity |
+| `RuntimeError` or `OSError` | Embedding model or vector index failure | No — check installation |
+
+### Intentional degradation (no exception)
+
+| Situation | `query_type` | Behaviour |
+|-----------|-------------|-----------|
+| Vector search returns no results | `"vector_search"` | Synthesises from training knowledge; `sources` is empty |
+| Similarity below `CONTEXT_CONFIDENCE_THRESHOLD` | `"training_only_response"` | Pack context not injected; Claude answers from training knowledge |
+| Cross-encoder fails to load | N/A | Passthrough — results returned without `ce_score` |
+| Multi-query Haiku call fails | N/A | Proceeds with original query only |
+| All sections filtered by quality scoring | N/A | Falls back to raw article content |
+
+### Minimal caller pattern
+
+```python
+from anthropic import APIConnectionError, APIStatusError, APITimeoutError
+
+try:
+    result = agent.query(question)
+    return result["answer"]
+except (APIConnectionError, APITimeoutError):
+    return "The AI service is temporarily unavailable. Please try again."
+except APIStatusError as e:
+    if e.status_code == 401:
+        raise RuntimeError("Invalid ANTHROPIC_API_KEY") from e
+    raise
+```
+
+See [Handle Exceptions](../howto/handle-exceptions.md) for more patterns and [Exception Types
+Reference](../reference/exception-types.md) for the full list.

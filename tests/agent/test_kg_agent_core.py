@@ -15,7 +15,9 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+import httpx
 import pandas as pd
+from anthropic import APIConnectionError
 
 from wikigr.agent.kg_agent import KnowledgeGraphAgent, _safe_json_loads
 
@@ -37,9 +39,12 @@ def _make_agent() -> KnowledgeGraphAgent:
     agent.enable_reranker = True
     agent.enable_multidoc = True
     agent.enable_fewshot = True
+    agent.enable_multi_query = False
+    agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
     agent.reranker = None
     agent.synthesizer = None
     agent.few_shot = None
+    agent.cross_encoder = None
     return agent
 
 
@@ -345,7 +350,7 @@ class TestHybridRetrieve:
 class TestConfidenceGatedContextInjection:
     """query() skips pack context and uses minimal synthesis when vector similarity < 0.5."""
 
-    def test_low_similarity_triggers_confidence_gated_fallback(self) -> None:
+    def test_low_similarity_triggers_training_only_response(self) -> None:
         """max_similarity < 0.5 → confidence gate fires, _synthesize_answer_minimal called."""
         agent = _make_agent()
         agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
@@ -361,7 +366,7 @@ class TestConfidenceGatedContextInjection:
         ):
             result = agent.query("What is Python?")
 
-        assert result["query_type"] == "confidence_gated_fallback"
+        assert result["query_type"] == "training_only_response"
         assert result["answer"] == "fallback answer"
         assert result["sources"] == []
         assert result["entities"] == []
@@ -415,9 +420,11 @@ class TestConfidenceGatedContextInjection:
         assert agent.token_usage["output_tokens"] == 5
 
     def test_synthesize_answer_minimal_api_error_returns_fallback_string(self) -> None:
-        """On API error, _synthesize_answer_minimal returns the fallback string and does not raise."""
+        """On Anthropic API error, _synthesize_answer_minimal returns the fallback string and does not raise."""
         agent = _make_agent()
-        agent.claude.messages.create.side_effect = Exception("API failure")
+        agent.claude.messages.create.side_effect = APIConnectionError(
+            request=httpx.Request("GET", "https://api.anthropic.com")
+        )
 
         result = agent._synthesize_answer_minimal("What is recursion?")
 
@@ -439,7 +446,7 @@ class TestConfidenceGatedContextInjection:
         ):
             result = agent.query("What is Python?")
 
-        assert result["query_type"] != "confidence_gated_fallback"
+        assert result["query_type"] != "training_only_response"
         mock_minimal.assert_not_called()
 
     def test_synthesize_answer_minimal_empty_response_returns_fallback_string(self) -> None:

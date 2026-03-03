@@ -27,6 +27,8 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+import requests
+
 # Disable tokenizers parallelism warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["LOKY_MAX_CPU_COUNT"] = "1"
@@ -243,7 +245,7 @@ def process_url(
         # Thin content or 404 — not a pipeline failure, just a skip
         logger.info(f"Skipped {url}: {e}")
         return False
-    except Exception as e:
+    except (requests.RequestException, json.JSONDecodeError) as e:
         logger.error(f"Failed to process {url}: {e}")
         return False
 
