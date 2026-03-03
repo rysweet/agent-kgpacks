@@ -3,7 +3,6 @@
 
 # Overview & Introduction
 https://learn.microsoft.com/en-us/copilot/security/microsoft-security-copilot
-https://learn.microsoft.com/en-us/copilot/security/what-is-microsoft-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/faq-security-copilot
 https://learn.microsoft.com/en-us/copilot/security/privacy-data-security
