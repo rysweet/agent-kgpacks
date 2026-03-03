@@ -19,6 +19,11 @@ from pathlib import Path
 
 from anthropic import Anthropic
 
+# Import canonical pattern from manifest to avoid definition drift.
+# Note: manifest.PACK_NAME_RE accepts [a-zA-Z0-9_-], which is intentionally
+# wider than the original lowercase-only pattern — this is a deliberate DRY
+# trade-off; pack names with uppercase/underscores are validated consistently.
+from wikigr.agent.kg_agent import KnowledgeGraphAgent
 from wikigr.packs.manifest import PACK_NAME_RE
 
 logging.basicConfig(level=logging.WARNING)
@@ -80,7 +85,7 @@ def judge_score(
             logger.warning("Judge returned no digits: %r", raw_text)
             return 0
         return min(10, int(digits))
-    except Exception:
+    except Exception:  # intentional: any Anthropic API/network failure returns 0 so eval loop continues
         logger.exception("Judge scoring failed for question: %s", question[:80])
         return 0
 
@@ -124,8 +129,6 @@ def main() -> None:
 
     client = Anthropic()
 
-    from wikigr.agent.kg_agent import KnowledgeGraphAgent
-
     training_scores: list[int] = []
     pack_scores: list[int] = []
 
@@ -141,7 +144,7 @@ def main() -> None:
                 messages=[{"role": "user", "content": question_text}],
             )
             training_answer = response.content[0].text
-        except Exception:
+        except Exception:  # intentional: API failure falls back to empty answer; eval loop must not abort
             logger.exception("Training baseline failed for: %s", question_text[:80])
             training_answer = ""
 
@@ -149,11 +152,10 @@ def main() -> None:
 
         # Pack: KG Agent answer
         try:
-            agent = KnowledgeGraphAgent(str(db_path), few_shot_path=str(questions_path))
-            result = agent.query(question_text)
-            pack_answer = result.get("answer", "")
-            agent.close()
-        except Exception:
+            with KnowledgeGraphAgent(str(db_path), read_only=True, few_shot_path=str(questions_path)) as agent:
+                result = agent.query(question_text)
+                pack_answer = result.get("answer", "")
+        except Exception:  # intentional: kuzu/agent failure falls back to empty answer; eval loop must not abort
             logger.exception("KG Agent failed for: %s", question_text[:80])
             pack_answer = ""
 
