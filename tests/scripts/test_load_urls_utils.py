@@ -34,10 +34,7 @@ import pytest
 # ---------------------------------------------------------------------------
 # Import under test
 # ---------------------------------------------------------------------------
-
-
 from wikigr.packs.utils import load_urls  # noqa: E402
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -420,7 +417,7 @@ class TestErrorHandling:
     def test_no_silent_empty_list_on_missing_file(self, tmp_path):
         """load_urls must NOT return [] for a missing file."""
         missing = tmp_path / "missing_urls.txt"
-        with pytest.raises(Exception):
+        with pytest.raises((FileNotFoundError, OSError)):
             load_urls(missing)
 
 
@@ -515,19 +512,16 @@ class TestNoLocalDefLoadUrlsInScripts:
     def test_no_local_def_load_urls_in_any_build_script(self):
         """No build_*_pack.py may define its own load_urls function."""
         offenders = [
-            p.name
-            for p in self._collect_build_scripts()
-            if self._has_local_load_urls_def(p)
+            p.name for p in self._collect_build_scripts() if self._has_local_load_urls_def(p)
         ]
-        assert offenders == [], (
-            f"These scripts still have a local def load_urls: {offenders}"
-        )
+        assert offenders == [], f"These scripts still have a local def load_urls: {offenders}"
 
     def _calls_load_urls(self, path: Path) -> bool:
         """Return True if the script body calls load_urls (excluding the def line)."""
         src = path.read_text()
         # Match any call to load_urls( that isn't inside a def statement
         import re
+
         # A call looks like 'load_urls(' anywhere in the source
         return bool(re.search(r"\bload_urls\s*\(", src))
 
@@ -540,35 +534,35 @@ class TestNoLocalDefLoadUrlsInScripts:
             for p in self._collect_build_scripts()
             if self._calls_load_urls(p) and not self._has_shared_import(p)
         ]
-        assert missing == [], (
-            f"These scripts call load_urls but don't import from wikigr.packs.utils: {missing}"
-        )
+        assert (
+            missing == []
+        ), f"These scripts call load_urls but don't import from wikigr.packs.utils: {missing}"
 
     def test_check_pack_freshness_imports_from_shared_utils(self):
         """check_pack_freshness.py must use the shared import."""
         p = self.SCRIPTS_DIR / "check_pack_freshness.py"
-        assert self._has_shared_import(p), (
-            "check_pack_freshness.py is missing 'from wikigr.packs.utils import load_urls'"
-        )
+        assert self._has_shared_import(
+            p
+        ), "check_pack_freshness.py is missing 'from wikigr.packs.utils import load_urls'"
 
     def test_validate_pack_urls_imports_from_shared_utils(self):
         """validate_pack_urls.py must use the shared import."""
         p = self.SCRIPTS_DIR / "validate_pack_urls.py"
-        assert self._has_shared_import(p), (
-            "validate_pack_urls.py is missing 'from wikigr.packs.utils import load_urls'"
-        )
+        assert self._has_shared_import(
+            p
+        ), "validate_pack_urls.py is missing 'from wikigr.packs.utils import load_urls'"
 
     def test_no_local_def_in_check_pack_freshness(self):
         p = self.SCRIPTS_DIR / "check_pack_freshness.py"
-        assert not self._has_local_load_urls_def(p), (
-            "check_pack_freshness.py must not define its own load_urls"
-        )
+        assert not self._has_local_load_urls_def(
+            p
+        ), "check_pack_freshness.py must not define its own load_urls"
 
     def test_no_local_def_in_validate_pack_urls(self):
         p = self.SCRIPTS_DIR / "validate_pack_urls.py"
-        assert not self._has_local_load_urls_def(p), (
-            "validate_pack_urls.py must not define its own load_urls"
-        )
+        assert not self._has_local_load_urls_def(
+            p
+        ), "validate_pack_urls.py must not define its own load_urls"
 
 
 # ---------------------------------------------------------------------------

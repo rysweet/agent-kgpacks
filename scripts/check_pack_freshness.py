@@ -410,8 +410,11 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="Output JSON report")
     parser.add_argument("--content-hash", action="store_true", help="Use content hashing (slower)")
     parser.add_argument(
-        "--workers", type=int, default=DEFAULT_WORKERS, metavar="N",
-        help="Concurrent workers (1-50, default: %(default)s)"
+        "--workers",
+        type=int,
+        default=DEFAULT_WORKERS,
+        metavar="N",
+        help="Concurrent workers (1-50, default: %(default)s)",
     )
     parser.add_argument(
         "--threshold",

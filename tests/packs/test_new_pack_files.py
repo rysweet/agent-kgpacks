@@ -636,10 +636,9 @@ def test_manifest_has_valid_json(pack_name: str) -> None:
     except json.JSONDecodeError as exc:
         pytest.fail(f"data/packs/{pack_name}/manifest.json is not valid JSON: {exc}")
 
-    assert isinstance(manifest, dict), (
-        f"data/packs/{pack_name}/manifest.json must be a JSON object, "
-        f"got {type(manifest).__name__}"
-    )
+    assert isinstance(
+        manifest, dict
+    ), f"data/packs/{pack_name}/manifest.json must be a JSON object, got {type(manifest).__name__}"
 
 
 _REQUIRED_MANIFEST_FIELDS = {

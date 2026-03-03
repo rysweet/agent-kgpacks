@@ -99,8 +99,11 @@ def main():
     parser.add_argument("--all", action="store_true", help="Validate all packs")
     parser.add_argument("--fix", action="store_true", help="Remove invalid URLs from file")
     parser.add_argument(
-        "--workers", type=int, default=10, metavar="N",
-        help="Concurrent workers (1-50, default: 10)"
+        "--workers",
+        type=int,
+        default=10,
+        metavar="N",
+        help="Concurrent workers (1-50, default: 10)",
     )
     args = parser.parse_args()
 
