@@ -1,0 +1,116 @@
+{
+  "pack_name": "rust-expert",
+  "timestamp": "2026-03-04T04:19:12Z",
+  "tasks_evaluated": 5,
+  "summary": {
+    "baseline": {
+      "avg_judge_score": 8.6,
+      "avg_composite_score": 0.8567,
+      "syntax_pass_rate": 0.6,
+      "accuracy_gte7": 1.0,
+      "avg_latency_ms": 18772.0,
+      "total_cost_usd": 0.5087,
+      "avg_tool_calls": 0.0
+    },
+    "pack_retrieval": {
+      "avg_judge_score": 8.8,
+      "avg_composite_score": 0.9267,
+      "syntax_pass_rate": 1.0,
+      "accuracy_gte7": 1.0,
+      "avg_latency_ms": 41743.0,
+      "total_cost_usd": 0.5352,
+      "avg_tool_calls": 0.0
+    },
+    "skill_delivery": {
+      "avg_judge_score": 8.0,
+      "avg_composite_score": 0.8867,
+      "syntax_pass_rate": 1.0,
+      "accuracy_gte7": 0.8,
+      "avg_latency_ms": 136792.0,
+      "total_cost_usd": 1.3316,
+      "avg_tool_calls": 4.6
+    }
+  },
+  "per_task": [
+    {
+      "task_id": "rust_001",
+      "baseline": {
+        "judge_score": 7,
+        "composite": 0.7
+      },
+      "pack_retrieval": {
+        "judge_score": 7,
+        "composite": 0.85
+      },
+      "skill_delivery": {
+        "judge_score": 7,
+        "composite": 0.85,
+        "tool_calls": 5
+      }
+    },
+    {
+      "task_id": "rust_002",
+      "baseline": {
+        "judge_score": 10,
+        "composite": 0.9667
+      },
+      "pack_retrieval": {
+        "judge_score": 10,
+        "composite": 0.9667
+      },
+      "skill_delivery": {
+        "judge_score": 10,
+        "composite": 0.9667,
+        "tool_calls": 2
+      }
+    },
+    {
+      "task_id": "rust_003",
+      "baseline": {
+        "judge_score": 7,
+        "composite": 0.7
+      },
+      "pack_retrieval": {
+        "judge_score": 8,
+        "composite": 0.9
+      },
+      "skill_delivery": {
+        "judge_score": 5,
+        "composite": 0.75,
+        "tool_calls": 5
+      }
+    },
+    {
+      "task_id": "rust_004",
+      "baseline": {
+        "judge_score": 10,
+        "composite": 1.0
+      },
+      "pack_retrieval": {
+        "judge_score": 10,
+        "composite": 1.0
+      },
+      "skill_delivery": {
+        "judge_score": 9,
+        "composite": 0.95,
+        "tool_calls": 4
+      }
+    },
+    {
+      "task_id": "rust_005",
+      "baseline": {
+        "judge_score": 9,
+        "composite": 0.9167
+      },
+      "pack_retrieval": {
+        "judge_score": 9,
+        "composite": 0.9167
+      },
+      "skill_delivery": {
+        "judge_score": 9,
+        "composite": 0.9167,
+        "tool_calls": 7
+      }
+    }
+  ]
+}
