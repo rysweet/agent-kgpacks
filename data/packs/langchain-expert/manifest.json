@@ -4,8 +4,8 @@
   "description": "Expert knowledge of LangChain framework covering agents, RAG pipelines, LCEL chains, LangGraph orchestration, and LangSmith observability.",
   "graph_stats": {
     "articles": 16,
-    "entities": 56,
-    "relationships": 58,
+    "entities": 59,
+    "relationships": 60,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://python.langchain.com/docs/concepts/",
     "https://github.com/langchain-ai/langchain"
   ],
-  "created": "2026-03-01T23:29:04.039885Z",
+  "created": "2026-03-03T19:39:40.115550Z",
   "license": "MIT"
 }

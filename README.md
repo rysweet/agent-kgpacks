@@ -58,7 +58,7 @@ EOF
 echo "y" | uv run python scripts/build_my_framework_pack.py
 ```
 
-The build pipeline fetches each URL, uses Claude Haiku to extract entities/relationships/facts, generates BGE vector embeddings (768-dim), and stores everything in a Kuzu graph database.
+The build pipeline fetches each URL, uses Claude Haiku to extract entities/relationships/facts, generates BGE vector embeddings (768-dim), and stores everything in a LadybugDB graph database.
 
 ### 3. Evaluate — Prove the pack adds value
 
@@ -116,7 +116,7 @@ with KnowledgeGraphAgent(db_path="data/packs/my-framework/pack.db") as agent:
 ## How It Works
 
 ```
-URLs ──> Fetch ──> Extract (Claude Haiku) ──> Embed (BGE) ──> Store (Kuzu)
+URLs ──> Fetch ──> Extract (Claude Haiku) ──> Embed (BGE) ──> Store (LadybugDB)
                                                                    |
                                                               pack.db + skill.md
                                                                    |

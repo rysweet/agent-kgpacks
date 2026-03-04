@@ -2,7 +2,7 @@
 # Python 3.10+
 
 # Core dependencies
-kuzu==0.11.3
+real_ladybug>=0.15.0,<0.16.0
 sentence-transformers==5.2.2
 requests==2.32.3
 pandas==3.0.0

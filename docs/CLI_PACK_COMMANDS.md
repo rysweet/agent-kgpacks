@@ -76,7 +76,7 @@ wikigr pack create \
 output/
 └── pack-name/
     ├── manifest.json        # Pack metadata and stats
-    ├── pack.db/            # Kuzu knowledge graph database
+    ├── pack.db/            # LadybugDB knowledge graph database
     ├── skill.md            # Claude Code skill file
     ├── kg_config.json      # KG Agent configuration
     └── eval_questions.jsonl # Evaluation questions (if provided)
@@ -373,7 +373,7 @@ wikigr pack validate <pack-directory> [--strict]
 Standard mode checks:
 
 - `manifest.json` exists and is valid JSON
-- `pack.db/` exists (Kuzu database directory)
+- `pack.db/` exists (LadybugDB database directory)
 - `skill.md` exists
 - `kg_config.json` exists and is valid JSON
 - Manifest fields are valid (version format, timestamps, etc.)

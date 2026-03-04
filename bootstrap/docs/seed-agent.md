@@ -80,7 +80,7 @@ SeedAgent._validate_titles()             [Wikipedia Query API]
 seeds JSON (per topic)
     |
     v
-create_schema() + RyuGraphOrchestrator   [Kuzu + sentence-transformers]
+create_schema() + RyuGraphOrchestrator   [LadybugDB + sentence-transformers]
     |
     v
 <topic>.db                               [One knowledge graph per topic]

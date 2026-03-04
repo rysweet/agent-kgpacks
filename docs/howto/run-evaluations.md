@@ -100,7 +100,7 @@ uv run python scripts/run_all_packs_evaluation.py --sample 10 --disable-reranker
 
 The script automatically discovers packs that have both:
 
-- `data/packs/<pack-name>/pack.db` (Kuzu database)
+- `data/packs/<pack-name>/pack.db` (LadybugDB database)
 - `data/packs/<pack-name>/eval/questions.jsonl` (evaluation questions)
 
 Packs missing either file are skipped.

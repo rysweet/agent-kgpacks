@@ -183,7 +183,7 @@ Instead of using a single article, the synthesizer traverses LINKS_TO edges from
 4. Cap the total source list at 7 articles
 5. Assemble unified context for synthesis
 
-**Constructor:** `MultiDocSynthesizer(kuzu_conn)` -- takes only the Kuzu connection. No additional configuration parameters.
+**Constructor:** `MultiDocSynthesizer(kuzu_conn)` -- takes only the LadybugDB connection. No additional configuration parameters.
 
 ## Step 7: Content Quality Filtering
 

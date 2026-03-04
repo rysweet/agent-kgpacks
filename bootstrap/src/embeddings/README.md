@@ -222,7 +222,7 @@ gen = EmbeddingGenerator(use_gpu=True)
 
 **Used by:**
 - `bootstrap/src/wikipedia/` - Embedding Wikipedia article sections
-- `bootstrap/src/database/` - Storing embeddings in Kuzu vector index
+- `bootstrap/src/database/` - Storing embeddings in LadybugDB vector index
 
 **Uses:**
 - `sentence-transformers` - Pre-trained transformer models

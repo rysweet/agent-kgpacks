@@ -5,7 +5,7 @@ FastAPI-based RESTful API for Wikipedia knowledge graph queries and visualizatio
 ## Features
 
 - **Graph Traversal**: Explore Wikipedia article connections with customizable depth
-- **Semantic Search**: Vector-based similarity search using Kuzu's embedding index
+- **Semantic Search**: Vector-based similarity search using LadybugDB's embedding index
 - **Article Details**: Full article metadata, sections, links, and backlinks
 - **Autocomplete**: Fast article title suggestions
 - **Statistics**: Database and performance metrics
@@ -92,7 +92,7 @@ backend/
 
 ### Key Design Decisions
 
-1. **Singleton Connection Manager**: Single Kuzu Database instance shared across requests
+1. **Singleton Connection Manager**: Single LadybugDB Database instance shared across requests
 2. **Dependency Injection**: FastAPI's `Depends()` for database connections
 3. **Service Layer**: Reuses existing query logic from `bootstrap/src/query/`
 4. **Pydantic Models**: Type-safe API contracts with validation

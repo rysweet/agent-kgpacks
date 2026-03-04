@@ -15,7 +15,7 @@ def validate_pack_structure(pack_dir: Path, strict: bool = False) -> list[str]:
 
     Checks:
     - manifest.json exists and is valid
-    - pack.db directory exists (Kuzu database)
+    - pack.db directory exists (LadybugDB database)
     - skill.md exists
     - kg_config.json exists and is valid JSON
     - Optional: eval/ directory and README.md
@@ -45,12 +45,12 @@ def validate_pack_structure(pack_dir: Path, strict: bool = False) -> list[str]:
         except Exception as e:
             errors.append(f"Error loading manifest.json: {e}")
 
-    # Check pack.db (must be a directory - Kuzu databases are directories)
+    # Check pack.db (must be a directory - LadybugDB databases are directories)
     pack_db_path = pack_dir / "pack.db"
     if not pack_db_path.exists():
         errors.append("Required database missing: pack.db")
     elif not pack_db_path.is_dir():
-        errors.append("pack.db must be a directory (Kuzu database)")
+        errors.append("pack.db must be a directory (LadybugDB database)")
 
     # Check skill.md
     skill_path = pack_dir / "skill.md"

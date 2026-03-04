@@ -4,8 +4,8 @@
   "description": "Expert Kotlin programming knowledge covering Kotlin 2.x with K2 compiler, coroutines, multiplatform development, Compose Multiplatform, sealed classes, null safety, extensions, and Android development.",
   "graph_stats": {
     "articles": 42,
-    "entities": 305,
-    "relationships": 208,
+    "entities": 286,
+    "relationships": 212,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -18,6 +18,6 @@
     "https://developer.android.com/kotlin",
     "https://kotlinlang.org/docs/coroutines-guide.html"
   ],
-  "created": "2026-03-01T23:32:11.671539Z",
+  "created": "2026-03-03T19:38:40.539371Z",
   "license": "MIT"
 }

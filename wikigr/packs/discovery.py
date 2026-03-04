@@ -19,7 +19,7 @@ def is_valid_pack(pack_dir: Path) -> bool:
 
     A valid pack must have:
     - manifest.json (valid JSON with required fields)
-    - pack.db/ (Kuzu database directory)
+    - pack.db/ (LadybugDB database directory)
     - skill.md (Claude Code skill file)
     - kg_config.json (KG Agent configuration)
 

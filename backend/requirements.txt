@@ -8,7 +8,7 @@ slowapi==0.1.9
 sse-starlette>=2.0.0,<3.0.0
 
 # Database
-kuzu==0.11.3
+real_ladybug>=0.15.0,<0.16.0
 
 # Data Processing
 pandas>=3.0.0,<4.0.0

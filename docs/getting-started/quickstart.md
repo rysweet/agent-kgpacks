@@ -36,7 +36,7 @@ This will:
 2. Fetch each page and extract text content
 3. Run LLM extraction to identify entities and relationships
 4. Generate BGE embeddings for all sections
-5. Store everything in a Kuzu graph database at `data/packs/go-expert/pack.db`
+5. Store everything in a LadybugDB graph database at `data/packs/go-expert/pack.db`
 6. Write `manifest.json` with pack metadata
 
 !!! note "Build time"
@@ -118,7 +118,7 @@ Delta                    +10pp
 
 ## What Just Happened?
 
-1. **Build**: The build script fetched Go documentation pages, extracted structured knowledge (entities, relationships, facts), generated vector embeddings, and stored everything in a Kuzu graph database.
+1. **Build**: The build script fetched Go documentation pages, extracted structured knowledge (entities, relationships, facts), generated vector embeddings, and stored everything in a LadybugDB graph database.
 
 2. **Query**: The KG Agent embedded your question, searched the graph for relevant content, applied enhancement modules (reranking, multi-doc synthesis), and used Claude to synthesize a grounded answer.
 

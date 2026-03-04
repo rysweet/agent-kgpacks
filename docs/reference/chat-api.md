@@ -300,7 +300,7 @@ The chat endpoints read the following environment variables at startup:
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `ANTHROPIC_API_KEY` | Yes | Anthropic API key — both endpoints return 503 if absent |
-| `WIKIGR_DATABASE_PATH` | No | Override the default Kuzu database path |
+| `WIKIGR_DATABASE_PATH` | No | Override the default LadybugDB database path |
 | `WIKIGR_CHAT_RATE_LIMIT` | No | Override the per-IP rate limit (default `5/minute`) |
 
 Pack databases are resolved at `data/packs/<pack_name>/pack.db` relative to the

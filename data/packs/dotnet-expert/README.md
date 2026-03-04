@@ -208,7 +208,7 @@ Claude: *loads dotnet-expert pack and provides answer*
 ### Prerequisites
 
 - Python 3.10+
-- Kuzu 0.3.0+
+- LadybugDB 0.15.0+
 - OpenAI API key or Azure OpenAI endpoint
 
 ### Build from Source
@@ -230,7 +230,7 @@ python scripts/build_dotnet_pack.py
 2. **Web Scraping**: Fetches content using WebContentSource
 3. **Content Processing**: Extracts entities and relationships with LLM
 4. **Embedding Generation**: Creates vector embeddings for semantic search
-5. **Database Creation**: Stores in Kuzu graph database
+5. **Database Creation**: Stores in LadybugDB graph database
 6. **Manifest Generation**: Creates `manifest.json` with metadata
 
 ## Evaluation
@@ -291,7 +291,7 @@ Defines Claude Code skill registration and invocation triggers.
 ## Requirements
 
 - Python 3.10+
-- Kuzu 0.3.0+
+- LadybugDB 0.15.0+
 - 1 GB RAM minimum
 - 2 GB disk space
 

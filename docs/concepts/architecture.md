@@ -41,7 +41,7 @@ This page describes the system architecture of Knowledge Packs, including the da
 │  │                   Data Access Layer                         │ │
 │  │                                                             │ │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐ │ │
-│  │  │  Kuzu DB     │  │  Vector Index │  │  Anthropic API  │ │ │
+│  │  │  LadybugDB   │  │  Vector Index │  │  Anthropic API  │ │ │
 │  │  │  (graph)     │  │  (HNSW)      │  │  (Claude)       │ │ │
 │  │  └──────────────┘  └──────────────┘  └─────────────────┘ │ │
 │  └────────────────────────────────────────────────────────────┘ │
@@ -52,9 +52,9 @@ This page describes the system architecture of Knowledge Packs, including the da
 
 | Component | Technology | Version | Purpose |
 |-----------|-----------|---------|---------|
-| Graph Database | Kuzu | 0.11.3+ | Embedded graph storage, Cypher queries |
+| Graph Database | LadybugDB | 0.15.0+ | Embedded graph storage, Cypher queries |
 | Embeddings | BAAI/bge-base-en-v1.5 | - | 768-dim sentence embeddings (local, CPU) |
-| Vector Index | HNSW (via Kuzu) | - | Approximate nearest neighbor search |
+| Vector Index | HNSW (via LadybugDB) | - | Approximate nearest neighbor search |
 | Synthesis Model | Claude Opus | claude-opus-4-6 | Answer generation, entity extraction |
 | Query Expansion | Claude Haiku | claude-haiku-4-5 | Alternative query phrasing |
 | Judge Model | Claude Haiku | claude-haiku-4-5 | Evaluation scoring (0-10) |
@@ -62,9 +62,9 @@ This page describes the system architecture of Knowledge Packs, including the da
 | Runtime | Python | 3.10+ | Application language |
 | Package Manager | uv | - | Dependency management |
 
-### Why Kuzu?
+### Why LadybugDB?
 
-Kuzu is an embedded, column-oriented graph database:
+LadybugDB is an embedded, column-oriented graph database:
 
 - **No server**: The database is a directory on disk, opened directly by the application
 - **Cypher support**: Uses the openCypher query language
@@ -258,7 +258,7 @@ Every pack follows a consistent directory structure:
 
 ```
 data/packs/<pack-name>/
-├── pack.db/              # Kuzu database directory (multiple files inside)
+├── pack.db/              # LadybugDB database directory (multiple files inside)
 ├── manifest.json         # Pack metadata, version, graph statistics
 ├── urls.txt              # Source URLs used to build the pack
 ├── skill.md              # Claude Code skill description

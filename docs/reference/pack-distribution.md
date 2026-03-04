@@ -14,7 +14,7 @@ pack directory. The archive contains:
 | Path (relative to archive root) | Required | Description |
 |---------------------------------|----------|-------------|
 | `manifest.json` | Yes | Pack metadata (name, version, description, …) |
-| `pack.db/` | Yes | Kuzu graph database directory |
+| `pack.db/` | Yes | LadybugDB graph database directory |
 | `skill.md` | Yes | Claude Code skill definition |
 | `kg_config.json` | Yes | Knowledge graph build configuration |
 | `README.md` | No | Human-readable documentation |

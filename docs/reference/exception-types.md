@@ -19,7 +19,7 @@ Each error domain has its own exception set. Programming bugs (`AttributeError`,
 | `anthropic.APIConnectionError` | Synthesis API call | Network failure connecting to Anthropic API |
 | `anthropic.APIStatusError` | Synthesis API call | HTTP error response (4xx/5xx) from Anthropic API |
 | `anthropic.APITimeoutError` | Synthesis API call | Anthropic API call timed out |
-| `RuntimeError` | `conn.execute()` | Kuzu database error during query execution |
+| `RuntimeError` | `conn.execute()` | LadybugDB database error during query execution |
 | `RuntimeError` or `OSError` | Vector pipeline | Embedding model or vector index failure |
 
 ### Exceptions from `_identify_seed_articles()`
@@ -35,7 +35,7 @@ Each error domain has its own exception set. Programming bugs (`AttributeError`,
 
 | Exception | Description |
 |-----------|-------------|
-| `RuntimeError` | Kuzu database could not be opened (missing path, permission denied) |
+| `RuntimeError` | LadybugDB database could not be opened (missing path, permission denied) |
 | `ImportError` | Optional enhancement module not installed |
 
 ### Exceptions that propagate as programming bugs
@@ -72,7 +72,7 @@ and proceeds with no patterns. The caller only sees the generation-level excepti
 
 | Exception | Description |
 |-----------|-------------|
-| `RuntimeError` | Kuzu `show_tables()` failed. Returns `"(schema unavailable)"` string instead of raising. |
+| `RuntimeError` | LadybugDB `show_tables()` failed. Returns `"(schema unavailable)"` string instead of raising. |
 
 ---
 
@@ -144,11 +144,11 @@ other errors terminate the build immediately with a traceback.
 |-----------|----------|
 | `requests.RequestException` | Caught per-URL; build continues with next URL |
 | `json.JSONDecodeError` | Caught per-URL; build continues with next URL |
-| `RuntimeError` (Kuzu) | **Not caught** — terminates build immediately |
+| `RuntimeError` (LadybugDB) | **Not caught** — terminates build immediately |
 | `OSError` (embedding) | **Not caught** — terminates build immediately |
 | `AttributeError`, `TypeError` | **Not caught** — terminates build immediately |
 
-If a build terminates with a Kuzu `RuntimeError`, the `pack.db` file may be corrupt.
+If a build terminates with a LadybugDB `RuntimeError`, the `pack.db` file may be corrupt.
 Delete it before re-running the build.
 
 ---
@@ -169,9 +169,9 @@ from anthropic import APIConnectionError, APIStatusError, APITimeoutError
 
 ---
 
-## Kuzu Exception Type
+## LadybugDB Exception Type
 
-Kuzu raises plain `RuntimeError` for all database errors. WikiGR does not subclass or wrap
+LadybugDB raises plain `RuntimeError` for all database errors. WikiGR does not subclass or wrap
 these. Check the error message for details (schema mismatch, missing table, index corrupt, etc.).
 
 ---

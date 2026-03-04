@@ -102,7 +102,7 @@ LLM extraction (Claude) → entities, relationships, facts
 Generate BGE embeddings for each section (768-dim vectors)
   │
   ▼
-Store in Kuzu graph database:
+Store in LadybugDB graph database:
   - Article nodes (title, category, word_count)
   - Section nodes (title, content, embedding)
   - Entity nodes (name, type, description)
@@ -118,7 +118,7 @@ Write manifest.json with metadata
 
 ```
 data/packs/go-expert/
-├── pack.db/            # Kuzu database directory
+├── pack.db/            # LadybugDB database directory
 ├── manifest.json       # Pack metadata (name, version, stats)
 ├── urls.txt            # Source URLs (input)
 ├── skill.md            # Claude Code skill description

@@ -92,7 +92,7 @@ This pack has been rigorously evaluated against baseline capabilities:
 ## Requirements
 
 - Python 3.10+
-- Kuzu 0.3.0+
+- LadybugDB 0.15.0+
 - 1.5 GB disk space
 
 ## License

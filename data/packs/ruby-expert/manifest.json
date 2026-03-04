@@ -4,8 +4,8 @@
   "description": "Expert Ruby programming knowledge covering Ruby 3.3+ with YJIT JIT compiler, Ractors for parallelism, pattern matching, RBS type signatures, Prism parser, and the complete core class library.",
   "graph_stats": {
     "articles": 45,
-    "entities": 233,
-    "relationships": 193,
+    "entities": 238,
+    "relationships": 185,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -18,6 +18,6 @@
     "https://www.ruby-lang.org/en/documentation/",
     "https://ruby-doc.org/"
   ],
-  "created": "2026-03-02T01:04:16.223250Z",
+  "created": "2026-03-03T19:58:25.747662Z",
   "license": "MIT"
 }

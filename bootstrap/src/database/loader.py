@@ -2,7 +2,7 @@
 Database loader for WikiGR
 
 Integrates Wikipedia API, section parsing, and embedding generation
-to load articles into Kuzu database.
+to load articles into LadybugDB database.
 """
 
 import logging
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class ArticleLoader:
-    """Loads Wikipedia articles into Kuzu database"""
+    """Loads Wikipedia articles into LadybugDB database"""
 
     def __init__(
         self,
@@ -31,7 +31,7 @@ class ArticleLoader:
         Initialize article loader
 
         Args:
-            db_path: Path to Kuzu database
+            db_path: Path to LadybugDB database
             wikipedia_client: Wikipedia API client (creates default if None)
             embedding_generator: Embedding generator (creates default if None)
         """

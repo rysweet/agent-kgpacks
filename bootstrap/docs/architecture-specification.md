@@ -8,7 +8,7 @@
 ## System Overview
 
 WikiGR is a **Wikipedia knowledge graph** system that combines:
-- **Graph database** (Kuzu) for article relationships
+- **Graph database** (LadybugDB) for article relationships
 - **Vector search** (HNSW) for semantic similarity
 - **Incremental expansion** for scalable growth from 3K → 30K articles
 
@@ -40,7 +40,7 @@ WikiGR is a **Wikipedia knowledge graph** system that combines:
              │ Load into DB
              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Kuzu Database                             │
+│                    LadybugDB Database                        │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │
 │  │ Article  │  │ Section  │  │ Category │                  │
 │  │  Nodes   │  │  Nodes   │  │  Nodes   │                  │
@@ -175,7 +175,7 @@ def semantic_search(conn, query_title: str, category: str = None, top_k: int = 1
     Find articles semantically similar to query_title
 
     Args:
-        conn: Kuzu connection
+        conn: LadybugDB connection
         query_title: Title of query article
         category: Optional category filter
         top_k: Number of results to return
@@ -362,7 +362,7 @@ def initialize_seeds(conn, seed_titles: list[str]) -> str:
     Initialize expansion with seed articles
 
     Args:
-        conn: Kuzu connection
+        conn: LadybugDB connection
         seed_titles: List of seed article titles
 
     Returns:

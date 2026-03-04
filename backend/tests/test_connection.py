@@ -1,5 +1,5 @@
 """
-Tests for Kuzu database connection manager.
+Tests for LadybugDB database connection manager.
 
 Tests the connection management logic ensuring proper singleton pattern,
 connection reuse, and cleanup.
@@ -20,7 +20,7 @@ def connection_manager(setup_test_env):
 
 
 class TestConnectionManager:
-    """Tests for Kuzu connection manager."""
+    """Tests for LadybugDB connection manager."""
 
     def test_connection_manager_singleton(self, setup_test_env):
         """Test that ConnectionManager implements singleton pattern."""
@@ -44,7 +44,7 @@ class TestConnectionManager:
         assert "data/" in manager.db_path or "test" in manager.db_path
 
     def test_get_connection_returns_connection(self, connection_manager):
-        """Test that get_connection returns valid Kuzu connection."""
+        """Test that get_connection returns valid LadybugDB connection."""
         conn = connection_manager.get_connection()
 
         assert conn is not None

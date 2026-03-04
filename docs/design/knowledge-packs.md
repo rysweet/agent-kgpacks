@@ -71,7 +71,7 @@ A knowledge pack is successful when:
 │                            │                                 │
 │                            ▼                                 │
 │  ┌───────────────────────────────────────────────────────┐  │
-│  │  Kuzu Graph Database (pack.db)                        │  │
+│  │  LadybugDB Graph Database (pack.db)                    │  │
 │  │  - Domain-specific entities and relationships         │  │
 │  │  - Vector embeddings for semantic search             │  │
 │  │  - Metadata: provenance, quality scores               │  │
@@ -81,7 +81,7 @@ A knowledge pack is successful when:
 Pack Installation:
 ~/.wikigr/packs/physics-expert/
 ├── manifest.json          # Pack metadata & dependencies
-├── pack.db                # Kuzu graph database
+├── pack.db                # LadybugDB graph database
 ├── kg_config.json         # KG Agent configuration
 ├── skill.md               # Claude Code skill interface
 ├── eval/                  # Evaluation benchmarks
@@ -106,7 +106,7 @@ Pack Installation:
 |-----------|-------------------|---------------|
 | **Claude Code Skills** | Auto-discovery from `~/.wikigr/packs/*/skill.md` | Skill frontmatter defines interface |
 | **KG Agent** | Python API (`KGAgent` class from `backend/kg_agent.py`) | `kg_config.json` per pack |
-| **Kuzu Database** | Direct file access (`pack.db`) | Standard WikiGR schema |
+| **LadybugDB Database** | Direct file access (`pack.db`) | Standard WikiGR schema |
 | **Evaluation** | CLI command `wikigr pack eval <pack-name>` | `eval/questions.jsonl` |
 | **Distribution** | Tar archive or git repo | `manifest.json` specifies dependencies |
 
@@ -208,7 +208,7 @@ Example:
 - `1.0.0`: Initial physics pack (quantum mechanics only)
 - `1.1.0`: Added relativity section (3000 new articles)
 - `1.1.1`: Fixed citation formatting in 50 articles
-- `2.0.0`: Migrated to Kuzu v0.8 schema (breaking change)
+- `2.0.0`: Migrated to LadybugDB v0.8 schema (breaking change)
 
 ## Skills Integration
 
@@ -775,7 +775,7 @@ wikigr pack install physics-expert@1.2.0
 # 1. Download/extract to /tmp
 # 2. Validate manifest.json
 # 3. Check disk space requirements
-# 4. Verify database integrity (Kuzu validation)
+# 4. Verify database integrity (LadybugDB validation)
 # 5. Copy to ~/.wikigr/packs/physics-expert/
 # 6. Register skill with Claude Code
 # 7. Run post-install tests
@@ -852,7 +852,7 @@ wikigr pack create --interactive
 # 1. Extract/parse source articles
 # 2. Generate entities and relationships (NER + link analysis)
 # 3. Create vector embeddings (text-embedding-3-small)
-# 4. Build Kuzu database (pack.db)
+# 4. Build LadybugDB database (pack.db)
 # 5. Generate default kg_config.json
 # 6. Create skill.md template
 # 7. Generate evaluation question set (optional)
@@ -864,7 +864,7 @@ wikigr pack create --interactive
 ```
 physics-expert/
 ├── manifest.json           # Generated metadata
-├── pack.db                 # Kuzu graph database
+├── pack.db                 # LadybugDB graph database
 ├── kg_config.json          # Default retrieval config
 ├── skill.md                # Skill template (user edits)
 ├── eval/
@@ -1019,7 +1019,7 @@ wikigr pack validate physics-expert-v1.2.0.tar.gz
 
 # Checks performed:
 # - manifest.json schema compliance
-# - pack.db Kuzu database integrity
+# - pack.db LadybugDB database integrity
 # - kg_config.json valid configuration
 # - skill.md frontmatter parsing
 # - eval/questions.jsonl format
@@ -1042,7 +1042,7 @@ wikigr pack validate physics-expert-v1.2.0.tar.gz
 
 **Dependencies**:
 - Existing WikiGR KG Agent (`backend/kg_agent.py`)
-- Kuzu database libraries
+- LadybugDB database libraries
 - Wikipedia data extraction (existing ingestion code)
 
 **Effort Estimate**: 80 hours
@@ -1176,7 +1176,7 @@ wikigr pack create physics-expert \
 # [2/7] Generating entities: 18,500 entities (22 min)
 # [3/7] Extracting relationships: 42,300 relationships (18 min)
 # [4/7] Creating vector embeddings: 5,240 articles (12 min)
-# [5/7] Building Kuzu database: pack.db (8 min)
+# [5/7] Building LadybugDB database: pack.db (8 min)
 # [6/7] Generating configuration: kg_config.json, skill.md
 # [7/7] Creating evaluation questions: 500 questions
 #
@@ -1335,7 +1335,7 @@ wikigr pack create microsoft-fabric-graphql-expert \
 # [2/7] Loading entities: 4,200 entities
 # [3/7] Loading relationships: 8,900 relationships
 # [4/7] Creating vector embeddings: 1,850 documents
-# [5/7] Building Kuzu database: pack.db
+# [5/7] Building LadybugDB database: pack.db
 # [6/7] Generating configuration files
 # [7/7] Creating evaluation questions: 200 questions
 #

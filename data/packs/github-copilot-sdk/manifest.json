@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of GitHub Copilot Extensions SDK covering building extensions, MCP server integration, VS Code chat participants, and Copilot agents.",
   "graph_stats": {
-    "articles": 17,
-    "entities": 79,
-    "relationships": 70,
+    "articles": 19,
+    "entities": 86,
+    "relationships": 73,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://docs.github.com/en/copilot/building-copilot-extensions/about-building-copilot-extensions",
     "https://code.visualstudio.com/docs/copilot/overview"
   ],
-  "created": "2026-03-01T23:07:30.581619Z",
+  "created": "2026-03-03T19:32:24.515201Z",
   "license": "MIT"
 }

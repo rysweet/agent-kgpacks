@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of Microsoft Security Copilot covering AI-powered security analysis, threat intelligence, incident response, plugins integration with Defender XDR, Sentinel, Intune and Entra, promptbooks, custom plugins, capacity management, and embedded security experiences.",
   "graph_stats": {
-    "articles": 5,
-    "entities": 52,
-    "relationships": 39,
+    "articles": 17,
+    "entities": 116,
+    "relationships": 102,
     "size_mb": 2.08
   },
   "eval_scores": null,
@@ -13,6 +13,6 @@
     "https://learn.microsoft.com/en-us/copilot/security/microsoft-security-copilot",
     "https://learn.microsoft.com/en-us/copilot/security/get-started-security-copilot"
   ],
-  "created": "2026-03-03T08:16:29.025855Z",
+  "created": "2026-03-03T20:01:23.726439Z",
   "license": "MIT"
 }

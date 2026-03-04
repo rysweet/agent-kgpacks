@@ -113,7 +113,7 @@ except (requests.RequestException, json.JSONDecodeError) as e:
 - `requests.RequestException` — network timeouts, DNS failures, connection resets
 - `json.JSONDecodeError` — malformed JSON in LLM extraction responses
 
-All other exceptions (Kuzu `RuntimeError`, embedding `OSError`, programming bugs like `AttributeError` or `TypeError`) are **not caught** in `process_url()`. They propagate to `build_pack()` and abort the build with a visible traceback. A corrupt partial database write is worse than a fast failure.
+All other exceptions (LadybugDB `RuntimeError`, embedding `OSError`, programming bugs like `AttributeError` or `TypeError`) are **not caught** in `process_url()`. They propagate to `build_pack()` and abort the build with a visible traceback. A corrupt partial database write is worse than a fast failure.
 
 See [Handle Exceptions from WikiGR Components](./handle-exceptions.md) for the full exception contract.
 
@@ -157,13 +157,13 @@ A full build processes all URLs. Depending on the number of URLs and page sizes,
 2. **Parse**: Content is split into sections by headings
 3. **Extract**: Claude identifies entities, relationships, and facts from each section
 4. **Embed**: BAAI/bge-base-en-v1.5 generates 768-dim vectors for each section
-5. **Store**: Everything is written to a Kuzu graph database
+5. **Store**: Everything is written to a LadybugDB graph database
 
 ### Build Output
 
 ```
 data/packs/my-domain-expert/
-├── pack.db/            # Kuzu graph database
+├── pack.db/            # LadybugDB graph database
 ├── manifest.json       # Pack metadata
 ├── urls.txt            # Source URLs
 ├── skill.md            # Claude Code skill description

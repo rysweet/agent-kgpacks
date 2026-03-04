@@ -4,8 +4,8 @@
   "description": "Expert Rust programming knowledge covering ownership, traits, async programming, unsafe code, and common patterns from official Rust documentation",
   "graph_stats": {
     "articles": 294,
-    "entities": 1415,
-    "relationships": 1166,
+    "entities": 1388,
+    "relationships": 1190,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -20,6 +20,6 @@
     "https://doc.rust-lang.org/nomicon/",
     "https://doc.rust-lang.org/std/"
   ],
-  "created": "2026-03-02T01:27:51.827619Z",
+  "created": "2026-03-03T20:25:18.333122Z",
   "license": "MIT"
 }

@@ -61,7 +61,7 @@ jobs:
           fail_ci_if_error: false
 
   schema-validation:
-    name: Validate Kuzu Schema
+    name: Validate LadybugDB Schema
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

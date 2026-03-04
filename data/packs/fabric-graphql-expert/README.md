@@ -184,7 +184,7 @@ uv run python scripts/eval_single_pack.py fabric-graphql-expert
 ## Requirements
 
 - Python 3.10+
-- Kuzu 0.3.0+
+- LadybugDB 0.15.0+
 - 512 MB RAM minimum
 - 300 MB disk space
 

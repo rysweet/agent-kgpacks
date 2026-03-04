@@ -170,7 +170,7 @@ The manifest sits alongside these files in the pack directory:
 ```
 data/packs/<pack-name>/
 ├── manifest.json         # This file
-├── pack.db/              # Kuzu graph database directory
+├── pack.db/              # LadybugDB graph database directory
 ├── urls.txt              # Source URLs used to build the pack
 ├── skill.md              # Claude Code skill description
 ├── kg_config.json        # KG Agent configuration overrides

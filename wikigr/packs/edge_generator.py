@@ -17,7 +17,7 @@ def generate_cooccurrence_edges(conn) -> int:
     """Create LINKS_TO edges between articles sharing entities.
 
     Args:
-        conn: Active Kuzu connection (must be writable).
+        conn: Active LadybugDB connection (must be writable).
 
     Returns:
         Number of edges created.

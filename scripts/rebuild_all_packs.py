@@ -60,7 +60,7 @@ def rebuild_pack(script_path: Path, test_mode: bool = False) -> dict:
             pack_dir = d
             break
 
-    # Delete old pack.db if it exists
+    # Delete old pack.db and any leftover WAL/lock files from Kuzu
     if pack_dir:
         db_path = pack_dir / "pack.db"
         if db_path.exists():
@@ -68,7 +68,11 @@ def rebuild_pack(script_path: Path, test_mode: bool = False) -> dict:
                 shutil.rmtree(db_path)
             else:
                 db_path.unlink()
-            logger.info(f"[{pack_name}] Deleted old pack.db")
+        # Also clean up WAL and lock files that Kuzu leaves behind
+        for pattern in ("pack.db.wal", "pack.db.lock", ".wal", ".lock"):
+            for f in pack_dir.glob(pattern):
+                f.unlink()
+        logger.info(f"[{pack_name}] Cleaned old database files")
 
     # Run build script
     cmd = [sys.executable, str(script_path)]

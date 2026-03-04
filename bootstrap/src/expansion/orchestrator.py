@@ -9,7 +9,7 @@ Coordinates the entire expansion process:
 - Expand to target count
 
 Supports parallel expansion with multiple worker threads, each using
-its own Kuzu connection for thread safety.
+its own LadybugDB connection for thread safety.
 """
 
 import logging
@@ -40,7 +40,7 @@ class RyuGraphOrchestrator:
         Initialize expansion orchestrator
 
         Args:
-            db_path: Path to Kuzu database
+            db_path: Path to LadybugDB database
             max_depth: Maximum expansion depth from seeds
             batch_size: Articles to process per batch
             claim_timeout: Timeout for claim reclamation (seconds)
@@ -162,7 +162,7 @@ class RyuGraphOrchestrator:
 
         Args:
             article_info: Dict with 'title', 'expansion_depth', and optionally 'category'.
-            worker_conn: A Kuzu connection owned exclusively by this worker thread.
+            worker_conn: A LadybugDB connection owned exclusively by this worker thread.
 
         Returns:
             (title, success, error_message)
@@ -340,7 +340,7 @@ class RyuGraphOrchestrator:
         """Process a batch of articles in parallel using the shared executor.
 
         Each article is submitted to the pool and processed with a dedicated
-        Kuzu connection selected round-robin from *worker_conns*.
+        LadybugDB connection selected round-robin from *worker_conns*.
         The executor is created once per expansion run and reused across batches.
         Processes in chunks of num_workers so each connection is held by at
         most one thread at a time.

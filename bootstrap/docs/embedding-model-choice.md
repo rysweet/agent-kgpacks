@@ -8,7 +8,7 @@
 
 **Why:**
 - **Fastest:** 1055 texts/sec (63% faster than all-MiniLM-L6-v2)
-- **Compact:** 384 dimensions (fast Kuzu HNSW queries)
+- **Compact:** 384 dimensions (fast LadybugDB HNSW queries)
 - **Efficient:** Only 0.24 hours (14 minutes) for 30K articles
 - **Lightweight:** 2.6GB memory for vectors
 
@@ -112,7 +112,7 @@ This model is production-ready and will easily meet the 30K article target withi
 - Vectors: 2.6 GB
 - Text (wikitext): ~300 MB
 - Metadata (titles, links): ~50 MB
-- Kuzu overhead: ~100 MB
+- LadybugDB overhead: ~100 MB
 - **Total: ~3 GB** (well under 10GB target)
 
 ---
@@ -207,7 +207,7 @@ This model is production-ready and will easily meet the 30K article target withi
 **Disadvantages:**
 - 8x slower (118 min vs 14 min)
 - 2x memory usage (5.3GB vs 2.6GB)
-- Slower Kuzu HNSW queries
+- Slower LadybugDB HNSW queries
 
 ---
 
@@ -288,7 +288,7 @@ model = SentenceTransformer('paraphrase-MiniLM-L3-v2', device=device)
 ### Phase 3: Medium Scale (1K Articles)
 
 1. Generate embeddings for 1K articles
-2. Benchmark query latency with Kuzu HNSW
+2. Benchmark query latency with LadybugDB HNSW
 3. Measure P95 latency
 4. **Success criteria:** P95 latency <500ms
 

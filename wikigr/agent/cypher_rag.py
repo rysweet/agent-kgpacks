@@ -12,18 +12,18 @@ from anthropic import Anthropic
 
 logger = logging.getLogger(__name__)
 
-CYPHER_RAG_PROMPT = """You are a Cypher query generator for a Kuzu graph database.
+CYPHER_RAG_PROMPT = """You are a Cypher query generator for a LadybugDB graph database.
 
 ## TARGET SCHEMA
 
 {schema}
 
-## KUZU SYNTAX RULES (NOT Neo4j)
+## LADYBUGDB SYNTAX RULES (NOT Neo4j)
 
 1. Parameters: $param (NOT {{param}} or {{{{param}}}})
 2. Case-insensitive match: lower(x) CONTAINS lower($param)
 3. Variable-length paths: [:REL*1..3] (MUST have upper bound)
-4. No apoc.* functions -- they do not exist in Kuzu
+4. No apoc.* functions -- they do not exist in LadybugDB
 5. No LENGTH() on strings -- use string_length() or avoid it
 6. LIMIT must be a literal integer, not a parameter
 7. String comparison: use CONTAINS, STARTS WITH, ENDS WITH (not LIKE or regex)
@@ -47,10 +47,10 @@ The cypher_params MUST contain "q" bound to the key search term extracted from t
 
 
 def build_schema_string(conn: Any) -> str:
-    """Extract schema from Kuzu database for prompt injection.
+    """Extract schema from LadybugDB database for prompt injection.
 
     Args:
-        conn: Kuzu database connection
+        conn: LadybugDB database connection
 
     Returns:
         Formatted schema string listing tables and their types,
@@ -70,7 +70,7 @@ def build_schema_string(conn: Any) -> str:
 
 
 class CypherRAG:
-    """Generate Kuzu Cypher queries using retrieved OpenCypher patterns as context.
+    """Generate LadybugDB Cypher queries using retrieved OpenCypher patterns as context.
 
     Combines a pattern retrieval manager (e.g. FewShotManager) with Claude API
     to produce pattern-informed Cypher queries instead of blind generation.

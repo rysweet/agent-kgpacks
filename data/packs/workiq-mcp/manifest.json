@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of Microsoft Work IQ MCP integration for accessing M365 Copilot data via CLI and MCP server modes.",
   "graph_stats": {
-    "articles": 20,
+    "articles": 23,
     "entities": 91,
-    "relationships": 81,
+    "relationships": 93,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://github.com/microsoft/work-iq-mcp",
     "https://learn.microsoft.com/en-us/microsoft-365-copilot/extensibility/workiq-overview"
   ],
-  "created": "2026-03-02T01:29:57.408953Z",
+  "created": "2026-03-03T20:18:59.769921Z",
   "license": "MIT"
 }

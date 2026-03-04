@@ -30,7 +30,7 @@ class GraphService:
         Get graph structure around seed article.
 
         Args:
-            conn: Kuzu connection
+            conn: LadybugDB connection
             article: Seed article title
             depth: Maximum depth to traverse (1-3)
             limit: Maximum number of nodes to return (1-200)
@@ -56,7 +56,7 @@ class GraphService:
             raise ValueError("Article not found")
 
         # Build query for graph traversal.
-        # NOTE: depth is interpolated via f-string because Kuzu does not
+        # NOTE: depth is interpolated via f-string because LadybugDB does not
         # support parameterised variable-length path bounds (e.g. *0..$depth).
         # The value is validated to int 1-3 above, so injection is not possible.
         if category:

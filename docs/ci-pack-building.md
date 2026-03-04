@@ -56,7 +56,7 @@ For a pack named `my-topic`:
 data/packs/my-topic/
   urls.txt              # Source URLs
   manifest.json         # Pack metadata and graph stats
-  pack.db/              # Kuzu database (NOT in git)
+  pack.db/              # LadybugDB database (NOT in git)
   eval/
     questions.json      # 50 eval questions (JSON array)
     questions.jsonl     # Same questions (JSONL format)

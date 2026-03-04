@@ -77,7 +77,7 @@ agent = KnowledgeGraphAgent(
 ```python
 from wikigr.agent.reranker import GraphReranker
 
-reranker = GraphReranker(kuzu_conn)  # constructor takes only a Kuzu connection
+reranker = GraphReranker(kuzu_conn)  # constructor takes only a LadybugDB connection
 
 reranked = reranker.rerank(
     vector_results,
@@ -118,7 +118,7 @@ agent = KnowledgeGraphAgent(
 ```python
 from wikigr.agent.multi_doc_synthesis import MultiDocSynthesizer
 
-synthesizer = MultiDocSynthesizer(kuzu_conn)  # constructor takes only a Kuzu connection
+synthesizer = MultiDocSynthesizer(kuzu_conn)  # constructor takes only a LadybugDB connection
 
 # Expand seed articles by traversing LINKS_TO edges
 expanded = synthesizer.expand_to_related_articles(seed_articles=[1, 2], max_hops=1)

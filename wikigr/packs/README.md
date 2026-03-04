@@ -60,7 +60,7 @@ save_manifest(manifest, Path("./physics-expert"))
 
 **Validation Checks:**
 - `manifest.json` exists and is valid
-- `pack.db/` directory exists (Kuzu database)
+- `pack.db/` directory exists (LadybugDB database)
 - `skill.md` exists
 - `kg_config.json` exists and is valid JSON
 - Manifest content validation (semantic versioning, valid ranges, etc.)
@@ -186,7 +186,7 @@ According to the design spec, a knowledge pack has the following structure:
 ```
 physics-expert/
 ├── manifest.json          # Pack metadata (REQUIRED)
-├── pack.db/               # Kuzu graph database directory (REQUIRED)
+├── pack.db/               # LadybugDB graph database directory (REQUIRED)
 ├── skill.md               # Claude Code skill interface (REQUIRED)
 ├── kg_config.json         # KG Agent configuration (REQUIRED)
 ├── eval/                  # Evaluation benchmarks (OPTIONAL)
@@ -197,7 +197,7 @@ physics-expert/
 ### Required Files
 
 1. **manifest.json**: Pack metadata including name, version, statistics, and evaluation scores
-2. **pack.db/**: Kuzu database directory containing the knowledge graph
+2. **pack.db/**: LadybugDB database directory containing the knowledge graph
 3. **skill.md**: Claude Code skill definition with frontmatter
 4. **kg_config.json**: KG Agent retrieval configuration
 
@@ -251,7 +251,7 @@ The `manifest.json` file follows this schema:
 ### Structure Validation
 
 - `manifest.json` must exist and be valid JSON
-- `pack.db` must exist and be a directory (Kuzu database format)
+- `pack.db` must exist and be a directory (LadybugDB database format)
 - `skill.md` must exist
 - `kg_config.json` must exist and be valid JSON
 
@@ -341,7 +341,7 @@ python -m wikigr.packs.examples.create_physics_pack_with_skill
 This example demonstrates:
 1. Creating pack directory structure
 2. Generating manifest with metadata
-3. Creating placeholder Kuzu database
+3. Creating placeholder LadybugDB database
 4. Generating kg_config.json
 5. Auto-generating skill.md from manifest
 6. Discovering pack and registering it

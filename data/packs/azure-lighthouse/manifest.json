@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Expert knowledge of Azure Lighthouse covering delegated resource management, cross-tenant management, managed services offers, Azure Marketplace publishing, policy at scale, monitoring, security best practices, and MSSP scenarios.",
   "graph_stats": {
-    "articles": 4,
-    "entities": 60,
-    "relationships": 33,
+    "articles": 29,
+    "entities": 267,
+    "relationships": 230,
     "size_mb": 2.08
   },
   "eval_scores": null,
@@ -13,6 +13,6 @@
     "https://learn.microsoft.com/en-us/azure/lighthouse/overview",
     "https://learn.microsoft.com/en-us/azure/lighthouse/concepts/azure-delegated-resource-management"
   ],
-  "created": "2026-03-03T08:14:42.279543Z",
+  "created": "2026-03-03T19:22:23.115528Z",
   "license": "MIT"
 }

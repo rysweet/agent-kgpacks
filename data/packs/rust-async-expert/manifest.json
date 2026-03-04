@@ -4,8 +4,8 @@
   "description": "Expert knowledge of Rust asynchronous programming covering async/await, Tokio runtime, Pin/Unpin, futures and streams, Send/Sync traits, channels, select!, and concurrent task management.",
   "graph_stats": {
     "articles": 49,
-    "entities": 249,
-    "relationships": 237,
+    "entities": 247,
+    "relationships": 238,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -18,6 +18,6 @@
     "https://rust-lang.github.io/async-book/",
     "https://docs.rs/tokio"
   ],
-  "created": "2026-03-02T01:05:16.302134Z",
+  "created": "2026-03-03T20:00:36.973264Z",
   "license": "MIT"
 }
