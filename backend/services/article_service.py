@@ -38,7 +38,7 @@ class ArticleService:
         Get detailed information about an article.
 
         Args:
-            conn: Kuzu connection
+            conn: LadybugDB connection
             title: Article title
 
         Returns:
@@ -145,7 +145,7 @@ class ArticleService:
         Get list of all categories with article counts.
 
         Args:
-            conn: Kuzu connection
+            conn: LadybugDB connection
 
         Returns:
             CategoryListResponse with category information
@@ -183,7 +183,7 @@ class ArticleService:
         Results are cached for 60 seconds to avoid repeated full-table scans.
 
         Args:
-            conn: Kuzu connection
+            conn: LadybugDB connection
             db_path: Path to database file
 
         Returns:

@@ -426,7 +426,7 @@ RETURN a.title, a.claimed_at, a.expansion_depth
 **Multiple workers:** Each claims independent batch, heartbeat prevents conflicts
 
 **Race conditions:**
-- Claim: Handled by Kuzu transaction isolation
+- Claim: Handled by LadybugDB transaction isolation
 - Heartbeat: Last write wins (acceptable)
 - Reclaim: May reclaim article being processed (worker will detect and skip)
 

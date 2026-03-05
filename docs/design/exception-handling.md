@@ -28,7 +28,7 @@ Four distinct domains; each has its own exception set:
 | Domain | Exception Types | Usage |
 |---|---|---|
 | Anthropic API | `APIConnectionError, APIStatusError, APITimeoutError` | Synthesis, seed identification |
-| Kuzu DB | `RuntimeError` | All `conn.execute()` calls |
+| LadybugDB | `RuntimeError` | All `conn.execute()` calls |
 | Embedding / ML | `RuntimeError, OSError` | Vector ops, pipeline enhancement |
 | Initialisation | `RuntimeError, ImportError` | Module / pipeline setup |
 
@@ -87,7 +87,7 @@ A generic Cypher query is not a valid fallback for a failed generation step.
 
 ### Schema Overview
 
-WikiGR uses **Kuzu** (an embedded graph database).  The schema is defined in
+WikiGR uses **LadybugDB** (an embedded graph database).  The schema is defined in
 `bootstrap/schema/ryugraph_schema.py` and initialised by
 `scripts/run_30k_expansion.py`.
 
@@ -167,11 +167,11 @@ CLI tool. All access is local and governed by OS-level file permissions.
 | Concern | Status | Notes |
 |---|---|---|
 | Anthropic API key | **Pass** — env-var only | `ANTHROPIC_API_KEY` never hardcoded; `ConfigurationError` raised if absent |
-| Kuzu DB access | **Pass** — local file | No network port; `read_only=True` accepted at construction; OS permissions govern file access |
+| LadybugDB access | **Pass** — local file | No network port; `read_only=True` accepted at construction; OS permissions govern file access |
 | Multi-query expansion | **Pass** — opt-in | `enable_multi_query=False` by default; doc note in `from_connection()` warns about PII/data-residency implications |
 
 **Guideline:** When deploying `KnowledgeGraphAgent` from an external entry point
-(e.g. FastAPI), open Kuzu with `read_only=True` unless the endpoint is
+(e.g. FastAPI), open LadybugDB with `read_only=True` unless the endpoint is
 explicitly a write path.
 
 ---
@@ -204,7 +204,7 @@ explicitly a write path.
 | Data | Location | Sensitivity | Controls |
 |---|---|---|---|
 | Anthropic API key | Environment variable | High | Never logged; `ConfigurationError` message does not echo the key value |
-| Knowledge graph content | Kuzu DB files (`data/packs/**/*.db`) | Low — public article text | OS file permissions; no encryption needed |
+| Knowledge graph content | LadybugDB files (`data/packs/**/*.db`) | Low — public article text | OS file permissions; no encryption needed |
 | Source discovery cache | `~/.wikigr/cache/sources/*.json` | Low — public URL lists | OS file permissions; cache key is MD5 hex (no path traversal risk) |
 | User questions | In-memory only | Medium — may contain PII | Not persisted; not sent to API when `enable_multi_query=False` |
 
@@ -224,7 +224,7 @@ The narrowing of exception types is a **net security improvement**:
 | `_safe_fallback` in `cypher_rag.py` | Removed; callers receive `ValueError` / `json.JSONDecodeError` | Eliminates silent use of a default MATCH query that could bypass intended pipeline logic |
 | `_fallback_seed_extraction` in `kg_agent.py` | Removed; API errors surface | Word-splitting cannot be exploited as an alternative input path for seed injection |
 | `except (RequestException, Exception)` in `seed_researcher.py` | `except RequestException` | Network errors from adversarial URLs no longer silently suppressed alongside arbitrary exceptions |
-| `except Exception` in build scripts | `except (RequestException, json.JSONDecodeError)` | Kuzu / embedding errors now terminate the build with a visible traceback; corrupt partial writes are prevented |
+| `except Exception` in build scripts | `except (RequestException, json.JSONDecodeError)` | LadybugDB / embedding errors now terminate the build with a visible traceback; corrupt partial writes are prevented |
 
 **Key invariant preserved:** `_validate_cypher()` runs on every LLM-generated
 query before `conn.execute()` is called. This guard was not touched by the
@@ -235,7 +235,7 @@ injection.
 
 ### Security Guidelines for Implementation
 
-1. **Always open Kuzu in read-only mode** from web-facing code paths:
+1. **Always open LadybugDB in read-only mode** from web-facing code paths:
    ```python
    KnowledgeGraphAgent(db_path=path, read_only=True)
    ```

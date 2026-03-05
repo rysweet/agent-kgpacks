@@ -47,7 +47,7 @@ Phase 1 of Knowledge Packs implements the foundational pack format and manifest 
 ```
 pack-name/
 ├── manifest.json          # Pack metadata
-├── pack.db/               # Kuzu database directory
+├── pack.db/               # LadybugDB database directory
 ├── skill.md               # Claude Code skill definition
 └── kg_config.json         # KG Agent configuration
 ```

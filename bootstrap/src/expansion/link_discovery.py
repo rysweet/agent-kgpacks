@@ -17,10 +17,10 @@ class LinkDiscovery:
 
     def __init__(self, conn: kuzu.Connection):
         """
-        Initialize link discovery with Kuzu connection
+        Initialize link discovery with LadybugDB connection
 
         Args:
-            conn: Active Kuzu database connection
+            conn: Active LadybugDB database connection
         """
         self.conn = conn
 

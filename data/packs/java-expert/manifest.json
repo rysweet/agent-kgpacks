@@ -4,8 +4,8 @@
   "description": "Expert Java programming knowledge covering Java 21+ features including virtual threads, pattern matching for switch, records, sealed classes, Foreign Function & Memory API, ZGC, structured concurrency, and scoped values",
   "graph_stats": {
     "articles": 34,
-    "entities": 256,
-    "relationships": 186,
+    "entities": 239,
+    "relationships": 168,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -18,6 +18,6 @@
     "https://dev.java/",
     "https://inside.java/"
   ],
-  "created": "2026-03-01T23:31:31.396379Z",
+  "created": "2026-03-03T19:37:29.047461Z",
   "license": "MIT"
 }

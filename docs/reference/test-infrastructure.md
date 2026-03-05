@@ -12,11 +12,11 @@ Reference documentation for shared test helpers used in the WikiGR agent test su
 def _make_agent(enable_multi_query: bool = False) -> KnowledgeGraphAgent:
 ```
 
-Constructs a fully stubbed `KnowledgeGraphAgent` instance without invoking `__init__`, making it suitable for fast, isolated unit tests that do not need a real Kuzu database or Anthropic API connection.
+Constructs a fully stubbed `KnowledgeGraphAgent` instance without invoking `__init__`, making it suitable for fast, isolated unit tests that do not need a real LadybugDB database or Anthropic API connection.
 
 ### Why `__new__` instead of `__init__`
 
-`KnowledgeGraphAgent.__init__` opens a Kuzu database connection, optionally downloads a cross-encoder model, and may hit the Anthropic API to load few-shot examples. All of these have side effects incompatible with unit tests. By calling `__new__` directly and populating attributes manually, tests get a deterministic, zero-latency stub with no external dependencies.
+`KnowledgeGraphAgent.__init__` opens a LadybugDB database connection, optionally downloads a cross-encoder model, and may hit the Anthropic API to load few-shot examples. All of these have side effects incompatible with unit tests. By calling `__new__` directly and populating attributes manually, tests get a deterministic, zero-latency stub with no external dependencies.
 
 ### Required Attribute Initialization
 
@@ -27,7 +27,7 @@ The following table lists all attributes set by `_make_agent` and their purpose:
 | Attribute | Value in stub | Why it must be set |
 |---|---|---|
 | `db` | `None` | Read by several database helper methods; `None` is the "no DB" sentinel |
-| `conn` | `MagicMock()` | Kuzu connection; methods call `.execute()` on it — must be a mock, not `None` |
+| `conn` | `MagicMock()` | LadybugDB connection; methods call `.execute()` on it — must be a mock, not `None` |
 | `claude` | `MagicMock()` | Anthropic client; synthesis and query-expansion calls go through this |
 | `synthesis_model` | `"mock-model"` | Model string passed to Claude API calls |
 | `_embedding_generator` | `None` | Lazy-initialised embedding generator; `None` means "not loaded" |

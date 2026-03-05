@@ -1,6 +1,6 @@
 # Overview
 
-Knowledge Packs are self-contained, domain-specific knowledge graph databases that augment LLMs with curated, structured information. Each pack packages a Kuzu graph database, vector embeddings, retrieval configuration, and evaluation questions into a portable unit.
+Knowledge Packs are self-contained, domain-specific knowledge graph databases that augment LLMs with curated, structured information. Each pack packages a LadybugDB graph database, vector embeddings, retrieval configuration, and evaluation questions into a portable unit.
 
 ## What Problem Packs Solve
 
@@ -56,7 +56,7 @@ Packs add complexity. Do not build one when:
 │                    Knowledge Pack                         │
 │                                                          │
 │  ┌─────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │  Kuzu Graph  │  │ BGE Vectors  │  │  Enhancement  │  │
+│  │  LadybugDB   │  │ BGE Vectors  │  │  Enhancement  │  │
 │  │   Database   │  │  (HNSW idx)  │  │   Modules     │  │
 │  │             │  │              │  │               │  │
 │  │ Articles    │  │ Section      │  │ Reranker      │  │
@@ -83,7 +83,7 @@ Packs add complexity. Do not build one when:
 
 | Component | Technology | Role |
 |-----------|-----------|------|
-| **Graph Database** | Kuzu (embedded) | Stores articles, sections, entities, relationships as graph nodes and edges |
+| **Graph Database** | LadybugDB (embedded) | Stores articles, sections, entities, relationships as graph nodes and edges |
 | **Vector Embeddings** | BAAI/bge-base-en-v1.5 (768-dim) | Enables semantic search over section content via HNSW index |
 | **Synthesis** | Claude (Opus) | Generates natural language answers from retrieved context |
 | **Query Expansion** | Claude (Haiku) | Generates alternative phrasings for multi-query retrieval |

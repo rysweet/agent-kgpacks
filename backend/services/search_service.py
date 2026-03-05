@@ -35,7 +35,7 @@ class SearchService:
         Perform semantic search for similar articles.
 
         Args:
-            conn: Kuzu connection
+            conn: LadybugDB connection
             query: Search query (article title)
             category: Optional category filter
             limit: Maximum results to return (1-100)
@@ -225,7 +225,7 @@ class SearchService:
         Get autocomplete suggestions for article titles.
 
         Args:
-            conn: Kuzu connection
+            conn: LadybugDB connection
             q: Query string (minimum 2 characters)
             limit: Maximum suggestions to return (1-20)
 

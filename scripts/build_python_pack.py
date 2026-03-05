@@ -177,6 +177,9 @@ def process_url(
     except (requests.RequestException, json.JSONDecodeError) as e:
         logger.error(f"Failed to process {url}: {e}")
         return False
+    except Exception as e:
+        logger.warning(f"Skipping {url}: {e}")
+        return False
 
 
 def create_manifest(

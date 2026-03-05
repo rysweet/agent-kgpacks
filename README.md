@@ -58,7 +58,7 @@ EOF
 echo "y" | uv run python scripts/build_my_framework_pack.py
 ```
 
-The build pipeline fetches each URL, uses Claude Haiku to extract entities/relationships/facts, generates BGE vector embeddings (768-dim), and stores everything in a Kuzu graph database.
+The build pipeline fetches each URL, uses Claude Haiku to extract entities/relationships/facts, generates BGE vector embeddings (768-dim), and stores everything in a LadybugDB graph database.
 
 ### 3. Evaluate — Prove the pack adds value
 
@@ -116,7 +116,7 @@ with KnowledgeGraphAgent(db_path="data/packs/my-framework/pack.db") as agent:
 ## How It Works
 
 ```
-URLs ──> Fetch ──> Extract (Claude Haiku) ──> Embed (BGE) ──> Store (Kuzu)
+URLs ──> Fetch ──> Extract (Claude Haiku) ──> Embed (BGE) ──> Store (LadybugDB)
                                                                    |
                                                               pack.db + skill.md
                                                                    |
@@ -130,7 +130,33 @@ The retrieval pipeline includes:
 - **Content quality scoring** — filters thin/irrelevant sections
 - **Graph reranking** — boosts well-connected articles via degree centrality
 
-## Pack Management
+## Claude Code Integration: `/kg-pack`
+
+Install the `/kg-pack` skill in any Claude Code project to manage packs:
+
+```bash
+# One-time setup
+git clone https://github.com/rysweet/agent-kgpacks.git ~/.wikigr/agent-kgpacks
+cd ~/.wikigr/agent-kgpacks && uv sync
+
+# Install /kg-pack command in your project
+mkdir -p /your/project/.claude/skills/kg-pack
+cp ~/.wikigr/agent-kgpacks/skills/kg-pack/SKILL.md /your/project/.claude/skills/kg-pack/
+```
+
+Then in Claude Code:
+
+```
+/kg-pack list                           # 49 packs available
+/kg-pack install rust-expert            # install Rust expertise
+/kg-pack build "WebAssembly components" # build a new pack from scratch
+/kg-pack query rust-expert "how do lifetimes work?"
+```
+
+Each installed pack becomes its own Claude Code skill that auto-activates when
+you ask about that domain. See `skills/README.md` for details.
+
+## Pack Management (CLI)
 
 ```bash
 wikigr pack list                    # List installed packs

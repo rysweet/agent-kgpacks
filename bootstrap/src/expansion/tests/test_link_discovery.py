@@ -2,8 +2,8 @@
 Tests for link discovery module
 """
 
-import real_ladybug as kuzu
 import pytest
+import real_ladybug as kuzu
 
 from ..link_discovery import LinkDiscovery
 

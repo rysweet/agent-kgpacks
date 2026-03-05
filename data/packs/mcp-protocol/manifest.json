@@ -4,8 +4,8 @@
   "description": "Expert knowledge of the Model Context Protocol (MCP) covering server development, tool definitions, resource handlers, prompt templates, sampling, transport setup, lifecycle management, and SDK usage.",
   "graph_stats": {
     "articles": 30,
-    "entities": 144,
-    "relationships": 119,
+    "entities": 159,
+    "relationships": 124,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://modelcontextprotocol.io/specification/2025-11-25",
     "https://modelcontextprotocol.io/docs/learn/architecture"
   ],
-  "created": "2026-03-01T23:30:04.621444Z",
+  "created": "2026-03-03T19:42:52.770889Z",
   "license": "MIT"
 }

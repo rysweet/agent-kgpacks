@@ -45,7 +45,7 @@ except APIStatusError as e:
 
 ### Database errors
 
-Kuzu errors surface as `RuntimeError`. These indicate a corrupt database, a missing pack file,
+LadybugDB errors surface as `RuntimeError`. These indicate a corrupt database, a missing pack file,
 or a schema mismatch:
 
 ```python
@@ -145,7 +145,7 @@ except RequestException as e:
 
 ## Build Scripts (`scripts/build_*_pack.py`)
 
-Each build script's `process_url()` function catches only network and JSON errors. Kuzu
+Each build script's `process_url()` function catches only network and JSON errors. LadybugDB
 errors, embedding failures, and other unexpected errors now **abort the build** with a visible
 traceback rather than logging a warning and moving on to the next URL.
 
@@ -157,12 +157,12 @@ This is intentional: a corrupt partial database write is worse than a build that
 #   json.JSONDecodeError        — malformed JSON in API response
 
 # Exceptions that are NOT caught (fatal, abort the build):
-#   RuntimeError                — Kuzu database error
+#   RuntimeError                — LadybugDB database error
 #   OSError                     — embedding model file missing
 #   AttributeError, TypeError   — programming bug in extraction code
 ```
 
-If a build aborts with a Kuzu `RuntimeError`, the database may be in a partial state. Delete
+If a build aborts with a LadybugDB `RuntimeError`, the database may be in a partial state. Delete
 the `pack.db` file and re-run the build from scratch.
 
 ### DB_PATH Safety Guard
@@ -236,7 +236,7 @@ Exception domains, plus programming bugs that propagate unhandled:
 | Domain | Exception Types | When Raised |
 |--------|----------------|-------------|
 | Anthropic API | `APIConnectionError`, `APIStatusError`, `APITimeoutError` | Synthesis, seed identification, Cypher generation |
-| Kuzu database | `RuntimeError` | Any `conn.execute()` call |
+| LadybugDB database | `RuntimeError` | Any `conn.execute()` call |
 | Embedding / ML | `RuntimeError`, `OSError` | Vector ops, model loading, pipeline init |
 | Seed researcher | `requests.RequestException` | HTTP fetch, DNS, timeout |
 | Build scripts (JSON) | `json.JSONDecodeError` | Malformed API response in URL loop |

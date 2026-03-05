@@ -4,8 +4,8 @@
   "description": "Expert .NET programming knowledge covering C#, ASP.NET Core, Entity Framework, Blazor, async/await, dependency injection, and common .NET patterns from official Microsoft documentation",
   "graph_stats": {
     "articles": 204,
-    "entities": 1141,
-    "relationships": 896,
+    "entities": 1089,
+    "relationships": 888,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -20,6 +20,6 @@
     "https://learn.microsoft.com/en-us/dotnet/core/",
     "https://learn.microsoft.com/en-us/dotnet/architecture/"
   ],
-  "created": "2026-03-01T23:26:54.045832Z",
+  "created": "2026-03-03T19:47:21.047036Z",
   "license": "MIT"
 }

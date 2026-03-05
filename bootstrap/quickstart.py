@@ -6,7 +6,7 @@ Validates the complete pipeline with 3 sample articles:
 1. Fetch from Wikipedia
 2. Parse sections
 3. Generate embeddings
-4. Load into Kuzu
+4. Load into LadybugDB
 5. Create vector index
 6. Run semantic search query
 

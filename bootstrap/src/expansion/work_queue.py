@@ -31,7 +31,7 @@ class WorkQueueManager:
         Initialize work queue manager.
 
         Args:
-            conn: Kuzu database connection
+            conn: LadybugDB database connection
             max_retries: Maximum retry attempts before marking as failed
 
         Example:

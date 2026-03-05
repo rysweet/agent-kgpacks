@@ -4,8 +4,8 @@
   "description": "Expert TypeScript programming knowledge covering TypeScript 5.x type system, generics, decorators, satisfies operator, const assertions, template literal types, conditional types, mapped types, and utility types",
   "graph_stats": {
     "articles": 45,
-    "entities": 246,
-    "relationships": 193,
+    "entities": 248,
+    "relationships": 202,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -17,6 +17,6 @@
     "https://www.typescriptlang.org/docs/",
     "https://devblogs.microsoft.com/typescript/"
   ],
-  "created": "2026-03-02T01:04:36.954933Z",
+  "created": "2026-03-03T20:12:51.898347Z",
   "license": "MIT"
 }

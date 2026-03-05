@@ -19,7 +19,7 @@ def get_article_summaries(
     avoiding the N+1 query problem.
 
     Args:
-        conn: Kuzu database connection
+        conn: LadybugDB database connection
         titles: List of article titles to fetch summaries for
 
     Returns:

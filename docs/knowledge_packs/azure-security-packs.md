@@ -206,7 +206,7 @@ except (requests.RequestException, json.JSONDecodeError) as e:
     return False
 ```
 
-This is intentional: Kuzu errors, embedding failures, and programming bugs terminate the build with a full traceback, preventing silent partial writes.
+This is intentional: LadybugDB errors, embedding failures, and programming bugs terminate the build with a full traceback, preventing silent partial writes.
 
 ### DB_PATH Safety Guard
 

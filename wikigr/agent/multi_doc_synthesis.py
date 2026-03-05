@@ -34,10 +34,10 @@ class MultiDocSynthesizer:
     """Expands and synthesizes content from multiple graph articles."""
 
     def __init__(self, kuzu_conn: kuzu.Connection):
-        """Initialize synthesizer with Kuzu connection.
+        """Initialize synthesizer with LadybugDB connection.
 
         Args:
-            kuzu_conn: Active Kuzu connection for graph traversal
+            kuzu_conn: Active LadybugDB connection for graph traversal
         """
         self.conn = kuzu_conn
 

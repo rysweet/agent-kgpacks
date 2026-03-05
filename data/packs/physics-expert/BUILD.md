@@ -9,7 +9,7 @@ The physics expert pack contains ~500 Wikipedia articles covering fundamental an
 1. Downloading Wikipedia articles for each topic
 2. Extracting entities, relationships, and facts using Claude (LLM)
 3. Generating embeddings for semantic search
-4. Building a Kuzu knowledge graph database
+4. Building a LadybugDB knowledge graph database
 
 ## Prerequisites
 

@@ -94,7 +94,7 @@ for article in source.get_articles():
          └────────┬────────────┘
                   │
          ┌────────▼────────────┐
-         │ Kuzu Database       │
+         │ LadybugDB Database   │
          │ (knowledge graph)   │
          └─────────────────────┘
 ```

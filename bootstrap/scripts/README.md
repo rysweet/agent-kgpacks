@@ -45,7 +45,7 @@ python bootstrap/scripts/monitor_expansion.py --db data/wikigr.db --interval 10
 
 ### Options
 
-- `--db PATH`: Path to Kuzu database (default: data/wikigr.db)
+- `--db PATH`: Path to LadybugDB database (default: data/wikigr.db)
 - `--interval SECONDS`: Refresh interval in seconds (default: 30)
 - `--target COUNT`: Target article count for progress tracking (optional)
 

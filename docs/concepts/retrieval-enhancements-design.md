@@ -19,7 +19,7 @@ A single embedding represents only one phrasing of the question. Wikipedia and t
 
 ### Problem 5: Stub Contamination
 
-Section content in Kuzu databases spans a wide quality spectrum: from comprehensive explanations (500+ words) to one-line disambiguation stubs ("See also: ..."). Before quality filtering, all sections entered the synthesis context equally. Short stubs:
+Section content in LadybugDB databases spans a wide quality spectrum: from comprehensive explanations (500+ words) to one-line disambiguation stubs ("See also: ..."). Before quality filtering, all sections entered the synthesis context equally. Short stubs:
 
 - Waste Claude's context window (fixed token budget per query)
 - Add noise that can confuse synthesis (hallucination)
@@ -81,7 +81,7 @@ Title-based deduplication (not content-hash or URL) was chosen because:
 
 `max_results` is clamped to `[1, 20]` before use:
 - Lower bound 1: prevents silent no-op from `semantic_search` when called with 0
-- Upper bound 20: prevents excessive Kuzu load from adversarial inputs
+- Upper bound 20: prevents excessive LadybugDB load from adversarial inputs
 
 #### Opt-In Default (`enable_multi_query=False`)
 

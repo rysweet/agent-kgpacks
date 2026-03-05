@@ -1,10 +1,11 @@
 """
 Knowledge Graph Agent - Query WikiGR using natural language.
 
-Simple library approach: direct Kuzu access + Claude for synthesis.
+Simple library approach: direct LadybugDB access + Claude for synthesis.
 No MCP server, no daemon, just a Python class.
 """
 
+import contextlib
 import json
 import logging
 import re
@@ -198,7 +199,7 @@ class KnowledgeGraphAgent:
         Initialize agent with database connection and Claude API.
 
         Args:
-            db_path: Path to WikiGR Kuzu database
+            db_path: Path to WikiGR LadybugDB database
             anthropic_api_key: Anthropic API key (or from ANTHROPIC_API_KEY env var)
             read_only: Open database in read-only mode (allows concurrent access during expansion)
             use_enhancements: Enable Phase 1 enhancements (reranking, multi-doc, few-shot)
@@ -300,10 +301,8 @@ class KnowledgeGraphAgent:
             try:
                 self.conn.execute(f"LOAD EXTENSION {ext};")
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-                except Exception:
-                    pass
 
     @staticmethod
     def _resolve_few_shot_path(few_shot_path: str | None, db_path: str) -> str | None:
@@ -1480,7 +1479,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
         if not isinstance(max_hops, int) or not (1 <= max_hops <= 10):
             raise ValueError(f"max_hops must be an integer between 1 and 10, got {max_hops!r}")
 
-        # Simplified query without path list comprehensions (Kuzu limitation)
+        # Simplified query without path list comprehensions (LadybugDB limitation)
         df = self._safe_query(
             f"""
             MATCH path = (src:Entity {{name: $src}})-[:ENTITY_RELATION*1..{max_hops}]->(tgt:Entity {{name: $tgt}})
@@ -1499,7 +1498,7 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
                 "source": source,
                 "target": target,
                 "hops": hops,
-                "note": "Full path details require multiple queries in Kuzu",
+                "note": "Full path details require multiple queries in LadybugDB",
             }
             for source, target, hops in zip(
                 df["source"].tolist(), df["target"].tolist(), df["hops"].tolist()

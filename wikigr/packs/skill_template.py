@@ -87,7 +87,7 @@ def generate_skill_md(manifest: PackManifest, kg_config_path: Path) -> str:
         "",
         "## Technical Details",
         "",
-        f"- Database: Kuzu graph database ({manifest.graph_stats.size_mb} MB)",
+        f"- Database: LadybugDB graph database ({manifest.graph_stats.size_mb} MB)",
         f"- Configuration: `{kg_config_path}`",
         f"- License: {manifest.license}",
         "",

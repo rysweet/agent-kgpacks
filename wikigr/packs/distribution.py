@@ -70,7 +70,7 @@ def package_pack(pack_dir: Path, output_path: Path) -> Path:
 
     Includes:
     - manifest.json
-    - pack.db/ (Kuzu database directory)
+    - pack.db/ (LadybugDB database directory)
     - skill.md
     - kg_config.json
     - README.md (if present)

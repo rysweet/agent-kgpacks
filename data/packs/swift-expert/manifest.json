@@ -4,8 +4,8 @@
   "description": "Expert Swift programming knowledge covering Swift 6 strict concurrency, typed throws, noncopyable types, macros, SwiftUI, actors, async/await, and the Swift standard library from official documentation.",
   "graph_stats": {
     "articles": 8,
-    "entities": 57,
-    "relationships": 42,
+    "entities": 54,
+    "relationships": 40,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -18,6 +18,6 @@
     "https://developer.apple.com/documentation/swift",
     "https://www.swift.org/documentation/"
   ],
-  "created": "2026-03-02T01:00:08.178564Z",
+  "created": "2026-03-03T20:04:48.269805Z",
   "license": "MIT"
 }

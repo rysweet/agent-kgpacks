@@ -49,14 +49,14 @@ def create_example_pack(output_dir: Path = Path("./example-pack")) -> None:
     save_manifest(manifest, output_dir)
     print("   ✓ Created manifest.json")
 
-    # Step 2: Create pack.db directory (placeholder for Kuzu database)
+    # Step 2: Create pack.db directory (placeholder for LadybugDB database)
     print("\n2. Creating pack.db directory...")
     pack_db_dir = output_dir / "pack.db"
     pack_db_dir.mkdir(exist_ok=True)
-    # In a real pack, this would be a Kuzu database
+    # In a real pack, this would be a LadybugDB database
     # For this example, just create a placeholder file
     (pack_db_dir / ".placeholder").write_text(
-        "This directory would contain a Kuzu graph database\n"
+        "This directory would contain a LadybugDB graph database\n"
     )
     print("   ✓ Created pack.db/ directory")
 

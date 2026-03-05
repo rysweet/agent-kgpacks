@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture(scope="session")
 def test_db_path():
-    """Path to test Kuzu database."""
+    """Path to test LadybugDB database."""
     # Use existing test database from project root
     # Project root is 2 levels up from backend/tests/
     base_path = Path(__file__).parent.parent.parent

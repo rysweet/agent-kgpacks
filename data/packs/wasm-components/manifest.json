@@ -4,8 +4,8 @@
   "description": "Expert knowledge of the WebAssembly Component Model, WASI P2, WIT interface definitions, wit-bindgen, guest/host interfaces, and wasmtime runtime embedding.",
   "graph_stats": {
     "articles": 37,
-    "entities": 136,
-    "relationships": 155,
+    "entities": 158,
+    "relationships": 163,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -18,6 +18,6 @@
     "https://docs.wasmtime.dev/examples-wasip2.html",
     "https://github.com/bytecodealliance/wit-bindgen"
   ],
-  "created": "2026-03-02T01:31:39.202122Z",
+  "created": "2026-03-03T20:17:08.113781Z",
   "license": "MIT"
 }

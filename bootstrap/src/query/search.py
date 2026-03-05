@@ -4,6 +4,7 @@ Query functions for WikiGR
 Provides semantic search, graph traversal, and hybrid queries.
 """
 
+import contextlib
 import logging
 
 import real_ladybug as kuzu
@@ -18,7 +19,7 @@ def semantic_search(
     Find articles semantically similar to query article
 
     Args:
-        conn: Kuzu connection
+        conn: LadybugDB connection
         query_title: Title of query article
         category: Optional category filter
         top_k: Number of results to return
@@ -166,7 +167,7 @@ def graph_traversal(
     Explore articles within N hops of seed article
 
     Args:
-        conn: Kuzu connection
+        conn: LadybugDB connection
         seed_title: Seed article title
         max_hops: Maximum hops to explore
         category: Optional category filter
@@ -186,7 +187,7 @@ def graph_traversal(
     logger.info(f"Graph traversal from: {seed_title} (max_hops={max_hops})")
 
     # NOTE: max_hops is validated to int 1-10 above, making f-string safe here.
-    # Kuzu does not support parameterized variable-length path patterns.
+    # LadybugDB does not support parameterized variable-length path patterns.
     if category:
         query = f"""
             MATCH path = (seed:Article {{title: $seed_title}})-[:LINKS_TO*1..{max_hops}]->(neighbor:Article)
@@ -226,7 +227,7 @@ def hybrid_query(
     Hybrid query: semantic similarity + graph proximity
 
     Args:
-        conn: Kuzu connection
+        conn: LadybugDB connection
         seed_title: Seed article title
         category: Optional category filter
         max_hops: Maximum hops for graph proximity
@@ -302,10 +303,8 @@ def main():
         try:
             conn.execute(f"LOAD EXTENSION {ext};")
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-            except Exception:
-                pass
 
     print("\n" + "=" * 60)
     print("Testing Semantic Search")

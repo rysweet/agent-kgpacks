@@ -301,7 +301,7 @@ for r in all_scored:
 ### Selective enhancement flags
 
 ```python
-# Enable cross-encoder but disable graph reranker (faster startup, no Kuzu PageRank)
+# Enable cross-encoder but disable graph reranker (faster startup, no LadybugDB PageRank)
 agent = KnowledgeGraphAgent(
     db_path="physics.db",
     use_enhancements=True,

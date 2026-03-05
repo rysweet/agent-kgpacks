@@ -37,7 +37,7 @@ urls.txt
                        ▼
 ┌──────────────────────────────────────────────────────┐
 │  4. STORE                                            │
-│  Kuzu embedded graph database:                        │
+│  LadybugDB embedded graph database:                    │
 │  • Article nodes (title, category, word_count)        │
 │  • Section nodes (title, content, embedding)          │
 │  • Entity nodes (name, type, description)             │
@@ -74,7 +74,7 @@ Each section's text content is passed through the embedding model to produce a 7
 
 ### Storage Stage
 
-All data is written to a Kuzu embedded graph database. Kuzu is a column-oriented graph database that requires no external server -- the database is a directory on disk that can be opened directly by the application.
+All data is written to a LadybugDB embedded graph database. LadybugDB is a column-oriented graph database that requires no external server -- the database is a directory on disk that can be opened directly by the application.
 
 ## Query Pipeline: Answering Questions
 

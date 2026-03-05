@@ -13,8 +13,8 @@ Integrates all modules to process a single article:
 import logging
 from datetime import UTC
 
-import real_ladybug as kuzu
 import numpy as np
+import real_ladybug as kuzu
 
 from ..embeddings import EmbeddingGenerator
 from ..sources.base import Article, ArticleNotFoundError, ContentSource
@@ -103,7 +103,7 @@ class ArticleProcessor:
         Initialize article processor
 
         Args:
-            conn: Kuzu database connection
+            conn: LadybugDB database connection
             content_source: ContentSource implementation (Wikipedia, web, etc.)
             wikipedia_client: Deprecated - use content_source instead
             embedding_generator: Embedding generator
@@ -254,7 +254,7 @@ class ArticleProcessor:
     ):
         """Insert article and sections into database.
 
-        Note: Explicit transactions are not used here because Kuzu's
+        Note: Explicit transactions are not used here because LadybugDB's
         single-connection model auto-commits each statement. Using
         BEGIN TRANSACTION would conflict with work queue writes on
         the same connection (write-write conflict).

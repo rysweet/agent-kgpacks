@@ -14,7 +14,7 @@ API Contract:
 
 Design Philosophy:
     - Simple weighted combination: vector_score * w1 + centrality * w2
-    - Uses PageRank-style centrality from Kuzu
+    - Uses PageRank-style centrality from LadybugDB
     - Preserves all metadata from input results
     - Handles missing graph nodes gracefully (zero centrality)
 """
@@ -31,10 +31,10 @@ class GraphReranker:
     """Combines vector similarity with graph centrality for better ranking."""
 
     def __init__(self, kuzu_conn: kuzu.Connection):
-        """Initialize reranker with Kuzu connection.
+        """Initialize reranker with LadybugDB connection.
 
         Args:
-            kuzu_conn: Active Kuzu connection for centrality queries
+            kuzu_conn: Active LadybugDB connection for centrality queries
         """
         self.conn = kuzu_conn
         self._sparse_graph: bool | None = None  # Cached density check (None = not yet checked)
@@ -83,7 +83,7 @@ class GraphReranker:
             return {}
 
         # Build Cypher query for raw degree centrality per article.
-        # Normalization is done in Python to avoid Kuzu nested-aggregation errors
+        # Normalization is done in Python to avoid LadybugDB nested-aggregation errors
         # when collect() and max() both operate on aggregated values.
         cypher = """
         UNWIND $article_ids AS aid
@@ -103,7 +103,7 @@ class GraphReranker:
                 # No articles found in graph
                 return dict.fromkeys(article_ids, 0.0)
 
-            # Normalize in Python to avoid Kuzu nested-aggregation errors
+            # Normalize in Python to avoid LadybugDB nested-aggregation errors
             max_degree = float(df["degree"].max()) if not df.empty else 0.0
             centrality = {}
             for _, row in df.iterrows():

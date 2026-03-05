@@ -4,6 +4,7 @@ LadybugDB database connection management.
 Provides singleton connection manager with dependency injection for FastAPI.
 """
 
+import contextlib
 import logging
 import threading
 from collections.abc import Generator
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class ConnectionManager:
     """
-    Singleton connection manager for Kuzu database.
+    Singleton connection manager for LadybugDB database.
 
     Keeps a single Database instance (thread-safe) and creates a new
     Connection per request to avoid sharing a non-thread-safe connection
@@ -61,7 +62,7 @@ class ConnectionManager:
                     if not db_path.exists():
                         raise FileNotFoundError(f"Database not found: {db_path}")
 
-                    logger.info(f"Opening Kuzu database: {db_path}")
+                    logger.info(f"Opening LadybugDB database: {db_path}")
                     self._database = kuzu.Database(str(db_path))
 
         return self._database
@@ -83,7 +84,7 @@ class ConnectionManager:
         """Close database (release Database instance)."""
         if self._database is not None:
             self._database = None
-            logger.info("Closed Kuzu database")
+            logger.info("Closed LadybugDB database")
 
 
 def _load_extensions(conn: kuzu.Connection) -> None:
@@ -92,10 +93,8 @@ def _load_extensions(conn: kuzu.Connection) -> None:
         try:
             conn.execute(f"LOAD EXTENSION {ext};")
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-            except Exception:
-                pass
 
 
 # Global connection manager instance
@@ -110,7 +109,7 @@ def get_db() -> Generator[kuzu.Connection, None, None]:
     do not share a single non-thread-safe connection.
 
     Yields:
-        Fresh Kuzu Connection instance
+        Fresh LadybugDB Connection instance
     """
     conn = _manager.get_connection()
     try:

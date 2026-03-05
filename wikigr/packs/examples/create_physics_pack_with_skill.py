@@ -3,7 +3,7 @@
 This example demonstrates the complete Phase 2 workflow:
 1. Create pack directory structure
 2. Generate manifest with metadata
-3. Create placeholder Kuzu database
+3. Create placeholder LadybugDB database
 4. Generate kg_config.json
 5. Auto-generate skill.md from manifest
 6. Discover pack and register it
@@ -71,7 +71,7 @@ def create_physics_pack_with_skill(packs_dir: Path) -> None:
     save_manifest(manifest, pack_dir)
     print("✓ Created manifest.json")
 
-    # 4. Create Kuzu database directory (placeholder)
+    # 4. Create LadybugDB database directory (placeholder)
     pack_db_dir = pack_dir / "pack.db"
     pack_db_dir.mkdir()
     print("✓ Created pack.db directory")

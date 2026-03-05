@@ -216,6 +216,9 @@ def process_article(
     except (requests.RequestException, json.JSONDecodeError) as e:
         logger.error(f"Failed to process {title}: {e}")
         return False
+    except Exception as e:
+        logger.warning(f"Skipping {title}: {e}")
+        return False
 
 
 def create_manifest(

@@ -1,0 +1,68 @@
+{
+  "pack_name": "ladybugdb-expert",
+  "timestamp": "2026-03-05T19:49:43Z",
+  "tasks_evaluated": 2,
+  "summary": {
+    "baseline": {
+      "avg_judge_score": 4.0,
+      "avg_composite_score": 0.531,
+      "syntax_pass_rate": 0.5,
+      "accuracy_gte7": 0.0,
+      "avg_latency_ms": 21671.0,
+      "total_cost_usd": 0.2176,
+      "avg_tool_calls": 0.0
+    },
+    "pack_retrieval": {
+      "avg_judge_score": 3.5,
+      "avg_composite_score": 0.5352,
+      "syntax_pass_rate": 0.5,
+      "accuracy_gte7": 0.0,
+      "avg_latency_ms": 37557.0,
+      "total_cost_usd": 0.1655,
+      "avg_tool_calls": 0.0
+    },
+    "skill_delivery": {
+      "avg_judge_score": 7.5,
+      "avg_composite_score": 0.7125,
+      "syntax_pass_rate": 0.0,
+      "accuracy_gte7": 1.0,
+      "avg_latency_ms": 233048.0,
+      "total_cost_usd": 1.1361,
+      "avg_tool_calls": 10.0
+    }
+  },
+  "per_task": [
+    {
+      "task_id": "lbug_001",
+      "baseline": {
+        "judge_score": 4,
+        "composite": 0.4952
+      },
+      "pack_retrieval": {
+        "judge_score": 4,
+        "composite": 0.5286
+      },
+      "skill_delivery": {
+        "judge_score": 8,
+        "composite": 0.75,
+        "tool_calls": 9
+      }
+    },
+    {
+      "task_id": "lbug_002",
+      "baseline": {
+        "judge_score": 4,
+        "composite": 0.5667
+      },
+      "pack_retrieval": {
+        "judge_score": 3,
+        "composite": 0.5417
+      },
+      "skill_delivery": {
+        "judge_score": 7,
+        "composite": 0.675,
+        "tool_calls": 11
+      }
+    }
+  ]
+}
