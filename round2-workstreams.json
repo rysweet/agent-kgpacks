@@ -1,9 +1,0 @@
-[
-  {
-    "issue": 264,
-    "branch": "fix/issue-264-test-timeouts",
-    "description": "Fix 4 test timeouts from live API calls",
-    "task": "Fix 4 test failures that are all subprocess timeouts from live API calls.\n\n1. In tests/cli/test_pack_commands.py, add @pytest.mark.skip with reason 'Requires Anthropic API key and Wikipedia network access' to: test_create_basic around line 111, test_create_missing_output_dir around line 153, test_create_install_list_remove_workflow around line 463.\n\n2. In tests/cli/test_query_pack_name_validation.py, test_valid_hyphenated_name_not_blocked around line 107: change the pack name from 'go-expert' to 'nonexistent-pack-abc123' so it hits the 'not found' exit path quickly instead of loading a real pack and calling Claude API.\n\nAfter fixes, run: uv run pytest tests/ --timeout=60 --no-cov -q to verify 0 failures.",
-    "recipe": "default-workflow"
-  }
-]

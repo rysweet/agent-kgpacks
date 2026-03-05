@@ -1,9 +1,0 @@
-[
-  {
-    "issue": 267,
-    "branch": "fix/issue-267-chat-stream-deleted-methods",
-    "description": "Fix chat_stream calling deleted methods",
-    "task": "CRITICAL: backend/api/v1/chat.py chat_stream endpoint at lines 177-180 calls _plan_query and _execute_query which were deleted in the dead code cleanup. Every SSE stream request raises AttributeError at runtime.\n\nFix: Replace the decomposed private-method calls in the generate function with a single agent.query call. Emit the answer as a token event and sources as a sources event.\n\nAlso fix: wikigr/packs/distribution.py line 142 - add filter='data' to tar.extractall call to prevent Python 3.14 deprecation warning.\n\nRun tests after to verify 0 failures.",
-    "recipe": "default-workflow"
-  }
-]
