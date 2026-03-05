@@ -12,7 +12,6 @@ Usage:
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 PACKS_DIR = Path("data/packs")
@@ -40,7 +39,9 @@ def generate_skill_md(pack_name: str, manifest: dict, pack_dir: Path) -> str:
     # Truncate description for frontmatter — must be very concise for context budget
     # Target: ~80 chars per skill to fit 49 skills in ~4000 char budget
     base_name = pack_name.replace("-expert", "").replace("-", " ")
-    short_desc = f"Expert knowledge about {base_name}. Use when coding with or asking about {base_name}."
+    short_desc = (
+        f"Expert knowledge about {base_name}. Use when coding with or asking about {base_name}."
+    )
     if len(short_desc) > 120:
         short_desc = f"Expert {base_name} knowledge. Use for {base_name} questions and coding."
 
@@ -119,11 +120,13 @@ def find_all_packs() -> list[dict]:
         manifest = load_manifest(pack_dir)
         if manifest is None:
             continue
-        packs.append({
-            "name": pack_dir.name,
-            "dir": pack_dir,
-            "manifest": manifest,
-        })
+        packs.append(
+            {
+                "name": pack_dir.name,
+                "dir": pack_dir,
+                "manifest": manifest,
+            }
+        )
     return packs
 
 
@@ -166,12 +169,16 @@ def main():
         skill_path.write_text(skill_content)
         installed += 1
 
-    print(f"\n{'Would install' if args.dry_run else 'Installed'}: {installed if not args.dry_run else len(packs)} skills")
+    print(
+        f"\n{'Would install' if args.dry_run else 'Installed'}: {installed if not args.dry_run else len(packs)} skills"
+    )
     print(f"Total description chars: {total_desc_chars}")
     budget = 4000  # ~2% of 200K context
     if total_desc_chars > budget:
-        print(f"WARNING: Descriptions exceed estimated context budget ({total_desc_chars} > {budget})")
-        print(f"  Consider: export SLASH_COMMAND_TOOL_CHAR_BUDGET=8000")
+        print(
+            f"WARNING: Descriptions exceed estimated context budget ({total_desc_chars} > {budget})"
+        )
+        print("  Consider: export SLASH_COMMAND_TOOL_CHAR_BUDGET=8000")
     else:
         print(f"Within context budget ({total_desc_chars}/{budget} chars)")
 

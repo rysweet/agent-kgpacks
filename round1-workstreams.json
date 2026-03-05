@@ -1,0 +1,37 @@
+[
+  {
+    "issue": 256,
+    "branch": "fix/issue-256-remove-dead-tests",
+    "description": "Remove tests referencing deleted methods",
+    "task": "Tests reference methods removed in the dead code cleanup: _validate_cypher, _execute_query, _execute_fallback_query, _plan_query. Fix: Remove tests/agent/test_validate_cypher.py entirely. Remove TestExecuteQuery and TestExecuteFallbackQuery classes from tests/agent/test_kg_agent_core.py. Remove test_handles_enriched_context from test_kg_agent_core.py. Fix test_query_skips_llm_when_high_confidence and test_query_never_calls_llm_cypher in test_kg_agent_semantic.py to not reference _plan_query. Add pytest.mark.skipif for test_kg_agent_queries.py when data/wikigr_30k.db is missing.",
+    "recipe": "default-workflow"
+  },
+  {
+    "issue": 257,
+    "branch": "fix/issue-257-path-traversal-cli",
+    "description": "Add path validation to cmd_query and validate_pack_urls",
+    "task": "Add PACK_NAME_RE validation to cmd_query in wikigr/cli.py for the short-name branch at line 679. When args.pack does not match the regex and is not a directory path or pack.db path, validate it. Also add the same validation to scripts/validate_pack_urls.py --pack flag at line 110. Extract PACK_NAME_RE to a shared constant in wikigr/packs/manifest.py that both files can import.",
+    "recipe": "default-workflow"
+  },
+  {
+    "issue": 258,
+    "branch": "fix/issue-258-test-cross-encoder-attr",
+    "description": "Fix _make_agent missing cross_encoder attribute",
+    "task": "In tests/agent/test_retrieval_enhancements.py, the _make_agent function does not set agent.cross_encoder = None. This causes _vector_primary_retrieve to raise AttributeError which is silently caught. Fix: add agent.cross_encoder = None to _make_agent around line 38.",
+    "recipe": "default-workflow"
+  },
+  {
+    "issue": 259,
+    "branch": "fix/issue-259-orchestrator-keyword",
+    "description": "Fix process_article keyword argument mismatch",
+    "task": "bootstrap/src/expansion/orchestrator.py line 173 calls process_article with title=title keyword but the method signature at processor.py:118 uses title_or_url as the param name. Fix: change to title_or_url=title at the call site.",
+    "recipe": "default-workflow"
+  },
+  {
+    "issue": 260,
+    "branch": "fix/issue-260-doc-manifest-regex",
+    "description": "Fix manifest doc name validation description",
+    "task": "docs/reference/pack-manifest.md line 47 says lowercase alphanumeric with hyphens but the regex allows uppercase and underscores. Update the doc to match the actual regex. Also remove the PLAN_CACHE_MAX_SIZE doc entry or add a note that it is not enforced.",
+    "recipe": "default-workflow"
+  }
+]

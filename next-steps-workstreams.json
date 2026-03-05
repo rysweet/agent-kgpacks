@@ -1,0 +1,23 @@
+[
+  {
+    "issue": 248,
+    "branch": "fix/issue-248-deduplicate-load-urls",
+    "description": "Deduplicate load_urls helper across build scripts",
+    "task": "Refactor: Extract the duplicated load_urls function from 45+ build scripts into a shared utility. Create wikigr/packs/utils.py with a load_urls function that reads urls.txt with blank/comment filtering. Then update all build scripts to import from the shared module. Run tests after.",
+    "recipe": "default-workflow"
+  },
+  {
+    "issue": 247,
+    "branch": "fix/issue-247-cleanup-deps",
+    "description": "Fix pyproject.toml missing dependency and cleanup",
+    "task": "Cleanup: Fix issue 247 about missing deps in pyproject.toml. Also fix issue 246 about hardcoded session paths in run.sh files. Check if there are any stale workstream files like round1-workstreams.json, round2-workstreams.json etc in the repo root and remove them. Clean up any launcher.py or run.sh files that should not be in the repo.",
+    "recipe": "default-workflow"
+  },
+  {
+    "issue": "TBD",
+    "branch": "feat/build-4-remaining-packs",
+    "description": "Create build scripts and URL lists for 4 missing packs",
+    "task": "Create build scripts and URL lists for the 4 packs that are missing pack.db: azure-lighthouse, fabric-graphql-expert, security-copilot, sentinel-graph.\n\nFor each:\n1. Research the domain and create data/packs/PACK/urls.txt with 50-80 URLs from official docs\n2. Create scripts/build_PACK_pack.py following the pattern of existing build scripts like build_go_pack.py\n3. Build the pack by running the script\n\nazure-lighthouse: Azure Lighthouse docs from learn.microsoft.com\nfabric-graphql-expert: already has urls.txt, just needs a build script\nsecurity-copilot: Microsoft Security Copilot docs from learn.microsoft.com\nsentinel-graph: Microsoft Sentinel docs from learn.microsoft.com",
+    "recipe": "default-workflow"
+  }
+]

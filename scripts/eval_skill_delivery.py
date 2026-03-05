@@ -193,10 +193,14 @@ def print_results(result: SkillDeliveryResult) -> None:
     b = result.summary["baseline"]
     s = result.summary["skill_delivery"]
     p = result.summary["pack_retrieval"]
-    print(f"\n  SKILL vs BASELINE: {s.avg_judge_score - b.avg_judge_score:+.1f} judge, "
-          f"{s.avg_composite_score - b.avg_composite_score:+.2f} composite")
-    print(f"  SKILL vs PACK:     {s.avg_judge_score - p.avg_judge_score:+.1f} judge, "
-          f"{s.avg_composite_score - p.avg_composite_score:+.2f} composite")
+    print(
+        f"\n  SKILL vs BASELINE: {s.avg_judge_score - b.avg_judge_score:+.1f} judge, "
+        f"{s.avg_composite_score - b.avg_composite_score:+.2f} composite"
+    )
+    print(
+        f"  SKILL vs PACK:     {s.avg_judge_score - p.avg_judge_score:+.1f} judge, "
+        f"{s.avg_composite_score - p.avg_composite_score:+.2f} composite"
+    )
 
 
 def save_results(result: SkillDeliveryResult, pack_path: Path) -> None:
@@ -224,7 +228,10 @@ def save_results(result: SkillDeliveryResult, pack_path: Path) -> None:
             {
                 "task_id": task_id,
                 "baseline": {"judge_score": b.judge_score, "composite": compute_composite_score(b)},
-                "pack_retrieval": {"judge_score": p.judge_score, "composite": compute_composite_score(p)},
+                "pack_retrieval": {
+                    "judge_score": p.judge_score,
+                    "composite": compute_composite_score(p),
+                },
                 "skill_delivery": {
                     "judge_score": sk.judge_score,
                     "composite": compute_composite_score(sk),

@@ -1,0 +1,9 @@
+[
+  {
+    "issue": 269,
+    "branch": "fix/issue-269-installer-pack-name-validation",
+    "description": "Add PACK_NAME_RE to installer uninstall and update",
+    "task": "Add PACK_NAME_RE validation to wikigr/packs/installer.py uninstall and update methods. Import PACK_NAME_RE from wikigr.packs.manifest and validate pack_name at the start of both methods. Raise ValueError if the name fails validation. Run tests after.",
+    "recipe": "default-workflow"
+  }
+]

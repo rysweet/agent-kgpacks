@@ -125,8 +125,7 @@ def main():
 
     with ProcessPoolExecutor(max_workers=args.workers) as executor:
         futures = {
-            executor.submit(rebuild_pack, script, args.test_mode): script
-            for script in scripts
+            executor.submit(rebuild_pack, script, args.test_mode): script for script in scripts
         }
         for i, future in enumerate(as_completed(futures), 1):
             result = future.result()

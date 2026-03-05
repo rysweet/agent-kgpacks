@@ -74,9 +74,7 @@ def check_expected_constructs(constructs: list[str], output: str) -> dict[str, b
     return results
 
 
-def run_execution_test(
-    test_code: str | None, output: str
-) -> tuple[bool | None, str | None]:
+def run_execution_test(test_code: str | None, output: str) -> tuple[bool | None, str | None]:
     """Run optional execution test against the output.
 
     Combines the first code block from output with test_code and runs it.

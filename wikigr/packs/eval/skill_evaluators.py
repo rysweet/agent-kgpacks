@@ -15,7 +15,7 @@ from pathlib import Path
 from anthropic import Anthropic
 
 from wikigr.packs.eval.kg_adapter import retrieve_from_pack
-from wikigr.packs.eval.skill_models import CodingTask, TaskResult, ValidationResult
+from wikigr.packs.eval.skill_models import CodingTask, TaskResult
 
 logger = logging.getLogger(__name__)
 
@@ -102,9 +102,7 @@ def evaluate_baseline(client: Anthropic, task: CodingTask) -> TaskResult:
     )
 
 
-def evaluate_pack_retrieval(
-    client: Anthropic, task: CodingTask, pack_path: Path
-) -> TaskResult:
+def evaluate_pack_retrieval(client: Anthropic, task: CodingTask, pack_path: Path) -> TaskResult:
     """Condition B: Claude + pre-fetched KG context in user message."""
     start = time.perf_counter()
 
@@ -175,11 +173,13 @@ def evaluate_skill_delivery(
                     kg_result = retrieve_from_pack(question, pack_path, top_k=max_results)
                 except Exception as e:
                     kg_result = f"Error querying knowledge pack: {e}"
-                tool_results.append({
-                    "type": "tool_result",
-                    "tool_use_id": tool_block.id,
-                    "content": kg_result,
-                })
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": tool_block.id,
+                        "content": kg_result,
+                    }
+                )
 
             messages.append({"role": "assistant", "content": response.content})
             messages.append({"role": "user", "content": tool_results})
@@ -200,9 +200,7 @@ def evaluate_skill_delivery(
     )
 
 
-def judge_task_output(
-    client: Anthropic, task: CodingTask, actual_output: str
-) -> tuple[int, str]:
+def judge_task_output(client: Anthropic, task: CodingTask, actual_output: str) -> tuple[int, str]:
     """Judge task output quality, returning (score, reason)."""
     prompt = TASK_JUDGE_PROMPT.format(
         prompt=task.prompt,
@@ -238,9 +236,7 @@ def compute_composite_score(result: TaskResult) -> float:
     syntax_score = 1.0 if v.syntax_valid else 0.0
 
     required_score = (
-        sum(v.contains_required.values()) / len(v.contains_required)
-        if v.contains_required
-        else 1.0
+        sum(v.contains_required.values()) / len(v.contains_required) if v.contains_required else 1.0
     )
     forbidden_score = (
         1.0 - sum(v.contains_forbidden.values()) / len(v.contains_forbidden)
@@ -248,9 +244,7 @@ def compute_composite_score(result: TaskResult) -> float:
         else 1.0
     )
     construct_score = (
-        sum(v.constructs_found.values()) / len(v.constructs_found)
-        if v.constructs_found
-        else 1.0
+        sum(v.constructs_found.values()) / len(v.constructs_found) if v.constructs_found else 1.0
     )
 
     score = (

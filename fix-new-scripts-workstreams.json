@@ -1,0 +1,9 @@
+[
+  {
+    "issue": 281,
+    "branch": "fix/issue-281-new-pack-scripts-quality",
+    "description": "Fix 22 test failures in 4 new pack build scripts",
+    "task": "Fix 22 test failures in the 4 new build scripts: build_azure_lighthouse_pack.py, build_fabric_graphql_expert_pack.py, build_security_copilot_pack.py, build_sentinel_graph_pack.py.\n\nFor each script:\n1. Replace local def load_urls with: from wikigr.packs.utils import load_urls\n2. Narrow all except Exception to specific types like requests.RequestException, json.JSONDecodeError\n3. Add DB path safety guard before any shutil.rmtree call - assert the path contains data/packs\n4. Build all 4 packs by running each script\n\nAfter fixes, run: uv run pytest tests/ --timeout=60 --no-cov -q and verify 0 failures.",
+    "recipe": "default-workflow"
+  }
+]

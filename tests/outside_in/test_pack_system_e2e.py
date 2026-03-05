@@ -30,7 +30,9 @@ PACKS_DIR = PROJECT_ROOT / "data" / "packs"
 SCRIPTS_DIR = PROJECT_ROOT / "scripts"
 
 
-def run_script(args: list[str], timeout: int = 120, env: dict | None = None) -> subprocess.CompletedProcess:
+def run_script(
+    args: list[str], timeout: int = 120, env: dict | None = None
+) -> subprocess.CompletedProcess:
     """Run a script and return the result."""
     full_env = {**os.environ, "TOKENIZERS_PARALLELISM": "false", "LOKY_MAX_CPU_COUNT": "1"}
     if env:
@@ -61,38 +63,44 @@ class TestLadybugDBIntegration:
 
     def test_kuzu_alias_works(self):
         """import real_ladybug as kuzu should work and provide Database/Connection."""
-        result = run_script([
-            "-c",
-            "import real_ladybug as kuzu; "
-            "db = kuzu.Database(); conn = kuzu.Connection(db); "
-            "print('OK')",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import real_ladybug as kuzu; "
+                "db = kuzu.Database(); conn = kuzu.Connection(db); "
+                "print('OK')",
+            ]
+        )
         assert result.returncode == 0, f"Alias failed: {result.stderr}"
         assert "OK" in result.stdout
 
     def test_extension_loading(self):
         """VECTOR and FTS extensions should load on a fresh connection."""
-        result = run_script([
-            "-c",
-            "import real_ladybug as kuzu; "
-            "db = kuzu.Database(); conn = kuzu.Connection(db); "
-            "conn.execute('INSTALL VECTOR; LOAD EXTENSION VECTOR;'); "
-            "conn.execute('INSTALL FTS; LOAD EXTENSION FTS;'); "
-            "print('EXTENSIONS_OK')",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import real_ladybug as kuzu; "
+                "db = kuzu.Database(); conn = kuzu.Connection(db); "
+                "conn.execute('INSTALL VECTOR; LOAD EXTENSION VECTOR;'); "
+                "conn.execute('INSTALL FTS; LOAD EXTENSION FTS;'); "
+                "print('EXTENSIONS_OK')",
+            ]
+        )
         assert result.returncode == 0, f"Extension loading failed: {result.stderr}"
         assert "EXTENSIONS_OK" in result.stdout
 
     def test_load_extensions_helper(self):
         """The load_extensions() helper from schema module should work."""
-        result = run_script([
-            "-c",
-            "import sys; sys.path.insert(0, '.'); "
-            "from bootstrap.schema.ryugraph_schema import load_extensions; "
-            "import real_ladybug as kuzu; "
-            "db = kuzu.Database(); conn = kuzu.Connection(db); "
-            "load_extensions(conn); print('HELPER_OK')",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import sys; sys.path.insert(0, '.'); "
+                "from bootstrap.schema.ryugraph_schema import load_extensions; "
+                "import real_ladybug as kuzu; "
+                "db = kuzu.Database(); conn = kuzu.Connection(db); "
+                "load_extensions(conn); print('HELPER_OK')",
+            ]
+        )
         assert result.returncode == 0, f"Helper failed: {result.stderr}"
         assert "HELPER_OK" in result.stdout
 
@@ -145,9 +153,7 @@ class TestPackBuild:
             if script.name == "build_pack_from_issue.py":
                 continue
             content = script.read_text()
-            assert "load_extensions" in content, (
-                f"{script.name} missing load_extensions import"
-            )
+            assert "load_extensions" in content, f"{script.name} missing load_extensions import"
 
     def test_build_script_has_catch_all_handler(self):
         """All build scripts should have catch-all exception handler in process_url."""
@@ -156,12 +162,12 @@ class TestPackBuild:
                 continue
             content = script.read_text()
             # Should have both specific and catch-all handlers
-            assert "except (requests.RequestException" in content, (
-                f"{script.name} missing specific exception handler"
-            )
-            assert 'logger.warning(f"Skipping' in content, (
-                f"{script.name} missing catch-all exception handler"
-            )
+            assert (
+                "except (requests.RequestException" in content
+            ), f"{script.name} missing specific exception handler"
+            assert (
+                'logger.warning(f"Skipping' in content
+            ), f"{script.name} missing catch-all exception handler"
 
 
 # ============================================================================
@@ -181,36 +187,42 @@ class TestKGAgentQueries:
 
     def test_kg_agent_query_returns_answer(self):
         """KG Agent should return an answer with sources."""
-        result = run_script([
-            "-c",
-            "import sys; sys.path.insert(0, '.'); "
-            "from wikigr.agent.kg_agent import KnowledgeGraphAgent; "
-            "agent = KnowledgeGraphAgent("
-            "  db_path='data/packs/ladybugdb-expert/pack.db', "
-            "  read_only=True, use_enhancements=False); "
-            "r = agent.query('What is LadybugDB?', max_results=2); "
-            "print('ANSWER:', bool(r.get('answer'))); "
-            "print('SOURCES:', len(r.get('sources', []))); "
-            "agent.conn.close()",
-        ], timeout=60)
+        result = run_script(
+            [
+                "-c",
+                "import sys; sys.path.insert(0, '.'); "
+                "from wikigr.agent.kg_agent import KnowledgeGraphAgent; "
+                "agent = KnowledgeGraphAgent("
+                "  db_path='data/packs/ladybugdb-expert/pack.db', "
+                "  read_only=True, use_enhancements=False); "
+                "r = agent.query('What is LadybugDB?', max_results=2); "
+                "print('ANSWER:', bool(r.get('answer'))); "
+                "print('SOURCES:', len(r.get('sources', []))); "
+                "agent.conn.close()",
+            ],
+            timeout=60,
+        )
         assert result.returncode == 0, f"Query failed: {result.stderr[-500:]}"
         assert "ANSWER: True" in result.stdout
         assert "SOURCES:" in result.stdout
 
     def test_kg_agent_vector_search_works(self):
         """Vector search should return results from the pack."""
-        result = run_script([
-            "-c",
-            "import sys; sys.path.insert(0, '.'); "
-            "from wikigr.agent.kg_agent import KnowledgeGraphAgent; "
-            "agent = KnowledgeGraphAgent("
-            "  db_path='data/packs/ladybugdb-expert/pack.db', "
-            "  read_only=True, use_enhancements=False); "
-            "r = agent.query('How do I create a vector index?', max_results=3); "
-            "sources = r.get('sources', []); "
-            "print(f'FOUND:{len(sources)}'); "
-            "agent.conn.close()",
-        ], timeout=60)
+        result = run_script(
+            [
+                "-c",
+                "import sys; sys.path.insert(0, '.'); "
+                "from wikigr.agent.kg_agent import KnowledgeGraphAgent; "
+                "agent = KnowledgeGraphAgent("
+                "  db_path='data/packs/ladybugdb-expert/pack.db', "
+                "  read_only=True, use_enhancements=False); "
+                "r = agent.query('How do I create a vector index?', max_results=3); "
+                "sources = r.get('sources', []); "
+                "print(f'FOUND:{len(sources)}'); "
+                "agent.conn.close()",
+            ],
+            timeout=60,
+        )
         assert result.returncode == 0, f"Vector search failed: {result.stderr[-500:]}"
         assert "FOUND:" in result.stdout
         count = int(result.stdout.split("FOUND:")[1].strip().split("\n")[0])
@@ -259,16 +271,18 @@ class TestSkillInstallation:
         """Generated SKILL.md should have valid YAML frontmatter."""
         import yaml
 
-        result = run_script([
-            "-c",
-            "import sys, json; sys.path.insert(0, '.'); "
-            "from scripts.install_pack_skills import load_manifest, generate_skill_md; "
-            "from pathlib import Path; "
-            "pack_dir = Path('data/packs/ladybugdb-expert'); "
-            "manifest = load_manifest(pack_dir); "
-            "content = generate_skill_md('ladybugdb-expert', manifest, pack_dir); "
-            "print(content)",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import sys, json; sys.path.insert(0, '.'); "
+                "from scripts.install_pack_skills import load_manifest, generate_skill_md; "
+                "from pathlib import Path; "
+                "pack_dir = Path('data/packs/ladybugdb-expert'); "
+                "manifest = load_manifest(pack_dir); "
+                "content = generate_skill_md('ladybugdb-expert', manifest, pack_dir); "
+                "print(content)",
+            ]
+        )
         assert result.returncode == 0, f"Generation failed: {result.stderr}"
 
         content = result.stdout
@@ -283,16 +297,18 @@ class TestSkillInstallation:
 
     def test_skill_contains_pack_db_path(self):
         """Generated skill should contain the absolute path to pack.db."""
-        result = run_script([
-            "-c",
-            "import sys; sys.path.insert(0, '.'); "
-            "from scripts.install_pack_skills import load_manifest, generate_skill_md; "
-            "from pathlib import Path; "
-            "pack_dir = Path('data/packs/ladybugdb-expert'); "
-            "manifest = load_manifest(pack_dir); "
-            "content = generate_skill_md('ladybugdb-expert', manifest, pack_dir); "
-            "print(content)",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import sys; sys.path.insert(0, '.'); "
+                "from scripts.install_pack_skills import load_manifest, generate_skill_md; "
+                "from pathlib import Path; "
+                "pack_dir = Path('data/packs/ladybugdb-expert'); "
+                "manifest = load_manifest(pack_dir); "
+                "content = generate_skill_md('ladybugdb-expert', manifest, pack_dir); "
+                "print(content)",
+            ]
+        )
         assert result.returncode == 0
         assert "pack.db" in result.stdout
         assert "KnowledgeGraphAgent" in result.stdout
@@ -308,21 +324,31 @@ class TestEvalHarness:
 
     def test_eval_models_importable(self):
         """Eval data models should be importable."""
-        result = run_script([
-            "-c",
-            "import sys; sys.path.insert(0, '.'); "
-            "from wikigr.packs.eval.skill_models import CodingTask, TaskResult, SkillDeliveryResult; "
-            "from wikigr.packs.eval.skill_validators import validate_task_output; "
-            "from wikigr.packs.eval.skill_evaluators import compute_composite_score; "
-            "print('IMPORTS_OK')",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import sys; sys.path.insert(0, '.'); "
+                "from wikigr.packs.eval.skill_models import CodingTask, TaskResult, SkillDeliveryResult; "
+                "from wikigr.packs.eval.skill_validators import validate_task_output; "
+                "from wikigr.packs.eval.skill_evaluators import compute_composite_score; "
+                "print('IMPORTS_OK')",
+            ]
+        )
         assert result.returncode == 0, f"Import failed: {result.stderr}"
         assert "IMPORTS_OK" in result.stdout
 
     def test_tasks_jsonl_valid(self):
         """All tasks.jsonl files should contain valid JSON with required fields."""
-        required_fields = {"id", "pack_name", "task_type", "difficulty", "prompt",
-                           "ground_truth_code", "ground_truth_description", "validation"}
+        required_fields = {
+            "id",
+            "pack_name",
+            "task_type",
+            "difficulty",
+            "prompt",
+            "ground_truth_code",
+            "ground_truth_description",
+            "validation",
+        }
         for tasks_file in PACKS_DIR.glob("*/eval/tasks.jsonl"):
             with open(tasks_file) as f:
                 for i, line in enumerate(f, 1):
@@ -331,59 +357,69 @@ class TestEvalHarness:
                         continue
                     task = json.loads(line)
                     missing = required_fields - set(task.keys())
-                    assert not missing, (
-                        f"{tasks_file}:{i} missing fields: {missing}"
-                    )
-                    assert task["task_type"] in ("code_gen", "debug", "config", "explain", "refactor"), (
-                        f"{tasks_file}:{i} invalid task_type: {task['task_type']}"
-                    )
-                    assert task["difficulty"] in ("easy", "medium", "hard"), (
-                        f"{tasks_file}:{i} invalid difficulty: {task['difficulty']}"
-                    )
+                    assert not missing, f"{tasks_file}:{i} missing fields: {missing}"
+                    assert task["task_type"] in (
+                        "code_gen",
+                        "debug",
+                        "config",
+                        "explain",
+                        "refactor",
+                    ), f"{tasks_file}:{i} invalid task_type: {task['task_type']}"
+                    assert task["difficulty"] in (
+                        "easy",
+                        "medium",
+                        "hard",
+                    ), f"{tasks_file}:{i} invalid difficulty: {task['difficulty']}"
 
     def test_validator_extracts_code_blocks(self):
         """Validator should correctly extract fenced code blocks."""
-        result = run_script([
-            "-c",
-            "import sys; sys.path.insert(0, '.'); "
-            "from wikigr.packs.eval.skill_validators import extract_code_blocks; "
-            "output = '```python\\nx = 1\\n```\\ntext\\n```rust\\nfn main() {}\\n```'; "
-            "blocks = extract_code_blocks(output); "
-            "print(f'BLOCKS:{len(blocks)}'); "
-            "print(f'FIRST:{blocks[0].strip()}')",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import sys; sys.path.insert(0, '.'); "
+                "from wikigr.packs.eval.skill_validators import extract_code_blocks; "
+                "output = '```python\\nx = 1\\n```\\ntext\\n```rust\\nfn main() {}\\n```'; "
+                "blocks = extract_code_blocks(output); "
+                "print(f'BLOCKS:{len(blocks)}'); "
+                "print(f'FIRST:{blocks[0].strip()}')",
+            ]
+        )
         assert result.returncode == 0, f"Failed: {result.stderr}"
         assert "BLOCKS:2" in result.stdout
         assert "FIRST:x = 1" in result.stdout
 
     def test_validator_checks_syntax(self):
         """Validator should detect Python syntax errors in code blocks."""
-        result = run_script([
-            "-c",
-            "import sys; sys.path.insert(0, '.'); "
-            "from wikigr.packs.eval.skill_validators import check_syntax; "
-            "valid, errors = check_syntax('python', '```python\\nx = 1\\n```'); "
-            "print(f'VALID:{valid}'); "
-            "valid2, errors2 = check_syntax('python', '```python\\ndef f(\\n```'); "
-            "print(f'INVALID:{not valid2}, ERRORS:{len(errors2)}')",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import sys; sys.path.insert(0, '.'); "
+                "from wikigr.packs.eval.skill_validators import check_syntax; "
+                "valid, errors = check_syntax('python', '```python\\nx = 1\\n```'); "
+                "print(f'VALID:{valid}'); "
+                "valid2, errors2 = check_syntax('python', '```python\\ndef f(\\n```'); "
+                "print(f'INVALID:{not valid2}, ERRORS:{len(errors2)}')",
+            ]
+        )
         assert result.returncode == 0, f"Failed: {result.stderr}"
         assert "VALID:True" in result.stdout
         assert "INVALID:True" in result.stdout
 
     def test_composite_score_calculation(self):
         """Composite score should combine judge + validation correctly."""
-        result = run_script([
-            "-c",
-            "import sys; sys.path.insert(0, '.'); "
-            "from wikigr.packs.eval.skill_models import TaskResult, ValidationResult; "
-            "from wikigr.packs.eval.skill_evaluators import compute_composite_score; "
-            "v = ValidationResult(True, [], {'a': True}, {}, {'fn': True}, None, None); "
-            "r = TaskResult('t1', 'baseline', 'output', judge_score=8, validation=v); "
-            "score = compute_composite_score(r); "
-            "print(f'SCORE:{score}'); "
-            "assert 0.0 <= score <= 1.0, f'Score out of range: {score}'",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import sys; sys.path.insert(0, '.'); "
+                "from wikigr.packs.eval.skill_models import TaskResult, ValidationResult; "
+                "from wikigr.packs.eval.skill_evaluators import compute_composite_score; "
+                "v = ValidationResult(True, [], {'a': True}, {}, {'fn': True}, None, None); "
+                "r = TaskResult('t1', 'baseline', 'output', judge_score=8, validation=v); "
+                "score = compute_composite_score(r); "
+                "print(f'SCORE:{score}'); "
+                "assert 0.0 <= score <= 1.0, f'Score out of range: {score}'",
+            ]
+        )
         assert result.returncode == 0, f"Failed: {result.stderr}"
         assert "SCORE:" in result.stdout
         score = float(result.stdout.split("SCORE:")[1].strip())
@@ -461,7 +497,9 @@ class TestDocumentation:
             for i, line in enumerate(content.splitlines(), 1):
                 stripped = line.strip()
                 if stripped == "import kuzu" or stripped.startswith("import kuzu "):
-                    pytest.fail(f"{py_file}:{i} has bare 'import kuzu' — should be 'import real_ladybug as kuzu'")
+                    pytest.fail(
+                        f"{py_file}:{i} has bare 'import kuzu' — should be 'import real_ladybug as kuzu'"
+                    )
 
     def test_pyproject_references_real_ladybug(self):
         """pyproject.toml should reference real_ladybug, not kuzu."""
@@ -476,7 +514,10 @@ class TestDocumentation:
 
     def test_requirements_txt_references_real_ladybug(self):
         """requirements.txt files should reference real_ladybug."""
-        for req_file in [PROJECT_ROOT / "requirements.txt", PROJECT_ROOT / "backend" / "requirements.txt"]:
+        for req_file in [
+            PROJECT_ROOT / "requirements.txt",
+            PROJECT_ROOT / "backend" / "requirements.txt",
+        ]:
             if not req_file.exists():
                 continue
             content = req_file.read_text()
@@ -497,13 +538,15 @@ class TestRebuildScript:
 
     def test_rebuild_script_importable(self):
         """rebuild_all_packs.py should be importable without errors."""
-        result = run_script([
-            "-c",
-            "import sys; sys.path.insert(0, '.'); "
-            "from scripts.rebuild_all_packs import find_build_scripts, rebuild_pack; "
-            "scripts = find_build_scripts(); "
-            "print(f'SCRIPTS:{len(scripts)}')",
-        ])
+        result = run_script(
+            [
+                "-c",
+                "import sys; sys.path.insert(0, '.'); "
+                "from scripts.rebuild_all_packs import find_build_scripts, rebuild_pack; "
+                "scripts = find_build_scripts(); "
+                "print(f'SCRIPTS:{len(scripts)}')",
+            ]
+        )
         assert result.returncode == 0, f"Import failed: {result.stderr}"
         count = int(result.stdout.split("SCRIPTS:")[1].strip())
         assert count >= 48, f"Expected >= 48 build scripts, found {count}"
