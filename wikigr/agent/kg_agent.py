@@ -5,6 +5,7 @@ Simple library approach: direct LadybugDB access + Claude for synthesis.
 No MCP server, no daemon, just a Python class.
 """
 
+import contextlib
 import json
 import logging
 import re
@@ -300,10 +301,8 @@ class KnowledgeGraphAgent:
             try:
                 self.conn.execute(f"LOAD EXTENSION {ext};")
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-                except Exception:
-                    pass
 
     @staticmethod
     def _resolve_few_shot_path(few_shot_path: str | None, db_path: str) -> str | None:

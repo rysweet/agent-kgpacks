@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import contextlib
 import sys
 from pathlib import Path
 
@@ -26,10 +27,8 @@ def load_extensions(conn) -> None:
         try:
             conn.execute(f"LOAD EXTENSION {ext};")
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-            except Exception:
-                pass
 
 
 def create_schema(db_path: str, drop_existing: bool = False):

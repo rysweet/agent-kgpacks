@@ -13,8 +13,8 @@ Integrates all modules to process a single article:
 import logging
 from datetime import UTC
 
-import real_ladybug as kuzu
 import numpy as np
+import real_ladybug as kuzu
 
 from ..embeddings import EmbeddingGenerator
 from ..sources.base import Article, ArticleNotFoundError, ContentSource

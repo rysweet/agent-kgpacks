@@ -19,6 +19,7 @@ Usage:
 """
 
 import argparse
+import contextlib
 import json
 import logging
 import os
@@ -37,10 +38,8 @@ def _load_db_extensions(conn) -> None:
         try:
             conn.execute(f"LOAD EXTENSION {ext};")
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-            except Exception:
-                pass
 
 
 def parse_topics_file(path: str) -> list[str]:

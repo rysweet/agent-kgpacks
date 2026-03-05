@@ -5,11 +5,12 @@ Integrates Wikipedia API, section parsing, and embedding generation
 to load articles into LadybugDB database.
 """
 
+import contextlib
 import logging
 from datetime import UTC, datetime
 
-import real_ladybug as kuzu
 import numpy as np
+import real_ladybug as kuzu
 
 from ..embeddings import EmbeddingGenerator
 from ..wikipedia import ArticleNotFoundError, WikipediaAPIClient, WikipediaArticle
@@ -50,10 +51,8 @@ class ArticleLoader:
             try:
                 self.conn.execute(f"LOAD EXTENSION {ext};")
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-                except Exception:
-                    pass
 
     def load_article(
         self,

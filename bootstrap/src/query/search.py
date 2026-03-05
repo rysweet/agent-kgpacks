@@ -4,6 +4,7 @@ Query functions for WikiGR
 Provides semantic search, graph traversal, and hybrid queries.
 """
 
+import contextlib
 import logging
 
 import real_ladybug as kuzu
@@ -302,10 +303,8 @@ def main():
         try:
             conn.execute(f"LOAD EXTENSION {ext};")
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-            except Exception:
-                pass
 
     print("\n" + "=" * 60)
     print("Testing Semantic Search")

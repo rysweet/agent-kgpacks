@@ -4,6 +4,7 @@ LadybugDB database connection management.
 Provides singleton connection manager with dependency injection for FastAPI.
 """
 
+import contextlib
 import logging
 import threading
 from collections.abc import Generator
@@ -92,10 +93,8 @@ def _load_extensions(conn: kuzu.Connection) -> None:
         try:
             conn.execute(f"LOAD EXTENSION {ext};")
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-            except Exception:
-                pass
 
 
 # Global connection manager instance

@@ -12,6 +12,7 @@ Supports parallel expansion with multiple worker threads, each using
 its own LadybugDB connection for thread safety.
 """
 
+import contextlib
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -77,10 +78,8 @@ class RyuGraphOrchestrator:
             try:
                 self.conn.execute(f"LOAD EXTENSION {ext};")
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
-                except Exception:
-                    pass
 
     def close(self):
         """Release database resources."""
