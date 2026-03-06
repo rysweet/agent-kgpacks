@@ -102,8 +102,15 @@ def rebuild_pack(script_path: Path, test_mode: bool = False) -> dict:
         return {"pack": pack_name, "status": "timeout", "elapsed": elapsed}
     except Exception as e:
         elapsed = time.time() - start
-        logger.error(f"[{pack_name}] Build error: {e}")
-        return {"pack": pack_name, "status": "error", "elapsed": elapsed, "error": str(e)}
+        from wikigr.utils import sanitize_error
+
+        logger.error(f"[{pack_name}] Build error: {sanitize_error(str(e))}")
+        return {
+            "pack": pack_name,
+            "status": "error",
+            "elapsed": elapsed,
+            "error": sanitize_error(str(e)),
+        }
 
 
 def main():

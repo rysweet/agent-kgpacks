@@ -120,7 +120,9 @@ class ArticleLoader:
             return (True, None)
 
         except Exception as e:
-            error_msg = f"Failed to load article {title}: {str(e)}"
+            from wikigr.utils import sanitize_error
+
+            error_msg = f"Failed to load article {title}: {sanitize_error(str(e))}"
             logger.error(error_msg, exc_info=True)
             return (False, error_msg)
 

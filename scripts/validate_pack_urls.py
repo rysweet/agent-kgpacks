@@ -49,7 +49,9 @@ def check_url(url: str, timeout: int = 10, retries: int = 2) -> tuple[str, int, 
                 continue
             return (url, 0, "timeout")
         except Exception as e:
-            return (url, 0, str(e)[:60])
+            from wikigr.utils import sanitize_error
+
+            return (url, 0, sanitize_error(str(e))[:60])
 
 
 def validate_file(urls_path: Path, fix: bool = False, workers: int = 10) -> dict:

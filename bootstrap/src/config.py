@@ -34,7 +34,7 @@ class Config:
                     "timeout": 30,
                 },
                 "embeddings": {
-                    "model_name": "paraphrase-MiniLM-L3-v2",
+                    "model_name": "BAAI/bge-base-en-v1.5",
                     "batch_size": 32,
                     "use_gpu": None,
                 },

@@ -81,9 +81,10 @@ class ConnectionManager:
 
     def close(self):
         """Close database (release Database instance)."""
-        if self._database is not None:
-            self._database = None
-            logger.info("Closed LadybugDB database")
+        with self._lock:
+            if self._database is not None:
+                self._database = None
+                logger.info("Closed LadybugDB database")
 
 
 def _load_extensions(conn: kuzu.Connection) -> None:

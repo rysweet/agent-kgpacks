@@ -39,6 +39,10 @@ async def lifespan(_app: FastAPI):
     logger.info(f"CORS origins: {settings.cors_origins}")
     yield
     logger.info("Shutting down WikiGR Visualization API")
+    # Shut down the chat streaming thread pool to avoid leaked threads
+    from backend.api.v1.chat import _stream_executor
+
+    _stream_executor.shutdown(wait=False)
 
 
 # Create FastAPI app
