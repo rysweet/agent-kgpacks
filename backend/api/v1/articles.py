@@ -56,7 +56,7 @@ def get_article(
             content={
                 "error": {
                     "code": "NOT_FOUND",
-                    "message": str(e),
+                    "message": "Article not found",
                 },
                 "timestamp": datetime.now(UTC).isoformat(),
             },
