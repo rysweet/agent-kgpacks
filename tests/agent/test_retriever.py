@@ -170,6 +170,14 @@ class TestDirectTitleLookup:
         # The param 'q' should be 'python' (stripped of "what is " prefix and trailing "?")
         assert params["q"] == "python"
 
+    def test_empty_question_returns_empty(self, mock_conn) -> None:
+        """Empty or whitespace-only question should return empty list."""
+        result = direct_title_lookup(mock_conn, "")
+        assert result == []
+
+        result = direct_title_lookup(mock_conn, "   ")
+        assert result == []
+
 
 # ===================================================================
 # 3. multi_query_retrieve
@@ -209,7 +217,7 @@ class TestMultiQueryRetrieve:
             claude_client, _semantic_search, track_fn, "What is gravity?"
         )
 
-        # Article A should keep 0.9 (best), B should keep 0.75 (best), C should be 0.8
+        # Dedup keeps highest similarity: A=max(0.9,0.85)=0.9, B=max(0.7,0.75)=0.75, C=0.8
         assert len(results) == 3
         assert results[0]["title"] == "Article A"
         assert results[0]["similarity"] == 0.9

@@ -202,6 +202,28 @@ class TestLoadSkillMd:
             mock_manifest, tmp_path / "kg_config.json"
         )
 
+    def test_generates_handles_none_manifest(self, tmp_path: Path) -> None:
+        """When load_manifest returns None, generate_skill_md receives None."""
+        mock_manifest_mod = MagicMock()
+        mock_manifest_mod.load_manifest.return_value = None
+        mock_template_mod = MagicMock()
+        mock_template_mod.generate_skill_md.return_value = "# Fallback"
+
+        with patch.dict(
+            "sys.modules",
+            {
+                "wikigr.packs.manifest": mock_manifest_mod,
+                "wikigr.packs.skill_template": mock_template_mod,
+            },
+        ):
+            result = load_skill_md(tmp_path)
+
+        # Should still call generate_skill_md even with None manifest
+        mock_template_mod.generate_skill_md.assert_called_once_with(
+            None, tmp_path / "kg_config.json"
+        )
+        assert result == "# Fallback"
+
 
 # ---------------------------------------------------------------------------
 # summarize_condition
