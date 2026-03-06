@@ -61,15 +61,14 @@ def get_graph(
 
     except ValueError as e:
         logger.warning(f"Graph query error: {e}")
-        error_msg = str(e)
 
-        if "not found" in error_msg.lower():
+        if "not found" in str(e).lower():
             return JSONResponse(
                 status_code=404,
                 content={
                     "error": {
                         "code": "NOT_FOUND",
-                        "message": error_msg,
+                        "message": "Article not found",
                     },
                     "timestamp": datetime.now(UTC).isoformat(),
                 },
@@ -80,7 +79,7 @@ def get_graph(
                 content={
                     "error": {
                         "code": "INVALID_PARAMETER",
-                        "message": error_msg,
+                        "message": "Invalid graph query parameter",
                     },
                     "timestamp": datetime.now(UTC).isoformat(),
                 },

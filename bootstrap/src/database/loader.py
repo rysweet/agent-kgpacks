@@ -5,7 +5,6 @@ Integrates Wikipedia API, section parsing, and embedding generation
 to load articles into LadybugDB database.
 """
 
-import contextlib
 import logging
 from datetime import UTC, datetime
 
@@ -47,12 +46,9 @@ class ArticleLoader:
 
     def _load_extensions(self):
         """Load required LadybugDB extensions."""
-        for ext in ("VECTOR", "FTS"):
-            try:
-                self.conn.execute(f"LOAD EXTENSION {ext};")
-            except Exception:
-                with contextlib.suppress(Exception):
-                    self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+        from bootstrap.schema.ryugraph_schema import load_extensions
+
+        load_extensions(self.conn)
 
     def load_article(
         self,

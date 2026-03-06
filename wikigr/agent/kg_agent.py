@@ -5,7 +5,6 @@ Simple library approach: direct LadybugDB access + Claude for synthesis.
 No MCP server, no daemon, just a Python class.
 """
 
-import contextlib
 import json
 import logging
 import re
@@ -297,12 +296,9 @@ class KnowledgeGraphAgent:
 
     def _load_extensions(self):
         """Load required LadybugDB extensions."""
-        for ext in ("VECTOR", "FTS"):
-            try:
-                self.conn.execute(f"LOAD EXTENSION {ext};")
-            except Exception:
-                with contextlib.suppress(Exception):
-                    self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+        from bootstrap.schema.ryugraph_schema import load_extensions
+
+        load_extensions(self.conn)
 
     @staticmethod
     def _resolve_few_shot_path(few_shot_path: str | None, db_path: str) -> str | None:

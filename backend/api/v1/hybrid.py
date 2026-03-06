@@ -5,6 +5,7 @@ Combines semantic similarity with graph proximity for richer search results.
 """
 
 import logging
+import time
 from datetime import UTC, datetime
 
 import real_ladybug as kuzu
@@ -47,8 +48,6 @@ def hybrid_search(
     Returns articles ranked by a weighted combination of vector similarity
     and link-graph distance from the seed article.
     """
-    import time
-
     response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_default}"
     start = time.perf_counter()
 
