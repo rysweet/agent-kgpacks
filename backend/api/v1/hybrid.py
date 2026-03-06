@@ -5,6 +5,7 @@ Combines semantic similarity with graph proximity for richer search results.
 """
 
 import logging
+import time
 from datetime import UTC, datetime
 
 import real_ladybug as kuzu
@@ -47,8 +48,6 @@ def hybrid_search(
     Returns articles ranked by a weighted combination of vector similarity
     and link-graph distance from the seed article.
     """
-    import time
-
     response.headers["Cache-Control"] = f"public, max-age={settings.cache_ttl_default}"
     start = time.perf_counter()
 
@@ -82,8 +81,7 @@ def hybrid_search(
         )
 
     except ValueError as e:
-        error_msg = str(e)
-        if "not found" in error_msg.lower():
+        if "not found" in str(e).lower():
             return JSONResponse(
                 status_code=404,
                 content={
@@ -94,7 +92,7 @@ def hybrid_search(
         return JSONResponse(
             status_code=400,
             content={
-                "error": {"code": "INVALID_PARAMETER", "message": error_msg},
+                "error": {"code": "INVALID_PARAMETER", "message": "Invalid search parameter"},
                 "timestamp": datetime.now(UTC).isoformat(),
             },
         )

@@ -14,7 +14,6 @@ Usage:
 """
 
 import argparse
-import contextlib
 import sys
 from pathlib import Path
 
@@ -23,6 +22,8 @@ import real_ladybug as kuzu
 
 def load_extensions(conn) -> None:
     """Load required LadybugDB extensions (vector, fts) on a connection."""
+    import contextlib
+
     for ext in ("VECTOR", "FTS"):
         try:
             conn.execute(f"LOAD EXTENSION {ext};")

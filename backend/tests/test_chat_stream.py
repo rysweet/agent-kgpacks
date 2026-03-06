@@ -465,7 +465,8 @@ class TestChatStreamErrorHandling:
         events = self._stream_with_error(stream_client, RuntimeError("DB connection failed"))
         error_events = [(t, d) for t, d in events if t == "error"]
         assert len(error_events) == 1, f"Expected 1 error event, got {len(error_events)}"
-        assert "RuntimeError" in error_events[0][1]
+        assert error_events[0][1] == "AgentError"
+        assert "RuntimeError" not in error_events[0][1]
 
     def test_no_done_event_after_error(self, stream_client):
         """A 'done' event should NOT be emitted when the generator raises."""
@@ -473,12 +474,13 @@ class TestChatStreamErrorHandling:
         done_events = [t for t, _ in events if t == "done"]
         assert done_events == [], "No 'done' event should follow an error"
 
-    def test_emits_exception_class_name_in_error_event(self, stream_client):
-        """The error event data must contain the exception class name."""
+    def test_does_not_leak_exception_class_name(self, stream_client):
+        """Error events must NOT leak internal exception class names."""
         events = self._stream_with_error(stream_client, ConnectionError("Network error"))
         error_events = [(t, d) for t, d in events if t == "error"]
         assert len(error_events) == 1
-        assert "ConnectionError" in error_events[0][1]
+        assert error_events[0][1] == "AgentError"
+        assert "ConnectionError" not in error_events[0][1]
 
     def test_emits_error_event_on_timeout(self, stream_client):
         """

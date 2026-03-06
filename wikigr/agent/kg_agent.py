@@ -5,7 +5,6 @@ Simple library approach: direct LadybugDB access + Claude for synthesis.
 No MCP server, no daemon, just a Python class.
 """
 
-import contextlib
 import json
 import logging
 import re
@@ -297,12 +296,9 @@ class KnowledgeGraphAgent:
 
     def _load_extensions(self):
         """Load required LadybugDB extensions."""
-        for ext in ("VECTOR", "FTS"):
-            try:
-                self.conn.execute(f"LOAD EXTENSION {ext};")
-            except Exception:
-                with contextlib.suppress(Exception):
-                    self.conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+        from bootstrap.schema.ryugraph_schema import load_extensions
+
+        load_extensions(self.conn)
 
     @staticmethod
     def _resolve_few_shot_path(few_shot_path: str | None, db_path: str) -> str | None:
@@ -912,9 +908,7 @@ class KnowledgeGraphAgent:
         return response.content[0].text
 
     # ------------------------------------------------------------------
-
-    # ------------------------------------------------------------------
-    # Retrieval helpers
+    # Retrieval helpers — delegate to wikigr.agent.retriever
     # ------------------------------------------------------------------
 
     def _direct_title_lookup(self, question: str) -> list[str]:
@@ -924,34 +918,9 @@ class KnowledgeGraphAgent:
         with matching titles. This catches cases where the LLM query planner
         generates bad Cypher but the answer is in an obviously-named article.
         """
+        from wikigr.agent.retriever import direct_title_lookup
 
-        # Extract potential article titles from question
-        # Strip common question prefixes
-        cleaned = _QUESTION_PREFIX_RE.sub("", question.lower()).rstrip("?. ")
-
-        # Try exact title match first, then partial
-        candidates = []
-        # Exact match (case-insensitive)
-        df = self._safe_query(
-            "MATCH (a:Article) WHERE lower(a.title) = $q RETURN a.title",
-            {"q": cleaned},
-            log_context="direct title exact match",
-        )
-        if df is not None:
-            candidates.extend(df["a.title"].tolist())
-
-        # Partial match if no exact match
-        if not candidates:
-            df = self._safe_query(
-                "MATCH (a:Article) WHERE lower(a.title) CONTAINS $q "
-                "RETURN a.title ORDER BY length(a.title) ASC LIMIT 3",
-                {"q": cleaned},
-                log_context="direct title partial match",
-            )
-            if df is not None:
-                candidates.extend(df["a.title"].tolist())
-
-        return candidates[:3]
+        return direct_title_lookup(self.conn, question)
 
     def _multi_query_retrieve(self, question: str, max_results: int = 5) -> list[dict]:
         """Retrieve results using original question plus 2 alternative phrasings.
@@ -967,75 +936,15 @@ class KnowledgeGraphAgent:
         Returns:
             Deduplicated list of result dicts sorted by similarity descending.
         """
-        # Clamp max_results to a safe range to prevent silent failure or excessive DB load
-        max_results = max(1, min(max_results, 20))
+        from wikigr.agent.retriever import multi_query_retrieve
 
-        # Generate 2 alternative phrasings via Claude Haiku
-        # NOTE: question is truncated before embedding to limit prompt injection surface.
-        # When enable_multi_query=True the (truncated) question is sent to the Anthropic API.
-        question_truncated = question[:500]
-        alternatives: list[str] = []
-        try:
-            expansion_response = self.claude.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=256,
-                timeout=10.0,  # fail fast — fall back to original query if expansion is slow
-                messages=[
-                    {
-                        "role": "user",
-                        "content": (
-                            f"Generate exactly 2 alternative phrasings of this question for semantic search. "
-                            f"Return a JSON array of 2 strings and nothing else.\n\nQuestion: {question_truncated}"
-                        ),
-                    }
-                ],
-            )
-            self._track_response(expansion_response)
-            raw = _strip_markdown_fences(
-                expansion_response.content[0].text.strip() if expansion_response.content else "[]"
-            )
-            parsed = json.loads(raw)
-            if isinstance(parsed, list):
-                alternatives = [str(p)[:300] for p in parsed[:2]]
-        except APITimeoutError:
-            logger.warning("Multi-query expansion timed out; falling back to original query")
-        except APIConnectionError as e:
-            logger.warning(
-                f"Multi-query expansion connection error: {e}; falling back to original query"
-            )
-        except APIStatusError as e:
-            # 429 = rate-limited (transient); 4xx auth/bad-request errors are permanent
-            if e.status_code == 429:
-                logger.warning("Multi-query expansion rate-limited; falling back to original query")
-            else:
-                logger.warning(
-                    f"Multi-query expansion API error (status={e.status_code}); falling back to original query"
-                )
-        except (json.JSONDecodeError, ValueError) as e:
-            logger.warning(f"Multi-query expansion returned invalid JSON: {e}")
-
-        # Gather results from all queries (original + alternatives)
-        all_queries = [question] + alternatives
-        merged: dict[str, dict] = {}  # title -> best result dict
-
-        for query in all_queries:
-            try:
-                results = self.semantic_search(query, top_k=max_results)
-                for result in results:
-                    title = result.get("title", "")
-                    if not title:
-                        continue
-                    existing = merged.get(title)
-                    if existing is None or result.get("similarity", 0.0) > existing.get(
-                        "similarity", 0.0
-                    ):
-                        merged[title] = result
-            except (RuntimeError, OSError) as e:
-                logger.warning(
-                    f"Multi-query search failed for query '{query[:100]}{'...' if len(query) > 100 else ''}': {e}"
-                )
-
-        return sorted(merged.values(), key=lambda r: r.get("similarity", 0.0), reverse=True)
+        return multi_query_retrieve(
+            self.claude,
+            self.semantic_search,
+            self._track_response,
+            question,
+            max_results,
+        )
 
     def _vector_primary_retrieve(
         self, question: str, max_results: int
@@ -1048,49 +957,18 @@ class KnowledgeGraphAgent:
 
         Returns:
             (kg_results_dict, max_similarity) or (None, 0.0) on failure.
-            max_similarity is the highest cosine similarity among results (0.0–1.0).
+            max_similarity is the highest cosine similarity among results (0.0-1.0).
         """
-        try:
-            # Determine candidate count: fetch more if cross-encoder will filter
-            candidate_k = (
-                min(max_results * 2, 40) if self.cross_encoder is not None else max_results
-            )
-            if self.enable_multi_query:
-                vector_results = self._multi_query_retrieve(question, max_results=candidate_k)
-            else:
-                vector_results = self.semantic_search(question, top_k=candidate_k)
-            if not vector_results:
-                return None, 0.0
+        from wikigr.agent.retriever import vector_primary_retrieve
 
-            if self.cross_encoder is not None:
-                vector_results = self.cross_encoder.rerank(
-                    question, vector_results, top_k=max_results
-                )
-
-            # Single pass: compute max_similarity, sources, and facts together
-            max_similarity = 0.0
-            sources = []
-            facts = []
-            for r in vector_results:
-                sim = r.get("similarity", 0.0)
-                if sim > max_similarity:
-                    max_similarity = sim
-                title = r["title"]
-                sources.append(title)
-                content = r.get("content", "")
-                if content:
-                    facts.append(f"[{title}] {content[:500]}")
-            return {
-                "sources": sources,
-                "entities": [],
-                "facts": facts,
-                "raw": [
-                    {"title": r["title"], "score": r.get("similarity", 0.0)} for r in vector_results
-                ],
-            }, max_similarity
-        except (RuntimeError, OSError) as e:
-            logger.warning(f"Vector primary retrieve failed: {e}")
-            return None, 0.0
+        return vector_primary_retrieve(
+            self.semantic_search,
+            self._multi_query_retrieve,
+            self.cross_encoder,
+            self.enable_multi_query,
+            question,
+            max_results,
+        )
 
     def _hybrid_retrieve(
         self,
@@ -1116,74 +994,19 @@ class KnowledgeGraphAgent:
         Returns:
             KG results dict with sources, entities, facts, raw.
         """
-        scored: dict[str, float] = {}
+        from wikigr.agent.retriever import hybrid_retrieve
 
-        # Signal 1: Vector search — reuse caller's results when available
-        if _precomputed_vector is not None:
-            vector_results = _precomputed_vector
-        else:
-            try:
-                vector_results = self.semantic_search(question, top_k=max_results)
-            except (RuntimeError, OSError) as e:
-                logger.warning(f"Vector search failed in hybrid retrieve: {e}")
-                vector_results = []
-        for r in vector_results:
-            title = r.get("article", r.get("title", ""))
-            if title:
-                scored[title] = scored.get(title, 0) + vector_weight * r.get("similarity", 0.5)
-
-        # Signal 2: Graph traversal (follow LINKS_TO from vector hits)
-        seed_titles = list(scored.keys())[:3]
-        for seed in seed_titles:
-            df = self._safe_query(
-                "MATCH (seed:Article {title: $title})-[:LINKS_TO]->(neighbor:Article) "
-                "RETURN neighbor.title AS title LIMIT $limit",
-                {"title": seed, "limit": max_results},
-                log_context=f"hybrid graph traversal for '{seed}'",
-            )
-            if df is not None:
-                for title in df["title"].tolist():
-                    if title:
-                        scored[title] = scored.get(title, 0) + graph_weight * 0.5
-
-        # Signal 3: Keyword match (title contains) — filter stop words to avoid
-        # wasteful DB queries on common words like "what", "from", "with".
-        keywords = [w for w in question.split() if len(w) > 3 and w.lower() not in self.STOP_WORDS]
-        for kw in keywords[:3]:
-            df = self._safe_query(
-                "MATCH (a:Article) WHERE lower(a.title) CONTAINS lower($kw) "
-                "RETURN a.title AS title LIMIT $limit",
-                {"kw": kw, "limit": max_results},
-                log_context=f"hybrid keyword search for '{kw}'",
-            )
-            if df is not None:
-                for title in df["title"].tolist():
-                    if title:
-                        scored[title] = scored.get(title, 0) + keyword_weight * 0.7
-
-        # Rank by combined score
-        ranked = sorted(scored.items(), key=lambda x: x[1], reverse=True)[:max_results]
-        source_titles = [title for title, _score in ranked]
-
-        # Fetch facts for top sources in a single batched query (vs N per-title queries)
-        facts: list[str] = []
-        if source_titles:
-            df = self._safe_query(
-                "MATCH (a:Article)-[:HAS_FACT]->(f:Fact) "
-                "WHERE a.title IN $titles "
-                "RETURN f.content AS content LIMIT 15",
-                {"titles": source_titles[:5]},
-                log_context="hybrid facts batch",
-            )
-            if df is not None and "content" in df.columns:
-                facts = df["content"].dropna().tolist()
-
-        return {
-            "sources": source_titles,
-            "entities": [],
-            "facts": facts,
-            "raw": [{"title": t, "score": s} for t, s in ranked[:10]],
-        }
+        return hybrid_retrieve(
+            self.conn,
+            self.semantic_search,
+            self.STOP_WORDS,
+            question,
+            max_results,
+            vector_weight,
+            graph_weight,
+            keyword_weight,
+            _precomputed_vector,
+        )
 
     def _score_section_quality(
         self,
@@ -1204,29 +1027,9 @@ class KnowledgeGraphAgent:
         Returns:
             Quality score in [0.0, 1.0]. Returns 0.0 for stubs under 20 words.
         """
-        words = content.split()
-        word_count = len(words)
-        if word_count < 20:
-            return 0.0
+        from wikigr.agent.retriever import score_section_quality
 
-        # Length score: maps word_count to [0.2, 0.8]
-        # 200+ words → 0.8; scales linearly below that
-        length_score = min(0.8, 0.2 + (word_count / 200) * 0.6)
-
-        # Keyword overlap: question keywords (excluding stop words) found in content
-        question_keywords = (
-            _q_keywords
-            if _q_keywords is not None
-            else frozenset(lw for w in question.split() if (lw := w.lower()) not in self.STOP_WORDS)
-        )
-        if question_keywords:
-            content_words_lower = {w.lower() for w in words}
-            overlap = len(question_keywords & content_words_lower) / len(question_keywords)
-            keyword_score = overlap * 0.2
-        else:
-            keyword_score = 0.0
-
-        return min(1.0, length_score + keyword_score)
+        return score_section_quality(content, question, self.STOP_WORDS, _q_keywords=_q_keywords)
 
     def _fetch_source_text(
         self,
@@ -1244,71 +1047,23 @@ class KnowledgeGraphAgent:
         are filtered out before inclusion.
         """
         self._check_open()
-        titles = source_titles[:max_articles]
-        if not titles:
-            return ""
 
-        texts: list[str] = []
+        from wikigr.agent.retriever import fetch_source_text
 
-        # Try to get section content (works for all pack types)
-        df = self._safe_query(
-            "MATCH (a:Article)-[:HAS_SECTION]->(s:Section) "
-            "WHERE a.title IN $titles "
-            "RETURN a.title AS title, s.content AS content "
-            "ORDER BY a.title",
-            {"titles": titles},
-            log_context="fetch source sections",
+        return fetch_source_text(
+            self.conn,
+            self._score_section_quality,
+            self.STOP_WORDS,
+            self.MAX_ARTICLE_CHARS,
+            self.CONTENT_QUALITY_THRESHOLD,
+            source_titles,
+            max_articles,
+            question,
         )
-        if df is not None:
-            from wikigr.packs.content_cleaner import clean_content
 
-            # Pre-compute question keywords once for all section comparisons
-            # (avoids re-splitting + re-filtering the question string per row)
-            q_keywords: frozenset[str] | None = None
-            if question is not None:
-                q_keywords = frozenset(
-                    lw for w in question.split() if (lw := w.lower()) not in self.STOP_WORDS
-                )
-
-            # Group sections by article, concatenate content
-            by_article: dict[str, list[str]] = {}
-            for title, sect_content in zip(df["title"].tolist(), df["content"].tolist()):
-                if title and sect_content:
-                    cleaned = clean_content(sect_content)
-                    # Filter low-quality sections when question is provided
-                    if q_keywords is not None and (
-                        self._score_section_quality(cleaned, question, _q_keywords=q_keywords)
-                        < self.CONTENT_QUALITY_THRESHOLD
-                    ):
-                        continue
-                    by_article.setdefault(title, []).append(cleaned)
-
-            for title in titles:
-                sections = by_article.get(title, [])
-                if sections:
-                    combined = "\n\n".join(sections)
-                    truncated = combined[: self.MAX_ARTICLE_CHARS] + (
-                        "..." if len(combined) > self.MAX_ARTICLE_CHARS else ""
-                    )
-                    texts.append(f"## {title}\n{truncated}")
-
-        # Fallback: try article.content directly if no sections found
-        if not texts:
-            df = self._safe_query(
-                "MATCH (a:Article) WHERE a.title IN $titles "
-                "RETURN a.title AS title, a.content AS content",
-                {"titles": titles},
-                log_context="fetch source article content fallback",
-            )
-            if df is not None:
-                for title, content in zip(df["title"].tolist(), df["content"].tolist()):
-                    if title and content:
-                        truncated = content[: self.MAX_ARTICLE_CHARS] + (
-                            "..." if len(content) > self.MAX_ARTICLE_CHARS else ""
-                        )
-                        texts.append(f"## {title}\n{truncated}")
-
-        return "\n\n".join(texts)
+    # ------------------------------------------------------------------
+    # Synthesis helpers — delegate to wikigr.agent.synthesizer
+    # ------------------------------------------------------------------
 
     def _build_synthesis_context(
         self,
@@ -1323,74 +1078,27 @@ class KnowledgeGraphAgent:
         the original article section text for grounded, accurate synthesis.
         Optionally includes few-shot examples when Phase 1 enhancements are enabled.
         """
-        sources = kg_results.get("sources", [])[:5]
+        from wikigr.agent.synthesizer import build_synthesis_context
 
-        # Fetch original article text for grounded synthesis (with quality filtering)
-        source_text = self._fetch_source_text(sources, question=question)
-
-        # Build few-shot examples section if provided
-        few_shot_section = ""
-        if few_shot_examples:
-            few_shot_section = "\nHere are similar questions and their answers:\n\n"
-            for i, example in enumerate(few_shot_examples[:3], 1):
-                few_shot_section += f"Example {i}:\n"
-                few_shot_section += f"Q: {example.get('question', example.get('query', ''))}\n"
-                few_shot_section += (
-                    f"A: {example.get('answer', example.get('ground_truth', ''))}\n\n"
-                )
-
-        context = f"""Query Type: {query_plan["type"]}
-
-Sources: {", ".join(sources)}
-
-Entities found: {json.dumps(kg_results.get("entities", [])[:10], indent=2)}
-
-Facts:
-{chr(10).join(f"- {fact}" for fact in kg_results.get("facts", [])[:10])}
-
-Raw results: {json.dumps(kg_results.get("raw", [])[:5], indent=2, default=str)}
-"""
-
-        # Add original text if available
-        if source_text:
-            context += f"""
-Original Article Text (for grounding):
-{source_text}
-"""
-
-        return f"""{few_shot_section}You are a knowledgeable expert. Answer the question below using BOTH your own expertise AND the retrieved content from a knowledge graph.
-
-When the retrieved content provides specific, detailed, or up-to-date information, prefer it and cite the source articles. When the retrieved content is limited or irrelevant, draw on your own knowledge to provide the best possible answer.
-
-Question: {question}
-
-Retrieved Knowledge Graph Content:
-{context}
-
-Provide a clear, accurate, comprehensive answer. Cite source articles when you use retrieved content."""
+        return build_synthesis_context(
+            self._fetch_source_text,
+            question,
+            kg_results,
+            query_plan,
+            few_shot_examples,
+        )
 
     def _synthesize_answer_minimal(self, question: str) -> str:
         """Synthesize answer using Claude's own knowledge when pack has no relevant content."""
-        prompt = (
-            "The knowledge pack for this query contained no relevant content. "
-            "Answer the following question using your own expertise:\n\n"
-            f"Question: {question}"
+        from wikigr.agent.synthesizer import synthesize_answer_minimal
+
+        return synthesize_answer_minimal(
+            self.claude,
+            self.synthesis_model,
+            self.SYNTHESIS_MAX_TOKENS,
+            self._track_response,
+            question,
         )
-        try:
-            response = self.claude.messages.create(
-                model=self.synthesis_model,
-                max_tokens=self.SYNTHESIS_MAX_TOKENS,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            self._track_response(response)
-        except (APIConnectionError, APIStatusError, APITimeoutError) as e:
-            logger.warning(f"Claude API error in _synthesize_answer_minimal: {e}")
-            return "Unable to answer: API error."
-
-        if not response.content:
-            return "Unable to synthesize answer: empty response from Claude."
-
-        return response.content[0].text
 
     def _synthesize_answer(
         self,
@@ -1400,30 +1108,19 @@ Provide a clear, accurate, comprehensive answer. Cite source articles when you u
         few_shot_examples: list[dict] | None = None,
     ) -> str:
         """Use Claude to synthesize natural language answer from KG results."""
-        # Handle error case
-        if "error" in kg_results:
-            return f"Query execution failed: {kg_results['error']}"
+        from wikigr.agent.synthesizer import synthesize_answer
 
-        prompt = self._build_synthesis_context(
-            question, kg_results, query_plan, few_shot_examples=few_shot_examples or []
+        return synthesize_answer(
+            self.claude,
+            self.synthesis_model,
+            self.SYNTHESIS_MAX_TOKENS,
+            self._track_response,
+            self._build_synthesis_context,
+            question,
+            kg_results,
+            query_plan,
+            few_shot_examples,
         )
-
-        try:
-            response = self.claude.messages.create(
-                model=self.synthesis_model,
-                max_tokens=self.SYNTHESIS_MAX_TOKENS,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            self._track_response(response)
-        except (APIConnectionError, APIStatusError, APITimeoutError) as e:
-            logger.warning(f"Claude API error in _synthesize_answer: {e}")
-            sources = ", ".join(kg_results.get("sources", [])[:5])
-            return f"Found relevant sources: {sources}" if sources else "No results found."
-
-        if not response.content:
-            return "Unable to synthesize answer: empty response from Claude."
-
-        return response.content[0].text
 
     # ------------------------------------------------------------------
     # Entity and relationship methods

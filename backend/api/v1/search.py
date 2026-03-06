@@ -61,15 +61,14 @@ def search(
 
     except ValueError as e:
         logger.warning(f"Search query error: {e}")
-        error_msg = str(e)
 
-        if "not found" in error_msg.lower():
+        if "not found" in str(e).lower():
             return JSONResponse(
                 status_code=404,
                 content={
                     "error": {
                         "code": "NOT_FOUND",
-                        "message": error_msg,
+                        "message": "Article not found",
                     },
                     "timestamp": datetime.now(UTC).isoformat(),
                 },
@@ -80,7 +79,7 @@ def search(
                 content={
                     "error": {
                         "code": "INVALID_PARAMETER",
-                        "message": error_msg,
+                        "message": "Invalid search parameter",
                     },
                     "timestamp": datetime.now(UTC).isoformat(),
                 },
@@ -140,7 +139,7 @@ def autocomplete(
             content={
                 "error": {
                     "code": "INVALID_PARAMETER",
-                    "message": str(e),
+                    "message": "Invalid autocomplete parameter",
                 },
                 "timestamp": datetime.now(UTC).isoformat(),
             },

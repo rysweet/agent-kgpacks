@@ -139,7 +139,7 @@ def chat(
             content={
                 "error": {
                     "code": "AGENT_ERROR",
-                    "message": f"Agent encountered an error: {type(e).__name__}",
+                    "message": "Agent encountered an error",
                 }
             },
         )
@@ -211,7 +211,7 @@ def chat_stream(
 
         except Exception as e:
             logger.error(f"Streaming chat error: {e}", exc_info=True)
-            yield {"event": "error", "data": str(type(e).__name__)}
+            yield {"event": "error", "data": "AgentError"}
         finally:
             with contextlib.suppress(Exception):
                 conn.close()

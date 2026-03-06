@@ -19,7 +19,6 @@ Usage:
 """
 
 import argparse
-import contextlib
 import json
 import logging
 import os
@@ -34,12 +33,9 @@ logger = logging.getLogger(__name__)
 
 def _load_db_extensions(conn) -> None:
     """Load required LadybugDB extensions (vector, fts) on a connection."""
-    for ext in ("VECTOR", "FTS"):
-        try:
-            conn.execute(f"LOAD EXTENSION {ext};")
-        except Exception:
-            with contextlib.suppress(Exception):
-                conn.execute(f"INSTALL {ext}; LOAD EXTENSION {ext};")
+    from bootstrap.schema.ryugraph_schema import load_extensions
+
+    load_extensions(conn)
 
 
 def parse_topics_file(path: str) -> list[str]:
