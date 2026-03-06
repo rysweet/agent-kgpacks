@@ -70,14 +70,13 @@ Or use the context manager form:
 ```python
 from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
-agent = KnowledgeGraphAgent(
+with KnowledgeGraphAgent(
     db_path="data/packs/go-expert/pack.db",
     use_enhancements=True,
-)
-
-result = agent.query("What is goroutine scheduling?")
-print(result["answer"])
-print(f"Sources: {result['sources']}")
+) as agent:
+    result = agent.query("What is goroutine scheduling?")
+    print(result["answer"])
+    print(f"Sources: {result['sources']}")
 ```
 
 The agent will:

@@ -59,12 +59,12 @@ def generate_cooccurrence_edges(conn) -> int:
                 # Create bidirectional edges
                 conn.execute(
                     "MATCH (a:Article {title: $src}), (b:Article {title: $dst}) "
-                    "CREATE (a)-[:LINKS_TO]->(b)",
+                    "MERGE (a)-[:LINKS_TO]->(b)",
                     {"src": src, "dst": dst},
                 )
                 conn.execute(
                     "MATCH (a:Article {title: $src}), (b:Article {title: $dst}) "
-                    "CREATE (b)-[:LINKS_TO]->(a)",
+                    "MERGE (b)-[:LINKS_TO]->(a)",
                     {"src": src, "dst": dst},
                 )
                 edges_created += 2

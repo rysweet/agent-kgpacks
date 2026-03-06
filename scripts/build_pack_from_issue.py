@@ -370,7 +370,9 @@ def main():
     try:
         pack_name = validate_pack_name(pack_name)
     except ValueError as e:
-        print(json.dumps({"error": str(e)}))
+        from wikigr.utils import sanitize_error
+
+        print(json.dumps({"error": sanitize_error(str(e))}))
         sys.exit(1)
 
     if not description:

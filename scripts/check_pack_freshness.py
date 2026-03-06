@@ -248,6 +248,8 @@ def check_url(
                 error="connection_error",
             )
         except Exception as e:
+            from wikigr.utils import sanitize_error
+
             return URLStatus(
                 url=url,
                 status_code=0,
@@ -255,7 +257,7 @@ def check_url(
                 last_modified=None,
                 content_hash=None,
                 changed=False,
-                error=str(e)[:80],
+                error=sanitize_error(str(e))[:80],
             )
 
 

@@ -1,5 +1,5 @@
 # WikiGR - Wikipedia Knowledge Graph
-# Python 3.10+
+# Python 3.12+
 
 # Core dependencies
 real_ladybug>=0.15.0,<0.16.0
