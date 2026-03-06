@@ -4,7 +4,7 @@ Step-by-step instructions for building a new Knowledge Pack from scratch.
 
 ## Prerequisites
 
-- Python 3.10+
+- Python 3.12+
 - `uv` installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - `ANTHROPIC_API_KEY` environment variable set
 - Network access to fetch source URLs

@@ -1,10 +1,10 @@
 # Quick Start
 
-Build, query, and evaluate a Knowledge Pack in under 5 minutes.
+Build, install, and query a Knowledge Pack in under 5 minutes.
 
 ## Prerequisites
 
-- **Python 3.10+**
+- **Python 3.12+**
 - **uv** (Python package manager): `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - **Anthropic API key**: Set `ANTHROPIC_API_KEY` in your environment
 
@@ -116,6 +116,38 @@ Delta                    +10pp
 !!! tip "Sample size"
     Use `--sample 5` for a quick check (~$0.15). For reliable results, use `--sample 25` or omit the flag to run all questions.
 
+## 6. Install as a Claude Code Skill
+
+Each pack can be installed as a Claude Code skill that auto-activates when you ask about that domain:
+
+```bash
+# Install skills for all packs
+uv run python scripts/install_pack_skills.py
+
+# Or use the /kg-pack command (if the skill is already installed)
+# /kg-pack install go-expert
+```
+
+This creates `.claude/skills/go-expert/SKILL.md` which tells Claude how to query the Go knowledge graph whenever you ask Go questions.
+
+## 7. Use the /kg-pack Skill Manager
+
+Install the `/kg-pack` skill in any Claude Code project:
+
+```bash
+mkdir -p /your/project/.claude/skills/kg-pack
+cp skills/kg-pack/SKILL.md /your/project/.claude/skills/kg-pack/
+```
+
+Then in Claude Code:
+
+```
+/kg-pack list                              # See all 49 available packs
+/kg-pack install rust-expert               # Install Rust expertise
+/kg-pack build "WebAssembly components"    # Build a new pack from scratch
+/kg-pack query go-expert "how do goroutines work?"
+```
+
 ## What Just Happened?
 
 1. **Build**: The build script fetched Go documentation pages, extracted structured knowledge (entities, relationships, facts), generated vector embeddings, and stored everything in a LadybugDB graph database.
@@ -124,8 +156,10 @@ Delta                    +10pp
 
 3. **Eval**: The evaluation script asked the same questions to Claude with and without pack context, then used a judge model to score both answers against ground truth.
 
+4. **Skill install**: The installer generated a SKILL.md file that tells Claude how and when to query the pack. Skills auto-activate in future sessions when you mention the domain.
+
 ## Next Steps
 
 - [Tutorial](tutorial.md) -- Full lifecycle walkthrough including domain selection, URL curation, and result interpretation
 - [Build a Pack](../howto/build-a-pack.md) -- Step-by-step guide for building packs from scratch
-- [Evaluation Methodology](../evaluation/methodology.md) -- Understanding the two-condition evaluation framework
+- [Run Evaluations](../howto/run-evaluations.md) -- Understanding the evaluation framework
