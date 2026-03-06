@@ -59,7 +59,7 @@ This page describes the system architecture of Knowledge Packs, including the da
 | Query Expansion | Claude Haiku | claude-haiku-4-5 | Alternative query phrasing |
 | Judge Model | Claude Haiku | claude-haiku-4-5 | Evaluation scoring (0-10) |
 | Cross-Encoder | ms-marco-MiniLM-L-12-v2 | - | Joint query-document scoring |
-| Runtime | Python | 3.10+ | Application language |
+| Runtime | Python | 3.12+ | Application language |
 | Package Manager | uv | - | Dependency management |
 
 ### Why LadybugDB?

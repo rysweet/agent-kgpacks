@@ -299,7 +299,38 @@ with KnowledgeGraphAgent(db_path="data/packs/go-expert/pack.db") as agent:
 
 ### As a Claude Code Skill
 
-Packs include a `skill.md` file that Claude Code auto-discovers when installed to `~/.wikigr/packs/`. The skill enhances Claude's responses with graph-retrieved context whenever questions match the pack's domain.
+Install the pack as a Claude Code skill that auto-activates when the domain is mentioned:
+
+```bash
+# Install all pack skills at once
+uv run python scripts/install_pack_skills.py
+
+# Or install a single pack
+# /kg-pack install go-expert
+```
+
+This generates `.claude/skills/go-expert/SKILL.md` with:
+- A concise description that triggers auto-activation
+- The absolute path to the pack's `pack.db`
+- Instructions telling Claude how to query the KG Agent
+
+In the next Claude Code session, ask a Go question and the skill activates automatically.
+
+### Using /kg-pack in Other Projects
+
+The `/kg-pack` skill works as a pack manager from any Claude Code project:
+
+```bash
+# Install the skill in your project
+mkdir -p .claude/skills/kg-pack
+cp ~/.wikigr/agent-kgpacks/skills/kg-pack/SKILL.md .claude/skills/kg-pack/
+
+# Then in Claude Code:
+/kg-pack list                              # See available packs
+/kg-pack install rust-expert               # Install Rust expertise
+/kg-pack build "Kubernetes networking"     # Build a new pack
+/kg-pack query go-expert "how do iterators work?"
+```
 
 ## Summary
 
@@ -313,4 +344,4 @@ Packs include a `skill.md` file that Claude Code auto-discovers when installed t
 | 6 | Run evaluation | Accuracy scores per condition |
 | 7 | Interpret results | Identify improvement areas |
 | 8 | Improve | Apply enhancements, rebuild |
-| 9 | Deploy | Use via Python, CLI, or Claude Code |
+| 9 | Deploy | Install as Claude Code skill via `install_pack_skills.py` or `/kg-pack install` |
