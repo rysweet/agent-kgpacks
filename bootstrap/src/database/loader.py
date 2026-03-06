@@ -44,6 +44,18 @@ class ArticleLoader:
 
         logger.info(f"ArticleLoader initialized with database: {db_path}")
 
+    def close(self):
+        """Close the database connection and release resources."""
+        self.conn = None
+        self.db = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
+
     def _load_extensions(self):
         """Load required LadybugDB extensions."""
         from bootstrap.schema.ryugraph_schema import load_extensions

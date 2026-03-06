@@ -66,9 +66,10 @@ def hybrid_search(
 
         search_results = [
             SearchResult(
-                title=r["article_title"],
+                article=r["article_title"],
                 similarity=r.get("combined_score", r.get("similarity", 0.0)),
                 category=r.get("category", ""),
+                word_count=r.get("word_count", 0),
             )
             for r in results
         ]

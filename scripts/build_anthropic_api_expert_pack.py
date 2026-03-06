@@ -180,27 +180,31 @@ def build_pack(test_mode=False):
     create_schema(str(DB_PATH), drop_existing=True)
     db = kuzu.Database(str(DB_PATH))
     conn = kuzu.Connection(db)
-    load_extensions(conn)
-    web_source = WebContentSource()
-    embedder = EmbeddingGenerator()
-    extractor = get_extractor()
-    successful, failed = 0, 0
-    for i, url in enumerate(urls, 1):
-        logger.info(f"Processing {i}/{len(urls)}: {url}")
-        if process_url(url, conn, web_source, embedder, extractor):
-            successful += 1
-        else:
-            failed += 1
-    a = conn.execute("MATCH (a:Article) RETURN count(a) AS c").get_as_df().iloc[0]["c"]
-    e = conn.execute("MATCH (e:Entity) RETURN count(e) AS c").get_as_df().iloc[0]["c"]
-    r = (
-        conn.execute("MATCH ()-[r:ENTITY_RELATION]->() RETURN count(r) AS c")
-        .get_as_df()
-        .iloc[0]["c"]
-    )
-    logger.info(f"Build complete: {successful} successful, {failed} failed")
-    logger.info(f"Final stats: {a} articles, {e} entities, {r} relationships")
-    create_manifest(DB_PATH, MANIFEST_PATH, a, e, r)
+    try:
+        load_extensions(conn)
+        web_source = WebContentSource()
+        embedder = EmbeddingGenerator()
+        extractor = get_extractor()
+        successful, failed = 0, 0
+        for i, url in enumerate(urls, 1):
+            logger.info(f"Processing {i}/{len(urls)}: {url}")
+            if process_url(url, conn, web_source, embedder, extractor):
+                successful += 1
+            else:
+                failed += 1
+        a = conn.execute("MATCH (a:Article) RETURN count(a) AS c").get_as_df().iloc[0]["c"]
+        e = conn.execute("MATCH (e:Entity) RETURN count(e) AS c").get_as_df().iloc[0]["c"]
+        r = (
+            conn.execute("MATCH ()-[r:ENTITY_RELATION]->() RETURN count(r) AS c")
+            .get_as_df()
+            .iloc[0]["c"]
+        )
+        logger.info(f"Build complete: {successful} successful, {failed} failed")
+        logger.info(f"Final stats: {a} articles, {e} entities, {r} relationships")
+        create_manifest(DB_PATH, MANIFEST_PATH, a, e, r)
+    finally:
+        conn = None
+        db = None
 
 
 def main():

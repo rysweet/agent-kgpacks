@@ -89,15 +89,21 @@ class EvalRunner:
                 logger.info("Running training baseline...")
                 training_answers = []
                 for q in questions:
-                    answers = self.training_eval.evaluate([q])
-                    training_answers.extend(answers)
+                    try:
+                        answers = self.training_eval.evaluate([q])
+                        training_answers.extend(answers)
+                    except Exception:
+                        logger.exception("Training baseline failed for question %s", q.id)
                     pbar.update(1)
 
                 logger.info("Running knowledge pack baseline...")
                 pack_answers = []
                 for q in questions:
-                    answers = self.pack_eval.evaluate([q])
-                    pack_answers.extend(answers)
+                    try:
+                        answers = self.pack_eval.evaluate([q])
+                        pack_answers.extend(answers)
+                    except Exception:
+                        logger.exception("Knowledge pack baseline failed for question %s", q.id)
                     pbar.update(1)
 
         # Calculate metrics

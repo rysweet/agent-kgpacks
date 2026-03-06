@@ -5,14 +5,19 @@ For MVP, the registry backend is not implemented - this provides the interface
 that will be used when the registry service is available.
 """
 
+import http.client
+import ipaddress
 import json
 import tempfile
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
 
 from wikigr.packs._url_validation import validate_download_url
+
+_CHUNK_SIZE: int = 65_536  # 64 KiB read buffer for streaming downloads
 
 
 @dataclass
@@ -56,8 +61,25 @@ class PackRegistryClient:
 
         Args:
             registry_url: Base URL of the registry API
+
+        Raises:
+            ValueError: If registry_url does not use HTTPS or has no hostname.
         """
         self.registry_url = registry_url.rstrip("/")
+        self._validate_registry_url(self.registry_url)
+
+    @staticmethod
+    def _validate_registry_url(url: str) -> None:
+        """Validate registry URL uses HTTPS and has a proper hostname (SSRF prevention).
+
+        Raises:
+            ValueError: If the URL scheme is not HTTPS or hostname is missing/private.
+        """
+        parsed = urlparse(url)
+        if parsed.scheme != "https":
+            raise ValueError(f"Only HTTPS registry URLs allowed, got: {parsed.scheme!r}")
+        if not parsed.hostname:
+            raise ValueError("Registry URL must have a hostname")
 
     def search(self, query: str) -> list[PackListing]:
         """Search published packs.
@@ -128,6 +150,9 @@ class PackRegistryClient:
     def download_pack(self, name: str, version: str) -> Path:
         """Download pack archive.
 
+        Connects directly to the pre-resolved IP address returned by
+        validate_download_url() to prevent DNS rebinding attacks (TOCTOU fix).
+
         Args:
             name: Pack name
             version: Pack version (or "latest" for most recent version)
@@ -136,7 +161,8 @@ class PackRegistryClient:
             Path to downloaded pack archive in temp directory
 
         Raises:
-            urllib.error.URLError: If download fails
+            ValueError: If DNS resolution fails or URL is invalid.
+            http.client.HTTPException: If the HTTP request fails.
         """
         # Get pack info to get download URL
         pack_info = self.get_pack_info(name)
@@ -145,14 +171,49 @@ class PackRegistryClient:
         if version == "latest":
             version = pack_info.version
 
+        # Validate URL and obtain the pre-resolved IP (SSRF + DNS-rebinding prevention)
+        resolved_ip = validate_download_url(pack_info.download_url)
+        if resolved_ip is None:
+            raise ValueError(
+                f"DNS resolution failed for URL: {pack_info.download_url}. "
+                "Cannot download pack from an unresolvable hostname."
+            )
+
+        parsed = urlparse(pack_info.download_url)
+        hostname = parsed.hostname
+        port = parsed.port or 443
+        path = parsed.path or "/"
+        if parsed.query:
+            path += "?" + parsed.query
+
+        # Connect to the pre-resolved IP -- not the hostname -- to prevent DNS rebinding.
+        # Use the original hostname in the Host header for SNI and virtual hosting.
+        if isinstance(resolved_ip, ipaddress.IPv6Address):
+            ip_str = f"[{resolved_ip}]"
+        else:
+            ip_str = str(resolved_ip)
+
         # Create temp file for download
         temp_dir = Path(tempfile.gettempdir())
         output_path = temp_dir / f"{name}-{version}.tar.gz"
 
-        # Validate URL before download (SSRF prevention)
-        validate_download_url(pack_info.download_url)
+        conn = http.client.HTTPSConnection(ip_str, port=port, timeout=30)
+        try:
+            conn.request("GET", path, headers={"Host": hostname})
+            response = conn.getresponse()
 
-        # Download pack archive
-        urllib.request.urlretrieve(pack_info.download_url, output_path)
+            if response.status != 200:
+                raise ValueError(
+                    f"Download failed with HTTP status {response.status} for URL: {pack_info.download_url}"
+                )
+
+            with open(output_path, "wb") as f:
+                while True:
+                    chunk = response.read(_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+        finally:
+            conn.close()
 
         return output_path
