@@ -130,18 +130,25 @@ The retrieval pipeline includes:
 - **Content quality scoring** — filters thin/irrelevant sections
 - **Graph reranking** — boosts well-connected articles via degree centrality
 
-## Claude Code Integration: `/kg-pack`
+## Quick Install
 
-Install the `/kg-pack` skill in any Claude Code project to manage packs:
+Add the `/kg-pack` skill to any Claude Code project with one command:
 
 ```bash
-# One-time setup
-git clone https://github.com/rysweet/agent-kgpacks.git ~/.wikigr/agent-kgpacks
-cd ~/.wikigr/agent-kgpacks && uv sync
+curl -sL https://raw.githubusercontent.com/rysweet/agent-kgpacks/main/scripts/install.sh | bash
+```
 
-# Install /kg-pack command in your project
-mkdir -p /your/project/.claude/skills/kg-pack
-cp ~/.wikigr/agent-kgpacks/skills/kg-pack/SKILL.md /your/project/.claude/skills/kg-pack/
+Or clone the repo for building and querying packs locally:
+
+```bash
+git clone https://github.com/rysweet/agent-kgpacks.git
+cd agent-kgpacks
+
+# Query packs only (fast, ~50MB)
+uv sync --no-extra
+
+# Build new packs (full, ~2GB)
+uv sync --extra build
 ```
 
 Then in Claude Code:
@@ -172,6 +179,7 @@ Full docs: **https://rysweet.github.io/agent-kgpacks/**
 
 | Section | What you'll learn |
 |---------|------------------|
+| **[Pack Catalog](docs/catalog.md)** | Browse all 49 packs with stats, eval scores, and install commands |
 | **[Overview](https://rysweet.github.io/agent-kgpacks/getting-started/overview/)** | What packs are and when to use them |
 | **[Tutorial](https://rysweet.github.io/agent-kgpacks/getting-started/tutorial/)** | Build your first pack end-to-end |
 | **[Build a Pack](https://rysweet.github.io/agent-kgpacks/howto/build-a-pack/)** | Step-by-step guide |
