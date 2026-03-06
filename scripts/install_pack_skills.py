@@ -101,11 +101,15 @@ with KnowledgeGraphAgent(db_path="{db_path}", read_only=True) as agent:
 
 ## Key Guidance
 
-1. **Always query the pack** before answering domain-specific questions — the KG has
-   documentation that may be more current than training data.
-2. **Cite sources** from the query results to ground your answers.
-3. **Use vector search** (the default) for conceptual questions, and graph traversal
-   for relationship questions ("how does X relate to Y?").
+1. **Query the pack for niche/recent topics** — the KG has documentation that may be
+   more current than training data. Don't query for basic concepts you already know well.
+2. **Pre-fetch context before answering** — retrieve relevant content first, then synthesize.
+   Don't make the user wait for multiple tool round-trips.
+3. **Cite sources** from the query results. Include article titles so answers are verifiable.
+4. **For code generation tasks**: query the pack for API signatures, function parameters,
+   and import patterns. Use the results to write correct code on the first try.
+5. **For debugging tasks**: query the pack for common pitfalls, error patterns, and
+   migration gotchas specific to {base}.
 """
 
 

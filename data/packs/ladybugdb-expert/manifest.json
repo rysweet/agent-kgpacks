@@ -4,8 +4,8 @@
   "description": "Comprehensive knowledge of LadybugDB, the active community fork of the archived Kuzu graph database. Covers the Python SDK (real_ladybug package), Cypher query language, vector search extensions, full-text search, graph algorithms, import/export, and migration from Kuzu.",
   "graph_stats": {
     "articles": 5,
-    "entities": 27,
-    "relationships": 20,
+    "entities": 25,
+    "relationships": 19,
     "size_mb": 2.08
   },
   "eval_scores": {
@@ -27,6 +27,6 @@
     "https://docs.ladybugdb.com/extensions/vector/",
     "https://github.com/LadybugDB/ladybug"
   ],
-  "created": "2026-03-06T18:43:23.135465Z",
+  "created": "2026-03-06T22:07:25.533634Z",
   "license": "MIT"
 }

@@ -13,7 +13,11 @@ Build, install, and query a Knowledge Pack in under 5 minutes.
 ```bash
 git clone https://github.com/rysweet/agent-kgpacks.git
 cd agent-kgpacks
+
 uv sync
+
+# To build packs from web content, also install build extras:
+# uv sync --extra build
 ```
 
 ## 2. Set Your API Key
@@ -159,6 +163,7 @@ Then in Claude Code:
 
 ## Next Steps
 
+- [Pack Catalog](../catalog.md) -- Browse all 49 available packs with stats, eval scores, and install commands
 - [Tutorial](tutorial.md) -- Full lifecycle walkthrough including domain selection, URL curation, and result interpretation
 - [Build a Pack](../howto/build-a-pack.md) -- Step-by-step guide for building packs from scratch
 - [Run Evaluations](../howto/run-evaluations.md) -- Understanding the evaluation framework
