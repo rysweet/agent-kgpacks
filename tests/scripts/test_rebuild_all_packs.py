@@ -234,3 +234,17 @@ class TestRebuildPack:
         assert call_args[0] == sys.executable
         assert call_args[1] == str(script)
         assert "--test-mode" not in call_args
+
+    def test_multi_word_pack_name_extracts_correctly(self, tmp_path: Path) -> None:
+        """Pack name extraction converts underscores to dashes for multi-word names."""
+        script = tmp_path / "build_azure_functions_pack.py"
+        script.write_text("")
+
+        with (
+            patch.object(_mod.subprocess, "run") as mock_run,
+            patch.object(_mod, "PACKS_DIR", tmp_path),
+        ):
+            mock_run.return_value = _make_completed_process(returncode=0)
+            result = rebuild_pack(script)
+
+        assert result["pack"] == "azure-functions"

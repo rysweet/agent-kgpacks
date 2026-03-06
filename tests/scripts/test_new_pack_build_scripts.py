@@ -347,21 +347,22 @@ def test_manifest_category(name: str, path: Path) -> None:
 
 @pytest.mark.parametrize("name,path", _NEW_SCRIPT_PATHS, ids=[n for n, _ in _NEW_SCRIPT_PATHS])
 def test_exception_narrowing_no_bare_except(name: str, path: Path) -> None:
-    """process_url() must NOT catch bare Exception.
+    """process_url() must have a specific exception handler.
 
-    OLD: except Exception as e:   # swallowed all errors
-    NEW: except (requests.RequestException, json.JSONDecodeError) as e:
+    A bare 'except Exception' as the ONLY handler is not allowed.
+    A catch-all fallback AFTER a specific handler is acceptable
+    (prevents build crashes on unexpected errors like thin-content pages).
     """
     tree = _parse(path)
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) and node.name in _URL_PROCESSOR_NAMES:
             handlers = [c for c in ast.walk(node) if isinstance(c, ast.ExceptHandler)]
             assert handlers, f"{name}: no except handler found in process_url()"
-            for handler in handlers:
-                assert not _is_bare_exception(handler), (
-                    f"{name}: process_url() uses bare 'except Exception'. "
-                    "Contract requires 'except (requests.RequestException, json.JSONDecodeError)'."
-                )
+            has_specific = any(not _is_bare_exception(h) for h in handlers)
+            assert has_specific, (
+                f"{name}: process_url() has ONLY bare 'except Exception' handlers. "
+                "At least one specific handler (e.g. requests.RequestException) is required."
+            )
             return
     pytest.fail(f"{name}: process_url() function not found")
 

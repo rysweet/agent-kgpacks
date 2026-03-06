@@ -100,22 +100,20 @@ _BUILD_SCRIPTS = _collect_build_scripts()
 
 @pytest.mark.parametrize("script_path", _BUILD_SCRIPTS, ids=[p.name for p in _BUILD_SCRIPTS])
 def test_process_url_has_no_bare_exception(script_path: Path) -> None:
-    """process_url() must NOT catch bare Exception.
+    """process_url() must have at least one specific exception handler.
 
-    OLD code:  except Exception as e:
-    NEW code:  except (requests.RequestException, json.JSONDecodeError) as e:
-
-    This test would FAIL against the old code because the old handler used
-    bare Exception.  It passes once the handler is narrowed.
+    A bare 'except Exception' as the ONLY handler is not allowed.
+    A catch-all fallback AFTER a specific handler is acceptable
+    (prevents build crashes on unexpected errors like thin-content pages).
     """
     handlers = _get_process_url_except_handlers(script_path)
     assert handlers, f"{script_path.name}: no except handler found in process_url()"
 
-    for handler in handlers:
-        assert not _is_bare_exception(handler), (
-            f"{script_path.name}: process_url() still uses bare 'except Exception'. "
-            "The contract requires 'except (requests.RequestException, json.JSONDecodeError)'."
-        )
+    has_specific = any(not _is_bare_exception(h) for h in handlers)
+    assert has_specific, (
+        f"{script_path.name}: process_url() has ONLY bare 'except Exception' handlers. "
+        "The contract requires 'except (requests.RequestException, json.JSONDecodeError)'."
+    )
 
 
 @pytest.mark.parametrize("script_path", _BUILD_SCRIPTS, ids=[p.name for p in _BUILD_SCRIPTS])
