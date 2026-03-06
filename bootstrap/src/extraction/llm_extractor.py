@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import re
+import threading
 from dataclasses import dataclass
 
 import anthropic
@@ -510,11 +511,14 @@ Focus on the most important entities and relationships. Be concise."""
 
 # Singleton instance
 _extractor = None
+_extractor_lock = threading.Lock()
 
 
 def get_extractor() -> LLMExtractor:
     """Get or create singleton LLM extractor."""
     global _extractor
     if _extractor is None:
-        _extractor = LLMExtractor()
+        with _extractor_lock:
+            if _extractor is None:
+                _extractor = LLMExtractor()
     return _extractor

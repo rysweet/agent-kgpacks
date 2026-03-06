@@ -97,6 +97,20 @@ def _load_extensions(conn: kuzu.Connection) -> None:
 _manager = ConnectionManager()
 
 
+def get_long_lived_connection() -> kuzu.Connection:
+    """Get a database connection whose lifecycle is managed by the caller.
+
+    Unlike get_db() (a FastAPI dependency that closes the connection when the
+    request ends), this returns a connection that stays open until the caller
+    explicitly closes it.  Use this for SSE generators or any code that needs
+    a connection beyond the normal request lifecycle.
+
+    Returns:
+        Fresh LadybugDB Connection instance with extensions loaded.
+    """
+    return _manager.get_connection()
+
+
 def get_db() -> Generator[kuzu.Connection, None, None]:
     """
     FastAPI dependency for database connection.

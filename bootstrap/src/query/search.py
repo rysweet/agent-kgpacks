@@ -59,58 +59,57 @@ def semantic_search(
     all_matches = []
     query_embedding = query_df.iloc[0]["embedding"]
 
-    if True:  # preserved indentation scope for minimal diff
-        # Query vector index
-        result = conn.execute(
-            """
-            CALL QUERY_VECTOR_INDEX(
-                'Section',
-                'embedding_idx',
-                $query_embedding,
-                $top_k
-            ) RETURN *
-        """,
-            {
-                "query_embedding": query_embedding,
-                "top_k": min(top_k * 5, 200),  # Over-fetch for aggregation, capped
-            },
-        )
+    # Query vector index
+    result = conn.execute(
+        """
+        CALL QUERY_VECTOR_INDEX(
+            'Section',
+            'embedding_idx',
+            $query_embedding,
+            $top_k
+        ) RETURN *
+    """,
+        {
+            "query_embedding": query_embedding,
+            "top_k": min(top_k * 5, 200),  # Over-fetch for aggregation, capped
+        },
+    )
 
-        matches = result.get_as_df()
+    matches = result.get_as_df()
 
-        for _, match_row in matches.iterrows():
-            node = match_row["node"]
-            distance = match_row["distance"]
+    for _, match_row in matches.iterrows():
+        node = match_row["node"]
+        distance = match_row["distance"]
 
-            # Extract section info (handle both dict formats)
-            if isinstance(node, dict):
-                if "_properties" in node:
-                    section_id = node["_properties"]["section_id"]
-                    section_title = node["_properties"]["title"]
-                else:
-                    section_id = node["section_id"]
-                    section_title = node["title"]
+        # Extract section info (handle both dict formats)
+        if isinstance(node, dict):
+            if "_properties" in node:
+                section_id = node["_properties"]["section_id"]
+                section_title = node["_properties"]["title"]
             else:
-                # Node is a Section object, access properties directly
-                section_id = node.section_id
-                section_title = node.title
+                section_id = node["section_id"]
+                section_title = node["title"]
+        else:
+            # Node is a Section object, access properties directly
+            section_id = node.section_id
+            section_title = node.title
 
-            # Get article title from section_id
-            article_title = section_id.split("#")[0]
+        # Get article title from section_id
+        article_title = section_id.split("#")[0]
 
-            # Skip self-matches
-            if article_title == query_title:
-                continue
+        # Skip self-matches
+        if article_title == query_title:
+            continue
 
-            all_matches.append(
-                {
-                    "article_title": article_title,
-                    "section_title": section_title,
-                    "section_id": section_id,
-                    "distance": distance,
-                    "similarity": max(0.0, min(1.0, 1.0 - distance)),
-                }
-            )
+        all_matches.append(
+            {
+                "article_title": article_title,
+                "section_title": section_title,
+                "section_id": section_id,
+                "distance": distance,
+                "similarity": max(0.0, min(1.0, 1.0 - distance)),
+            }
+        )
 
     # Step 3: Aggregate by article (take best matching section per article)
     article_best_matches = {}
@@ -182,7 +181,7 @@ def graph_traversal(
             ...
         ]
     """
-    max_hops = max(1, min(int(max_hops), 10))  # Validate: integer 1-10
+    max_hops = max(1, min(int(max_hops), 3))  # Validate: integer 1-3
 
     logger.info(f"Graph traversal from: {seed_title} (max_hops={max_hops})")
 

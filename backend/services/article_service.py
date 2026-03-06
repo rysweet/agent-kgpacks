@@ -5,6 +5,7 @@ Handles article details, categories, and statistics.
 """
 
 import logging
+import threading
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 # Stats cache: (result, timestamp). TTL = 60 seconds.
 _stats_cache: tuple | None = None
+_stats_lock = threading.Lock()
 _STATS_TTL = 60
 
 
@@ -190,10 +192,11 @@ class ArticleService:
             StatsResponse with comprehensive statistics
         """
         global _stats_cache
-        if _stats_cache is not None:
-            cached_result, cached_at = _stats_cache
-            if time.time() - cached_at < _STATS_TTL:
-                return cached_result
+        with _stats_lock:
+            if _stats_cache is not None:
+                cached_result, cached_at = _stats_cache
+                if time.time() - cached_at < _STATS_TTL:
+                    return cached_result
         # Article statistics
         articles_result = conn.execute(
             """
@@ -295,6 +298,7 @@ class ArticleService:
         )
 
         # Cache the result
-        _stats_cache = (result, time.time())
+        with _stats_lock:
+            _stats_cache = (result, time.time())
 
         return result

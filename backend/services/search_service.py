@@ -104,52 +104,51 @@ class SearchService:
         all_matches = []
         query_embedding = query_df.iloc[0]["embedding"]
 
-        if True:  # preserved indentation scope for minimal diff
-            # Query vector index
-            result = conn.execute(
-                """
-                CALL QUERY_VECTOR_INDEX(
-                    'Section',
-                    'embedding_idx',
-                    $query_embedding,
-                    $top_k
-                ) RETURN *
-                """,
-                {
-                    "query_embedding": query_embedding,
-                    "top_k": min(top_k * 5, 200),  # Over-fetch for aggregation, capped
-                },
-            )
+        # Query vector index
+        result = conn.execute(
+            """
+            CALL QUERY_VECTOR_INDEX(
+                'Section',
+                'embedding_idx',
+                $query_embedding,
+                $top_k
+            ) RETURN *
+            """,
+            {
+                "query_embedding": query_embedding,
+                "top_k": min(top_k * 5, 200),  # Over-fetch for aggregation, capped
+            },
+        )
 
-            matches = result.get_as_df()
+        matches = result.get_as_df()
 
-            for _, match_row in matches.iterrows():
-                node = match_row["node"]
-                distance = match_row["distance"]
+        for _, match_row in matches.iterrows():
+            node = match_row["node"]
+            distance = match_row["distance"]
 
-                # Extract section info
-                if isinstance(node, dict):
-                    if "_properties" in node:
-                        section_id = node["_properties"]["section_id"]
-                    else:
-                        section_id = node["section_id"]
+            # Extract section info
+            if isinstance(node, dict):
+                if "_properties" in node:
+                    section_id = node["_properties"]["section_id"]
                 else:
-                    section_id = node.section_id
+                    section_id = node["section_id"]
+            else:
+                section_id = node.section_id
 
-                # Get article title from section_id
-                article_title = section_id.split("#")[0]
+            # Get article title from section_id
+            article_title = section_id.split("#")[0]
 
-                # Skip self-matches
-                if article_title == query_title:
-                    continue
+            # Skip self-matches
+            if article_title == query_title:
+                continue
 
-                all_matches.append(
-                    {
-                        "article_title": article_title,
-                        "distance": distance,
-                        "similarity": max(0.0, min(1.0, 1.0 - distance)),
-                    }
-                )
+            all_matches.append(
+                {
+                    "article_title": article_title,
+                    "distance": distance,
+                    "similarity": max(0.0, min(1.0, 1.0 - distance)),
+                }
+            )
 
         # Step 3: Aggregate by article (best match per article)
         article_best_matches = {}

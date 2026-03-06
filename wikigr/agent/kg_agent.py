@@ -181,7 +181,7 @@ class KnowledgeGraphAgent:
 
     def __init__(
         self,
-        db_path: str,
+        db_path: str | None = None,
         anthropic_api_key: str | None = None,
         read_only: bool = True,
         use_enhancements: bool = True,
@@ -193,12 +193,15 @@ class KnowledgeGraphAgent:
         synthesis_model: str | None = None,
         cypher_pack_path: str | None = None,
         enable_multi_query: bool = False,
+        *,
+        _conn: "kuzu.Connection | None" = None,
+        _claude_client: "Anthropic | None" = None,
     ):
         """
         Initialize agent with database connection and Claude API.
 
         Args:
-            db_path: Path to WikiGR LadybugDB database
+            db_path: Path to WikiGR LadybugDB database (required unless _conn is provided)
             anthropic_api_key: Anthropic API key (or from ANTHROPIC_API_KEY env var)
             read_only: Open database in read-only mode (allows concurrent access during expansion)
             use_enhancements: Enable Phase 1 enhancements (reranking, multi-doc, few-shot)
@@ -213,11 +216,25 @@ class KnowledgeGraphAgent:
             enable_multi_query: Generate alternative query phrasings via Claude Haiku to improve recall.
                 **Data notice:** when True, user questions are sent to the Anthropic API for expansion.
                 Keep False for deployments with data-residency, PII, or offline constraints.
+            _conn: Pre-existing LadybugDB connection (used by from_connection(); skips DB creation).
+            _claude_client: Pre-existing Anthropic client (used by from_connection()).
         """
-        self.db = kuzu.Database(db_path, read_only=read_only)
-        self.conn = kuzu.Connection(self.db)
-        self._load_extensions()
-        self.claude = Anthropic(api_key=anthropic_api_key)
+        if _conn is not None:
+            # External connection mode: caller manages DB lifecycle
+            self.db = None
+            self.conn = _conn
+            self.claude = (
+                _claude_client
+                if _claude_client is not None
+                else Anthropic(api_key=anthropic_api_key)
+            )
+        elif db_path is not None:
+            self.db = kuzu.Database(db_path, read_only=read_only)
+            self.conn = kuzu.Connection(self.db)
+            self._load_extensions()
+            self.claude = Anthropic(api_key=anthropic_api_key)
+        else:
+            raise ValueError("Either db_path or _conn must be provided")
         self.synthesis_model = synthesis_model or self.DEFAULT_MODEL
         self._embedding_generator = None
         self._plan_cache: dict[str, dict] = {}
@@ -423,33 +440,18 @@ class KnowledgeGraphAgent:
         """Create an agent from an existing connection (no DB lifecycle management).
 
         Use this when the connection is managed externally (e.g., FastAPI dependency
-        injection). All attributes are properly initialized, avoiding the fragile
-        __new__() pattern.
+        injection). All attributes are properly initialized via __init__ with the
+        _conn and _claude_client keyword-only parameters.
 
         **Data notice:** if you set ``agent.enable_multi_query = True`` after construction,
         user questions will be sent to the Anthropic API for query expansion.  Keep the
         default (``False``) for deployments with data-residency, PII, or offline constraints.
         """
-        agent = cls.__new__(cls)
-        agent.db = None
-        agent.conn = conn
-        agent.claude = claude_client
-        agent._embedding_generator = None
-        agent._plan_cache = {}
-        agent.use_enhancements = False
-        agent.token_usage = {"input_tokens": 0, "output_tokens": 0, "api_calls": 0}
-        agent.enable_reranker = True
-        agent.enable_multidoc = True
-        agent.enable_fewshot = True
-        agent.enable_cross_encoder = False
-        agent.enable_multi_query = False
-        agent.synthesis_model = cls.DEFAULT_MODEL
-        agent.reranker = None
-        agent.synthesizer = None
-        agent.few_shot = None
-        agent.cross_encoder = None
-        agent.cypher_rag = None
-        return agent
+        return cls(
+            use_enhancements=False,
+            _conn=conn,
+            _claude_client=claude_client,
+        )
 
     def _check_open(self) -> None:
         """Raise RuntimeError if the agent has been closed."""
@@ -471,16 +473,12 @@ class KnowledgeGraphAgent:
     def _safe_query(self, cypher: str, params: dict | None = None, *, log_context: str = "") -> Any:
         """Execute Cypher and return DataFrame, or None on failure.
 
-        Consolidates the repeated try/execute/get_as_df/except pattern.
-        Returns the DataFrame when non-empty, or None on empty/error.
+        Delegates to the standalone ``_safe_query`` in ``retriever.py`` to
+        avoid duplicating the try/execute/get_as_df/except pattern.
         """
-        try:
-            result = self.conn.execute(cypher, params or {})
-            df = result.get_as_df()
-            return df if not df.empty else None
-        except RuntimeError as e:
-            logger.debug("Query failed%s: %s", f" ({log_context})" if log_context else "", e)
-            return None
+        from wikigr.agent.retriever import _safe_query as _sq
+
+        return _sq(self.conn, cypher, params, log_context=log_context)
 
     def query(
         self,

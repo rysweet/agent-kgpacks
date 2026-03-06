@@ -1,7 +1,8 @@
 """Tests for pack registry API client."""
 
+import ipaddress
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -142,19 +143,24 @@ class TestPackRegistryClient:
         with pytest.raises(urllib.error.HTTPError):
             client.get_pack_info("nonexistent-pack")
 
-    @patch("urllib.request.urlretrieve")
-    def test_download_pack(self, mock_urlretrieve, tmp_path: Path):
+    def _mock_https_conn(self, body: bytes = b"fake archive content", status: int = 200):
+        """Build a mock HTTPSConnection that returns the given body on getresponse()."""
+        mock_response = MagicMock()
+        mock_response.status = status
+        # Simulate chunked reads: return body on first read(), then b""
+        read_calls = iter([body, b""])
+        mock_response.read.side_effect = lambda sz=None: next(read_calls)
+
+        mock_conn = MagicMock()
+        mock_conn.getresponse.return_value = mock_response
+        return mock_conn
+
+    @patch("wikigr.packs.registry_api.validate_download_url")
+    @patch("wikigr.packs.registry_api.http.client.HTTPSConnection")
+    def test_download_pack(self, mock_https_cls, mock_validate, tmp_path: Path):
         """Test download_pack downloads and returns path."""
-        # Create a fake downloaded file
-        downloaded_file = tmp_path / "physics-expert-1.0.0.tar.gz"
-        downloaded_file.write_text("fake archive content")
-
-        def mock_download(url, filename):
-            # Copy our fake file to the target location
-            Path(filename).write_text("fake archive content")
-            return filename, None
-
-        mock_urlretrieve.side_effect = mock_download
+        mock_validate.return_value = ipaddress.ip_address("93.184.216.34")
+        mock_https_cls.return_value = self._mock_https_conn(b"fake archive content")
 
         # Mock get_pack_info to return download URL
         with patch.object(PackRegistryClient, "get_pack_info") as mock_get_info:
@@ -173,19 +179,14 @@ class TestPackRegistryClient:
 
             assert result_path.exists()
             assert result_path.name == "physics-expert-1.0.0.tar.gz"
-            assert "fake archive content" in result_path.read_text()
+            assert b"fake archive content" in result_path.read_bytes()
 
-    @patch("urllib.request.urlretrieve")
-    def test_download_pack_latest_version(self, mock_urlretrieve, tmp_path: Path):
+    @patch("wikigr.packs.registry_api.validate_download_url")
+    @patch("wikigr.packs.registry_api.http.client.HTTPSConnection")
+    def test_download_pack_latest_version(self, mock_https_cls, mock_validate, tmp_path: Path):
         """Test download_pack with 'latest' version."""
-        downloaded_file = tmp_path / "pack.tar.gz"
-        downloaded_file.write_text("content")
-
-        def mock_download(url, filename):
-            Path(filename).write_text("content")
-            return filename, None
-
-        mock_urlretrieve.side_effect = mock_download
+        mock_validate.return_value = ipaddress.ip_address("93.184.216.34")
+        mock_https_cls.return_value = self._mock_https_conn(b"content")
 
         with patch.object(PackRegistryClient, "get_pack_info") as mock_get_info:
             mock_get_info.return_value = PackListing(
@@ -205,10 +206,14 @@ class TestPackRegistryClient:
             # Should use actual version from registry, not "latest"
             assert "2.5.0" in result_path.name
 
-    @patch("urllib.request.urlretrieve")
-    def test_download_pack_network_error(self, mock_urlretrieve):
+    @patch("wikigr.packs.registry_api.validate_download_url")
+    @patch("wikigr.packs.registry_api.http.client.HTTPSConnection")
+    def test_download_pack_network_error(self, mock_https_cls, mock_validate):
         """Test download_pack handles network errors."""
-        mock_urlretrieve.side_effect = Exception("Download failed")
+        mock_validate.return_value = ipaddress.ip_address("93.184.216.34")
+        mock_conn = MagicMock()
+        mock_conn.request.side_effect = Exception("Download failed")
+        mock_https_cls.return_value = mock_conn
 
         with patch.object(PackRegistryClient, "get_pack_info") as mock_get_info:
             mock_get_info.return_value = PackListing(

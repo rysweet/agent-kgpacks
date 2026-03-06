@@ -11,6 +11,7 @@ import contextlib
 import json
 import logging
 import os
+import threading
 import time
 from pathlib import Path
 
@@ -31,18 +32,25 @@ router = APIRouter(prefix="/api/v1", tags=["chat"])
 
 # Module-level Anthropic client (created once, reused across requests)
 _anthropic_client = None
+_anthropic_client_lock = threading.Lock()
 
 # Maximum seconds to wait for agent.query() before emitting a timeout error (R-DOS-1)
 STREAM_TIMEOUT_S = int(os.environ.get("WIKIGR_STREAM_TIMEOUT_S", "60"))
 
+# Module-level bounded ThreadPoolExecutor for stream timeout management.
+# Reused across requests to avoid per-request thread pool creation overhead.
+_stream_executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+
 
 def _get_anthropic_client():
-    """Get or create a shared Anthropic client."""
+    """Get or create a shared Anthropic client (thread-safe, double-checked locking)."""
     global _anthropic_client
     if _anthropic_client is None:
-        from anthropic import Anthropic
+        with _anthropic_client_lock:
+            if _anthropic_client is None:
+                from anthropic import Anthropic
 
-        _anthropic_client = Anthropic()
+                _anthropic_client = Anthropic()
     return _anthropic_client
 
 
@@ -174,26 +182,27 @@ def chat_stream(
 
     def generate():
         start = time.perf_counter()
-        # Manage connection inside generator so it stays alive for the full stream
-        from backend.db.connection import _manager
+        # Manage connection inside generator so it stays alive for the full stream.
+        # Use the public API instead of accessing the private _manager.
+        from backend.db.connection import get_long_lived_connection
 
-        conn = _manager.get_connection()
+        conn = get_long_lived_connection()
         try:
             from wikigr.agent.kg_agent import KnowledgeGraphAgent
 
             agent = KnowledgeGraphAgent.from_connection(conn, _get_anthropic_client())
 
-            # Run agent.query with a timeout to bound SSE connection lifetime (R-DOS-1)
-            pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-            future = pool.submit(agent.query, question=question, max_results=max_results)
+            # Run agent.query with a timeout to bound SSE connection lifetime (R-DOS-1).
+            # Use the module-level bounded executor instead of creating one per request.
+            future = _stream_executor.submit(
+                agent.query, question=question, max_results=max_results
+            )
             try:
                 result = future.result(timeout=STREAM_TIMEOUT_S)
             except concurrent.futures.TimeoutError:
-                pool.shutdown(wait=False, cancel_futures=True)
+                future.cancel()
                 yield {"event": "error", "data": "TimeoutError"}
                 return
-            else:
-                pool.shutdown(wait=False)
 
             yield {"event": "sources", "data": json.dumps(result.get("sources", []))}
             yield {"event": "token", "data": result.get("answer", "")}
@@ -213,6 +222,8 @@ def chat_stream(
             logger.error(f"Streaming chat error: {e}", exc_info=True)
             yield {"event": "error", "data": "AgentError"}
         finally:
+            # Only close the connection after the future has completed or been cancelled,
+            # so we don't close it while the background thread may still be using it.
             with contextlib.suppress(Exception):
                 conn.close()
 
