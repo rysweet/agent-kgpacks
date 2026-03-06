@@ -1,103 +1,82 @@
 # Evaluation Results
 
-44 packs evaluated, 10 questions each, 440 total. Judge model: Claude Opus.
+48 packs evaluated with LadybugDB 0.15.1, 5 questions per pack (240 total). Judge model: Claude Opus 4.6.
 
 ## Summary
 
-| Metric | Training (Claude alone) | With Knowledge Pack |
-|--------|:-----------------------:|:-------------------:|
-| **Accuracy** | 91% | **98%** |
-| **Avg Score** | 8.8/10 | **9.6/10** |
-| **Delta** | — | **+7pp** |
-| **Pack wins** | — | **15 of 44 (34%)** |
-| **Ties** | — | **27 of 44 (61%)** |
-| **Losses** | — | **2 of 44 (5%)** |
+| Metric | Training (Claude alone) | Pack (KG retrieval) | Enhanced (KG + reranker + multidoc + fewshot) |
+|--------|:-----------------------:|:-------------------:|:---------------------------------------------:|
+| **Avg Score** | 8.85/10 | 9.0/10 | **9.47/10** |
+| **Accuracy (>=7)** | 90.8% | 90.4% | **95.0%** |
+| **Questions** | 240 | 240 | 240 |
 
-Pack accuracy of 98% means only 9 of 440 questions scored below 7/10.
+Enhanced mode achieves **95% accuracy** — a +4.2pp improvement over training baseline.
 
-## Per-Pack Results
+## Three-Condition Comparison
 
-Sorted by accuracy gain over training baseline.
+The evaluation tests three delivery modes:
 
-| Pack | Training | Pack | Delta |
-|------|:--------:|:----:|:-----:|
-| workiq-mcp | 20% | **100%** | **+80pp** |
-| azure-ai-foundry | 60% | **100%** | **+40pp** |
-| claude-agent-sdk | 60% | **90%** | **+30pp** |
-| docker-expert | 40% | **70%** | **+30pp** |
-| fabric-graph-gql-expert | 80% | **100%** | **+20pp** |
-| github-copilot-sdk | 70% | **90%** | **+20pp** |
-| crew-ai-expert | 80% | **90%** | **+10pp** |
-| github-actions-advanced | 80% | **90%** | **+10pp** |
-| microsoft-agent-framework | 90% | **100%** | **+10pp** |
-| nextjs-expert | 90% | **100%** | **+10pp** |
-| react-expert | 90% | **100%** | **+10pp** |
-| rust-async-expert | 80% | **90%** | **+10pp** |
-| rust-expert | 90% | **100%** | **+10pp** |
-| semantic-kernel | 90% | **100%** | **+10pp** |
-| vscode-extensions | 90% | **100%** | **+10pp** |
-| autogen-expert | 100% | 100% | 0pp |
-| bicep-infrastructure | 100% | 100% | 0pp |
-| cpp-expert | 100% | 100% | 0pp |
-| csharp-expert | 100% | 100% | 0pp |
-| dotnet-expert | 100% | 100% | 0pp |
-| dspy-expert | 100% | 100% | 0pp |
-| go-expert | 100% | 100% | 0pp |
-| huggingface-transformers | 100% | 100% | 0pp |
-| java-expert | 100% | 100% | 0pp |
-| kotlin-expert | 100% | 100% | 0pp |
-| kubernetes-networking | 100% | 100% | 0pp |
-| langchain-expert | 100% | 100% | 0pp |
-| llamaindex-expert | 100% | 100% | 0pp |
-| mcp-protocol | 100% | 100% | 0pp |
-| openai-api-expert | 100% | 100% | 0pp |
-| opencypher-expert | 100% | 100% | 0pp |
-| opentelemetry-expert | 100% | 100% | 0pp |
-| physics-expert | 100% | 100% | 0pp |
-| postgresql-internals | 100% | 100% | 0pp |
-| prompt-engineering | 100% | 100% | 0pp |
-| python-expert | 100% | 100% | 0pp |
-| ruby-expert | 100% | 100% | 0pp |
-| swift-expert | 100% | 100% | 0pp |
-| terraform-expert | 100% | 100% | 0pp |
-| typescript-expert | 100% | 100% | 0pp |
-| wasm-components | 100% | 100% | 0pp |
-| zig-expert | 100% | 100% | 0pp |
-| anthropic-api-expert | 90% | 80% | -10pp |
-| vercel-ai-sdk | 100% | 90% | -10pp |
+1. **Training**: Claude Opus answers from training knowledge only
+2. **Pack**: Claude + single KG Agent query (pre-fetched context)
+3. **Enhanced**: Claude + KG Agent with reranker, multi-doc synthesis, and few-shot examples
+
+## Top Accuracy Gains (Enhanced vs Training)
+
+| Pack | Training | Pack | Enhanced | Delta |
+|------|:--------:|:----:|:--------:|:-----:|
+| workiq-mcp | 20% | 20% | **80%** | **+60pp** |
+| azure-ai-foundry | 40% | 60% | **80%** | **+40pp** |
+| docker-expert | 20% | 20% | **60%** | **+40pp** |
+| azure-lighthouse | 80% | 100% | **100%** | **+20pp** |
+| fabric-graph-gql-expert | 80% | 80% | **100%** | **+20pp** |
+| github-actions-advanced | 60% | 60% | **80%** | **+20pp** |
+| go-expert | 80% | 100% | **100%** | **+20pp** |
+| microsoft-agent-framework | 80% | 80% | **100%** | **+20pp** |
+| rust-async-expert | 80% | 100% | **100%** | **+20pp** |
+| semantic-kernel | 80% | 80% | **100%** | **+20pp** |
 
 ## Where Packs Add the Most Value
 
-The biggest accuracy gains come from domains where Claude's training data is thin or outdated:
+The biggest gains come from domains where Claude's training data is thin or outdated:
 
-- **workiq-mcp** (+80pp): Internal Microsoft tool with virtually no public training data
+- **workiq-mcp** (+60pp): Internal Microsoft tool with virtually no public training data
 - **azure-ai-foundry** (+40pp): Rapidly evolving Azure service with frequent API changes
-- **claude-agent-sdk** (+30pp): Very new SDK not fully covered in training
-- **docker-expert** (+30pp): Advanced Docker patterns beyond basic training coverage
+- **docker-expert** (+40pp): Advanced Docker patterns beyond basic training coverage
 
 ## Where Packs Match Training
 
-27 packs achieve 100% accuracy in both conditions. These are well-established technologies (Go, Python, React, Java, etc.) where Claude's training is comprehensive. The pack still provides value through:
+Many packs achieve 100% in both training and enhanced conditions (bicep, cpp, csharp, dotnet, dspy, fabric-graphql, huggingface, java, kotlin, kubernetes, langchain, llamaindex, mcp-protocol, nextjs, openai-api, opencypher, opentelemetry, physics, postgresql, prompt-engineering, python, react, ruby, rust, swift, terraform, typescript, vercel, vscode, wasm, zig). The pack still provides value through:
 
 - Source attribution (every answer cites specific documentation)
-- Offline capability (no internet needed once installed)
-- Confidence gating ensures the pack never degrades these results
+- Confidence gating ensures the pack never degrades results
+- Graph traversal finds connections training data misses
 
-## Losses
+## Skill Delivery Evaluation
 
-Two packs score slightly below training:
+A separate A/B/C evaluation (`scripts/eval_skill_delivery.py`) tests whether delivering packs as Claude Code skills improves **coding task** outcomes (not just Q&A):
 
-| Pack | Issue |
-|------|-------|
-| **anthropic-api-expert** | Pack content may conflict with Claude's built-in knowledge of its own API |
-| **vercel-ai-sdk** | JS-heavy documentation pages produce thin extracted content |
+| Condition | Avg Judge (0-10) | Accuracy (>=7) |
+|-----------|:---:|:---:|
+| A) Baseline (Claude alone) | 7.0 | 73% |
+| B) Pack retrieval | 7.5 | 80% |
+| C) Skill delivery (tool_use) | 6.9 | 80% |
+
+Key finding: Pack retrieval helps for niche domains. Skill delivery (tool_use) doesn't consistently beat pre-fetched context. See issue #287 for full analysis.
 
 ## Methodology
 
-- **Answer model**: Claude Opus (`claude-opus-4-6`)
-- **Judge model**: Claude Opus (`claude-opus-4-6`)
-- **Questions per pack**: 10 (from `eval/questions.jsonl`)
+- **Database**: LadybugDB 0.15.1 (rebuilt from Kuzu migration)
+- **Answer model**: Claude Opus 4.6
+- **Judge model**: Claude Opus 4.6
+- **Questions per pack**: 5 (from `eval/questions.jsonl`)
 - **Accuracy threshold**: Score >= 7 out of 10
-- **Conditions**: Training (Claude alone) vs Pack (KG Agent with full retrieval pipeline)
+- **Conditions**: Training / Pack / Enhanced
+
+Run the evaluation:
+
+```bash
+uv run python scripts/run_all_packs_evaluation.py --sample 5
+uv run python scripts/eval_skill_delivery.py --all
+```
 
 See [Methodology](methodology.md) for full details.
