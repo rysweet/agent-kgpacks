@@ -108,3 +108,10 @@ data/packs/*/eval/results.json
 launcher.py
 run.sh
 workstreams*.json
+AGENTS.md
+
+# Generated indexes
+index.scip
+
+# PM Architect state (session-local)
+.pm/
