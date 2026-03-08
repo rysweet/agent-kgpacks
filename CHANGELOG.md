@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Registry API improvements for pack discovery
 
 ### Removed
-- 63 stale merged remote branches cleaned up
+- 142 stale remote branches cleaned up (63 merged + 79 unmerged)
 - `index.scip` removed from tracking (generated artifact)
 
 ## [0.3.0] - 2026-03-02
