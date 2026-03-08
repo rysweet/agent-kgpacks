@@ -161,7 +161,9 @@ Then in Claude Code:
 ```
 
 Each installed pack becomes its own Claude Code skill that auto-activates when
-you ask about that domain. See `skills/README.md` for details.
+you ask about that domain. Skills are the primary integration — see `skills/README.md` for details.
+
+> **Alternative integration**: An MCP server (`mcp_server.py`) is also available for GitHub Copilot and Claude Desktop, but Skills are the recommended approach for Claude Code.
 
 ## Pack Management (CLI)
 
