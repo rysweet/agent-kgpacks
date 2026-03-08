@@ -17,11 +17,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `CHANGELOG.md`
 - `.editorconfig` for consistent formatting
 - `Makefile` for common development tasks
+- Dockerfile (multi-stage: backend API and MCP server targets)
+- Shallow clone guidance in README for large repo
 
 ### Changed
 - UX overhaul for pack management workflows (#298)
+- CI: shallow clones (`fetch-depth: 1`) across all jobs for faster builds
+- CI: uv dependency caching (`enable-cache: true`) across all Python jobs
+- CI: npm dependency caching for frontend tests
 - Improved backend chat API with streaming enhancements
 - Registry API improvements for pack discovery
+
+### Removed
+- 63 stale merged remote branches cleaned up
+- `index.scip` removed from tracking (generated artifact)
 
 ## [0.3.0] - 2026-03-02
 
