@@ -108,10 +108,11 @@ agent-kgpacks/
 ├── backend/           FastAPI REST API
 ├── frontend/          React UI
 ├── scripts/           Pack build and evaluation scripts
+├── skills/            /kg-pack skill definition (primary integration)
 ├── data/packs/        Knowledge pack databases and manifests
 ├── docs/              Documentation (MkDocs source)
 ├── tests/             Test suites
-└── mcp_server.py      Model Context Protocol server
+└── mcp_server.py      MCP server (alternative integration for Copilot/Claude Desktop)
 ```
 
 ## Reporting Issues

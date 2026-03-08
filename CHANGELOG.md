@@ -8,10 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- MCP server for GitHub Copilot and Claude Desktop integration (`mcp_server.py`)
-- Pack catalog generation script (`scripts/generate_catalog.py`)
-- Pack publishing script (`scripts/publish_packs.py`)
-- One-liner installation script (`scripts/install.sh`)
 - `CONTRIBUTING.md` with development guidelines
 - `LICENSE` file (MIT)
 - `CHANGELOG.md`
@@ -19,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Makefile` for common development tasks
 - Dockerfile (multi-stage: backend API and MCP server targets)
 - Shallow clone guidance in README for large repo
+- MCP server as alternative integration for GitHub Copilot and Claude Desktop (`mcp_server.py`)
+- Pack catalog generation script (`scripts/generate_catalog.py`)
+- Pack publishing script (`scripts/publish_packs.py`)
+- One-liner installation script (`scripts/install.sh`)
 
 ### Changed
 - UX overhaul for pack management workflows (#298)
