@@ -77,7 +77,7 @@ uv run python scripts/build_python_pack.py
 uv run python scripts/eval_single_pack.py --pack python-expert
 ```
 
-See [docs/how-to/build-a-pack.md](docs/how-to/build-a-pack.md) for the full guide.
+See [docs/howto/build-a-pack.md](docs/howto/build-a-pack.md) for the full guide.
 
 ## Pull Request Process
 

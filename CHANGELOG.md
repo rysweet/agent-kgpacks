@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved backend chat API with streaming enhancements
 - Registry API improvements for pack discovery
 
-## [0.3.0] - 2026-03-01
+## [0.3.0] - 2026-03-02
 
 ### Added
 - 49 knowledge packs covering languages, frameworks, AI/ML, infrastructure, and Azure services
@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Retrieval pipeline accuracy improved from 91.7% to 99%
 - Evaluation framework with baseline vs pack comparison
 
-## [0.2.0] - 2026-02-20
+## [0.2.0] - 2026-03-02
 
 ### Added
 - FastAPI backend with hybrid search API
@@ -51,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated to LadybugDB for graph storage
 - BGE embeddings for vector search
 
-## [0.1.1] - 2026-02-10
+## [0.1.1] - 2026-02-19
 
 ### Added
 - Initial knowledge graph extraction pipeline
