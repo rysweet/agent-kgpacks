@@ -189,4 +189,14 @@ Full docs: **https://rysweet.github.io/agent-kgpacks/**
 
 ## License
 
-MIT
+[MIT](LICENSE)
+
+## Repository Notes
+
+**Clone size**: The repository includes ~520 MB of knowledge pack databases (`data/packs/*/pack.db`). For faster clones, use shallow clone:
+
+```bash
+git clone --depth 1 https://github.com/rysweet/agent-kgpacks.git
+```
+
+Migration to [Git LFS](https://git-lfs.com) for pack databases is planned for a future release.

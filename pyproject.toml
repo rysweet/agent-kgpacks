@@ -88,10 +88,10 @@ wikigr-schema = "bootstrap.schema.ryugraph_schema:main"
 wikigr-explore = "bootstrap.scripts.explore:main"
 
 [project.urls]
-Homepage = "https://github.com/rysweet/wikigr"
-Repository = "https://github.com/rysweet/wikigr"
-Documentation = "https://github.com/rysweet/wikigr/tree/main/bootstrap/docs"
-Issues = "https://github.com/rysweet/wikigr/issues"
+Homepage = "https://github.com/rysweet/agent-kgpacks"
+Repository = "https://github.com/rysweet/agent-kgpacks"
+Documentation = "https://rysweet.github.io/agent-kgpacks"
+Issues = "https://github.com/rysweet/agent-kgpacks/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["bootstrap", "wikigr"]
