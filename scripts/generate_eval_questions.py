@@ -457,7 +457,6 @@ DOMAIN_DESCRIPTIONS: dict[str, str] = {
         "MIPROv2 for prompt optimization, BootstrapFinetune, BetterTogether for "
         "composing optimizers), assertions and suggestions (dspy.Suggest, dspy.Refine), "
         "evaluation with custom metrics, retrieval models (ColBERTv2, ChromaRM), "
-        "language model configuration via LiteLLM, and agent development patterns."
     ),
     "vscode-extensions": (
         "VS Code extension development using the Extension API. Key topics: extension "
