@@ -30,6 +30,12 @@ concurrency:
   group: pack-freshness-${{ github.ref }}
   cancel-in-progress: true
 
+# Least-privilege default for GITHUB_TOKEN. Read-only is sufficient for the
+# check/rebuild/eval jobs (checkout + artifact upload/download). The create-pr
+# job below requests the additional contents:write / pull-requests:write it needs.
+permissions:
+  contents: read
+
 env:
   PYTHON_VERSION: "3.11"
 
@@ -45,9 +51,9 @@ jobs:
       packs_to_rebuild: ${{ steps.check.outputs.packs_to_rebuild }}
       report_json: ${{ steps.check.outputs.report_json }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
       - run: uv python install ${{ env.PYTHON_VERSION }}
 
@@ -97,7 +103,7 @@ jobs:
           echo "report_json=$REPORT_JSON" >> "$GITHUB_OUTPUT"
 
       - name: Upload freshness report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: freshness-report
           path: freshness_report.json
@@ -121,9 +127,9 @@ jobs:
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
       - run: uv python install ${{ env.PYTHON_VERSION }}
 
@@ -144,7 +150,7 @@ jobs:
           uv run python "$SCRIPT" --test-mode
 
       - name: Upload rebuilt pack
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: rebuilt-pack-${{ matrix.pack }}
           path: |
@@ -171,16 +177,16 @@ jobs:
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
 
       - run: uv python install ${{ env.PYTHON_VERSION }}
 
       - run: uv venv && uv pip install -e ".[dev]"
 
       - name: Download rebuilt pack
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: rebuilt-pack-${{ matrix.pack }}
           path: data/packs/${{ matrix.pack }}/
@@ -232,7 +238,7 @@ jobs:
           "
 
       - name: Upload eval results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: eval-results-${{ matrix.pack }}
@@ -256,23 +262,23 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Download all rebuilt packs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: rebuilt-pack-*
           merge-multiple: true
           path: data/packs/
 
       - name: Download freshness report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: freshness-report
           path: .
 
       - name: Download eval results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: eval-results-*
           merge-multiple: true

@@ -10,6 +10,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Least-privilege default for GITHUB_TOKEN. All jobs here only read the repo
+# (checkout) and upload coverage; none need write access.
+permissions:
+  contents: read
+
 env:
   PYTHON_VERSION: "3.12"
   UV_SYSTEM_PYTHON: "false"
@@ -20,10 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
       - run: uv python install ${{ env.PYTHON_VERSION }}
@@ -46,10 +51,10 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
       - run: uv python install ${{ matrix.python-version }}
@@ -62,7 +67,7 @@ jobs:
             --cov-report=term-missing \
             --cov-report=xml:coverage.xml \
             -v --timeout=60
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         if: matrix.python-version == '3.12'
         with:
           file: ./coverage.xml
@@ -73,10 +78,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
       - run: uv python install ${{ env.PYTHON_VERSION }}
@@ -93,10 +98,10 @@ jobs:
       matrix:
         python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
       - run: uv python install ${{ matrix.python-version }}
@@ -110,7 +115,7 @@ jobs:
             --cov-report=term-missing \
             --cov-report=xml:pack-coverage.xml \
             -v --timeout=60
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
         if: matrix.python-version == '3.12'
         with:
           file: ./pack-coverage.xml
@@ -123,10 +128,10 @@ jobs:
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     needs: [lint, schema-validation]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
       - run: uv python install ${{ env.PYTHON_VERSION }}
@@ -143,7 +148,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
       - name: Validate documentation structure
@@ -171,10 +176,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
       - run: uv python install ${{ env.PYTHON_VERSION }}
@@ -188,10 +193,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
       - run: uv python install ${{ env.PYTHON_VERSION }}
@@ -204,10 +209,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '20'
           cache: 'npm'
@@ -218,3 +223,41 @@ jobs:
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 1
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - name: Verify lockfile matches pyproject (no relocking)
+        run: uv lock --check
+      - name: Export exact locked dependency pins
+        run: |
+          uv export --frozen --format requirements-txt \
+            --no-emit-project --no-hashes > audit-requirements.txt
+      - name: Audit locked dependencies for known vulnerabilities
+        # pip-audit fails the build on any unignored advisory. The ignores below
+        # are the only advisories with no in-range fix; each is documented and is
+        # not exploitable in this project's usage:
+        #   torch  CVE-2025-3000 / PYSEC-2025-194 (DB aliases of the same issue)
+        #          and PYSEC-2026-139: no patched torch release is published
+        #          upstream; both require local torch.jit / pt2-loader access and
+        #          are not reachable from packaged usage or CI.
+        #   pytest CVE-2025-71176: dev/test-only tool (never shipped); the fix is
+        #          pytest 9.0.3, outside the supported <9.0.0 range.
+        # Re-audit and drop an ID here as soon as an in-range fix lands.
+        run: |
+          uvx --from 'pip-audit>=2.7.0,<3.0.0' pip-audit \
+            --requirement audit-requirements.txt \
+            --ignore-vuln CVE-2025-3000 \
+            --ignore-vuln PYSEC-2025-194 \
+            --ignore-vuln PYSEC-2026-139 \
+            --ignore-vuln CVE-2025-71176 \
+            --desc
